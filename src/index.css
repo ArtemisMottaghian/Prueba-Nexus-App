@@ -1230,3 +1230,70 @@ body {
 [data-bs-theme="light"] .bulk-actions-bar {
   background: rgba(124, 63, 255, 0.08);
 }
+
+/* ── SIDEBAR MÓVIL ── */
+@media (max-width: 991px) {
+  .ara-sidebar {
+    position: fixed;
+    left: -280px;
+    top: 0;
+    height: 100vh;
+    z-index: 1035;
+    transition: left 0.3s ease;
+  }
+  .ara-sidebar.sidebar-open {
+    left: 0;
+  }
+}
+
+/* ── CLIENTES RESPONSIVE ── */
+/* En móvil: layout en columna, detalle debajo de la lista */
+@media (max-width: 991px) {
+  .clientes-split {
+    flex-direction: column !important;
+    display: flex;
+  }
+
+  .clientes-list-panel {
+    width: 100% !important;
+    min-width: unset !important;
+    max-width: unset !important;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .clientes-detail-panel {
+    width: 100% !important;
+    min-width: unset !important;
+    padding-left: 0 !important;
+  }
+}
+
+/* ── SCROLL TÁCTIL MÓVIL ── */
+@media (max-width: 991px) {
+  .ara-content,
+  .content-scroll,
+  .clientes-page,
+  .clientes-split,
+  .clientes-list-panel,
+  .clientes-detail-panel {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  html, body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    height: auto !important;
+  }
+
+  .ara-main {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    height: 100dvh;
+  }
+}
