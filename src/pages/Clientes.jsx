@@ -151,11 +151,61 @@ export default function Clientes() {
         </div>
 
         <div className="clientes-detail-panel">
-          <div className="clientes-empty-state">
-            <i className="bi bi-building fs-1 mb-3 d-block"></i>
-            <h5>Selecciona un cliente</h5>
-            <p className="text-muted">Haz clic en un cliente para ver sus datos.</p>
-          </div>
+          {clienteSeleccionado ? (
+            <>
+              <div className="cliente-profile-header mb-4">
+                <div className="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                  <div>
+                    <h3 className="cliente-profile-nombre">{clienteSeleccionado.nombre}</h3>
+                    <span className="cliente-sector">{clienteSeleccionado.sector}</span>
+                  </div>
+                  <span className="cliente-vacantes-badge grande">{clienteSeleccionado.vacantesAbiertas} vacantes abiertas</span>
+                </div>
+              </div>
+
+              <div className="row g-3 mb-4">
+                <div className="col-12 col-lg-6">
+                  <div className="cliente-info-card h-100">
+                    <h6 className="info-card-title"><i className="bi bi-person-badge me-2"></i>Datos de contacto</h6>
+                    <div className="info-grid">
+                      <div className="info-item"><span className="info-label">Contacto principal</span><span className="info-value">{clienteSeleccionado.contactoPrincipal}</span></div>
+                      <div className="info-item"><span className="info-label">Email</span><a href={`mailto:${clienteSeleccionado.email}`} className="info-value text-decoration-none"><i className="bi bi-envelope me-1 text-muted"></i>{clienteSeleccionado.email}</a></div>
+                      <div className="info-item"><span className="info-label">Teléfono</span><a href={`tel:${clienteSeleccionado.telefono}`} className="info-value text-decoration-none"><i className="bi bi-telephone me-1 text-muted"></i>{clienteSeleccionado.telefono}</a></div>
+                    </div>
+                    <div className="d-flex gap-2 mt-3">
+                      <a href={`mailto:${clienteSeleccionado.email}`} className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"><i className="bi bi-envelope"></i><span>Email</span></a>
+                      <a href={`tel:${clienteSeleccionado.telefono}`} className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"><i className="bi bi-telephone"></i><span>Llamar</span></a>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-12 col-lg-6">
+                  <div className="cliente-info-card h-100">
+                    <h6 className="info-card-title"><i className="bi bi-building me-2"></i>Datos fiscales</h6>
+                    <div className="info-grid">
+                      <div className="info-item"><span className="info-label">CIF</span><span className="info-value">{clienteSeleccionado.cif || '—'}</span></div>
+                      <div className="info-item"><span className="info-label">Dirección</span><span className="info-value">{clienteSeleccionado.direccion || '—'}</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="cliente-info-card">
+                <h6 className="info-card-title mb-3"><i className="bi bi-briefcase me-2"></i>Vacantes vinculadas ({clienteSeleccionado.vacantes.length})</h6>
+                {clienteSeleccionado.vacantes.length > 0 ? clienteSeleccionado.vacantes.map(v => (
+                  <div key={v.id} className="vacante-vinculada d-flex align-items-center justify-content-between mb-2">
+                    <div><p className="mb-0 vacante-vinculada-titulo">{v.titulo}</p><span className="activity-time">{v.fecha}</span></div>
+                    <span className={`badge ${getBadgeEstado(v.estado)}`}>{v.estado}</span>
+                  </div>
+                )) : <p className="text-muted small mb-0">No hay vacantes vinculadas.</p>}
+              </div>
+            </>
+          ) : (
+            <div className="clientes-empty-state">
+              <i className="bi bi-building fs-1 mb-3 d-block"></i>
+              <h5>Selecciona un cliente</h5>
+              <p className="text-muted">Haz clic en un cliente de la lista para ver sus datos y vacantes asociadas.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
