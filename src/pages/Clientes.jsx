@@ -87,3 +87,77 @@ const validarForm = (form) => {
   if (!form.telefono.trim()) errores.telefono = 'El teléfono es obligatorio';
   return errores;
 };
+
+export default function Clientes() {
+  const [clientes, setClientes] = useState(clientesIniciales);
+  const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
+  const [busqueda, setBusqueda] = useState('');
+  const [filtroSector, setFiltroSector] = useState('Todos');
+
+  const sectores = ['Todos', ...new Set(clientes.map(c => c.sector))];
+
+  const clientesFiltrados = clientes.filter(c => {
+    const coincideNombre = c.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+      c.contactoPrincipal.toLowerCase().includes(busqueda.toLowerCase()) ||
+      c.email.toLowerCase().includes(busqueda.toLowerCase());
+    const coincideSector = filtroSector === 'Todos' || c.sector === filtroSector;
+    return coincideNombre && coincideSector;
+  });
+
+  return (
+    <div className="clientes-page">
+      <div className="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+          <h2 className="page-title mb-1">Directorio de Clientes</h2>
+          <p className="text-muted mb-0">Gestiona tus clientes B2B y sus vacantes asociadas.</p>
+        </div>
+        <button className="btn btn-primary d-flex align-items-center gap-2">
+          <i className="bi bi-plus-circle"></i>
+          <span>Nuevo cliente</span>
+        </button>
+      </div>
+
+      <div className="clientes-split">
+        <div className="clientes-list-panel">
+          <div className="clientes-filters mb-3">
+            <div className="topbar-search mb-2">
+              <i className="bi bi-search"></i>
+              <input type="text" placeholder="Buscar por nombre, contacto o email..." value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+            </div>
+            <select className="form-select filter-select" value={filtroSector} onChange={(e) => setFiltroSector(e.target.value)}>
+              {sectores.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+
+          {clientesFiltrados.map(cliente => (
+            <div key={cliente.id} className={`cliente-card ${clienteSeleccionado?.id === cliente.id ? 'active' : ''}`} onClick={() => setClienteSeleccionado(cliente)}>
+              <div className="d-flex justify-content-between align-items-start">
+                <div className="flex-grow-1 me-2" style={{ minWidth: 0 }}>
+                  <h6 className="cliente-nombre mb-1 text-truncate">{cliente.nombre}</h6>
+                  <span className="cliente-sector">{cliente.sector}</span>
+                </div>
+                <span className="cliente-vacantes-badge">{cliente.vacantesAbiertas} {cliente.vacantesAbiertas !== 1 ? 'vacantes' : 'vacante'}</span>
+              </div>
+              <div className="cliente-contacto mt-2"><i className="bi bi-person me-1"></i>{cliente.contactoPrincipal}</div>
+            </div>
+          ))}
+
+          {clientesFiltrados.length === 0 && (
+            <div className="text-center text-muted py-4">
+              <i className="bi bi-building fs-3 d-block mb-2"></i>
+              No se encontraron clientes
+            </div>
+          )}
+        </div>
+
+        <div className="clientes-detail-panel">
+          <div className="clientes-empty-state">
+            <i className="bi bi-building fs-1 mb-3 d-block"></i>
+            <h5>Selecciona un cliente</h5>
+            <p className="text-muted">Haz clic en un cliente para ver sus datos.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
