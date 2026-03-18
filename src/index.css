@@ -259,36 +259,6 @@ body {
   margin-top: auto;
 }
 
-/* --- Adaptación para Móvil --- */
-@media (max-width: 991px) {
-  .ara-sidebar {
-    position: fixed;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-    width: 256px;
-    z-index: 1050;
-  }
-  
-  .ara-sidebar.show {
-    transform: translateX(0);
-  }
-  
-  .ara-sidebar .sidebar-text,
-  .ara-sidebar .sidebar-badge,
-  .ara-sidebar .sidebar-group-header,
-  .ara-sidebar .logo-large {
-    opacity: 1;
-    visibility: visible;
-  }
-
-  .ara-sidebar .logo-small {
-    opacity: 0;
-    visibility: hidden;
-  }
-}
 /* ==========================================
    4. MAIN CONTENT & TOPBAR
    ========================================== */
@@ -1011,3 +981,170 @@ body {
    ========================================== */
 .modal-backdrop { z-index: 1050; }
 .modal { z-index: 1060; }
+
+/* ==========================================
+   13. MÓDULO CLIENTES
+   ========================================== */
+
+.clientes-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.clientes-split {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Panel izquierdo */
+.clientes-list-panel {
+  width: 320px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.clientes-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cliente-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cliente-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--color-purple-secondary);
+}
+
+.cliente-card.active {
+  background: rgba(124, 63, 255, 0.15);
+  border-color: var(--color-purple-secondary);
+  box-shadow: 0 0 0 1px var(--color-purple-secondary);
+}
+
+.cliente-nombre {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.cliente-sector {
+  font-size: 11px;
+  color: var(--color-cyan-primary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cliente-vacantes-badge {
+  background: rgba(0, 212, 255, 0.1);
+  color: var(--color-cyan-primary);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+.cliente-vacantes-badge.grande {
+  font-size: 13px;
+  padding: 5px 14px;
+}
+
+.cliente-contacto {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Panel derecho */
+.clientes-detail-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.cliente-profile-nombre {
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.cliente-info-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.info-card-title {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.info-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.vacante-vinculada {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.vacante-vinculada-titulo {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.clientes-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 300px;
+  color: var(--text-muted);
+  text-align: center;
+}
