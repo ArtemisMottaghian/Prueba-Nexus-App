@@ -1148,3 +1148,85 @@ body {
   color: var(--text-muted);
   text-align: center;
 }
+
+/* Bulk Actions Bar */
+.bulk-actions-bar {
+  background: rgba(124, 63, 255, 0.15);
+  border: 1px solid var(--color-purple-secondary);
+  border-radius: 14px;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.bulk-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.bulk-select {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 8px;
+}
+
+.btn-bulk-assign {
+  background: var(--color-purple-secondary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.btn-bulk-assign:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-bulk-discard {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.btn-bulk-discard:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #ef4444;
+}
+
+/* Modo claro - Clientes */
+[data-bs-theme="light"] .cliente-card {
+  background: #ffffff;
+  border-color: #e5e7eb;
+}
+
+[data-bs-theme="light"] .cliente-card:hover {
+  background: #f9fafb;
+}
+
+[data-bs-theme="light"] .cliente-card.active {
+  background: rgba(124, 63, 255, 0.08);
+}
+
+[data-bs-theme="light"] .cliente-info-card {
+  background: #ffffff;
+  border-color: #e5e7eb;
+}
+
+[data-bs-theme="light"] .vacante-vinculada {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+}
+
+[data-bs-theme="light"] .bulk-actions-bar {
+  background: rgba(124, 63, 255, 0.08);
+}
