@@ -19,7 +19,7 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     role user_role NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMPT
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 COMMENT ON TABLE users IS 'Almacena las credenciales y roles de acceso al sistema';
 
@@ -74,13 +74,12 @@ CREATE TABLE search_results (
 
 CREATE TABLE clients (
     id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT REFERENCES users(id), -- Cuenta vinculada si la empresa tiene acceso
+    user_id BIGINT REFERENCES users(id) UNIQUE, -- Cuenta vinculada si la empresa tiene acceso
     source_id INT REFERENCES job_portals(id), -- Portal de origen
     original_offer_id BIGINT REFERENCES job_offers(id), -- Oferta que originó el contacto
     company_name VARCHAR(255) NOT NULL,
     entity_type entity_type,
     lead_status lead_status,
-    is_active_client BOOLEAN DEFAULT FALSE
 );
 COMMENT ON TABLE clients IS 'Empresas gestionadas en el flujo comercial';
 
