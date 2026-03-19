@@ -13,7 +13,7 @@ CREATE TYPE lead_status AS ENUM ('new', 'qualifying', 'negotiating', 'converted'
 CREATE TYPE entity_type AS ENUM ('scraping_prospect', 'confirmed_client');
 
 -- Estado global del candidatos
-CREATE TYPE candidate_status AS ENUM('active', 'passive','hired_elsewhere', 'blacklisted')
+CREATE TYPE candidate_status AS ENUM('active', 'passive','hired_elsewhere', 'blacklisted');
 
 -- Estado del proceso de seleccion especifico para una oferta
 CREATE TYPE application_status AS ENUM (
@@ -148,7 +148,6 @@ CREATE TABLE job_applications (
     offer_id BIGINT REFERENCES job_offers(id) ON DELETE CASCADE,
 
     status application_status DEFAULT 'proposed',
-    interview_count INT DEFAULT 0, -- Cuantas entrevistas lleva
     feedback TEXT, -- Feedback del cliente o del recruiter
 
     hired_at TIMESTAMPTZ,
@@ -157,8 +156,20 @@ CREATE TABLE job_applications (
 
     -- Un candidato no deberia aplicar dos veces a la misma oferta activa
     CONSTRAINT unique_candidate_application UNIQUE (candidate_id, offer_id)
-)
+);
 
+-- Tabla entrevistas para poder contar cuantas veces se ha entrevistado
+CREATE TABLE interviews (
+    id BIGSERIAL PRIMARY KEY,
+    application_id BIGINT REFERENCES job_applications(id) ON DELETE CASCADE,
+    interviewer_id BIGINT REFERENCES users(id),
+    scheduled_at TIMESTAMPTZ NOT NULL,
+    duration_minutes INT DEFAULT 30,
+    meeting_link TEXT,
+    result VARCHAR(50), -- 'passed', 'failed', 'no-show', 'pending'
+    feedback TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
 
 -- FUNCIONES Y TRIGGERS
 
@@ -225,3 +236,17 @@ CREATE INDEX idx_job_offers_company ON job_offers(company_name);
 CREATE INDEX idx_clients_company ON clients(company_name);
 CREATE INDEX idx_candidates_skills ON candidates(skills);
 CREATE INDEX idx_candidates_email ON candidates(email);
+
+-- Vista para el resumen de candidaturas
+CREATE OR REPLACE VIEW v_application_metrics AS
+SELECT
+    ja.id AS application_id,
+    ja.status,
+    c.first_name,
+    c.last_name,
+    jo.title AS job_title,
+    (SELECT COUNT(*) FROM interviews i WHERE i.application_id = ja.id) AS interview_count,
+    DATE_PART('day', NOW() - ja.created_at) AS days_in_process
+FROM job_applications ja
+JOIN candidates c ON ja.candidate_id = c.id
+JOIN job_offers jo ON ja.offer_id = jo.id;
