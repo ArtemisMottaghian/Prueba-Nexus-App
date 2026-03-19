@@ -5,6 +5,7 @@ import Topbar from './components/layout/Topbar';
 import ActivityPanel from './components/layout/ActivityPanel';
 import Dashboard from './pages/Dashboard';
 import Vacancies from './pages/Vacancies';
+import Calendario from './pages/Calendar';
 
 import './index.css';
 
@@ -22,6 +23,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/vacantes" element={<Vacancies />} />
+                <Route path="/Calendar" element={<Calendario/>} />
               </Routes>
               
             </div>
