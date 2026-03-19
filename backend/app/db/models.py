@@ -35,7 +35,21 @@ class EntityType(str, enum.Enum):
     scraping_prospect = "scraping_prospect"
     confirmed_client = "confirmed_client"
 
+class CandidateStatus(str, enum.Enum):
+    active = "active"
+    passive = "passive"
+    hired_elsewhere = "hired_elsewhere"
+    blacklisted = "blacklisted"
 
+class ApplicationStatus(str, enum.Enum):
+    proposed = "proposed"
+    client_interested = "client_interested"
+    interviewing = "interviewing"
+    offer_sent = "offer_sent"
+    hired = "hired"
+    rejected_by_client = "rejected_by_client"
+    rejected_by_candidate = "rejected_by_candidate"
+    pool = "pool"
 # Modelos (Tablas)
 class User(Base):
     __tablename__= "users"
@@ -53,8 +67,9 @@ class User(Base):
     searches = relationship("Search", back_populates="user")
     # 'managed_offers" accede a ofertas donde este usuario es el gestor
     managed_offers = relationship("JobOffer", back_populates="manager")
-    # Relacion 1 a 1 con Clients (si aplica)
-    client_profile = relationship("Client", back_populates="manager")
+    
+    # CORREGIDO: back_populates debe apuntar a 'user' en la clase Client
+    client_profile = relationship("Client", back_populates="user", uselist=False)
 
 class JobPortal(Base):
     __tablename__= "job_portals"
@@ -121,6 +136,9 @@ class JobOffer(Base):
     related_client = relationship("Client", back_populates="original_offer", uselist=False)
     
     tracking_entries = relationship("TrackingHistory", back_populates="offer")
+    
+    # AÑADIDO: Relación con JobApplication
+    applications = relationship("JobApplication", back_populates="offer", cascade="all, delete-orphan")
 
 class SearchResult(Base):
     __tablename__ = "search_results"
@@ -180,3 +198,67 @@ class TrackingHistory(Base):
 
     client = relationship("Client", back_populates="history")
     offer = relationship("JobOffer", back_populates="tracking_entries")
+
+
+class Candidate(Base):
+    __tablename__ = "candidates"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    first_name = Column(String(100), nullable=False)
+    last_name = Column(String(100), nullable=False)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    phone = Column(String(50))
+    linkedin_url = Column(String(255))
+    cv_url = Column(Text)
+    skills = Column(Text) # Puedes guardar "Python, React"
+    status = Column(PgEnum(CandidateStatus), default=CandidateStatus.active, index=True)
+    notes = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Relación con las aplicaciones
+    applications = relationship("JobApplication", back_populates="candidate", cascade="all, delete-orphan")
+
+class JobApplication(Base):
+    __tablename__ = "job_applications"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    candidate_id = Column(BigInteger, ForeignKey("candidates.id", ondelete="CASCADE"))
+    offer_id = Column(BigInteger, ForeignKey("job_offers.id", ondelete="CASCADE"))
+    
+    status = Column(PgEnum(ApplicationStatus), default=ApplicationStatus.proposed, index=True)
+    feedback = Column(Text)
+    
+    hired_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Constraints
+    __table_args__ = (
+        UniqueConstraint('candidate_id', 'offer_id', name='unique_candidate_application'),
+    )
+
+    candidate = relationship("Candidate", back_populates="applications")
+    
+    # AÑADIDO: Relación inversa con ofertas
+    offer = relationship("JobOffer", back_populates="applications")
+
+    # AÑADIDO: Relación con entrevistas (Plural)
+    interviews = relationship("Interview", back_populates="application", cascade="all, delete-orphan")
+
+class Interview(Base):
+    __tablename__ = "interviews"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    application_id = Column(BigInteger, ForeignKey("job_applications.id", ondelete="CASCADE"))
+    interviewer_id = Column(BigInteger, ForeignKey("users.id"))
+    scheduled_at = Column(DateTime(timezone=True), nullable=False)
+    duration_minutes = Column(Integer, default=30)
+    meeting_link = Column(Text)
+    result = Column(String(50)) # 'passed', 'failed', 'pending'
+    feedback = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    application = relationship("JobApplication", back_populates="interviews")
+    interviewer = relationship("User")
+
