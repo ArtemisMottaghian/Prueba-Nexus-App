@@ -148,3 +148,17 @@ CREATE INDEX idx_contacts_client_id ON contacts(client_id);
 CREATE INDeX idx_tracking_history_client_id ON tracking_history(client_id);
 CREATE INDEX idx_tracking_history_offer_id ON tracking_history(offer_id);
 
+-- Indices de Filtros frecuentes
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_job_offers_status ON job_offers(status);
+CREATE INDEX idx_searches_status ON searches(status);
+CREATE INDEX idx_clients_lead_status ON clients(lead_status);
+
+-- Indices de Ordenamiento (para acelerar ORDER BY)
+CREATE INDEX idx_job_offers_scraped_at ON job_offers(scraped_at DESC);
+CREATE INDEX idx_tracking_history_recorded_at ON tracking_history(recorded_at DESC);
+
+-- Indices de texto simple (para acelerar LIKE %texto%)
+CREATE INDEX idx_job_offers_title ON job_offers(title);
+CREATE INDEX idx_job_offers_company ON job_offers(company_name)
+CREATE INDEX idx_clients_company ON clients(company_name);
