@@ -110,3 +110,41 @@ CREATE TABLE tracking_history (
     recorded_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 COMMENT ON TABLE tracking_history IS 'Log detallado de acciones comerciales y cambios de estado';
+
+-- FUNCIONES Y TRIGGERS
+
+-- Funcion para actualizar la fecha de modificacion automaticamente
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGERS AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP
+    RETURN NEW;
+END;
+$$ language 'plpgsql'
+
+-- Triggers aplicados a las tablas claves
+CREATE TRIGGER update_users_modtime
+    BEFORE UPDATE ON users
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_job_offers_modtime
+    BEFORE UPDATE ON job_offers
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_clients_modtime
+    BEFORE UPDATE ON clients
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+
+-- Indices
+-- Indices de claves foraneas (para acelerar joins)
+CREATE INDEX idx_searches_user_id ON searches(user_id);
+CREATE INDEX idx_job_offers_portal_id ON job_offers(portal_id);
+CREATE INDEX idx_job_offers_managed_by ON job_offers(managed_by_id);
+CREATE INDEX idx_search_results_search_id ON search_results(search_id);
+CREATE INDEX idx_search_results_offer_id ON search_results(offer_id);
+CREATE INDEX idx_clients_source_id ON clients(source_id);
+CREATE INDEX idx_contacts_client_id ON contacts(client_id);
+CREATE INDeX idx_tracking_history_client_id ON tracking_history(client_id);
+CREATE INDEX idx_tracking_history_offer_id ON tracking_history(offer_id);
+
