@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import uvicorn
+from api.routes.main_router import api_router
 
 # Inicializacion
 app = FastAPI()
@@ -8,6 +9,8 @@ app = FastAPI()
 @app.on_event("startup")
 def arrancar_servidor():
     print("Iniciando ")
+
+app.include_router(api_router, prefix="/api")
 
 # endpoint prueba
 @app.get("/")

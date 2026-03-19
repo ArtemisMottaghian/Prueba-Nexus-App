@@ -63,7 +63,7 @@ CREATE TABLE job_offers (
     status offer_status DEFAULT 'detected',
     priority INT DEFAULT 3, -- Prioridad de 1 a 5
     scraped_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMPm
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT check_salary_range CHECK (salary_min <= salary_max),
     CONSTRAINT unique_offer_per_portal UNIQUE (portal_id, external_id)
@@ -115,12 +115,12 @@ COMMENT ON TABLE tracking_history IS 'Log detallado de acciones comerciales y ca
 
 -- Funcion para actualizar la fecha de modificacion automaticamente
 CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGERS AS $$
+RETURNS TRIGGER AS $$ 
 BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP
+    NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
-$$ language 'plpgsql'
+$$ LANGUAGE 'plpgsql';
 
 -- Triggers aplicados a las tablas claves
 CREATE TRIGGER update_users_modtime
@@ -145,7 +145,7 @@ CREATE INDEX idx_search_results_search_id ON search_results(search_id);
 CREATE INDEX idx_search_results_offer_id ON search_results(offer_id);
 CREATE INDEX idx_clients_source_id ON clients(source_id);
 CREATE INDEX idx_contacts_client_id ON contacts(client_id);
-CREATE INDeX idx_tracking_history_client_id ON tracking_history(client_id);
+CREATE INDEX idx_tracking_history_client_id ON tracking_history(client_id); 
 CREATE INDEX idx_tracking_history_offer_id ON tracking_history(offer_id);
 
 -- Indices de Filtros frecuentes
@@ -160,5 +160,5 @@ CREATE INDEX idx_tracking_history_recorded_at ON tracking_history(recorded_at DE
 
 -- Indices de texto simple (para acelerar LIKE %texto%)
 CREATE INDEX idx_job_offers_title ON job_offers(title);
-CREATE INDEX idx_job_offers_company ON job_offers(company_name)
+CREATE INDEX idx_job_offers_company ON job_offers(company_name); 
 CREATE INDEX idx_clients_company ON clients(company_name);
