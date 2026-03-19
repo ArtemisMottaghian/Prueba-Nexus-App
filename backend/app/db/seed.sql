@@ -12,6 +12,21 @@ CREATE TYPE lead_status AS ENUM ('new', 'qualifying', 'negotiating', 'converted'
 -- Clasificacion de la entidad: prospecto de scraping o cliente ya confirmado
 CREATE TYPE entity_type AS ENUM ('scraping_prospect', 'confirmed_client');
 
+-- Estado global del candidatos
+CREATE TYPE candidate_status AS ENUM('active', 'passive','hired_elsewhere', 'blacklisted');
+
+-- Estado del proceso de seleccion especifico para una oferta
+CREATE TYPE application_status AS ENUM (
+    'proposed',           -- Se le ha ofrecido al cliente
+    'client_interested',  -- El cliente quiere verle
+    'interviewing',       -- En proceso de entrevistas
+    'offer_sent',         -- El cliente le ha hecho una oferta
+    'hired',              -- ¡Contratado!
+    'rejected_by_client', -- El cliente lo descarta
+    'rejected_by_candidate', -- El candidato no le interesa
+    'pool'                -- Guardado para futuro
+);
+
 
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
@@ -111,6 +126,51 @@ CREATE TABLE tracking_history (
 );
 COMMENT ON TABLE tracking_history IS 'Log detallado de acciones comerciales y cambios de estado';
 
+CREATE TABLE candidates (
+    id BIGSERIAL PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    phone VARCHAR(50),
+    linkedin_url VARCHAR(255),
+    cv_url TEXT, -- Link al archivo (S3, Cloudinary...)
+    skills TEXT,
+    status candidate_status DEFAULT 'active',
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabla para relacionar un candidato con una oferta
+CREATE TABLE job_applications (
+    id BIGSERIAL PRIMARY KEY,
+    candidate_id BIGINT REFERENCES candidates(id) ON DELETE CASCADE,
+    offer_id BIGINT REFERENCES job_offers(id) ON DELETE CASCADE,
+
+    status application_status DEFAULT 'proposed',
+    feedback TEXT, -- Feedback del cliente o del recruiter
+
+    hired_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
+    -- Un candidato no deberia aplicar dos veces a la misma oferta activa
+    CONSTRAINT unique_candidate_application UNIQUE (candidate_id, offer_id)
+);
+
+-- Tabla entrevistas para poder contar cuantas veces se ha entrevistado
+CREATE TABLE interviews (
+    id BIGSERIAL PRIMARY KEY,
+    application_id BIGINT REFERENCES job_applications(id) ON DELETE CASCADE,
+    interviewer_id BIGINT REFERENCES users(id),
+    scheduled_at TIMESTAMPTZ NOT NULL,
+    duration_minutes INT DEFAULT 30,
+    meeting_link TEXT,
+    result VARCHAR(50), -- 'passed', 'failed', 'no-show', 'pending'
+    feedback TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
 -- FUNCIONES Y TRIGGERS
 
 -- Funcion para actualizar la fecha de modificacion automaticamente
@@ -135,6 +195,14 @@ CREATE TRIGGER update_clients_modtime
     BEFORE UPDATE ON clients
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_candidates_modtime
+    BEFORE UPDATE ON candidates
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_job_applications_modtime
+    BEFORE UPDATE ON job_applications
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 
 -- Indices
 -- Indices de claves foraneas (para acelerar joins)
@@ -147,12 +215,16 @@ CREATE INDEX idx_clients_source_id ON clients(source_id);
 CREATE INDEX idx_contacts_client_id ON contacts(client_id);
 CREATE INDEX idx_tracking_history_client_id ON tracking_history(client_id); 
 CREATE INDEX idx_tracking_history_offer_id ON tracking_history(offer_id);
+CREATE INDEX idx_job_applications_candidate ON job_applications(candidate_id);
+CREATE INDEX idx_job_applications_offer ON job_applications(offer_id);
 
 -- Indices de Filtros frecuentes
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_job_offers_status ON job_offers(status);
 CREATE INDEX idx_searches_status ON searches(status);
 CREATE INDEX idx_clients_lead_status ON clients(lead_status);
+CREATE INDEX idx_candidates_status ON candidates(status);
+CREATE INDEX idx_job_applications_status ON job_applications(status);
 
 -- Indices de Ordenamiento (para acelerar ORDER BY)
 CREATE INDEX idx_job_offers_scraped_at ON job_offers(scraped_at DESC);
@@ -162,3 +234,19 @@ CREATE INDEX idx_tracking_history_recorded_at ON tracking_history(recorded_at DE
 CREATE INDEX idx_job_offers_title ON job_offers(title);
 CREATE INDEX idx_job_offers_company ON job_offers(company_name); 
 CREATE INDEX idx_clients_company ON clients(company_name);
+CREATE INDEX idx_candidates_skills ON candidates(skills);
+CREATE INDEX idx_candidates_email ON candidates(email);
+
+-- Vista para el resumen de candidaturas
+CREATE OR REPLACE VIEW v_application_metrics AS
+SELECT
+    ja.id AS application_id,
+    ja.status,
+    c.first_name,
+    c.last_name,
+    jo.title AS job_title,
+    (SELECT COUNT(*) FROM interviews i WHERE i.application_id = ja.id) AS interview_count,
+    DATE_PART('day', NOW() - ja.created_at) AS days_in_process
+FROM job_applications ja
+JOIN candidates c ON ja.candidate_id = c.id
+JOIN job_offers jo ON ja.offer_id = jo.id;
