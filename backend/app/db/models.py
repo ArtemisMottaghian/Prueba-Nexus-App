@@ -127,7 +127,7 @@ class SearchResult(Base):
 
     id = Column(BigInteger, primary_key=True, index=True)
     search_id = Column(BigInteger, ForeignKey("searches.id", ondelete="CASCADE"))
-    search_id = Column(BigInteger, ForeignKey("job_offers.id", ondelete="CASCADE"))
+    offer_id = Column(BigInteger, ForeignKey("job_offers.id", ondelete="CASCADE"))
 
     search = relationship("Search", back_populates="results")
     offer = relationship("JobOffer", back_populates="search_matches")
