@@ -1,7 +1,0 @@
-requests
-beautifulsoup4
-schedule
-python-dotenv
-psycopg2-binary
-fastapi
-uvicorn
