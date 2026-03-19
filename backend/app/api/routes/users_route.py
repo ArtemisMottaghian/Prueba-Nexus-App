@@ -24,7 +24,7 @@ def endpoint_crear_usuario(datos_cliente: NewUser):
     return nuevo_user 
 
 
-# ------------------
+# -----------------
 # Obtener usuario por email
 # GET /api/usuarios/{email} 
 # -----------------
