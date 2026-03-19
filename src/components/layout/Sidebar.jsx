@@ -65,10 +65,12 @@ export default function Sidebar({ isOpen, onClose }) {
               <span className="sidebar-text">Inbox</span>
               <span className="sidebar-badge">5</span>
             </a>
-            <a href="#" className="sidebar-item" title="Calendario">
+            
+            {/*CALENDARIO */}
+            <NavLink to="/calendar" className={({isActive}) => `sidebar-item ${isActive ? 'active' : ''}`} title="Calendario">
               <i className="bi bi-calendar-check"></i>
               <span className="sidebar-text">Calendario</span>
-            </a>
+            </NavLink>
           </div>
 
           <div className="sidebar-group">
