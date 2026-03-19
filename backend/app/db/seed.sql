@@ -19,7 +19,8 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     role user_role NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 COMMENT ON TABLE users IS 'Almacena las credenciales y roles de acceso al sistema';
 
@@ -61,7 +62,11 @@ CREATE TABLE job_offers (
     work_modality VARCHAR(50), -- Remoto, Híbrido, Presencial
     status offer_status DEFAULT 'detected',
     priority INT DEFAULT 3, -- Prioridad de 1 a 5
-    scraped_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    scraped_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMPm
+
+    CONSTRAINT check_salary_range CHECK (salary_min <= salary_max),
+    CONSTRAINT unique_offer_per_portal UNIQUE (portal_id, external_id)
 );
 COMMENT ON TABLE job_offers IS 'Ofertas laborales extraídas mediante scraping';
 
@@ -80,6 +85,7 @@ CREATE TABLE clients (
     company_name VARCHAR(255) NOT NULL,
     entity_type entity_type,
     lead_status lead_status,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 COMMENT ON TABLE clients IS 'Empresas gestionadas en el flujo comercial';
 
