@@ -1,15 +1,30 @@
-export default function VacancyCard({ job, isListView, onClick }) {
+export default function VacancyCard({
+  job,
+  isListView,
+  onClick,
+  isSelected,
+  onSelect,
+  onUpdateStatus,
+}) {
   let badgeClass = 'badge-nueva';
   if (job.status === 'Contactada') badgeClass = 'badge-contactada';
   if (job.status === 'En proceso') badgeClass = 'badge-en-proceso';
   if (job.status === 'Descartada') badgeClass = 'badge-descartada';
 
-  // Función para evitar que el modal se abra si solo queremos marcar el checkbox o cambiar el estado
+  const handleCheckboxClick = (e) => {
+    e.stopPropagation();
+    onSelect(job.id);
+  };
+
   const handleChildClick = (e) => {
     e.stopPropagation();
   };
 
-  // Diseño para Modo Lista
+  const handleStatusChange = (e) => {
+    e.stopPropagation();
+    onUpdateStatus(job.id, e.target.value);
+  };
+
   if (isListView) {
     return (
       <div
@@ -22,7 +37,8 @@ export default function VacancyCard({ job, isListView, onClick }) {
             <input
               className="form-check-input"
               type="checkbox"
-              onClick={handleChildClick}
+              checked={isSelected || false}
+              onChange={handleCheckboxClick}
             />
             <h5 className="mb-0 text-white vacante-title-list-sm">
               {job.title}
@@ -45,7 +61,6 @@ export default function VacancyCard({ job, isListView, onClick }) {
     );
   }
 
-  // Diseño para Modo Grid
   return (
     <div
       className="vacante-card"
@@ -57,16 +72,19 @@ export default function VacancyCard({ job, isListView, onClick }) {
           <input
             className="form-check-input mt-0 checkbox-lg"
             type="checkbox"
-            onClick={handleChildClick}
+            checked={isSelected || false}
+            onChange={handleCheckboxClick}
           />
           <select
             className={`form-select form-select-sm select-status-inline ${badgeClass}`}
-            defaultValue={job.status}
+            value={job.status}
+            onChange={handleStatusChange}
             onClick={handleChildClick}
           >
             <option value="Nueva">Nueva</option>
             <option value="Contactada">Contactada</option>
             <option value="En proceso">En proceso</option>
+            <option value="Descartada">Descartada</option>
           </select>
         </div>
         <button className="btn-icon btn-icon-sm" onClick={handleChildClick}>

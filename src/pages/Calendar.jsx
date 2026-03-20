@@ -80,7 +80,7 @@ export default function Calendario() {
   const deleteEvent = (id) => {
     setEvents(events.filter((e) => e.id !== id));
   };
-
+  // eslint-disable-next-line no-unused-vars
   const _moveEvent = (id, newDate) => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(newDate)) return;
     setEvents(events.map((e) => (e.id === id ? { ...e, date: newDate } : e)));

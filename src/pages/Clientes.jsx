@@ -679,7 +679,7 @@ export default function Clientes() {
                     ¿Estás seguro de que quieres eliminar a
                   </p>
                   <p className="fw-semibold mb-3">
-                    "{clienteAEliminar?.nombre}"?
+                    &apos;{clienteAEliminar?.nombre}&apos;?
                   </p>
                   <p className="text-muted small mb-0">
                     <i className="bi bi-info-circle me-1"></i>

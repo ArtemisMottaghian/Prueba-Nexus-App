@@ -3,8 +3,8 @@ import globals from 'globals';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
-import prettierPlugin from 'eslint-plugin-prettier'; 
-import eslintConfigPrettier from 'eslint-config-prettier'; 
+import prettierPlugin from 'eslint-plugin-prettier';
+import eslintConfigPrettier from 'eslint-config-prettier';
 
 export default [
   { ignores: ['dist'] },
@@ -36,7 +36,8 @@ export default [
         'warn',
         { allowConstantExport: true },
       ],
-      'prettier/prettier': 'error', 
+      'react/prop-types': 'off', // Quita el rojo de las props
+      'prettier/prettier': ['error', { endOfLine: 'auto' }], // Quita el error de "Delete CR"
     },
   },
   eslintConfigPrettier,
