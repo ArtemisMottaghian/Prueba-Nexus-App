@@ -12,9 +12,24 @@ const clientesIniciales = [
     cif: 'B12345678',
     direccion: 'Calle Gran Vía 28, Madrid',
     vacantes: [
-      { id: 'v1', titulo: 'Senior Frontend Developer', estado: 'Nueva', fecha: 'Hace 2h' },
-      { id: 'v4', titulo: 'DevOps Engineer', estado: 'Contactada', fecha: 'Hace 1 día' },
-      { id: 'v5', titulo: 'Product Manager', estado: 'En proceso', fecha: 'Hace 3 días' },
+      {
+        id: 'v1',
+        titulo: 'Senior Frontend Developer',
+        estado: 'Nueva',
+        fecha: 'Hace 2h',
+      },
+      {
+        id: 'v4',
+        titulo: 'DevOps Engineer',
+        estado: 'Contactada',
+        fecha: 'Hace 1 día',
+      },
+      {
+        id: 'v5',
+        titulo: 'Product Manager',
+        estado: 'En proceso',
+        fecha: 'Hace 3 días',
+      },
     ],
   },
   {
@@ -28,9 +43,24 @@ const clientesIniciales = [
     cif: 'A87654321',
     direccion: 'Paseo de la Castellana 55, Madrid',
     vacantes: [
-      { id: 'v3', titulo: 'Data Scientist', estado: 'En proceso', fecha: 'Hace 1 día' },
-      { id: 'v6', titulo: 'Revenue Manager', estado: 'Nueva', fecha: 'Hace 4h' },
-      { id: 'v7', titulo: 'Marketing Digital', estado: 'Contactada', fecha: 'Hace 2 días' },
+      {
+        id: 'v3',
+        titulo: 'Data Scientist',
+        estado: 'En proceso',
+        fecha: 'Hace 1 día',
+      },
+      {
+        id: 'v6',
+        titulo: 'Revenue Manager',
+        estado: 'Nueva',
+        fecha: 'Hace 4h',
+      },
+      {
+        id: 'v7',
+        titulo: 'Marketing Digital',
+        estado: 'Contactada',
+        fecha: 'Hace 2 días',
+      },
       { id: 'v8', titulo: 'UX Designer', estado: 'Nueva', fecha: 'Hace 5h' },
       { id: 'v9', titulo: 'Backend Java', estado: 'Nueva', fecha: 'Hace 6h' },
     ],
@@ -46,8 +76,18 @@ const clientesIniciales = [
     cif: 'A39000013',
     direccion: 'Ciudad Grupo Santander, Boadilla del Monte',
     vacantes: [
-      { id: 'v10', titulo: 'Data Engineer Python', estado: 'Nueva', fecha: 'Hace 3h' },
-      { id: 'v11', titulo: 'Cybersecurity Analyst', estado: 'Contactada', fecha: 'Hace 2 días' },
+      {
+        id: 'v10',
+        titulo: 'Data Engineer Python',
+        estado: 'Nueva',
+        fecha: 'Hace 3h',
+      },
+      {
+        id: 'v11',
+        titulo: 'Cybersecurity Analyst',
+        estado: 'Contactada',
+        fecha: 'Hace 2 días',
+      },
     ],
   },
 ];
@@ -65,10 +105,10 @@ const formVacio = {
 
 const getBadgeEstado = (estado) => {
   const map = {
-    'Nueva': 'badge-nueva',
-    'Contactada': 'badge-contactada',
+    Nueva: 'badge-nueva',
+    Contactada: 'badge-contactada',
     'En proceso': 'badge-en-proceso',
-    'Descartada': 'badge-descartada',
+    Descartada: 'badge-descartada',
   };
   return map[estado] || 'badge-nueva';
 };
@@ -78,7 +118,8 @@ const validarForm = (form) => {
   const errores = {};
   if (!form.nombre.trim()) errores.nombre = 'El nombre es obligatorio';
   if (!form.sector.trim()) errores.sector = 'El sector es obligatorio';
-  if (!form.contactoPrincipal.trim()) errores.contactoPrincipal = 'El contacto es obligatorio';
+  if (!form.contactoPrincipal.trim())
+    errores.contactoPrincipal = 'El contacto es obligatorio';
   if (!form.email.trim()) {
     errores.email = 'El email es obligatorio';
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
@@ -102,13 +143,15 @@ export default function Clientes() {
   const [errores, setErrores] = useState({});
   const [clienteEditando, setClienteEditando] = useState(null);
 
-  const sectores = ['Todos', ...new Set(clientes.map(c => c.sector))];
+  const sectores = ['Todos', ...new Set(clientes.map((c) => c.sector))];
 
-  const clientesFiltrados = clientes.filter(c => {
-    const coincideNombre = c.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+  const clientesFiltrados = clientes.filter((c) => {
+    const coincideNombre =
+      c.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
       c.contactoPrincipal.toLowerCase().includes(busqueda.toLowerCase()) ||
       c.email.toLowerCase().includes(busqueda.toLowerCase());
-    const coincideSector = filtroSector === 'Todos' || c.sector === filtroSector;
+    const coincideSector =
+      filtroSector === 'Todos' || c.sector === filtroSector;
     return coincideNombre && coincideSector;
   });
 
@@ -159,14 +202,14 @@ export default function Clientes() {
         vacantesAbiertas: 0,
         vacantes: [],
       };
-      setClientes(prev => [...prev, nuevoCliente]);
+      setClientes((prev) => [...prev, nuevoCliente]);
     } else if (modalAbierto === 'editar') {
-      setClientes(prev => prev.map(c =>
-        c.id === clienteEditando.id ? { ...c, ...form } : c
-      ));
+      setClientes((prev) =>
+        prev.map((c) => (c.id === clienteEditando.id ? { ...c, ...form } : c))
+      );
       // Actualizar el seleccionado si es el mismo
       if (clienteSeleccionado?.id === clienteEditando.id) {
-        setClienteSeleccionado(prev => ({ ...prev, ...form }));
+        setClienteSeleccionado((prev) => ({ ...prev, ...form }));
       }
     }
     setModalAbierto(false);
@@ -174,7 +217,7 @@ export default function Clientes() {
 
   // Confirmar eliminar
   const confirmarEliminar = () => {
-    setClientes(prev => prev.filter(c => c.id !== clienteAEliminar.id));
+    setClientes((prev) => prev.filter((c) => c.id !== clienteAEliminar.id));
     if (clienteSeleccionado?.id === clienteAEliminar.id) {
       setClienteSeleccionado(null);
     }
@@ -184,20 +227,24 @@ export default function Clientes() {
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-    if (errores[name]) setErrores(prev => ({ ...prev, [name]: undefined }));
+    setForm((prev) => ({ ...prev, [name]: value }));
+    if (errores[name]) setErrores((prev) => ({ ...prev, [name]: undefined }));
   };
 
   return (
     <div className="clientes-page">
-
       {/* Cabecera con botón nuevo cliente */}
       <div className="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-2">
         <div>
           <h2 className="page-title mb-1">Directorio de Clientes</h2>
-          <p className="text-muted mb-0">Gestiona tus clientes B2B y sus vacantes asociadas.</p>
+          <p className="text-muted mb-0">
+            Gestiona tus clientes B2B y sus vacantes asociadas.
+          </p>
         </div>
-        <button className="btn btn-primary d-flex align-items-center gap-2" onClick={abrirModalNuevo}>
+        <button
+          className="btn btn-primary d-flex align-items-center gap-2"
+          onClick={abrirModalNuevo}
+        >
           <i className="bi bi-plus-circle"></i>
           <span>Nuevo cliente</span>
         </button>
@@ -205,7 +252,6 @@ export default function Clientes() {
 
       {/* Vista dividida */}
       <div className="clientes-split">
-
         {/* Panel izquierdo */}
         <div className="clientes-list-panel">
           <div className="clientes-filters mb-3">
@@ -223,11 +269,15 @@ export default function Clientes() {
               value={filtroSector}
               onChange={(e) => setFiltroSector(e.target.value)}
             >
-              {sectores.map(s => <option key={s} value={s}>{s}</option>)}
+              {sectores.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
             </select>
           </div>
 
-          {clientesFiltrados.map(cliente => (
+          {clientesFiltrados.map((cliente) => (
             <div
               key={cliente.id}
               className={`cliente-card ${clienteSeleccionado?.id === cliente.id ? 'active' : ''}`}
@@ -235,12 +285,15 @@ export default function Clientes() {
             >
               <div className="d-flex justify-content-between align-items-start">
                 <div className="flex-grow-1 me-2" style={{ minWidth: 0 }}>
-                  <h6 className="cliente-nombre mb-1 text-truncate">{cliente.nombre}</h6>
+                  <h6 className="cliente-nombre mb-1 text-truncate">
+                    {cliente.nombre}
+                  </h6>
                   <span className="cliente-sector">{cliente.sector}</span>
                 </div>
                 <div className="d-flex align-items-center gap-1 flex-shrink-0">
                   <span className="cliente-vacantes-badge me-1">
-                    {cliente.vacantesAbiertas} {cliente.vacantesAbiertas !== 1 ? 'vacantes' : 'vacante'}
+                    {cliente.vacantesAbiertas}{' '}
+                    {cliente.vacantesAbiertas !== 1 ? 'vacantes' : 'vacante'}
                   </span>
                   {/* Botón editar */}
                   <button
@@ -283,8 +336,12 @@ export default function Clientes() {
               <div className="cliente-profile-header mb-4">
                 <div className="d-flex justify-content-between align-items-start flex-wrap gap-2">
                   <div>
-                    <h3 className="cliente-profile-nombre">{clienteSeleccionado.nombre}</h3>
-                    <span className="cliente-sector">{clienteSeleccionado.sector}</span>
+                    <h3 className="cliente-profile-nombre">
+                      {clienteSeleccionado.nombre}
+                    </h3>
+                    <span className="cliente-sector">
+                      {clienteSeleccionado.sector}
+                    </span>
                   </div>
                   <div className="d-flex align-items-center gap-2 flex-wrap">
                     <span className="cliente-vacantes-badge grande">
@@ -299,7 +356,9 @@ export default function Clientes() {
                     </button>
                     <button
                       className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1"
-                      onClick={(e) => abrirModalEliminar(e, clienteSeleccionado)}
+                      onClick={(e) =>
+                        abrirModalEliminar(e, clienteSeleccionado)
+                      }
                     >
                       <i className="bi bi-trash"></i>
                       <span className="d-none d-sm-inline">Eliminar</span>
@@ -313,23 +372,32 @@ export default function Clientes() {
                 <div className="col-12 col-lg-6">
                   <div className="cliente-info-card h-100">
                     <h6 className="info-card-title">
-                      <i className="bi bi-person-badge me-2"></i>Datos de contacto
+                      <i className="bi bi-person-badge me-2"></i>Datos de
+                      contacto
                     </h6>
                     <div className="info-grid">
                       <div className="info-item">
                         <span className="info-label">Contacto principal</span>
-                        <span className="info-value">{clienteSeleccionado.contactoPrincipal}</span>
+                        <span className="info-value">
+                          {clienteSeleccionado.contactoPrincipal}
+                        </span>
                       </div>
                       <div className="info-item">
                         <span className="info-label">Email</span>
-                        <a href={`mailto:${clienteSeleccionado.email}`} className="info-value text-decoration-none">
+                        <a
+                          href={`mailto:${clienteSeleccionado.email}`}
+                          className="info-value text-decoration-none"
+                        >
                           <i className="bi bi-envelope me-1 text-muted"></i>
                           {clienteSeleccionado.email}
                         </a>
                       </div>
                       <div className="info-item">
                         <span className="info-label">Teléfono</span>
-                        <a href={`tel:${clienteSeleccionado.telefono}`} className="info-value text-decoration-none">
+                        <a
+                          href={`tel:${clienteSeleccionado.telefono}`}
+                          className="info-value text-decoration-none"
+                        >
                           <i className="bi bi-telephone me-1 text-muted"></i>
                           {clienteSeleccionado.telefono}
                         </a>
@@ -364,11 +432,15 @@ export default function Clientes() {
                     <div className="info-grid">
                       <div className="info-item">
                         <span className="info-label">CIF</span>
-                        <span className="info-value">{clienteSeleccionado.cif || '—'}</span>
+                        <span className="info-value">
+                          {clienteSeleccionado.cif || '—'}
+                        </span>
                       </div>
                       <div className="info-item">
                         <span className="info-label">Dirección</span>
-                        <span className="info-value">{clienteSeleccionado.direccion || '—'}</span>
+                        <span className="info-value">
+                          {clienteSeleccionado.direccion || '—'}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -382,21 +454,27 @@ export default function Clientes() {
                   Vacantes vinculadas ({clienteSeleccionado.vacantes.length})
                 </h6>
                 {clienteSeleccionado.vacantes.length > 0 ? (
-                  clienteSeleccionado.vacantes.map(v => (
+                  clienteSeleccionado.vacantes.map((v) => (
                     <div
                       key={v.id}
                       className="vacante-vinculada d-flex align-items-center justify-content-between mb-2"
                       style={{ cursor: 'default' }}
                     >
                       <div>
-                        <p className="mb-0 vacante-vinculada-titulo">{v.titulo}</p>
+                        <p className="mb-0 vacante-vinculada-titulo">
+                          {v.titulo}
+                        </p>
                         <span className="activity-time">{v.fecha}</span>
                       </div>
-                      <span className={`badge ${getBadgeEstado(v.estado)}`}>{v.estado}</span>
+                      <span className={`badge ${getBadgeEstado(v.estado)}`}>
+                        {v.estado}
+                      </span>
                     </div>
                   ))
                 ) : (
-                  <p className="text-muted small mb-0">No hay vacantes vinculadas.</p>
+                  <p className="text-muted small mb-0">
+                    No hay vacantes vinculadas.
+                  </p>
                 )}
               </div>
             </>
@@ -404,7 +482,10 @@ export default function Clientes() {
             <div className="clientes-empty-state">
               <i className="bi bi-building fs-1 mb-3 d-block"></i>
               <h5>Selecciona un cliente</h5>
-              <p className="text-muted">Haz clic en un cliente de la lista para ver sus datos y vacantes asociadas.</p>
+              <p className="text-muted">
+                Haz clic en un cliente de la lista para ver sus datos y vacantes
+                asociadas.
+              </p>
             </div>
           )}
         </div>
@@ -417,20 +498,25 @@ export default function Clientes() {
           <div className="modal fade show d-block" tabIndex="-1" role="dialog">
             <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
               <div className="modal-content">
-
                 <div className="modal-header">
                   <h5 className="modal-title">
-                    <i className={`bi bi-${modalAbierto === 'nuevo' ? 'plus-circle' : 'pencil'} me-2`}></i>
-                    {modalAbierto === 'nuevo' ? 'Nuevo cliente' : `Editar — ${clienteEditando?.nombre}`}
+                    <i
+                      className={`bi bi-${modalAbierto === 'nuevo' ? 'plus-circle' : 'pencil'} me-2`}
+                    ></i>
+                    {modalAbierto === 'nuevo'
+                      ? 'Nuevo cliente'
+                      : `Editar — ${clienteEditando?.nombre}`}
                   </h5>
-                  <button className="btn-icon" onClick={() => setModalAbierto(false)}>
+                  <button
+                    className="btn-icon"
+                    onClick={() => setModalAbierto(false)}
+                  >
                     <i className="bi bi-x-lg"></i>
                   </button>
                 </div>
 
                 <div className="modal-body">
                   <div className="row g-3">
-
                     {/* Nombre */}
                     <div className="col-12 col-md-6">
                       <label className="filter-label">Nombre empresa *</label>
@@ -442,7 +528,9 @@ export default function Clientes() {
                         value={form.nombre}
                         onChange={handleFormChange}
                       />
-                      {errores.nombre && <div className="invalid-feedback">{errores.nombre}</div>}
+                      {errores.nombre && (
+                        <div className="invalid-feedback">{errores.nombre}</div>
+                      )}
                     </div>
 
                     {/* Sector */}
@@ -456,12 +544,16 @@ export default function Clientes() {
                         value={form.sector}
                         onChange={handleFormChange}
                       />
-                      {errores.sector && <div className="invalid-feedback">{errores.sector}</div>}
+                      {errores.sector && (
+                        <div className="invalid-feedback">{errores.sector}</div>
+                      )}
                     </div>
 
                     {/* Contacto principal */}
                     <div className="col-12 col-md-6">
-                      <label className="filter-label">Contacto principal *</label>
+                      <label className="filter-label">
+                        Contacto principal *
+                      </label>
                       <input
                         type="text"
                         name="contactoPrincipal"
@@ -470,7 +562,11 @@ export default function Clientes() {
                         value={form.contactoPrincipal}
                         onChange={handleFormChange}
                       />
-                      {errores.contactoPrincipal && <div className="invalid-feedback">{errores.contactoPrincipal}</div>}
+                      {errores.contactoPrincipal && (
+                        <div className="invalid-feedback">
+                          {errores.contactoPrincipal}
+                        </div>
+                      )}
                     </div>
 
                     {/* Email */}
@@ -484,7 +580,9 @@ export default function Clientes() {
                         value={form.email}
                         onChange={handleFormChange}
                       />
-                      {errores.email && <div className="invalid-feedback">{errores.email}</div>}
+                      {errores.email && (
+                        <div className="invalid-feedback">{errores.email}</div>
+                      )}
                     </div>
 
                     {/* Teléfono */}
@@ -498,7 +596,11 @@ export default function Clientes() {
                         value={form.telefono}
                         onChange={handleFormChange}
                       />
-                      {errores.telefono && <div className="invalid-feedback">{errores.telefono}</div>}
+                      {errores.telefono && (
+                        <div className="invalid-feedback">
+                          {errores.telefono}
+                        </div>
+                      )}
                     </div>
 
                     {/* CIF */}
@@ -526,21 +628,26 @@ export default function Clientes() {
                         onChange={handleFormChange}
                       />
                     </div>
-
                   </div>
-                  <p className="text-muted small mt-3 mb-0">* Campos obligatorios</p>
+                  <p className="text-muted small mt-3 mb-0">
+                    * Campos obligatorios
+                  </p>
                 </div>
 
                 <div className="modal-footer">
-                  <button className="btn btn-secondary" onClick={() => setModalAbierto(false)}>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setModalAbierto(false)}
+                  >
                     Cancelar
                   </button>
                   <button className="btn btn-primary" onClick={guardarCliente}>
                     <i className="bi bi-check-circle me-2"></i>
-                    {modalAbierto === 'nuevo' ? 'Crear cliente' : 'Guardar cambios'}
+                    {modalAbierto === 'nuevo'
+                      ? 'Crear cliente'
+                      : 'Guardar cambios'}
                   </button>
                 </div>
-
               </div>
             </div>
           </div>
@@ -554,42 +661,53 @@ export default function Clientes() {
           <div className="modal fade show d-block" tabIndex="-1" role="dialog">
             <div className="modal-dialog modal-dialog-centered">
               <div className="modal-content">
-
                 <div className="modal-header border-0 pb-0">
                   <h5 className="modal-title text-danger">
                     <i className="bi bi-exclamation-triangle me-2"></i>
                     Eliminar cliente
                   </h5>
-                  <button className="btn-icon" onClick={() => setModalEliminar(false)}>
+                  <button
+                    className="btn-icon"
+                    onClick={() => setModalEliminar(false)}
+                  >
                     <i className="bi bi-x-lg"></i>
                   </button>
                 </div>
 
                 <div className="modal-body pt-2">
-                  <p className="mb-1">¿Estás seguro de que quieres eliminar a</p>
-                  <p className="fw-semibold mb-3">"{clienteAEliminar?.nombre}"?</p>
+                  <p className="mb-1">
+                    ¿Estás seguro de que quieres eliminar a
+                  </p>
+                  <p className="fw-semibold mb-3">
+                    "{clienteAEliminar?.nombre}"?
+                  </p>
                   <p className="text-muted small mb-0">
                     <i className="bi bi-info-circle me-1"></i>
-                    Esta acción no se puede deshacer. Se eliminarán también todas sus vacantes vinculadas.
+                    Esta acción no se puede deshacer. Se eliminarán también
+                    todas sus vacantes vinculadas.
                   </p>
                 </div>
 
                 <div className="modal-footer border-0">
-                  <button className="btn btn-secondary" onClick={() => setModalEliminar(false)}>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setModalEliminar(false)}
+                  >
                     Cancelar
                   </button>
-                  <button className="btn btn-danger" onClick={confirmarEliminar}>
+                  <button
+                    className="btn btn-danger"
+                    onClick={confirmarEliminar}
+                  >
                     <i className="bi bi-trash me-2"></i>
                     Sí, eliminar
                   </button>
                 </div>
-
               </div>
             </div>
           </div>
         </>
       )}
-
     </div>
   );
 }

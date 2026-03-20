@@ -1,7 +1,6 @@
 export default function BotStatusGrid() {
   return (
     <div className="row g-3 mb-4">
-      
       {/* Adzuna - Todo OK */}
       <div className="col-12 col-md-4">
         <div className="alert alert-bot-success d-flex align-items-center mb-0">
@@ -39,7 +38,6 @@ export default function BotStatusGrid() {
           </button>
         </div>
       </div>
-
     </div>
   );
 }

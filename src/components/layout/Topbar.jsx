@@ -27,7 +27,6 @@ export default function Topbar({ onMenuToggle, onActivityToggle }) {
   return (
     <header className="ara-topbar">
       <div className="topbar-content">
-
         <div className="d-flex align-items-center gap-3">
           {/* Botón menú lateral — funciona en móvil */}
           <button className="btn-icon d-lg-none" onClick={onMenuToggle}>
@@ -55,7 +54,10 @@ export default function Topbar({ onMenuToggle, onActivityToggle }) {
           </button>
 
           {/* Botón notificaciones — abre el panel de actividad */}
-          <button className="btn-icon position-relative" onClick={onActivityToggle}>
+          <button
+            className="btn-icon position-relative"
+            onClick={onActivityToggle}
+          >
             <i className="bi bi-bell"></i>
             <span className="notification-dot"></span>
           </button>
