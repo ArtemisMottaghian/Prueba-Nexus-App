@@ -2,7 +2,6 @@ import { useState } from 'react';
 import FilterBar from '../components/recruitment/FilterBar';
 import VacancyGrid from '../components/recruitment/VacancyGrid';
 import BulkActions from '../components/recruitment/BulkActions';
-// 1. IMPORTANTE: Ahora importamos los datos aquí, en el jefe
 import initialJobsData from '../data/dummyData.json'; 
 
 export default function Vacancies() {
@@ -56,11 +55,11 @@ export default function Vacancies() {
       )}
       
       <VacancyGrid 
-        jobs={jobs} // 4. Le pasamos los trabajos al hijo
+        jobs={jobs} 
         activeFilters={filters} 
         selectedVacancies={selectedVacancies} 
         onSelectVacancy={handleSelectVacancy}
-        onUpdateJobStatus={handleUpdateJobStatus} // 5. Le pasamos la función para actualizar
+        onUpdateJobStatus={handleUpdateJobStatus} 
       />
     </>
   );
