@@ -3,9 +3,8 @@ export default function StatsPanel() {
     <div className="stats-panel mb-4">
       {/* Línea decorativa superior */}
       <div className="stats-accent"></div>
-      
+
       <div className="row g-0">
-        
         {/* Columna: Nuevas */}
         <div className="col-4">
           <div className="stats-col">
@@ -41,7 +40,6 @@ export default function StatsPanel() {
             </div>
           </div>
         </div>
-
       </div>
 
       {/* Barra de progreso inferior (El width se queda en línea por ser dato dinámico) */}

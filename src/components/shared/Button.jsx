@@ -8,11 +8,11 @@ export default function Button({
   className = '',
 }) {
   const variants = {
-    primary:  'btn-primary',
+    primary: 'btn-primary',
     secondary: 'btn-secondary',
-    danger:   'btn-danger',
-    outline:  'btn-outline-secondary',
-    ghost:    'btn-link text-decoration-none',
+    danger: 'btn-danger',
+    outline: 'btn-outline-secondary',
+    ghost: 'btn-link text-decoration-none',
   };
 
   const sizeClass = size ? `btn-${size}` : '';

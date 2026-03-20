@@ -15,13 +15,13 @@ export default function VacancyGrid() {
         </h2>
 
         <div className="view-toggle">
-          <button 
+          <button
             className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
             onClick={() => setViewMode('grid')}
           >
             <i className="bi bi-grid-3x3-gap"></i>
           </button>
-          <button 
+          <button
             className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
             onClick={() => setViewMode('list')}
           >
@@ -30,7 +30,9 @@ export default function VacancyGrid() {
         </div>
       </div>
 
-      <div className={viewMode === 'grid' ? 'vacancies-grid' : 'vacancies-list'}>
+      <div
+        className={viewMode === 'grid' ? 'vacancies-grid' : 'vacancies-list'}
+      >
         {jobsData.map((job) => (
           <div key={job.id} onClick={() => setSelectedJob(job)}>
             <VacancyCard job={job} isListView={viewMode === 'list'} />
@@ -40,10 +42,7 @@ export default function VacancyGrid() {
 
       {/* 4. Dibujamos el modal. Si "selectedJob" tiene algo, se abre. */}
       {selectedJob && (
-        <VacancyModal 
-          job={selectedJob} 
-          onClose={() => setSelectedJob(null)} 
-        />
+        <VacancyModal job={selectedJob} onClose={() => setSelectedJob(null)} />
       )}
     </>
   );

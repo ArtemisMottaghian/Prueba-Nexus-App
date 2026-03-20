@@ -1,6 +1,11 @@
 import { useState } from 'react';
 
-export default function BulkActions({ selectedCount = 0, onDiscard, onAssign, onClear }) {
+export default function BulkActions({
+  selectedCount = 0,
+  onDiscard,
+  onAssign,
+  onClear,
+}) {
   const [assignTarget, setAssignTarget] = useState('');
 
   if (selectedCount === 0) return null;
@@ -10,7 +15,8 @@ export default function BulkActions({ selectedCount = 0, onDiscard, onAssign, on
       <div className="d-flex align-items-center gap-3">
         <span className="bulk-count">
           <i className="bi bi-check2-square me-2"></i>
-          {selectedCount} vacante{selectedCount !== 1 ? 's' : ''} seleccionada{selectedCount !== 1 ? 's' : ''}
+          {selectedCount} vacante{selectedCount !== 1 ? 's' : ''} seleccionada
+          {selectedCount !== 1 ? 's' : ''}
         </span>
       </div>
 
@@ -36,10 +42,7 @@ export default function BulkActions({ selectedCount = 0, onDiscard, onAssign, on
         </button>
 
         {/* Descartar */}
-        <button
-          className="btn btn-sm btn-bulk-discard"
-          onClick={onDiscard}
-        >
+        <button className="btn btn-sm btn-bulk-discard" onClick={onDiscard}>
           <i className="bi bi-trash me-1"></i>
           Descartar
         </button>

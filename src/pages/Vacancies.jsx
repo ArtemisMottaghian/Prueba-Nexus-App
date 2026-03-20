@@ -6,7 +6,9 @@ export default function Vacancies() {
     <>
       <div className="mb-4">
         <h2 className="page-title mb-1">Directorio de Vacantes</h2>
-        <p className="text-muted">Gestiona las oportunidades capturadas por el sistema.</p>
+        <p className="text-muted">
+          Gestiona las oportunidades capturadas por el sistema.
+        </p>
       </div>
       <FilterBar />
       <VacancyGrid />
