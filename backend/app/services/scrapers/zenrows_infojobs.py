@@ -1,23 +1,13 @@
-import requests
+import asyncio
+import httpx
+from core.config import settings
+from sqlalchemy.dialects.postgresql import insert
+from app.schemas.job_offer import JobOfferRequest
+
 from bs4 import BeautifulSoup
 import re
 import json
-import os 
-from dotenv import load_dotenv
 import urllib.parse
-import psycopg2
-from psycopg2.extras import execute_values
-
-
-# -----------
-# VARIABLES GLOBALES
-# -----------
-load_dotenv()
-API_KEY = os.getenv('ZENROWS_API_KEY')
-DB_USER = os.getenv('DB_USER')
-DB_PASSWORD = os.getenv('DB_PASSWORD')
-DB_NAME = os.getenv('DB_NAME')
-DB_PORT = os.getenv('DB_PORT')
 
 
 # -----------
@@ -99,7 +89,7 @@ def construir_url_infojobs(palabra_clave=None, provincia=None, pagina=1, filtro_
 # -----------
 # FUNCION EXTRACCION DATOS
 # -----------
-def extraer_ofertas_infojobs(url_busqueda, apikey, nombre_sector, limite=None):
+async def extraer_ofertas_infojobs(url_busqueda, apikey, nombre_sector, limite=None):
     
     # configuracion de scroll
     instrucciones_scroll = [
@@ -138,11 +128,14 @@ def extraer_ofertas_infojobs(url_busqueda, apikey, nombre_sector, limite=None):
     }
     '''
     
-    response = requests.get('https://api.zenrows.com/v1/', params=params)
-    
-    if response.status_code != 200:
-        print(f"Error de conexión: {response.status_code}")
-        return []
+    # Conexión asíncrona segura con el context manager
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get('https://api.zenrows.com/v1/', params=params)
+            response.raise_for_status()
+        except Exception as e:
+            print(f"Error de conexión: {str(e)}")
+            return []
     
     # Codificacion para tildes y caracteres especiales
     response.encoding = 'utf-8'  
@@ -212,97 +205,63 @@ def extraer_ofertas_infojobs(url_busqueda, apikey, nombre_sector, limite=None):
         elementos_lista = tarjeta.select('li.ij-OfferCardContent-description-list-item')
         textos_lista = [el.text.strip() for el in elementos_lista if el]
 
-        #JSON
-        datos = {
-            "external_id": id_limpio,
-            "title": titulo_texto,
-            "company": nombre_empresa,
-            "sector": nombre_sector,
-            "location": get_text('span.ij-OfferCardContent-description-list-item-truncate'),
-            "offer_url": offer_url,
-            "job_description": get_text('p.ij-OfferCardContent-description-description'),
-            "published_at": get_text('span[data-testid="sincedate-tag"]'),
-            "salary_min": None,
-            "salary_max": None,
-            "contract_type": next((t for t in textos_lista if 'Contrato' in t or 'Autónomo' in t), None),
-            "contract_time": next((t for t in textos_lista if 'Jornada' in t or 'Horas' in t), None),
-            "modalidad": next((t for t in textos_lista if 'teletrabajo' in t.lower() or 'híbrido' in t.lower() or 'presencial' in t.lower()), None),
-        }
-        
         # Procesar salario
         salario_texto = get_text('span.ij-OfferCardContent-description-salary-info')
+        salary_min_val = None
+        salary_max_val = None
+        
         if salario_texto:
             salario_limpio = salario_texto.replace('\xa0', '').replace('.', '')
             numeros = re.findall(r'\d+', salario_limpio)
             if len(numeros) >= 2:
-                datos["salary_min"] = int(numeros[0])
-                datos["salary_max"] = int(numeros[1])
+                salary_min_val = int(numeros[0])
+                salary_max_val = int(numeros[1])
             elif len(numeros) == 1:
-                datos["salary_min"] = int(numeros[0])
+                salary_min_val = int(numeros[0])
 
-        resultados_db.append(datos)
+        contract_type_val = next((t for t in textos_lista if 'Contrato' in t or 'Autónomo' in t), None)
+        contract_time_val = next((t for t in textos_lista if 'Jornada' in t or 'Horas' in t), None)
+
+        #JSON convertido a Pydantic
+        try:
+            valid_lead = JobOfferRequest(
+                portal_id = 2, 
+                external_id=id_limpio,
+                title=titulo_texto,
+                company_name=nombre_empresa,
+                location=get_text('span.ij-OfferCardContent-description-list-item-truncate'),
+                offer_url=offer_url,
+
+                job_description=get_text('p.ij-OfferCardContent-description-description'),
+                published_at=get_text('span[data-testid="sincedate-tag"]'),
+                sector=nombre_sector,
+                
+                salary_min=salary_min_val,
+                salary_max=salary_max_val,
+                contract_type=contract_type_val,
+                contract_time=contract_time_val
+            )
+
+            resultados_db.append(valid_lead)
+
+        except ValueError as e:
+            print(f"Descartando oferta inválida: {e}")
+            continue
 
     return resultados_db
 
 
 #-----------
-# GUARDADO DATOS
-#-----------
-def guardar_en_postgres(ofertas):
-    if not ofertas:
-        print("No hay ofertas nuevas para guardar en la base de datos.")
-        return
-
-    try:
-        # CONEXION DB
-        conexion = psycopg2.connect(
-            host="localhost",
-            port=DB_PORT,      
-            database=DB_NAME,    
-            user=DB_USER,     
-            password=DB_PASSWORD 
-        )
-        cursor = conexion.cursor()
-
-        query = """
-            INSERT INTO ofertas_infojobs (
-                external_id, title, company, sector, location, offer_url, 
-                job_description, published_at, salary_min, salary_max, 
-                contract_type, contract_time, modalidad
-            ) VALUES %s
-            ON CONFLICT (external_id) DO NOTHING;
-        """
-
-        valores = [
-            (
-                o['external_id'], o['title'], o['company'], o['sector'], o['location'], o['offer_url'],
-                o['job_description'], o['published_at'], o['salary_min'], o['salary_max'], o['contract_type'],
-                o['contract_time'], o['modalidad']
-            ) for o in ofertas
-        ]
-
-        execute_values(cursor, query, valores)
-        conexion.commit()
-        
-        #debug
-        print(f" Inserción finalizada. Intentos: {len(ofertas)}.")
-        print(" (Las repetidas se ignoraron silenciosamente)")
-
-    except Exception as e:
-        print(f" Error con PostgreSQL: {e}")
-    finally:
-        if 'conexion' in locals() and conexion:
-            cursor.close()
-            conexion.close()
-
-#-----------
 #EJECUCION 
 #-----------
 #debug
-def main():
+async def main():
     print("\n--- INICIO ---")
 
     todas_las_ofertas = []
+    ids_watched = set()
+    urls_watched = set()
+
     for num_pagina in range(1, paginas_a_escanear + 1):
         #debug
         #print(f"\n Escaneando pag {num_pagina} de {paginas_a_escanear}...")
@@ -316,10 +275,18 @@ def main():
             id_sector=SECTORES.get(sector_buscar)
         )
         
-        resultados_pagina = extraer_ofertas_infojobs(url_pagina, API_KEY, sector_buscar)
+        # Llamamos a la función asíncrona pasándole la API KEY desde el archivo settings
+        resultados_pagina = await extraer_ofertas_infojobs(url_pagina, settings.ZENROWS_API_KEY, sector_buscar)
 
         if resultados_pagina:
-            todas_las_ofertas.extend(resultados_pagina)
+            # Filtramos duplicados en memoria antes de añadir a la lista general
+            for lead in resultados_pagina:
+                if lead.external_id in ids_watched or lead.offer_url in urls_watched:
+                    continue
+                todas_las_ofertas.append(lead)
+                ids_watched.add(lead.external_id)
+                urls_watched.add(lead.offer_url)
+                
             #debug
             #print(f" Se han añadido {len(resultados_pagina)} ofertas de la página {num_pagina}.")
         else:
@@ -330,5 +297,26 @@ def main():
     #debug
     print(f"\n--- EXTRACCIÓN COMPLETADA ({len(todas_las_ofertas)} ofertas en total) ---")
 
-    # guardamos datos db
-    guardar_en_postgres(todas_las_ofertas)
+    # Comentado hasta que la BBDD este disponible y usable, probar viabilidad del script
+    
+    # if todas_las_ofertas:
+    #     insert_valid = [offer.model_dump() for offer in todas_las_ofertas]
+    #     session = SessionLocal()
+
+    #     try:
+    #         inserts = insert(JobOfferRequest).values(insert_valid)
+
+    #         inserts = inserts.on_conflict_do_nothing(
+    #             index_element=['portal_id', 'external_id']
+    #         )
+
+    #         session.execute(inserts)
+    #         session.commit()
+
+    #     except Exception as e:
+    #         session.rollback()
+    #     finally:
+    #         session.close()
+
+if __name__ == "__main__":
+    asyncio.run(main())

@@ -1,8 +1,11 @@
 requests
 beautifulsoup4
 schedule
-python-dotenv
 fastapi
 uvicorn
-sqlalchemy
+pydantic==2.12.5
+pydantic-settings==2.13.1
+pydantic_core==2.41.5
 asyncpg
+httpx
+sqlalchemy
