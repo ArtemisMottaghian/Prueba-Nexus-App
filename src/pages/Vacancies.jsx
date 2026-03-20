@@ -14,7 +14,7 @@ export default function Vacancies() {
 
   const [selectedVacancies, setSelectedVacancies] = useState([]);
   
-  // 2. NUEVA MEMORIA: Guardamos los trabajos aquí para poder modificarlos
+
   const [jobs, setJobs] = useState(initialJobsData);
 
   const handleFilterChange = (filterName, value) => {
@@ -32,7 +32,7 @@ export default function Vacancies() {
     });
   };
 
-  // 3. NUEVA FUNCIÓN: Busca la vacante por ID y le cambia el estado
+
   const handleUpdateJobStatus = (jobId, newStatus) => {
     setJobs(prevJobs => 
       prevJobs.map(job => 

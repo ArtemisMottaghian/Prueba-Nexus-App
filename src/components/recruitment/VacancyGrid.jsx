@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import VacancyCard from './VacancyCard';
 import VacancyModal from './VacancyModal';
-// 1. OJO: Hemos borrado la importación de dummyData.json de aquí.
 
 // 2. Recibimos 'jobs' y 'onUpdateJobStatus' del padre
 export default function VacancyGrid({ jobs, activeFilters, selectedVacancies, onSelectVacancy, onUpdateJobStatus }) {
   const [viewMode, setViewMode] = useState('grid');
   const [selectedJob, setSelectedJob] = useState(null);
 
-  // 3. Ahora filtramos sobre 'jobs', no sobre 'jobsData'
   const filteredJobs = activeFilters ? jobs.filter((job) => {
     const matchEstado = activeFilters.estado === 'Todas' || job.status === activeFilters.estado;
     const matchUbicacion = activeFilters.ubicacion === 'Todas' || job.location === activeFilters.ubicacion;
@@ -48,19 +46,18 @@ export default function VacancyGrid({ jobs, activeFilters, selectedVacancies, on
                 isListView={viewMode === 'list'}  
                 isSelected={selectedVacancies?.includes(job.id)}
                 onSelect={onSelectVacancy} 
-                onUpdateStatus={onUpdateJobStatus} // 4. Le pasamos la función a la tarjeta
+                onUpdateStatus={onUpdateJobStatus} 
               />
             </div>
           ))
         )}
       </div>
 
-     {/* En VacancyGrid.jsx */}
 {selectedJob && (
   <VacancyModal 
     job={selectedJob} 
     onClose={() => setSelectedJob(null)} 
-    onUpdateStatus={onUpdateJobStatus} // <-- Añadimos esta prop
+    onUpdateStatus={onUpdateJobStatus} 
   />
 )}
     </>

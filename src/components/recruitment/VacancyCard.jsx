@@ -1,4 +1,3 @@
-// 1. Añadimos onUpdateStatus a las props
 export default function VacancyCard({ job, isListView, onClick, isSelected, onSelect, onUpdateStatus }) { 
   let badgeClass = "badge-nueva";
   if (job.status === "Contactada") badgeClass = "badge-contactada";
@@ -14,10 +13,9 @@ export default function VacancyCard({ job, isListView, onClick, isSelected, onSe
     e.stopPropagation();
   };
 
-  // 2. NUEVA FUNCIÓN: Maneja el cambio en el select sin abrir el modal
   const handleStatusChange = (e) => {
-    e.stopPropagation(); // Evitamos que se abra el modal
-    onUpdateStatus(job.id, e.target.value); // Mandamos el ID y el nuevo estado hacia arriba
+    e.stopPropagation(); 
+    onUpdateStatus(job.id, e.target.value); 
   };
 
   if (isListView) {
@@ -45,7 +43,6 @@ export default function VacancyCard({ job, isListView, onClick, isSelected, onSe
     );
   }
 
-  // Diseño para Modo Grid
   return (
     <div className="vacante-card" onClick={onClick} style={{ cursor: 'pointer' }}>
       <div className="card-header-row">
@@ -56,7 +53,6 @@ export default function VacancyCard({ job, isListView, onClick, isSelected, onSe
             checked={isSelected || false} 
             onChange={handleCheckboxClick} 
           />
-          {/* 3. CAMBIOS EN EL SELECT: value y onChange */}
           <select 
             className={`form-select form-select-sm select-status-inline ${badgeClass}`} 
             value={job.status} 

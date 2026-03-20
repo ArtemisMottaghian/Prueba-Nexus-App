@@ -1,18 +1,14 @@
 import { useState } from 'react';
 
-// 1. Añadimos onUpdateStatus a las props
 export default function VacancyModal({ job, onClose, onUpdateStatus }) {
   const [activeTab, setActiveTab] = useState('detalles');
-  
-  // 2. Estado local para el nuevo status (por si el usuario cambia de opinión antes de guardar)
   const [localStatus, setLocalStatus] = useState(job?.status || '');
 
   if (!job) return null;
 
-  // 3. Función para guardar y cerrar
   const handleSave = () => {
     onUpdateStatus(job.id, localStatus);
-    onClose(); // Cerramos el modal tras guardar
+    onClose(); 
   };
 
   return (
@@ -34,7 +30,6 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
             </div>
 
             <div className="modal-body">
-              {/* --- Select de Estado Controlado --- */}
               <div className="d-flex align-items-center gap-3 mb-4">
                 <select 
                   className="form-select select-status-inline" 
@@ -51,7 +46,6 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
                 </button>
               </div>
 
-              {/* Tabs (Detalles, Seguimiento, etc) */}
               <ul className="nav nav-tabs mb-4">
                 <li className="nav-item">
                   <button className={`nav-link ${activeTab === 'detalles' ? 'active' : ''}`} onClick={() => setActiveTab('detalles')}>
@@ -89,7 +83,7 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
                     </div>
                   </div>
                 )}
-                {/* ... resto de tus pestañas ... */}
+
               </div>
             </div>
 
@@ -97,7 +91,6 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
               <button type="button" className="btn btn-secondary" onClick={onClose}>
                 Cancelar
               </button>
-              {/* 4. Conectamos el botón de Guardar */}
               <button 
                 type="button" 
                 className="btn btn-primary" 
