@@ -18,7 +18,6 @@ async def endpoint_newUser(
     db: AsyncSession = Depends(get_db)
 ):
     try:
-        # ¡Importante poner await al llamar al servicio!
         nuevo_user = await users_service.newUser(db, datos_cliente)
         return nuevo_user
         

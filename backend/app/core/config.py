@@ -1,18 +1,15 @@
 import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Ruta absoluta al .env (que está en la carpeta backend)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RUTA_ENV = os.path.join(BASE_DIR, ".env")
 
 class Settings(BaseSettings):
-    # Obligatorio: Scrapers
     ZENROWS_API_KEY: str
     ADZUNA_APP_ID: str
     ADZUNA_APP_KEY: str
     ADZUNA_PAIS: str
     
-    # Obligatorio: Base de Datos (SIN HARDCODEAR)
     DB_USER: str
     DB_PASSWORD: str
     DB_HOST: str

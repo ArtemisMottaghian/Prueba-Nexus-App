@@ -20,4 +20,4 @@ class UserResponse(BaseModel):
     role: UserType
 
     class Config:
-        from_attributes = True # Permite leer el objeto de SQLAlchemy
+        from_attributes = True 
