@@ -18,7 +18,6 @@ function App() {
   return (
     <BrowserRouter>
       <div className="ara-container">
-
         {/* Overlay para cerrar sidebar en móvil */}
         {sidebarAbierto && (
           <div
@@ -40,15 +39,15 @@ function App() {
 
         <main className="ara-main">
           <Topbar
-            onMenuToggle={() => setSidebarAbierto(prev => !prev)}
-            onActivityToggle={() => setActivityAbierto(prev => !prev)}
+            onMenuToggle={() => setSidebarAbierto((prev) => !prev)}
+            onActivityToggle={() => setActivityAbierto((prev) => !prev)}
           />
           <div className="ara-content">
             <div className="content-scroll">
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/vacantes" element={<Vacancies />} />
-                <Route path="/Calendar" element={<Calendario/>} />
+                <Route path="/Calendar" element={<Calendario />} />
                 <Route path="/clientes" element={<Clientes />} />
               </Routes>
             </div>
@@ -59,7 +58,6 @@ function App() {
           isOpen={activityAbierto}
           onClose={() => setActivityAbierto(false)}
         />
-
       </div>
     </BrowserRouter>
   );

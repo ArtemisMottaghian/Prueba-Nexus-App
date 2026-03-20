@@ -9,7 +9,6 @@ export default function FilterBar({ filters, onFilterChange, onClearFilters }) {
   return (
     <div className="filter-bar mb-4">
       <div className="row g-2 align-items-end">
-        
         {/* Filtro Estado */}
         <div className="col-12 col-md-3">
           <label className="filter-label">Estado</label>
@@ -82,7 +81,6 @@ export default function FilterBar({ filters, onFilterChange, onClearFilters }) {
             <i className="bi bi-x-lg"></i>
           </button>
         </div>
-
       </div>
     </div>
   );

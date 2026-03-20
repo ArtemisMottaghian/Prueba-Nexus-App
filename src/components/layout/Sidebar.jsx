@@ -4,21 +4,25 @@ import isotipoNexus from '../../assets/isotipo-nexus.svg';
 
 export default function Sidebar({ isOpen, onClose }) {
   return (
-    <aside className={`ara-sidebar ${isOpen ? 'sidebar-open' : ''}`} id="sidebar">
+    <aside
+      className={`ara-sidebar ${isOpen ? 'sidebar-open' : ''}`}
+      id="sidebar"
+    >
       <div className="sidebar-content">
-
         <div className="sidebar-logo">
           <img src={isotipoNexus} alt="NexusAI Icon" className="logo-small" />
           <img src={logoNexus} alt="NexusAI Full" className="logo-large" />
         </div>
 
         <nav className="sidebar-nav">
-
           <div className="sidebar-group">
             <div className="sidebar-group-header">VISIÓN GENERAL</div>
             <NavLink
-              to="/" end
-              className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
+              to="/"
+              end
+              className={({ isActive }) =>
+                `sidebar-item ${isActive ? 'active' : ''}`
+              }
               title="Inicio"
               onClick={onClose}
             >
@@ -35,7 +39,9 @@ export default function Sidebar({ isOpen, onClose }) {
             <div className="sidebar-group-header">RECLUTAMIENTO</div>
             <NavLink
               to="/vacantes"
-              className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
+              className={({ isActive }) =>
+                `sidebar-item ${isActive ? 'active' : ''}`
+              }
               title="Vacantes"
               onClick={onClose}
             >
@@ -49,7 +55,9 @@ export default function Sidebar({ isOpen, onClose }) {
             </a>
             <NavLink
               to="/clientes"
-              className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
+              className={({ isActive }) =>
+                `sidebar-item ${isActive ? 'active' : ''}`
+              }
               title="Clientes"
               onClick={onClose}
             >
@@ -65,9 +73,15 @@ export default function Sidebar({ isOpen, onClose }) {
               <span className="sidebar-text">Inbox</span>
               <span className="sidebar-badge">5</span>
             </a>
-            
+
             {/*CALENDARIO */}
-            <NavLink to="/calendar" className={({isActive}) => `sidebar-item ${isActive ? 'active' : ''}`} title="Calendario">
+            <NavLink
+              to="/calendar"
+              className={({ isActive }) =>
+                `sidebar-item ${isActive ? 'active' : ''}`
+              }
+              title="Calendario"
+            >
               <i className="bi bi-calendar-check"></i>
               <span className="sidebar-text">Calendario</span>
             </NavLink>
@@ -84,7 +98,6 @@ export default function Sidebar({ isOpen, onClose }) {
               <span className="sidebar-text">Scraping & Fuentes</span>
             </a>
           </div>
-
         </nav>
 
         <div className="flex-grow-1"></div>
@@ -95,7 +108,6 @@ export default function Sidebar({ isOpen, onClose }) {
             <span className="sidebar-text">Configuración</span>
           </a>
         </div>
-
       </div>
     </aside>
   );

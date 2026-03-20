@@ -24,16 +24,24 @@ export default function VacancyGrid({ jobs, activeFilters, selectedVacancies, on
         </h2>
 
         <div className="view-toggle">
-          <button className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`} onClick={() => setViewMode('grid')}>
+          <button
+            className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
+            onClick={() => setViewMode('grid')}
+          >
             <i className="bi bi-grid-3x3-gap"></i>
           </button>
-          <button className={`view-btn ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')}>
+          <button
+            className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
+            onClick={() => setViewMode('list')}
+          >
             <i className="bi bi-list-ul"></i>
           </button>
         </div>
       </div>
 
-      <div className={viewMode === 'grid' ? 'vacancies-grid' : 'vacancies-list'}>
+      <div
+        className={viewMode === 'grid' ? 'vacancies-grid' : 'vacancies-list'}
+      >
         {filteredJobs.length === 0 ? (
           <div className="w-100 text-center text-muted py-5">
             <p>No se encontraron vacantes con estos filtros.</p>
@@ -41,25 +49,26 @@ export default function VacancyGrid({ jobs, activeFilters, selectedVacancies, on
         ) : (
           filteredJobs.map((job) => (
             <div key={job.id} onClick={() => setSelectedJob(job)}>
-              <VacancyCard 
-                job={job}  
-                isListView={viewMode === 'list'}  
+              <VacancyCard
+                job={job}
+                isListView={viewMode === 'list'}
                 isSelected={selectedVacancies?.includes(job.id)}
-                onSelect={onSelectVacancy} 
-                onUpdateStatus={onUpdateJobStatus} 
+                onSelect={onSelectVacancy}
+                onUpdateStatus={onUpdateJobStatus}
               />
             </div>
           ))
         )}
       </div>
 
-{selectedJob && (
-  <VacancyModal 
-    job={selectedJob} 
-    onClose={() => setSelectedJob(null)} 
-    onUpdateStatus={onUpdateJobStatus} 
-  />
-)}
+      {/* 4. Dibujamos el modal. Si "selectedJob" tiene algo, se abre. */}
+      {selectedJob && (
+        <VacancyModal
+          job={selectedJob}
+          onClose={() => setSelectedJob(null)}
+          onUpdateStatus={onUpdateJobStatus}
+        />
+      )}
     </>
   );
 }
