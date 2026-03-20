@@ -1,15 +1,11 @@
-import psycopg2
-import os
-from dotenv import load_dotenv
+import asyncpg
+from app.db.config import settings
 
-load_dotenv()
-
-def get_db_connection():
-   
-    return psycopg2.connect(
-        host="localhost",
-        database=os.getenv("DB_NAME"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        port=os.getenv("DB_PORT")
+async def get_db_connection():
+    return await asyncpg.connect(
+        host=settings.DB_HOST,
+        database=settings.DB_NAME,
+        user=settings.DB_USER,
+        password=settings.DB_PASSWORD,
+        port=settings.DB_PORT
     )
