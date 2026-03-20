@@ -81,7 +81,7 @@ export default function Calendario() {
     setEvents(events.filter(e => e.id !== id));
   };
 
-  const moveEvent = (id, newDate) => {
+  const _moveEvent = (id, newDate) => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(newDate)) return;
     setEvents(events.map(e => (e.id === id ? { ...e, date: newDate } : e)));
   };
