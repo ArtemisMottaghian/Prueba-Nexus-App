@@ -1,21 +1,36 @@
-export default function VacancyCard({ job, isListView, onClick }) { 
+// 1. Añadimos onUpdateStatus a las props
+export default function VacancyCard({ job, isListView, onClick, isSelected, onSelect, onUpdateStatus }) { 
   let badgeClass = "badge-nueva";
   if (job.status === "Contactada") badgeClass = "badge-contactada";
   if (job.status === "En proceso") badgeClass = "badge-en-proceso";
   if (job.status === "Descartada") badgeClass = "badge-descartada";
 
-  // Función para evitar que el modal se abra si solo queremos marcar el checkbox o cambiar el estado
-  const handleChildClick = (e) => {
+  const handleCheckboxClick = (e) => {
     e.stopPropagation(); 
+    onSelect(job.id); 
   };
 
-  // Diseño para Modo Lista
+  const handleChildClick = (e) => {
+    e.stopPropagation();
+  };
+
+  // 2. NUEVA FUNCIÓN: Maneja el cambio en el select sin abrir el modal
+  const handleStatusChange = (e) => {
+    e.stopPropagation(); // Evitamos que se abra el modal
+    onUpdateStatus(job.id, e.target.value); // Mandamos el ID y el nuevo estado hacia arriba
+  };
+
   if (isListView) {
     return (
       <div className="vacante-card-list mb-2" onClick={onClick} style={{ cursor: 'pointer' }}>
         <div className="d-flex align-items-center justify-content-between w-100 p-3">
           <div className="d-flex align-items-center gap-3">
-            <input className="form-check-input" type="checkbox" onClick={handleChildClick} />
+            <input 
+              className="form-check-input" 
+              type="checkbox" 
+              checked={isSelected || false} 
+              onChange={handleCheckboxClick} 
+            />
             <h5 className="mb-0 text-white vacante-title-list-sm">{job.title}</h5>
             <span className="text-muted small">|</span>
             <span className="detail-text">{job.companyName}</span>
@@ -38,16 +53,20 @@ export default function VacancyCard({ job, isListView, onClick }) {
           <input 
             className="form-check-input mt-0 checkbox-lg" 
             type="checkbox" 
-            onClick={handleChildClick} 
+            checked={isSelected || false} 
+            onChange={handleCheckboxClick} 
           />
+          {/* 3. CAMBIOS EN EL SELECT: value y onChange */}
           <select 
             className={`form-select form-select-sm select-status-inline ${badgeClass}`} 
-            defaultValue={job.status}
+            value={job.status} 
+            onChange={handleStatusChange} 
             onClick={handleChildClick}
           >
             <option value="Nueva">Nueva</option>
             <option value="Contactada">Contactada</option>
             <option value="En proceso">En proceso</option>
+            <option value="Descartada">Descartada</option>
           </select>
         </div>
         <button className="btn-icon btn-icon-sm" onClick={handleChildClick}><i className="bi bi-star"></i></button>

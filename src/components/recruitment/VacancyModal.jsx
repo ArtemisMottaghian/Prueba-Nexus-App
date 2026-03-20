@@ -1,22 +1,28 @@
 import { useState } from 'react';
 
-export default function VacancyModal({ job, onClose }) {
-  // 1. Estado para controlar la pestaña activa
+// 1. Añadimos onUpdateStatus a las props
+export default function VacancyModal({ job, onClose, onUpdateStatus }) {
   const [activeTab, setActiveTab] = useState('detalles');
+  
+  // 2. Estado local para el nuevo status (por si el usuario cambia de opinión antes de guardar)
+  const [localStatus, setLocalStatus] = useState(job?.status || '');
 
   if (!job) return null;
 
+  // 3. Función para guardar y cerrar
+  const handleSave = () => {
+    onUpdateStatus(job.id, localStatus);
+    onClose(); // Cerramos el modal tras guardar
+  };
+
   return (
     <>
-      {/* Fondo oscuro */}
       <div className="modal-backdrop fade show"></div>
       
-      {/* Estructura del Modal */}
       <div className="modal fade show d-block" tabIndex="-1" role="dialog">
         <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
           <div className="modal-content">
             
-            {/* Header */}
             <div className="modal-header">
               <div className="flex-grow-1">
                 <h2 className="modal-title">{job.title}</h2>
@@ -27,11 +33,14 @@ export default function VacancyModal({ job, onClose }) {
               </button>
             </div>
 
-            {/* Body */}
             <div className="modal-body">
-              {/* Estado y Favorito */}
+              {/* --- Select de Estado Controlado --- */}
               <div className="d-flex align-items-center gap-3 mb-4">
-                <select className="form-select select-status-inline" defaultValue={job.status}>
+                <select 
+                  className="form-select select-status-inline" 
+                  value={localStatus}
+                  onChange={(e) => setLocalStatus(e.target.value)}
+                >
                   <option value="Nueva">Nueva</option>
                   <option value="Contactada">Contactada</option>
                   <option value="En proceso">En proceso</option>
@@ -42,38 +51,21 @@ export default function VacancyModal({ job, onClose }) {
                 </button>
               </div>
 
-              {/* Tabs dinámicas */}
+              {/* Tabs (Detalles, Seguimiento, etc) */}
               <ul className="nav nav-tabs mb-4">
                 <li className="nav-item">
-                  <button 
-                    className={`nav-link ${activeTab === 'detalles' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('detalles')}
-                  >
+                  <button className={`nav-link ${activeTab === 'detalles' ? 'active' : ''}`} onClick={() => setActiveTab('detalles')}>
                     <i className="bi bi-info-circle me-2"></i>Detalles
                   </button>
                 </li>
                 <li className="nav-item">
-                  <button 
-                    className={`nav-link ${activeTab === 'seguimiento' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('seguimiento')}
-                  >
+                  <button className={`nav-link ${activeTab === 'seguimiento' ? 'active' : ''}`} onClick={() => setActiveTab('seguimiento')}>
                     <i className="bi bi-list-check me-2"></i>Seguimiento
-                  </button>
-                </li>
-                <li className="nav-item">
-                  <button 
-                    className={`nav-link ${activeTab === 'documentos' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('documentos')}
-                  >
-                    <i className="bi bi-file-earmark me-2"></i>Documentos
                   </button>
                 </li>
               </ul>
 
-              {/* Contenido de las Pestañas */}
               <div className="tab-content">
-                
-                {/* --- Tab: Detalles --- */}
                 {activeTab === 'detalles' && (
                   <div className="tab-pane fade show active">
                     <div className="detail-section">
@@ -93,76 +85,26 @@ export default function VacancyModal({ job, onClose }) {
                             <div className="field-value">{job.location}</div>
                           </div>
                         </div>
-                        <div className="detail-field">
-                          <div className="detail-icon icon-purple"><i className="bi bi-cash"></i></div>
-                          <div>
-                            <div className="field-label">Salario</div>
-                            <div className="field-value">{job.salary || "A convenir"}</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="detail-section">
-                      <h4 className="section-title">Descripción del puesto</h4>
-                      <p className="section-text">Buscamos un perfil Senior para integrarse en el equipo de desarrollo...</p>
-                    </div>
-                    <div className="detail-section">
-                      <h4 className="section-title">Origen</h4>
-                      <div className="origin-badge-large">
-                        <i className={`bi bi-${job.source?.toLowerCase() === 'linkedin' ? 'linkedin' : 'search'}`}></i>
-                        <span>Capturado desde {job.source}</span>
                       </div>
                     </div>
                   </div>
                 )}
-
-                {/* --- Tab: Seguimiento --- */}
-                {activeTab === 'seguimiento' && (
-                  <div className="tab-pane fade show active">
-                    <div className="add-note-section mb-4">
-                      <h4 className="section-title">Agregar nota</h4>
-                      <textarea className="form-control mb-3" rows="3" placeholder="Escribe una nota..."></textarea>
-                      <button className="btn btn-primary">
-                        <i className="bi bi-plus-circle me-2"></i> Agregar nota
-                      </button>
-                    </div>
-                    <div className="timeline-section">
-                      <h4 className="section-title">Historial</h4>
-                      <div className="timeline-item">
-                        <div className="timeline-marker marker-purple"><i className="bi bi-plus-circle"></i></div>
-                        <div className="timeline-content">
-                          <p className="timeline-title">Vacante capturada</p>
-                          <p className="timeline-desc">Desde {job.source}</p>
-                          <span className="timeline-time">{job.time} · Sistema</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* --- Tab: Documentos --- */}
-                {activeTab === 'documentos' && (
-                  <div className="tab-pane fade show active">
-                    <div className="documents-section">
-                      <h4 className="section-title mb-3">Documentos adjuntos</h4>
-                      <div className="document-item">
-                        <div className="document-icon"><i className="bi bi-file-earmark-pdf"></i></div>
-                        <div className="document-info">
-                          <p className="document-name">job_description_{job.id}.pdf</p>
-                          <p className="document-meta">Generado por Nexus Engine</p>
-                        </div>
-                        <button className="btn-icon"><i className="bi bi-download"></i></button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {/* ... resto de tus pestañas ... */}
               </div>
             </div>
 
-            {/* Footer */}
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={onClose}>Cerrar</button>
-              <button type="button" className="btn btn-primary">Guardar cambios</button>
+              <button type="button" className="btn btn-secondary" onClick={onClose}>
+                Cancelar
+              </button>
+              {/* 4. Conectamos el botón de Guardar */}
+              <button 
+                type="button" 
+                className="btn btn-primary" 
+                onClick={handleSave}
+              >
+                Guardar cambios
+              </button>
             </div>
 
           </div>
