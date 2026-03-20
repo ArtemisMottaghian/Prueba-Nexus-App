@@ -1,15 +1,28 @@
-import psycopg2
-import os
-from dotenv import load_dotenv
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import declarative_base
 
-load_dotenv()
+# Importamos la variable 'settings' que ya has instanciado en tu config.py
+from core.config import settings 
 
-def get_db_connection():
-   
-    return psycopg2.connect(
-        host="localhost",
-        database=os.getenv("DB_NAME"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        port=os.getenv("DB_PORT")
-    )
+# Creamos el motor asíncrono
+engine = create_async_engine(settings.DATABASE_URL, echo=False)
+
+# Creador de sesiones asíncronas
+AsyncSessionLocal = async_sessionmaker(
+    bind=engine, 
+    class_=AsyncSession, 
+    expire_on_commit=False
+)
+
+# ==========================================
+# AQUÍ ESTÁ EL BASE QUE NO ENCONTRABA
+Base = declarative_base()
+# ==========================================
+
+# El inyector de dependencias asíncrono
+async def get_db():
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()

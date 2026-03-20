@@ -2,7 +2,7 @@ import asyncio
 import httpx
 from core.config import settings
 from sqlalchemy.dialects.postgresql import insert
-from backend.app.schemas.job_offer import JobOfferRequest
+from app.schemas.job_offer import JobOfferRequest
 
 from bs4 import BeautifulSoup
 import re
