@@ -2,12 +2,13 @@ from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import selectinload
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import AsyncSessionLocal
 from app.db.models import JobOffer, OfferStatus
 
 # Funcion para obtener el listado (Dashboard y Pantalla de Vacantes)
-async def get_vacancies_list(status: Optional[str] = None) -> List[JobOffer]:
+async def get_vacancies_list(db: AsyncSession, status: Optional[str] = None) -> List[JobOffer]:
     """
     Obtiene todas las vacantes.
     Si se pasa 'status' (ej: 'detected), filtra por ese estado
@@ -35,7 +36,7 @@ async def get_vacancies_list(status: Optional[str] = None) -> List[JobOffer]:
         raise e
 
 # Funcion para obtener el detalle de una vacante
-async def get_vacancy_by_id(vacancy_id: int) -> Optional[JobOffer]:
+async def get_vacancy_by_id(db: AsyncSession, vacancy_id: int) -> Optional[JobOffer]:
     try:
         async with AsyncSessionLocal() as session:
             # Buscar por id

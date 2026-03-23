@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.dialects.postgresql import ENUM 
-from db.connection import Base
-from backend.app.schemas.users_schemas import UserType 
+from app.db.connection import Base
+from app.schemas.users_schemas import UserType 
 
 class User(Base):
     __tablename__ = "users"

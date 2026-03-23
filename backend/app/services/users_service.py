@@ -3,8 +3,8 @@ from sqlalchemy.future import select
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from fastapi import HTTPException
 
-from models.user_model import User
-from schemas.users_schemas import NewUser
+from app.models.user_model import User
+from app.schemas.users_schemas import NewUser
 
 #Crear nuevo usuario
 async def newUser(db: AsyncSession, datos: NewUser):
