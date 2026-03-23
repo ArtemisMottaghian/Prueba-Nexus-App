@@ -32,14 +32,13 @@ async def get_vacancies_list(db: AsyncSession, status: Optional[str] = None) -> 
 
             return result.scalars().all()
     except Exception as e:
-        # En caso de error, se relanza la excepcion para que la maneje el controlador
         raise e
 
-# Funcion para obtener el detalle de una vacante
+# detalle de una vacante
 async def get_vacancy_by_id(db: AsyncSession, vacancy_id: int) -> Optional[JobOffer]:
     try:
         async with AsyncSessionLocal() as session:
-            # Buscar por id
+            # buscar por id
             query = select(JobOffer).where(JobOffer.id == vacancy_id)
 
             result = await session.execute(query)

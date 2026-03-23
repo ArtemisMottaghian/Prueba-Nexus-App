@@ -10,7 +10,7 @@ router = APIRouter()
 
 # --------------------
 # CREAR usuario
-# POST /api/usuarios
+# POST /api/users
 # -----------------
 @router.post("", response_model=UserResponse)
 async def endpoint_newUser(
@@ -28,7 +28,7 @@ async def endpoint_newUser(
 
 # -----------------
 # Obtener usuario por email
-# GET /api/usuarios/{email} 
+# GET /api/users/{email} 
 # -----------------
 @router.get("/{email}", response_model=UserResponse)
 async def endpoint_getUser(

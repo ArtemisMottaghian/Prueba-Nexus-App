@@ -10,6 +10,10 @@ from app.schemas.vacancies_schemas import VacancySummary, VacancyDetail
 router = APIRouter()
 
 # Listado vacantes con filtro opcional por estado
+# -----------------
+# Obtener listado de vacantes
+# GET /api/vacancies
+# -----------------
 @router.get("", response_model=List[VacancySummary])
 async def read_vacancies(
     status: Optional[str] = None, 
@@ -19,6 +23,10 @@ async def read_vacancies(
     return vacantes
 
 # Detalle de vacante por ID
+# -----------------
+# Obtener detalle de vacante
+# GET /api/vacancies/{vacancy_id}
+# -----------------
 @router.get("/{vacancy_id}", response_model=VacancyDetail)
 async def read_vacancy(
     vacancy_id: int, 
