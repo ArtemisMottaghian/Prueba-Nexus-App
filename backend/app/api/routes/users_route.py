@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
-from schemas.services_schemas import NewUser, UserResponse 
+from backend.app.schemas.users_schemas import NewUser, UserResponse 
 from services import users_service
 from db.connection import get_db
 
