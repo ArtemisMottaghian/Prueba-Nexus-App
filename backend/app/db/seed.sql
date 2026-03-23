@@ -206,6 +206,18 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Funcion para registrar cambios de estado en tracking_history
+CREATE OR REPLACE FUNCTION log_client_lead_status_change()
+RETURN TRIGGER AS $$
+BEGIN
+    IF NEW.lead_status IS DISTINCT FROM OLD.lead_status THEN
+        INSERT INTO tracking_history (client_id, offer_id, action_type, previous_status, new_status, comments, recorded_at)
+        VALUES (OLD.id, NULL, 'Cambio de estado automatico', OLD.lead_status, NEW.lead_status, NULL, CURRENT_TIMESTAMP);
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Triggers aplicados a las tablas claves
 CREATE TRIGGER update_users_modtime
     BEFORE UPDATE ON users
@@ -232,6 +244,10 @@ AFTER UPDATE OF status ON candidates
 FOR EACH ROW
 EXECUTE FUNCTION log_candidate_status_change();
 
+CREATE TRIGGER trg_log_client_lead_status_change
+AFTER UPDATE OF lead_status ON clients
+FOR EACH ROW
+EXECUTE FUNCTION log_client_lead_status_change();
 
 -- Indices
 -- Indices de claves foraneas (para acelerar joins)
