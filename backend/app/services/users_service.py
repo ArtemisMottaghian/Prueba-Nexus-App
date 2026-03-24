@@ -5,13 +5,21 @@ from fastapi import HTTPException
 
 from app.models.user_model import User
 from app.schemas.users_schemas import NewUser
+from app.core.security import hash_passowrd
 
 #Crear nuevo usuario
 async def newUser(db: AsyncSession, datos: NewUser):
     try:
         datos_dict = datos.model_dump()
+
+        # Se extrae la contraseña plana y se hashea
+        plain_password = datos_dict.pop('password_hash')
+        hashed_pasword = hash_passowrd(plain_password)
+
+        # Se asigna la contraseña hasheada al diccionario
+        datos_dict['password_hash'] = hashed_pasword
+
         db_user = User(**datos_dict)
-        
         db.add(db_user)
         await db.commit() 
         await db.refresh(db_user) 
