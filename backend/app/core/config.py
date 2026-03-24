@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     DB_NAME: str
 
     PEPPER: str
+    SECRET_KEY: str
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_HOURS: int
 
     model_config = SettingsConfigDict(
         env_file=RUTA_ENV,
