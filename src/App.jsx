@@ -8,7 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Vacancies from './pages/Vacancies';
 import Calendario from './pages/Calendar';
 import Clientes from './pages/Clientes';
-import Candidatos from './pages/Candidatos';
+import Candidates from './pages/Candidates';
 
 import './index.css';
 
@@ -50,7 +50,7 @@ function App() {
                 <Route path="/vacantes" element={<Vacancies />} />
                 <Route path="/Calendar" element={<Calendario />} />
                 <Route path="/clientes" element={<Clientes />} />
-                <Route path="/candidatos" element={<Candidatos />} />
+                <Route path="/candidatos" element={<Candidates />} />
               </Routes>
             </div>
           </div>
