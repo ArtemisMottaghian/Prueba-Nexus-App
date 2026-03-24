@@ -49,10 +49,19 @@ export default function Sidebar({ isOpen, onClose }) {
               <span className="sidebar-text">Vacantes</span>
               <span className="sidebar-badge">12</span>
             </NavLink>
-            <a href="#" className="sidebar-item" title="Candidatos">
+
+            <NavLink
+              to="/candidatos"
+              className={({ isActive }) =>
+                `sidebar-item ${isActive ? 'active' : ''}`
+              }
+              title="Candidatos"
+              onClick={onClose}
+            >
               <i className="bi bi-people"></i>
               <span className="sidebar-text">Candidatos</span>
-            </a>
+            </NavLink>
+
             <NavLink
               to="/clientes"
               className={({ isActive }) =>
