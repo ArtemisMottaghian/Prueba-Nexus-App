@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     DB_PORT: str
     DB_NAME: str
 
+    PEPPER: str
+
     model_config = SettingsConfigDict(
         env_file=RUTA_ENV,
         env_file_encoding="utf-8",
