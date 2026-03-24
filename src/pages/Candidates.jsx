@@ -2,7 +2,7 @@ import { useState } from 'react';
 import FilterBar from '../components/recruitment/FilterBar';
 import CandidateGrid from '../components/recruitment/CandidateGrid';
 import BulkActions from '../components/recruitment/BulkActions';
-import initialJobsData from '../data/dummyData.json';
+import initialCandidatesData from '../data/candidatesData.json';
 
 export default function Candidates() {
   const [filters, setFilters] = useState({

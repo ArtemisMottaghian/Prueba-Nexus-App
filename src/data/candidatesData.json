@@ -1,0 +1,35 @@
+[
+  {
+    "id": 1,
+    "name": "Laura Martínez García",
+    "specialty": "Desarrollo Frontend",
+    "location": "Madrid",
+    "status": "Nuevo",
+    "source": "LinkedIn",
+    "experience": "4 años",
+    "isAvailable": true,
+    "time": "Hace 2 días"
+  },
+  {
+    "id": 2,
+    "name": "Carlos Ruiz Fernández",
+    "specialty": "Data Science",
+    "location": "Barcelona",
+    "status": "Contactado",
+    "source": "InfoJobs",
+    "experience": "6 años",
+    "isAvailable": false,
+    "time": "Hace 1 semana"
+  },
+  {
+    "id": 3,
+    "name": "Ana Sánchez López",
+    "specialty": "UX/UI Design",
+    "location": "Valencia",
+    "status": "En proceso",
+    "source": "LinkedIn",
+    "experience": "3 años",
+    "isAvailable": true,
+    "time": "Hace 3 días"
+  }
+]
