@@ -1,0 +1,49 @@
+/* src/components/recruitment/VacancyCard.css */
+.vacante-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.vacante-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--color-purple-primary);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(91, 63, 255, 0.2);
+}
+
+.vacante-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.detail-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-purple { background: #4325a7ad; color: #bba6ff; }
+.icon-cyan { background: rgba(0, 212, 255, 0.15); color: var(--color-cyan-primary); }
+
+.checkbox-lg {
+  width: 1.2rem;
+  height: 1.2rem;
+  cursor: pointer;
+}

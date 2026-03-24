@@ -1,0 +1,29 @@
+.stats-panel {
+  background: linear-gradient(
+    135deg,
+    rgba(91, 63, 255, 0.15) 0%,
+    rgba(124, 63, 255, 0.12) 40%,
+    rgba(0, 212, 255, 0.1) 100%
+  );
+  border: 1px solid rgba(91, 63, 255, 0.3);
+  border-radius: 24px;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+}
+
+.stat-number {
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stat-number-purple { color: var(--color-purple-primary); text-shadow: 0 0 20px rgba(91, 63, 255, 0.4); }
+.stat-number-cyan { color: var(--color-cyan-primary); text-shadow: 0 0 20px rgba(0, 212, 255, 0.4); }
+
+.stats-bar-track {
+  height: 6px;
+  border-radius: 9999px;
+  display: flex;
+  gap: 2px;
+  overflow: hidden;
+}

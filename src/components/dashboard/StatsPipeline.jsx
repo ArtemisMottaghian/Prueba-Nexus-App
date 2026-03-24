@@ -1,4 +1,5 @@
-export default function StatsPanel() {
+import './StatsPipeline.css';
+export default function StatsPipeline() {
   return (
     <div className="stats-panel mb-4">
       {/* Línea decorativa superior */}

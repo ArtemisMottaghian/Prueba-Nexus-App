@@ -1,3 +1,4 @@
+import './FilterBar.css';
 export default function FilterBar({ filters, onFilterChange, onClearFilters }) {
   const hasActiveFilters =
     filters.estado !== 'Todas' ||

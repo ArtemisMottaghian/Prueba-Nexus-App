@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import './CalendarGrid.css'; 
+import './CalendarGrid.css';
 
 export default function Calendario() {
   const [events, setEvents] = useState(() => {
@@ -214,7 +214,10 @@ export default function Calendario() {
               />
 
               <div className="modal-actions">
-                <button onClick={() => setSelectedDate(null)} className="nav-btn">
+                <button
+                  onClick={() => setSelectedDate(null)}
+                  className="nav-btn"
+                >
                   Cancelar
                 </button>
                 <button onClick={addEvent} className="primary-btn">

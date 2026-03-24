@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import VacancyCard from './VacancyCard';
 import VacancyModal from './VacancyModal';
-
+import './VacancyGrid.css';
 // 2. Recibimos 'jobs' y 'onUpdateJobStatus' del padre
 export default function VacancyGrid({
   jobs,

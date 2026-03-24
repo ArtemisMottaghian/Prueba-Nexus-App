@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-
+import './Topbar.css';
 const TITLES = {
   '/': 'Dashboard',
   '/vacantes': 'Vacantes',

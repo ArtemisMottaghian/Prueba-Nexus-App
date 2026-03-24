@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import CandidateCard from './CandidateCard';
 import CandidateModal from './CandidateModal';
-
+import './CandidateGrid.css';
 export default function CandidateGrid({
   candidates,
   activeFilters,

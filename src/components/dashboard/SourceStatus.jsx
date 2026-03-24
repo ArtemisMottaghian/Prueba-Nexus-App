@@ -1,4 +1,5 @@
-export default function BotStatusGrid() {
+import './SourceStatus.css';
+export default function SourceStatus() {
   return (
     <div className="row g-3 mb-4">
       {/* Adzuna - Todo OK */}
