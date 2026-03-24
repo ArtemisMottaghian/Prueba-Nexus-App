@@ -90,7 +90,9 @@ export default function CandidateModal({ candidate, onClose, onUpdateStatus }) {
                           </div>
                           <div>
                             <div className="field-label">Ubicación</div>
-                            <div className="field-value">{candidate.location}</div>
+                            <div className="field-value">
+                              {candidate.location}
+                            </div>
                           </div>
                         </div>
                         <div className="detail-field">

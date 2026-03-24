@@ -27,7 +27,9 @@ export default function CandidateGrid({
           activeFilters.especialidad === 'Todas' ||
           candidate.specialty === activeFilters.especialidad;
 
-        return matchEstado && matchEspecialidad && matchUbicacion && matchOrigen;
+        return (
+          matchEstado && matchEspecialidad && matchUbicacion && matchOrigen
+        );
       })
     : candidates;
 
@@ -64,7 +66,10 @@ export default function CandidateGrid({
           </div>
         ) : (
           filteredCandidates.map((candidate) => (
-            <div key={candidate.id} onClick={() => setSelectedCandidate(candidate)}>
+            <div
+              key={candidate.id}
+              onClick={() => setSelectedCandidate(candidate)}
+            >
               <CandidateCard
                 candidate={candidate}
                 isListView={viewMode === 'list'}

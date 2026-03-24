@@ -51,12 +51,12 @@ export default function Sidebar({ isOpen, onClose }) {
             </NavLink>
 
             <NavLink
-            to="/candidatos"
-            className={({isActive}) =>
-              `sidebar-item ${isActive ? 'active' : ''}`
-            }
-            title="Candidatos"
-            onClick={onClose}
+              to="/candidatos"
+              className={({ isActive }) =>
+                `sidebar-item ${isActive ? 'active' : ''}`
+              }
+              title="Candidatos"
+              onClick={onClose}
             >
               <i className="bi bi-people"></i>
               <span className="sidebar-text">Candidatos</span>
