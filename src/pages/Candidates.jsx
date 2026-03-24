@@ -29,7 +29,7 @@ export default function Candidates() {
     });
   };
 
-  const handleSelectCandidates = (id) => {
+  const handleSelectCandidate = (id) => {
     setSelectedCandidates((prevSelected) => {
       if (prevSelected.includes(id))
         return prevSelected.filter((vacancyId) => vacancyId !== id);
