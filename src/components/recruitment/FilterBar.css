@@ -3,33 +3,59 @@
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  padding: 16px;
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
+  padding: 20px;
 }
 
 .filter-label {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
   color: var(--text-muted);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   display: block;
 }
 
 .filter-select {
-  background: rgba(255, 255, 255, 0.05);
+  background-color: var(--bg-dark-elevated); /* Color sólido para evitar transparencias raras */
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
   border: 1px solid var(--border-color);
   border-radius: 12px;
   color: var(--text-primary);
   font-size: 14px;
-  padding: 10px 12px;
+  padding: 10px 36px 10px 12px; /* Espacio extra a la derecha para la flecha */
+  appearance: none; /* Quita la flecha fea por defecto del navegador */
   transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+/* ✨ ESTO ARREGLA EL MENÚ QUE SE VE BLANCO ✨ */
+.filter-select option {
+  background-color: var(--bg-dark-tertiary);
+  color: var(--text-primary);
+  padding: 10px;
 }
 
 .filter-select:focus {
+  outline: none;
   border-color: var(--color-purple-primary);
-  box-shadow: 0 0 0 3px rgba(91, 63, 255, 0.2);
+  box-shadow: 0 0 0 3px rgba(124, 63, 255, 0.2);
+}
+
+/* Estilo para el botón de limpiar */
+.btn-clear {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.btn-clear:not(:disabled):hover {
+  transform: scale(1.05);
+  filter: brightness(1.1);
 }

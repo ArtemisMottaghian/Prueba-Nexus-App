@@ -19,3 +19,42 @@
   border-radius: 12px;
   padding: 4px;
 }
+/* --- Estilos para el selector de vista (Cuadrícula/Lista) --- */
+.view-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.view-btn {
+  padding: 8px 12px;
+  background: transparent; /* Quita el fondo gris feo */
+  border: none;            /* Quita el borde de botón antiguo */
+  border-radius: 8px;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* El botón que está seleccionado brilla con tus colores */
+.view-btn.active {
+  background: linear-gradient(
+    135deg,
+    var(--color-purple-primary),
+    var(--color-purple-secondary)
+  );
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(91, 63, 255, 0.3);
+}
+
+.view-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
