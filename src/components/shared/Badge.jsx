@@ -1,3 +1,4 @@
+import './Badge.css';
 export default function Badge({ type = 'nueva', label }) {
   const classes = {
     nueva: 'badge-nueva',

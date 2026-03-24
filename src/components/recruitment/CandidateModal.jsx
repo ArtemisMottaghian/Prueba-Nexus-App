@@ -1,5 +1,5 @@
 import { useState } from 'react';
-
+import './CandidateModal.css';
 export default function CandidateModal({ candidate, onClose, onUpdateStatus }) {
   const [activeTab, setActiveTab] = useState('detalles');
   const [localStatus, setLocalStatus] = useState(candidate?.status || '');

@@ -1,3 +1,4 @@
+import './CandidateCard.css';
 export default function CandidateCard({
   candidate,
   isListView,

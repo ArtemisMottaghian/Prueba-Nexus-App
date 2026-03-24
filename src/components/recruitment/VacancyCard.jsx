@@ -1,3 +1,4 @@
+import './VacancyCard.css';
 export default function VacancyCard({
   job,
   isListView,

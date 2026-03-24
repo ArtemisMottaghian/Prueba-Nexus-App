@@ -1,0 +1,118 @@
+.stats-panel {
+  background: linear-gradient(
+    135deg,
+    rgba(26, 26, 46, 0.4) 0%,
+    rgba(91, 63, 255, 0.05) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.stats-panel:hover {
+  transform: translateY(-4px);
+  border-color: rgba(91, 63, 255, 0.3);
+}
+
+/* Línea de luz superior */
+.stats-accent {
+  height: 3px;
+  background: linear-gradient(
+    90deg, 
+    var(--color-purple-primary), 
+    var(--color-cyan-primary), 
+    var(--color-violet)
+  );
+  opacity: 0.8;
+}
+
+.stats-col {
+  padding: 32px 24px;
+  text-align: center;
+  position: relative;
+}
+
+/* Separadores sutiles entre columnas */
+.stats-col:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.stat-number {
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+/* Efectos de brillo para los números */
+.stat-number-purple {
+  color: #a855f7;
+  text-shadow: 0 0 25px rgba(168, 85, 247, 0.4);
+}
+
+.stat-number-cyan {
+  color: #00d4ff;
+  text-shadow: 0 0 25px rgba(0, 212, 255, 0.4);
+}
+
+.stat-number-violet {
+  color: #ff00e5; /* Un violeta más vibrante */
+  text-shadow: 0 0 25px rgba(255, 0, 229, 0.4);
+}
+
+.stat-change {
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* Barra de progreso LED */
+.stats-bar-container {
+  padding: 0 24px 24px;
+}
+
+.stats-bar-track {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 9999px;
+  display: flex;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.stats-bar-purple {
+  background: #a855f7;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.6);
+}
+
+.stats-bar-cyan {
+  background: #00d4ff;
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.6);
+}
+
+.stats-bar-violet {
+  background: #ff00e5;
+  box-shadow: 0 0 12px rgba(255, 0, 229, 0.6);
+}

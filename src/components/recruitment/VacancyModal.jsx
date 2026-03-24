@@ -1,5 +1,5 @@
 import { useState } from 'react';
-
+import './VacancyModal.css';
 export default function VacancyModal({ job, onClose, onUpdateStatus }) {
   const [activeTab, setActiveTab] = useState('detalles');
   const [localStatus, setLocalStatus] = useState(job?.status || '');
