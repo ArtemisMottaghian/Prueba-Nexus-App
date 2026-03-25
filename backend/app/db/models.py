@@ -50,6 +50,7 @@ class ApplicationStatus(str, enum.Enum):
     rejected_by_client = "rejected_by_client"
     rejected_by_candidate = "rejected_by_candidate"
     pool = "pool"
+
 # Modelos (Tablas)
 class User(Base):
     __tablename__= "users"
@@ -57,7 +58,7 @@ class User(Base):
     id = Column(BigInteger, primary_key=True, index=True)
     email = Column(String(255), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
-    role = Column(PgEnum(UserRole), nullable=False)
+    role = Column(PgEnum(UserRole, name="user_role", create_type=False), nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
@@ -68,7 +69,6 @@ class User(Base):
     # 'managed_offers" accede a ofertas donde este usuario es el gestor
     managed_offers = relationship("JobOffer", back_populates="manager")
     
-    # CORREGIDO: back_populates debe apuntar a 'user' en la clase Client
     client_profile = relationship("Client", back_populates="user", uselist=False)
 
 class JobPortal(Base):
@@ -116,7 +116,7 @@ class JobOffer(Base):
     contract_type = Column(String(50))
     contract_time = Column(String(50))
     work_modality = Column(String(50))
-    status = Column(PgEnum(OfferStatus), default=OfferStatus.detected, index=True)
+    status = Column(PgEnum(OfferStatus, name="offer_status", create_type=False), default=OfferStatus.detected, index=True)
     priority = Column(Integer, default=3)
     scraped_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
@@ -137,7 +137,6 @@ class JobOffer(Base):
     
     tracking_entries = relationship("TrackingHistory", back_populates="offer")
     
-    # AÑADIDO: Relación con JobApplication
     applications = relationship("JobApplication", back_populates="offer", cascade="all, delete-orphan")
 
 class SearchResult(Base):
@@ -158,8 +157,8 @@ class Client(Base):
     source_id = Column(Integer, ForeignKey("job_portals.id"))
     original_offer_id = Column(BigInteger, ForeignKey("job_offers.id"))
     company_name = Column(String(255), nullable=False, index=True)
-    entity_type = Column(PgEnum(EntityType))
-    lead_status = Column(PgEnum(LeadStatus), index=True)
+    entity_type = Column(PgEnum(EntityType, name="entity_type", create_type=False))
+    lead_status = Column(PgEnum(LeadStatus, name="lead_status", create_type=False), index=True)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     user = relationship("User", back_populates="client_profile")
@@ -192,8 +191,8 @@ class TrackingHistory(Base):
     client_id = Column(BigInteger, ForeignKey("clients.id", ondelete="CASCADE"))
     offer_id = Column(BigInteger, ForeignKey("job_offers.id"))
     action_type = Column(String(255))
-    previous_status = Column(PgEnum(LeadStatus))
-    new_status = Column(PgEnum(LeadStatus))
+    previous_status = Column(PgEnum(LeadStatus, name="lead_status", create_type=False))
+    new_status = Column(PgEnum(LeadStatus, name="lead_status", create_type=False))
     comments = Column(Text)
     recorded_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
@@ -212,7 +211,7 @@ class Candidate(Base):
     linkedin_url = Column(String(255))
     cv_url = Column(Text)
     skills = Column(Text) # Puedes guardar "Python, React"
-    status = Column(PgEnum(CandidateStatus), default=CandidateStatus.active, index=True)
+    status = Column(PgEnum(CandidateStatus, name="candidate_status", create_type=False), default=CandidateStatus.active, index=True)
     notes = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
@@ -227,7 +226,7 @@ class JobApplication(Base):
     candidate_id = Column(BigInteger, ForeignKey("candidates.id", ondelete="CASCADE"))
     offer_id = Column(BigInteger, ForeignKey("job_offers.id", ondelete="CASCADE"))
     
-    status = Column(PgEnum(ApplicationStatus), default=ApplicationStatus.proposed, index=True)
+    status = Column(PgEnum(ApplicationStatus, name="application_status", create_type=False), default=ApplicationStatus.proposed, index=True)
     feedback = Column(Text)
     
     hired_at = Column(DateTime(timezone=True))

@@ -2,15 +2,15 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
-from schemas.services_schemas import NewUser, UserResponse 
-from services import users_service
-from db.connection import get_db
+from app.schemas.users_schemas import NewUser, UserResponse
+from app.services import users_service
+from app.db.connection import get_db
 
 router = APIRouter() 
 
 # --------------------
 # CREAR usuario
-# POST /api/usuarios
+# POST /api/users
 # -----------------
 @router.post("", response_model=UserResponse)
 async def endpoint_newUser(
@@ -28,7 +28,7 @@ async def endpoint_newUser(
 
 # -----------------
 # Obtener usuario por email
-# GET /api/usuarios/{email} 
+# GET /api/users/{email} 
 # -----------------
 @router.get("/{email}", response_model=UserResponse)
 async def endpoint_getUser(

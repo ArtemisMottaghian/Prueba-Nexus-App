@@ -141,6 +141,18 @@ CREATE TABLE candidates (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Tabla para registrar cada cambio de estado de los candidatos
+CREATE TABLE candidate_status_history (
+    id BIGSERIAL PRIMARY KEY,
+    candidate_id BIGINT REFERENCES candidates(id) ON DELETE CASCADE,
+    previous_status candidate_status,
+    new_status candidate_status,
+    changed_by BIGINT REFERENCES users(id) -- Quien hizo el cambio (Opcional)
+    comments TEXT,
+    changed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+
 -- Tabla para relacionar un candidato con una oferta
 CREATE TABLE job_applications (
     id BIGSERIAL PRIMARY KEY,
@@ -182,6 +194,30 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
+-- Funcion para insertar automaticamente datos en la tabla candidate_status_history al registrar un cambio de estado
+CREATE OR REPLACE FUNCTION log_candidate_status_change()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.status IS DISTINCT FROM OLD.status THEN
+        INSERT INTO candidate_status_history (candidate_id, previous_status, new_status, changed_at)
+        VALUES (OLD.id, OLD.status, NEW.status, CURRENT_TIMESTAMP);
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Funcion para registrar cambios de estado en tracking_history
+CREATE OR REPLACE FUNCTION log_client_lead_status_change()
+RETURN TRIGGER AS $$
+BEGIN
+    IF NEW.lead_status IS DISTINCT FROM OLD.lead_status THEN
+        INSERT INTO tracking_history (client_id, offer_id, action_type, previous_status, new_status, comments, recorded_at)
+        VALUES (OLD.id, NULL, 'Cambio de estado automatico', OLD.lead_status, NEW.lead_status, NULL, CURRENT_TIMESTAMP);
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Triggers aplicados a las tablas claves
 CREATE TRIGGER update_users_modtime
     BEFORE UPDATE ON users
@@ -203,6 +239,15 @@ CREATE TRIGGER update_job_applications_modtime
     BEFORE UPDATE ON job_applications
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER trg_log_candidate_status_change
+AFTER UPDATE OF status ON candidates
+FOR EACH ROW
+EXECUTE FUNCTION log_candidate_status_change();
+
+CREATE TRIGGER trg_log_client_lead_status_change
+AFTER UPDATE OF lead_status ON clients
+FOR EACH ROW
+EXECUTE FUNCTION log_client_lead_status_change();
 
 -- Indices
 -- Indices de claves foraneas (para acelerar joins)
