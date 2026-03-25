@@ -2,15 +2,108 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException
+from typing import List
 
 from app.models.clients_model import Client
-from app.schemas.clients_schemas import ClientUpdate
+from app.models.contacts_model import Contact
+from app.models.job_model import JobOffer
+from app.schemas.clients_schemas import ClientUpdate, ClientOut, ClientDetailOut, VacanteOut
 
-async def update_client(db: AsyncSession, client_id: int, client_data: ClientUpdate) -> Client:
+# --- Funciones helper ----
+async def _get_primary_contact(db: AsyncSession, client_id: int) -> Contact | None:
+    """ Devuelve el primer contacto vinculado al cliente, si existe"""
+    result = await db.execute(
+        select(Contact)
+        .where(Contact.client_id == client_id)
+        .order_by(Contact.id.asc())
+        .limit(1)
+    )
+    return result.scalars().first()
+
+def _build_client_out(client: Client, contact: Contact | None, vacantes_abiertas: int) -> dict:
+    """ Construye el dict de salida combinando Client + Contact."""
+    return {
+        "id": client.id,
+        "nombre": client.company_name,
+        "sector": client.sector,
+        "contacto_principal": contact.full_name if contact else None,
+        "email": contact.email if contact else None,
+        "telefono": contact.phone if contact else None,
+        "cif": client.cif,
+        "direccion": client.direction,
+    }
+
+async def _get_client_or_404(db: AsyncSession, client_id: int) -> Client:
+    result = await db.execute(select(Client).where(Client.id == client_id))
+    client = result.scalars().first()
+    if not client:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Cliente con ID {client_id} no encontrado"
+        )
+    return client
+
+# ---- CRUD -----
+async def get_all_clients(db: AsyncSession) -> List[ClientOut]:
     try:
-        result = await db.execute(select(Client).where(Client.id == client_id))
-        client = result.scalars().first()
+        result = await db.execute(select(Client).order_by(Client.id.asc()))
+        clients = result.scalars().all()
 
+        output = []
+
+        for client in clients:
+            contact = await _get_primary_contact(db, client.id)
+            data = await _build_client_out(client, contact, 0)  # Provide vacantes_abiertas if needed
+            output.append(ClientOut(**data))
+        
+        return output
+    except SQLAlchemyError as e:
+        print(f"Error al obtener clientes: {e}")
+        raise HTTPException(status_code=500, detail="Error al obtener el listado de clientes")
+
+async def get_client_by_id(db: AsyncSession, client_id: int) -> ClientDetailOut:
+    try:
+        client = await _get_client_or_404(db, client_id)
+        contact = await _get_primary_contact(db, client_id)
+
+        # Vacantes vinculadas al cliente
+        vacantes_result = await db.execute(
+            select(JobOffer).where(
+                JobOffer.id == client.original_offer_id
+            )
+        )
+        vacantes_raw = vacantes_result.scalars().all()
+
+        vacantes = [
+            VacanteOut(
+                id=v.title,
+                estado=v.status.value if v.status else "unkown",
+                fecha=v.published_at
+            )
+            for v in vacantes_raw
+        ]
+
+        data = _build_client_out(client, contact, vacantes_abiertas=len(vacantes))
+        return ClientDetailOut(**data, vacantes=vacantes)
+    
+    except HTTPException:
+        raise
+
+    except SQLAlchemyError as e:
+        print(f"Error al obtener el cliente {client_id}: {e}")
+        raise HTTPException(status_code=500, detail="Error al obtener el cliente")
+    
+    except Exception as e:
+        print(f"Error inesperado al listar el cliente {client_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error inesperado en el servidor"
+        )
+    
+
+async def update_client(db: AsyncSession, client_id: int, client_data: ClientUpdate) -> ClientOut:
+    try:
+        client = await _get_client_or_404(db, client_id)
         if not client:
             raise HTTPException(
                 status_code=404,
@@ -21,13 +114,36 @@ async def update_client(db: AsyncSession, client_id: int, client_data: ClientUpd
         # exclude_unset=True es clave aquí para no sobreescribir con None los campos no enviados
         update_data = client_data.model_dump(exclude_unset=True)
 
-        for key, value in update_data.items():
-            setattr(client, key, value)
+        # Campos que van al modelo Contact
+        contact_fields = {"contacto_principal", "email", "telefono"}
+        contact_updates = {k: v for k, v in update_data.items() if k in contact_fields}
 
+        contact = await _get_primary_contact(db, client_id)
+
+        if contact_updates:
+            if contact:
+                # Actualizar el contacto existente
+                if "contacto_principal" in contact_updates:
+                    contact.full_name = contact_updates["contacto_principal"]
+                if "email" in contact_updates:
+                    contact.email = contact_updates["email"]
+                if "telefono" in contact_updates:
+                    contact.phone = contact_updates["telefono"]
+            else:
+                # Crear contacto si no existia
+                contact = Contact(
+                    client_id=client_id,
+                    full_name=contact_updates.get("contacto_principal", "Sin nombre"),
+                    email=contact_updates.get("email"),
+                    phone=contact_updates.get("telefono")
+                )
+                db.add(contact)
+        
         await db.commit()
         await db.refresh(client)
 
-        return client
+        data = _build_client_out(client, contact)
+        return ClientOut(**data)
     
     except HTTPException:
         # Se relanza la excepcion 404 para que FastAPI la devuelva correctamente
