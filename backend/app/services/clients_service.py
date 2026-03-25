@@ -216,3 +216,30 @@ async def update_client(db: AsyncSession, client_id: int, client_data: ClientUpd
             status_code=500,
             detail="Error inesperado en el servidor"
         )
+
+async def get_client_vacantes(db: AsyncSession, client_id: int) -> List[VacanteOut]:
+    try:
+        await _get_client_or_404(db, client_id)
+
+        result = await db.execute(
+            select(JobOffer).where(JobOffer.id == (
+                select(Client.original_offer_id).where(Client.id == client_id).scalar_subquery()
+            ))
+        )
+
+        vacantes_raw = result.scalars().all()
+
+        return [
+            VacanteOut(
+                id=v.id,
+                titulo=v.title,
+                estado=v.status.value if v.status else "unknown",
+                fecha=v.published_at,
+            )
+            for v in vacantes_raw
+        ]
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        print(f"Error al obtener vacantes del cliente {client_id}: {e}")
+        raise HTTPException(status_code=500, detail="Error al obtener vacantes")
