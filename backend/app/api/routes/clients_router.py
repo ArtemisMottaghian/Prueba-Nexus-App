@@ -60,3 +60,14 @@ async def endpoint_update_client(
         raise HTTPException(status_code=400, detail="Error de integridad en la base de datos")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.delete("/client_id")
+async def delete_client(client_id: int, db: AsyncSession = Depends(get_db)):
+    try:
+        cliente_eliminado = await clients_service.delete_client(db, client_id)
+        return cliente_eliminado
+    except IntegrityError as e:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="Error de integridad en la base de datos")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

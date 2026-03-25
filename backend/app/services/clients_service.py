@@ -1,14 +1,16 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import func, delete
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException
 from typing import List
 
 from app.models.clients_model import Client
-from app.models.contacts_model import Contact
-from app.models.job_model import JobOffer
-from app.schemas.clients_schemas import ClientUpdate, ClientOut, ClientDetailOut, VacanteOut
-
+from app.models.contacts_model import Contact      # asegúrate de tener este modelo
+from app.models.job_model import JobOffer   # asegúrate de tener este modelo
+from app.schemas.clients_schemas import (
+    ClientCreate, ClientUpdate, ClientOut, ClientDetailOut, VacanteOut
+)
 # --- Funciones helper ----
 async def _get_primary_contact(db: AsyncSession, client_id: int) -> Contact | None:
     """ Devuelve el primer contacto vinculado al cliente, si existe"""
@@ -100,6 +102,22 @@ async def get_client_by_id(db: AsyncSession, client_id: int) -> ClientDetailOut:
             detail="Error inesperado en el servidor"
         )
     
+async def delete_client(db: AsyncSession, client_id: int) -> dict:
+    try:
+        client = await _get_client_or_404(db, client_id)
+
+        # Los contactos tienen ON DELETE CASCADE en la DB, pero por claridad
+        await db.execute(delete(Contact).where(Contact.client_id == client_id))
+        await db.delete(client)
+        await db.commit()
+
+        return {"mensaje": "Cliente eliminado correctamente"}
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        await db.rollback()
+        print(f"Error al eliminar el cliente {client_id}: {e}")
+        raise HTTPException(status_code=500, detail="Error al eliminar el cliente")
 
 async def update_client(db: AsyncSession, client_id: int, client_data: ClientUpdate) -> ClientOut:
     try:
