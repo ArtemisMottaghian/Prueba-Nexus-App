@@ -1,3 +1,4 @@
+import './ActivityPanel.css';
 export default function ActivityPanel({ isOpen, onClose }) {
   if (!isOpen) return null;
 

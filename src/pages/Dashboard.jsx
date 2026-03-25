@@ -1,6 +1,5 @@
-import BotStatusGrid from '../components/dashboard/BotStatusGrid';
-import StatsPanel from '../components/dashboard/StatsPanel';
-
+import SourceStatus from '../components/dashboard/SourceStatus';
+import StatsPipeline from '../components/dashboard/StatsPipeline';
 export default function Dashboard() {
   return (
     <>
@@ -10,8 +9,8 @@ export default function Dashboard() {
           Resumen de actividad de los bots y estado comercial.
         </p>
       </div>
-      <BotStatusGrid />
-      <StatsPanel />
+      <SourceStatus />
+      <StatsPipeline />
     </>
   );
 }

@@ -1,6 +1,6 @@
-import './VacancyCard.css';
-export default function VacancyCard({
-  job,
+import './CandidateCard.css';
+export default function CandidateCard({
+  candidate,
   isListView,
   onClick,
   isSelected,
@@ -8,13 +8,13 @@ export default function VacancyCard({
   onUpdateStatus,
 }) {
   let badgeClass = 'badge-nueva';
-  if (job.status === 'Contactada') badgeClass = 'badge-contactada';
-  if (job.status === 'En proceso') badgeClass = 'badge-en-proceso';
-  if (job.status === 'Descartada') badgeClass = 'badge-descartada';
+  if (candidate.status === 'Contactado') badgeClass = 'badge-contactada';
+  if (candidate.status === 'En proceso') badgeClass = 'badge-en-proceso';
+  if (candidate.status === 'Descartado') badgeClass = 'badge-descartada';
 
   const handleCheckboxClick = (e) => {
     e.stopPropagation();
-    onSelect(job.id);
+    onSelect(candidate.id);
   };
 
   const handleChildClick = (e) => {
@@ -23,7 +23,7 @@ export default function VacancyCard({
 
   const handleStatusChange = (e) => {
     e.stopPropagation();
-    onUpdateStatus(job.id, e.target.value);
+    onUpdateStatus(candidate.id, e.target.value);
   };
 
   if (isListView) {
@@ -42,17 +42,17 @@ export default function VacancyCard({
               onChange={handleCheckboxClick}
             />
             <h5 className="mb-0 text-white vacante-title-list-sm">
-              {job.title}
+              {candidate.name}
             </h5>
             <span className="text-muted small">|</span>
-            <span className="detail-text">{job.companyName}</span>
+            <span className="detail-text">{candidate.specialty}</span>
           </div>
           <div className="d-flex align-items-center gap-4">
             <span className="detail-text opacity-75">
               <i className="bi bi-geo-alt me-1"></i>
-              {job.location}
+              {candidate.location}
             </span>
-            <span className={`badge ${badgeClass}`}>{job.status}</span>
+            <span className={`badge ${badgeClass}`}>{candidate.status}</span>
             <button className="btn-icon btn-icon-sm" onClick={handleChildClick}>
               <i className="bi bi-star"></i>
             </button>
@@ -78,14 +78,14 @@ export default function VacancyCard({
           />
           <select
             className={`form-select form-select-sm select-status-inline ${badgeClass}`}
-            value={job.status}
+            value={candidate.status}
             onChange={handleStatusChange}
             onClick={handleChildClick}
           >
-            <option value="Nueva">Nueva</option>
-            <option value="Contactada">Contactada</option>
+            <option value="Nuevo">Nuevo</option>
+            <option value="Contactado">Contactado</option>
             <option value="En proceso">En proceso</option>
-            <option value="Descartada">Descartada</option>
+            <option value="Descartado">Descartado</option>
           </select>
         </div>
         <button className="btn-icon btn-icon-sm" onClick={handleChildClick}>
@@ -93,17 +93,17 @@ export default function VacancyCard({
         </button>
       </div>
 
-      <h3 className="vacante-title">{job.title}</h3>
+      <h3 className="vacante-title">{candidate.name}</h3>
 
       <div className="vacante-details">
         <div className="detail-item">
           <div className="detail-icon icon-purple">
-            <i className="bi bi-building"></i>
+            <i className="bi bi-person-badge"></i>
           </div>
           <div className="d-flex flex-column">
-            <span className="detail-text">{job.companyName}</span>
-            {job.isClient && (
-              <span className="badge mt-1 badge-client">Cliente Activo</span>
+            <span className="detail-text">{candidate.specialty}</span>
+            {candidate.isAvailable && (
+              <span className="badge mt-1 badge-client">Disponible</span>
             )}
           </div>
         </div>
@@ -111,16 +111,16 @@ export default function VacancyCard({
           <div className="detail-icon icon-cyan">
             <i className="bi bi-geo-alt"></i>
           </div>
-          <span className="detail-text">{job.location}</span>
+          <span className="detail-text">{candidate.location}</span>
         </div>
       </div>
 
       <div className="vacante-footer">
         <div className="origin-badge">
           <i className="bi bi-linkedin"></i>
-          <span>{job.source}</span>
+          <span>{candidate.source}</span>
         </div>
-        <span className="vacante-date">{job.time}</span>
+        <span className="vacante-date">{candidate.time}</span>
       </div>
     </div>
   );

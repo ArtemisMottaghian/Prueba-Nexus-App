@@ -1,0 +1,60 @@
+.source-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Efecto de brillo sutil en el borde según el estado */
+.source-card.status-success { border-left: 4px solid #10b981; }
+.source-card.status-warning { border-left: 4px solid #f59e0b; }
+.source-card.status-danger  { border-left: 4px solid #ef4444; }
+
+.source-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-2px);
+}
+
+.source-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+  font-size: 1.25rem;
+}
+
+/* Colores de iconos con resplandor */
+.bg-success-soft { 
+  background: rgba(16, 185, 129, 0.15); 
+  color: #10b981;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+.bg-warning-soft { 
+  background: rgba(245, 158, 11, 0.15); 
+  color: #f59e0b;
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+}
+.bg-danger-soft  { 
+  background: rgba(239, 68, 68, 0.15); 
+  color: #ef4444;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+.source-info h6 {
+  font-weight: 700;
+  margin-bottom: 2px;
+  letter-spacing: 0.5px;
+}
+
+.source-status-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+}

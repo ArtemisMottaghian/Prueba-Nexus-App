@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import './VacancyModal.css';
-export default function VacancyModal({ job, onClose, onUpdateStatus }) {
+import './CandidateModal.css';
+export default function CandidateModal({ candidate, onClose, onUpdateStatus }) {
   const [activeTab, setActiveTab] = useState('detalles');
-  const [localStatus, setLocalStatus] = useState(job?.status || '');
+  const [localStatus, setLocalStatus] = useState(candidate?.status || '');
 
-  if (!job) return null;
+  if (!candidate) return null;
 
   const handleSave = () => {
-    onUpdateStatus(job.id, localStatus);
+    onUpdateStatus(candidate.id, localStatus);
     onClose();
   };
 
@@ -19,11 +19,11 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
           <div className="modal-content">
             <div className="modal-header">
               <div className="flex-grow-1">
-                <h2 className="modal-title">{job.title}</h2>
+                <h2 className="modal-title">{candidate.name}</h2>
                 <div className="d-flex align-items-center gap-2 mt-1">
-                  <span className="modal-subtitle">{job.companyName}</span>
-                  {job.isClient && (
-                    <span className="badge badge-client-sm">Cliente</span>
+                  <span className="modal-subtitle">{candidate.specialty}</span>
+                  {candidate.isAvailable && (
+                    <span className="badge badge-client-sm">Disponible</span>
                   )}
                 </div>
               </div>
@@ -41,10 +41,10 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
                   value={localStatus}
                   onChange={(e) => setLocalStatus(e.target.value)}
                 >
-                  <option value="Nueva">Nueva</option>
-                  <option value="Contactada">Contactada</option>
+                  <option value="Nuevo">Nuevo</option>
+                  <option value="Contactado">Contactado</option>
                   <option value="En proceso">En proceso</option>
-                  <option value="Descartada">Descartada</option>
+                  <option value="Descartado">Descartado</option>
                 </select>
                 <button className="btn-icon">
                   <i className="bi bi-star"></i>
@@ -90,17 +90,19 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
                           </div>
                           <div>
                             <div className="field-label">Ubicación</div>
-                            <div className="field-value">{job.location}</div>
+                            <div className="field-value">
+                              {candidate.location}
+                            </div>
                           </div>
                         </div>
                         <div className="detail-field">
                           <div className="detail-icon icon-purple">
-                            <i className="bi bi-cash"></i>
+                            <i className="bi bi-briefcase"></i>
                           </div>
                           <div>
-                            <div className="field-label">Salario</div>
+                            <div className="field-label">Experiencia</div>
                             <div className="field-value">
-                              {job.salary || 'A convenir'}
+                              {candidate.experience || 'No especificada'}
                             </div>
                           </div>
                         </div>
