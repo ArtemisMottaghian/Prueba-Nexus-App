@@ -7,7 +7,7 @@ from typing import List
 from app.models.clients_model import Client
 from app.models.contacts_model import Contact
 from app.models.job_model import JobOffer
-from app.schemas.clients_schemas import ClientUpdate, ClientOut
+from app.schemas.clients_schemas import ClientUpdate, ClientOut, ClientDetailOut, VacanteOut
 
 # --- Funciones helper ----
 async def _get_primary_contact(db: AsyncSession, client_id: int) -> Contact | None:
@@ -60,7 +60,47 @@ async def get_all_clients(db: AsyncSession) -> List[ClientOut]:
     except SQLAlchemyError as e:
         print(f"Error al obtener clientes: {e}")
         raise HTTPException(status_code=500, detail="Error al obtener el listado de clientes")
+
+async def get_client_by_id(db: AsyncSession, client_id: int) -> ClientDetailOut:
+    try:
+        client = await _get_client_or_404(db, client_id)
+        contact = await _get_primary_contact(db, client_id)
+
+        # Vacantes vinculadas al cliente
+        vacantes_result = await db.execute(
+            select(JobOffer).where(
+                JobOffer.id == client.original_offer_id
+            )
+        )
+        vacantes_raw = vacantes_result.scalars().all()
+
+        vacantes = [
+            VacanteOut(
+                id=v.title,
+                estado=v.status.value if v.status else "unkown",
+                fecha=v.published_at
+            )
+            for v in vacantes_raw
+        ]
+
+        data = _build_client_out(client, contact, vacantes_abiertas=len(vacantes))
+        return ClientDetailOut(**data, vacantes=vacantes)
     
+    except HTTPException:
+        raise
+
+    except SQLAlchemyError as e:
+        print(f"Error al obtener el cliente {client_id}: {e}")
+        raise HTTPException(status_code=500, detail="Error al obtener el cliente")
+    
+    except Exception as e:
+        print(f"Error inesperado al listar el cliente {client_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error inesperado en el servidor"
+        )
+    
+
 async def update_client(db: AsyncSession, client_id: int, client_data: ClientUpdate) -> ClientOut:
     try:
         client = await _get_client_or_404(db, client_id)
