@@ -15,19 +15,22 @@ class EntityType(str, Enum):
 
 
 
-# 1. Esquema Base: Contiene los campos comunes que se repiten
+# Esquema Base: Contiene los campos comunes que se repiten
 class ClientBase(BaseModel):
     company_name: str
+    sector: Optional[str] = None
+    cif: Optional[str] = None
+    direccion: Optional[str] = None
     source_id: Optional[int] = None
     original_offer_id: Optional[int] = None
     entity_type: Optional[EntityType] = None
     lead_status: Optional[LeadStatus] = LeadStatus.new
 
-# 2. Esquema de Creación ()
+# Esquema de Creación ()
 class ClientCreate(ClientBase):
     pass # Usa exactamente los mismos campos que ClientBase
 
-# 3. Esquema de Actualización (ClientUpdate)
+# Esquema de Actualización (ClientUpdate)
 class ClientUpdate(BaseModel):
     # En un Update (PATCH), todos los campos deben ser opcionales
     # porque el usuario podría querer actualizar solo uno de ellos.
@@ -37,7 +40,7 @@ class ClientUpdate(BaseModel):
     entity_type: Optional[EntityType] = None
     lead_status: Optional[LeadStatus] = None
 
-# 4. Esquema de Salida (ClientOut / ClientResponse)
+# Esquema de Salida (ClientOut / ClientResponse)
 class ClientOut(ClientBase):
     # Añadimos los campos que genera la base de datos automáticamente
     id: int
