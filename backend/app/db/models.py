@@ -180,6 +180,7 @@ class Contact(Base):
     email = Column(String(255))
     phone = Column(String(50))
     job_title = Column(String(100))
+    linkedin_url = Column(String(255))
     last_interaction = Column(DateTime(timezone=True))
 
     client = relationship("Client", back_populates="contacts")
