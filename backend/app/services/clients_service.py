@@ -33,6 +33,15 @@ def _build_client_out(client: Client, contact: Contact | None, vacantes_abiertas
         "direccion": client.direction,
     }
 
+async def _get_client_or_404(db: AsyncSession, client_id: int) -> Client:
+    result = await db.execute(select(Client).where(Client.id == client_id))
+    client = result.scalars().first()
+    if not client:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Cliente con ID {client_id} no encontrado"
+        )
+    return client
 
 # ---- CRUD -----
 async def get_all_clients(db: AsyncSession) -> List[ClientOut]:
@@ -52,11 +61,9 @@ async def get_all_clients(db: AsyncSession) -> List[ClientOut]:
         print(f"Error al obtener clientes: {e}")
         raise HTTPException(status_code=500, detail="Error al obtener el listado de clientes")
     
-async def update_client(db: AsyncSession, client_id: int, client_data: ClientUpdate) -> Client:
+async def update_client(db: AsyncSession, client_id: int, client_data: ClientUpdate) -> ClientOut:
     try:
-        result = await db.execute(select(Client).where(Client.id == client_id))
-        client = result.scalars().first()
-
+        client = await _get_client_or_404(db, client_id)
         if not client:
             raise HTTPException(
                 status_code=404,
@@ -67,13 +74,36 @@ async def update_client(db: AsyncSession, client_id: int, client_data: ClientUpd
         # exclude_unset=True es clave aquí para no sobreescribir con None los campos no enviados
         update_data = client_data.model_dump(exclude_unset=True)
 
-        for key, value in update_data.items():
-            setattr(client, key, value)
+        # Campos que van al modelo Contact
+        contact_fields = {"contacto_principal", "email", "telefono"}
+        contact_updates = {k: v for k, v in update_data.items() if k in contact_fields}
 
+        contact = await _get_primary_contact(db, client_id)
+
+        if contact_updates:
+            if contact:
+                # Actualizar el contacto existente
+                if "contacto_principal" in contact_updates:
+                    contact.full_name = contact_updates["contacto_principal"]
+                if "email" in contact_updates:
+                    contact.email = contact_updates["email"]
+                if "telefono" in contact_updates:
+                    contact.phone = contact_updates["telefono"]
+            else:
+                # Crear contacto si no existia
+                contact = Contact(
+                    client_id=client_id,
+                    full_name=contact_updates.get("contacto_principal", "Sin nombre"),
+                    email=contact_updates.get("email"),
+                    phone=contact_updates.get("telefono")
+                )
+                db.add(contact)
+        
         await db.commit()
         await db.refresh(client)
 
-        return client
+        data = _build_client_out(client, contact)
+        return ClientOut(**data)
     
     except HTTPException:
         # Se relanza la excepcion 404 para que FastAPI la devuelva correctamente
