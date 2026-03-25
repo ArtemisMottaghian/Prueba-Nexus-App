@@ -135,6 +135,9 @@ CREATE TABLE candidates (
     last_name VARCHAR(100) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     phone VARCHAR(50),
+    location VARCHAR(255),      
+    source VARCHAR(100),        
+    experience VARCHAR(100),
     linkedin_url VARCHAR(255),
     cv_url TEXT, -- Link al archivo (S3, Cloudinary...)
     skills TEXT,
@@ -150,7 +153,7 @@ CREATE TABLE candidate_status_history (
     candidate_id BIGINT REFERENCES candidates(id) ON DELETE CASCADE,
     previous_status candidate_status,
     new_status candidate_status,
-    changed_by BIGINT REFERENCES users(id) -- Quien hizo el cambio (Opcional)
+    changed_by BIGINT REFERENCES users(id), -- Quien hizo el cambio (Opcional)
     comments TEXT,
     changed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
