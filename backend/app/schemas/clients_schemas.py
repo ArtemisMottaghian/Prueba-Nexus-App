@@ -28,7 +28,14 @@ class ClientBase(BaseModel):
 
 # Esquema de Creación ()
 class ClientCreate(ClientBase):
-    pass # Usa exactamente los mismos campos que ClientBase
+    """Campos que envia el frontend al crear un cliente"""
+    nombre: str
+    sector: Optional[str] = None
+    contacto_principal: Optional[str] = None
+    email: Optional[str] = None
+    telefono: Optional[str] = None
+    cif: Optional[str] = None
+    direccion: Optional[str] = None
 
 # Esquema de Actualización (ClientUpdate)
 class ClientUpdate(BaseModel):

@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from typing import List
 
-from app.schemas.clients_schemas import ClientUpdate, ClientOut, ClientDetailOut
+from app.schemas.clients_schemas import ClientUpdate, ClientOut, ClientDetailOut, ClientCreate
 from app.services import clients_service
 from app.db.connection import get_db
 
@@ -40,6 +40,21 @@ async def get_client(client_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
     
 # --------------------
+# Crear un cliente
+# POST /api/clients/
+# --------------------
+@router.post("", response_model=ClientOut, status_code=201)
+async def create_client(client_data: ClientCreate, db: AsyncSession = Depends(get_db)):
+    try:
+        cliente_creado = await clients_service.create_client(db, client_data)
+        return cliente_creado
+    except IntegrityError as e:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="Error de la integridad en la base de datos")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# --------------------
 # ACTUALIZAR cliente parcialmente
 # PUT /api/clients/{client_id}
 # --------------------
@@ -61,6 +76,10 @@ async def endpoint_update_client(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+# --------------------
+# DELETE cliente 
+# DELETE /api/clients/{client_id}
+# --------------------
 @router.delete("/client_id")
 async def delete_client(client_id: int, db: AsyncSession = Depends(get_db)):
     try:
