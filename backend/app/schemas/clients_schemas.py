@@ -2,6 +2,7 @@ from enum import Enum
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
+from typing import List
 class LeadStatus(str, Enum):
     new = "new"
     qualifying = "qualifying"
@@ -12,7 +13,6 @@ class LeadStatus(str, Enum):
 class EntityType(str, Enum):
     scraping_prospect = "scraping_prospect"
     confirmed_client = "confirmed_client"
-
 
 
 # Esquema Base: Contiene los campos comunes que se repiten
@@ -54,3 +54,15 @@ class ClientOut(ClientBase):
     direccion: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=False)  # construido a mano desde el servicio
+
+class ClientDetailOut(ClientOut):
+    """ Respuesta exctendida con lista de vacantes para el detalle"""
+    vacantes: List[VacanteOut] = []
+
+# Esquema de Vacante (para el detalle de cliente)
+class VacanteOut(BaseModel):
+    id: int
+    titulo: str
+    estado: str
+
+    model_config = ConfigDict(from_attributes=True)
