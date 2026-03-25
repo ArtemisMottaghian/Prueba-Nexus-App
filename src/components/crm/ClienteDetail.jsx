@@ -1,4 +1,7 @@
+import { useState } from 'react';
+import VacancyModal from '../recruitment/VacancyModal';
 import './ClienteDetail.css';
+
 const getBadgeEstado = (estado) => {
   const map = {
     Nueva: 'badge-nueva',
@@ -9,15 +12,27 @@ const getBadgeEstado = (estado) => {
   return map[estado] || 'badge-nueva';
 };
 
+const adaptarVacante = (vacante, cliente) => ({
+  id: vacante.id,
+  title: vacante.titulo,
+  companyName: cliente.nombre,
+  location: cliente.direccion || 'No especificada',
+  status: vacante.estado,
+  source: 'Nexus',
+  time: vacante.fecha,
+  salary: null,
+});
+
 export default function ClienteDetail({ cliente, onEdit, onDelete }) {
+  const [vacanteSeleccionada, setVacanteSeleccionada] = useState(null);
+
   if (!cliente) {
     return (
       <div className="clientes-empty-state">
         <i className="bi bi-building fs-1 mb-3 d-block"></i>
         <h5>Selecciona un cliente</h5>
         <p className="text-muted">
-          Haz clic en un cliente de la lista para ver sus datos y vacantes
-          asociadas.
+          Haz clic en un cliente de la lista para ver sus datos y vacantes asociadas.
         </p>
       </div>
     );
@@ -25,6 +40,7 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
 
   return (
     <>
+      {/* Header */}
       <div className="cliente-profile-header mb-4">
         <div className="d-flex justify-content-between align-items-start flex-wrap gap-2">
           <div>
@@ -67,24 +83,26 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
               </div>
               <div className="info-item">
                 <span className="info-label">Email</span>
-                <a
-                  href={`mailto:${cliente.email}`}
-                  className="info-value text-decoration-none"
-                >
+                <a href={`mailto:${cliente.email}`} className="info-value text-decoration-none">
                   <i className="bi bi-envelope me-1 text-muted"></i>
                   {cliente.email}
                 </a>
               </div>
               <div className="info-item">
                 <span className="info-label">Teléfono</span>
-                <a
-                  href={`tel:${cliente.telefono}`}
-                  className="info-value text-decoration-none"
-                >
+                <a href={`tel:${cliente.telefono}`} className="info-value text-decoration-none">
                   <i className="bi bi-telephone me-1 text-muted"></i>
                   {cliente.telefono}
                 </a>
               </div>
+            </div>
+            <div className="d-flex gap-2 mt-3">
+              <a href={`mailto:${cliente.email}`} className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
+                <i className="bi bi-envelope"></i><span>Email</span>
+              </a>
+              <a href={`tel:${cliente.telefono}`} className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
+                <i className="bi bi-telephone"></i><span>Llamar</span>
+              </a>
             </div>
           </div>
         </div>
@@ -109,7 +127,7 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
         </div>
       </div>
 
-      {/* Vacantes vinculadas */}
+      {/* Vacantes vinculadas — clicables */}
       <div className="cliente-info-card">
         <h6 className="info-card-title mb-3">
           <i className="bi bi-briefcase me-2"></i>
@@ -120,21 +138,31 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
             <div
               key={v.id}
               className="vacante-vinculada d-flex align-items-center justify-content-between mb-2"
-              style={{ cursor: 'default' }}
+              style={{ cursor: 'pointer' }}
+              onClick={() => setVacanteSeleccionada(adaptarVacante(v, cliente))}
             >
               <div>
                 <p className="mb-0 vacante-vinculada-titulo">{v.titulo}</p>
                 <span className="activity-time">{v.fecha}</span>
               </div>
-              <span className={`badge ${getBadgeEstado(v.estado)}`}>
-                {v.estado}
-              </span>
+              <div className="d-flex align-items-center gap-2">
+                <span className={`badge ${getBadgeEstado(v.estado)}`}>{v.estado}</span>
+                <i className="bi bi-chevron-right text-muted" style={{ fontSize: '12px' }}></i>
+              </div>
             </div>
           ))
         ) : (
           <p className="text-muted small mb-0">No hay vacantes vinculadas.</p>
         )}
       </div>
+
+      {/* Modal vacante */}
+      {vacanteSeleccionada && (
+        <VacancyModal
+          job={vacanteSeleccionada}
+          onClose={() => setVacanteSeleccionada(null)}
+        />
+      )}
     </>
   );
 }
