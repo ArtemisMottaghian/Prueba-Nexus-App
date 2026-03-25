@@ -180,3 +180,24 @@ async def get_vacantes_filtradas(
             return result.scalars().all()
     except Exception as e:
         raise e
+
+async def set_favorito(
+    db: AsyncSession,
+    vacancy_id: int,
+    favorito: bool
+) -> None:
+    """
+    Marca o desmarca una vacante como favorita.
+    """
+    try:
+        async with AsyncSessionLocal() as session:
+            query = select(JobOffer).where(JobOffer.id == vacancy_id)
+            result = await session.execute(query)
+            vacante = result.scalar_one_or_none()
+
+            if vacante:
+                vacante.is_favorite = favorito
+                await session.commit()
+    except Exception as e:
+        await session.rollback()
+        raise e
