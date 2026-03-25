@@ -42,11 +42,15 @@ class ClientUpdate(BaseModel):
 
 # Esquema de Salida (ClientOut / ClientResponse)
 class ClientOut(ClientBase):
-    # Añadimos los campos que genera la base de datos automáticamente
+    """Respuesta estándar de lista y creación/edición."""
     id: int
-    user_id: Optional[int] = None
-    updated_at: Optional[datetime] = None
+    nombre: str
+    sector: Optional[str] = None
+    contacto_principal: Optional[str] = None
+    email: Optional[str] = None
+    telefono: Optional[str] = None
+    vacantes_abiertas: int = 0
+    cif: Optional[str] = None
+    direccion: Optional[str] = None
 
-    # Configuración CLAVE para Pydantic V2: 
-    # Permite leer los datos directamente del modelo SQLAlchemy (antes orm_mode = True)
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=False)  # construido a mano desde el servicio
