@@ -32,7 +32,8 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
         <i className="bi bi-building fs-1 mb-3 d-block"></i>
         <h5>Selecciona un cliente</h5>
         <p className="text-muted">
-          Haz clic en un cliente de la lista para ver sus datos y vacantes asociadas.
+          Haz clic en un cliente de la lista para ver sus datos y vacantes
+          asociadas.
         </p>
       </div>
     );
@@ -83,25 +84,39 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
               </div>
               <div className="info-item">
                 <span className="info-label">Email</span>
-                <a href={`mailto:${cliente.email}`} className="info-value text-decoration-none">
+                <a
+                  href={`mailto:${cliente.email}`}
+                  className="info-value text-decoration-none"
+                >
                   <i className="bi bi-envelope me-1 text-muted"></i>
                   {cliente.email}
                 </a>
               </div>
               <div className="info-item">
                 <span className="info-label">Teléfono</span>
-                <a href={`tel:${cliente.telefono}`} className="info-value text-decoration-none">
+                <a
+                  href={`tel:${cliente.telefono}`}
+                  className="info-value text-decoration-none"
+                >
                   <i className="bi bi-telephone me-1 text-muted"></i>
                   {cliente.telefono}
                 </a>
               </div>
             </div>
             <div className="d-flex gap-2 mt-3">
-              <a href={`mailto:${cliente.email}`} className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
-                <i className="bi bi-envelope"></i><span>Email</span>
+              <a
+                href={`mailto:${cliente.email}`}
+                className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
+              >
+                <i className="bi bi-envelope"></i>
+                <span>Email</span>
               </a>
-              <a href={`tel:${cliente.telefono}`} className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
-                <i className="bi bi-telephone"></i><span>Llamar</span>
+              <a
+                href={`tel:${cliente.telefono}`}
+                className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
+              >
+                <i className="bi bi-telephone"></i>
+                <span>Llamar</span>
               </a>
             </div>
           </div>
@@ -146,8 +161,13 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
                 <span className="activity-time">{v.fecha}</span>
               </div>
               <div className="d-flex align-items-center gap-2">
-                <span className={`badge ${getBadgeEstado(v.estado)}`}>{v.estado}</span>
-                <i className="bi bi-chevron-right text-muted" style={{ fontSize: '12px' }}></i>
+                <span className={`badge ${getBadgeEstado(v.estado)}`}>
+                  {v.estado}
+                </span>
+                <i
+                  className="bi bi-chevron-right text-muted"
+                  style={{ fontSize: '12px' }}
+                ></i>
               </div>
             </div>
           ))
