@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, BigInteger, DateTime, ForeignKey, func
 from sqlalchemy.dialects.postgresql import ENUM
 from app.db.connection import Base
-from app.schemas.client import EntityType, LeadStatus
+from app.schemas.clients_schemas import EntityType, LeadStatus
 
 class Client(Base):
     __tablename__="clients"

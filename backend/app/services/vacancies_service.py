@@ -121,3 +121,62 @@ async def create_vacancy(job_data: dict) -> JobOffer:
     except Exception as e:
         print(f"Error específico en create_vacancy: {type(e).__name__} - {e}")
         raise e
+
+
+
+async def apply_bulk_action(
+    db: AsyncSession,
+    ids_vacantes: List[int],
+    accion: str
+) -> None:
+    """
+    Aplica una acción masiva sobre un listado de vacantes.
+    - 'descartar' → cambia el estado a 'discarded'
+    - 'eliminar'  → borra las vacantes de la BD
+    """
+    try:
+        async with AsyncSessionLocal() as session:
+            query = select(JobOffer).where(JobOffer.id.in_(ids_vacantes))
+            result = await session.execute(query)
+            vacantes = result.scalars().all()
+
+            for vacante in vacantes:
+                if accion == "descartar":
+                    vacante.status = OfferStatus.discarded
+                elif accion == "eliminar":
+                    await session.delete(vacante)
+
+            await session.commit()
+    except Exception as e:
+        await session.rollback()
+        raise e
+
+
+
+async def get_vacantes_filtradas(
+    db: AsyncSession,
+    estado: Optional[str] = None,
+    sector: Optional[str] = None,
+    ubicacion: Optional[str] = None
+) -> List[JobOffer]:
+    """
+    Obtiene vacantes filtrando por estado, sector y/o ubicación.
+    Todos los filtros son opcionales.
+    """
+    try:
+        async with AsyncSessionLocal() as session:
+            query = select(JobOffer)
+
+            if estado:
+                query = query.where(JobOffer.status == estado)
+            if sector:
+                query = query.where(JobOffer.sector == sector)
+            if ubicacion:
+                query = query.where(JobOffer.location == ubicacion)
+
+            query = query.order_by(JobOffer.published_at.desc())
+
+            result = await session.execute(query)
+            return result.scalars().all()
+    except Exception as e:
+        raise e
