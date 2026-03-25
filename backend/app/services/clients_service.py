@@ -46,6 +46,40 @@ async def _get_client_or_404(db: AsyncSession, client_id: int) -> Client:
     return client
 
 # ---- CRUD -----
+
+async def create_client(db: AsyncSession, client_data: ClientCreate) -> ClientOut:
+    try:
+        new_client = Client(
+            company_name = client_data.nombre,
+            sector=client_data.sector,
+            cif=client_data.cif,
+            direccion=client_data.direccion,
+        )
+        db.add(new_client)
+        await db.flush() # Se obtiene el id sin hacer commit aun
+
+        # Si viene info del contacto, crear el registro en contacts
+        contact = None
+        if any([client_data.contacto_principal, client_data.email, client_data.telefono]):
+            contact = Contact(
+                client_id=new_client.id,
+                full_name=client_data.contacto_principal or "Sin nombre",
+                email=client_data.email,
+                phone=client_data.telefono,
+            )
+            db.add(contact)
+        await db.commit()
+        await db.refresh(new_client)
+
+        data = _build_client_out(new_client, contact)
+        return ClientOut(**data)
+    
+    except SQLAlchemyError as e:
+        await db.rollback()
+        print(f"Error al crar cliente: {e}")
+        raise HTTPException(status_code=500, detail="Error al crear el cliente")
+
+
 async def get_all_clients(db: AsyncSession) -> List[ClientOut]:
     try:
         result = await db.execute(select(Client).order_by(Client.id.asc()))
