@@ -98,6 +98,9 @@ CREATE TABLE clients (
     source_id INT REFERENCES job_portals(id), -- Portal de origen
     original_offer_id BIGINT REFERENCES job_offers(id), -- Oferta que originó el contacto
     company_name VARCHAR(255) NOT NULL,
+    sector VARCHAR(255),
+    cif VARCHAR(255),
+    direccion VARCHAR(500),
     entity_type entity_type,
     lead_status lead_status,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP

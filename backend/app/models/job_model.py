@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, BigInteger, Text, DateTime, ForeignKey, CheckConstraint, UniqueConstraint, func
+from sqlalchemy import Column, Integer, String, BigInteger, Text, DateTime, ForeignKey, CheckConstraint, UniqueConstraint, func,Boolean
 from sqlalchemy.dialects.postgresql import ENUM
 from app.db.connection import Base
 from app.schemas.job_offer import OfferStatus 
@@ -30,6 +30,7 @@ class JobOffer(Base):
     )
     
     priority = Column(Integer, default=3)
+    is_favorite = Column(Boolean, default=False)
     scraped_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
