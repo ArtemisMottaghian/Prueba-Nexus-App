@@ -1,48 +1,34 @@
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.exc import SQLAlchemyError
-from fastapi import HTTPException
+from typing import List, Optional
+from app.models.candidates_model import Candidate 
+from app.schemas.candidates_schemas import CandidateStatus
 
-from app.models.candidates_model import Candidate
-from app.schemas.candidates_schemas import CandidateUpdate
+async def get_all_candidates(db: AsyncSession) -> List[Candidate]:
+    query = select(Candidate).order_by(Candidate.created_at.desc())
+    result = await db.execute(query)
+    return result.scalars().all()
 
+async def get_candidate_by_id(db: AsyncSession, candidate_id: int) -> Optional[Candidate]:
+    query = select(Candidate).where(Candidate.id == candidate_id)
+    result = await db.execute(query)
+    return result.scalar_one_or_none()
 
-async def update_candidate(db: AsyncSession, candidate_id: int, candidate_data: CandidateUpdate) -> Candidate:
-    try:
-        result = await db.execute(select(Candidate).where(Candidate.id == candidate_id))
-        candidate = result.scalars().first()
-
-        if not candidate:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Candidato con ID {candidate_id} no encontrado"
-            )
+async def update_status(db: AsyncSession, candidate_id: int, new_status: CandidateStatus) -> Optional[Candidate]:
+    candidate = await get_candidate_by_id(db, candidate_id)
+    if not candidate:
+        return None
         
-        update_data = candidate_data.model_dump(exclude_unset=True)
+    candidate.status = new_status
+    await db.commit()
+    await db.refresh(candidate)
+    return candidate
 
-        for key, value in update_data.items():
-            setattr(candidate, key, value)
-
-        await db.commit()
-        await db.refresh(candidate)
-
-        return candidate
-    
-    except HTTPException:
-        raise
-
-    except SQLAlchemyError as e:
-        await db.rollback()
-        print(f"Error de SQLAlchemy al actualizar el candidato: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Error interno al procesar la actualizacion en la base de datos"
-        )
-    
-    except Exception as e:
-        await db.rollback()
-        print(f"Error inesperado al actualizar el candidato: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Error inesperado en el servidor"
-        )
+async def delete_candidate(db: AsyncSession, candidate_id: int) -> bool:
+    candidate = await get_candidate_by_id(db, candidate_id)
+    if not candidate:
+        return False
+        
+    await db.delete(candidate)
+    await db.commit()
+    return True
