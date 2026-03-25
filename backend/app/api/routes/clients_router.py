@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from typing import List
 
-from app.schemas.clients_schemas import ClientUpdate, ClientOut
+from app.schemas.clients_schemas import ClientUpdate, ClientOut, ClientDetailOut
 from app.services import clients_service
 from app.db.connection import get_db
 
@@ -23,6 +23,22 @@ async def endpoint_list_clients(db: AsyncSession = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+router = APIRouter()
+# --------------------
+# Obtener un cliente con detalles de la vacante 
+# GET /api/clients/{client_id}
+# --------------------
+@router.get("/{client_id}", response_model=ClientDetailOut)
+async def get_client(client_id: int, db: AsyncSession = Depends(get_db)):
+    try:
+        client = clients_service.get_client_by_id(db, client_id)
+        return client
+    except IntegrityError as e:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="Error de integridad en la base de datos")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
 # --------------------
 # ACTUALIZAR cliente parcialmente
 # PUT /api/clients/{client_id}
