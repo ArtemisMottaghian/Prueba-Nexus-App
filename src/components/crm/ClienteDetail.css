@@ -94,3 +94,111 @@
 .stat-cyan { color: var(--color-cyan-primary); text-shadow: 0 0 12px rgba(0, 212, 255, 0.4); }
 .stat-amber { color: #f59e0b; text-shadow: 0 0 12px rgba(245, 158, 11, 0.4); }
 .stat-green { color: #10b981; text-shadow: 0 0 12px rgba(16, 185, 129, 0.4); }
+
+/* --- TABS --- */
+.cliente-tabs {
+  display: flex;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 4px;
+}
+
+.cliente-tab {
+  flex: 1;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.cliente-tab:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+.cliente-tab.active {
+  background: linear-gradient(135deg, var(--color-purple-primary), var(--color-purple-secondary));
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(124, 63, 255, 0.3);
+}
+
+.tab-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 9999px;
+}
+
+.cliente-tab.active .tab-badge {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* --- INFO CARDS --- */
+.cliente-info-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.info-card-title {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.info-grid { display: flex; flex-direction: column; gap: 12px; }
+.info-item { display: flex; flex-direction: column; gap: 2px; }
+
+.info-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.info-link {
+  color: var(--color-cyan-primary) !important;
+  transition: opacity 0.2s ease;
+}
+
+.info-link:hover { opacity: 0.8; }
+
+.btn-contact {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.btn-contact:hover {
+  background: rgba(124, 63, 255, 0.15);
+  border-color: var(--color-purple-secondary);
+  color: var(--text-primary);
+}
