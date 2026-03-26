@@ -283,3 +283,81 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
           )}
         </div>
       )}
+
+      {/* TAB: Notas */}
+      {activeTab === 'notas' && (
+        <div>
+          <div className="cliente-info-card mb-3">
+            <h6 className="info-card-title mb-3">
+              <i className="bi bi-plus-circle me-2"></i>Nueva nota
+            </h6>
+            <textarea
+              className="nota-textarea mb-2"
+              rows="3"
+              placeholder="Escribe una nota sobre este cliente..."
+              value={notaTexto}
+              onChange={(e) => setNotaTexto(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && e.ctrlKey) agregarNota();
+              }}
+            />
+            <div className="d-flex justify-content-between align-items-center">
+              <span className="text-muted" style={{ fontSize: '11px' }}>
+                Ctrl+Enter para guardar
+              </span>
+              <button
+                className="btn btn-sm btn-primary"
+                onClick={agregarNota}
+                disabled={!notaTexto.trim()}
+              >
+                <i className="bi bi-plus me-1"></i>Añadir nota
+              </button>
+            </div>
+          </div>
+
+          {notas.length > 0 ? (
+            <div className="notas-timeline">
+              {notas.map((nota) => (
+                <div key={nota.id} className="nota-item">
+                  <div className="nota-dot"></div>
+                  <div className="nota-content">
+                    <div className="d-flex justify-content-between align-items-start">
+                      <p className="nota-texto mb-1">{nota.texto}</p>
+                      <button
+                        className="btn-icon btn-icon-sm ms-2 flex-shrink-0"
+                        onClick={() => eliminarNota(nota.id)}
+                        title="Eliminar nota"
+                      >
+                        <i
+                          className="bi bi-trash text-danger"
+                          style={{ fontSize: '12px' }}
+                        ></i>
+                      </button>
+                    </div>
+                    <span className="activity-time">
+                      <i className="bi bi-clock me-1"></i>
+                      {nota.fecha}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center text-muted py-4">
+              <i className="bi bi-journal-text fs-3 d-block mb-2"></i>
+              <p className="mb-0">No hay notas para este cliente</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Modal vacante */}
+      {vacanteSeleccionada && (
+        <VacancyModal
+          job={vacanteSeleccionada}
+          onClose={() => setVacanteSeleccionada(null)}
+        />
+      )}
+    </>
+  );
+}
