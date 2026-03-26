@@ -1,5 +1,5 @@
 from enum import Enum
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict,EmailStr, Field
 from typing import Optional, List
 from datetime import datetime
 
@@ -17,39 +17,42 @@ class EntityType(str, Enum):
     confirmed_client = "confirmed_client"
 
 
-# --- Schemas de Vacante (para el detalle de cliente) ---
+# --- Schemas de Vacante (Para cuando listamos vacantes dentro de un cliente)) ---
 
-class VacanteOut(BaseModel):
+class VacancyOut(BaseModel):
     id: int
-    title: str
-    status: str
+    title: str = Field(..., alias="titulo")
+    status: str = Field(..., alias="estado")
     date: Optional[datetime] = None
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 # --- Schemas de Cliente ---
 
 class ClientBase(BaseModel):
-    company_name: str
-    sector: Optional[str] = None
-    cif: Optional[str] = None
-    address: Optional[str] = None
+    """
+    El molde Padre.
+    Aquí ponemos lo que un cliente SIEMPRE tiene.
+    """
+    company_name: str = Field(..., min_length=2, max_length=100)
+    sector: Optional[str] = Field(None, max_length=50)
+    cif: Optional[str] = Field(None, min_length=8, max_length=9)
+    address: Optional[str] = Field(None, max_length=200)
     source_id: Optional[int] = None
     original_offer_id: Optional[int] = None
-    entity_type: Optional[EntityType] = None
+    entity_type: Optional[EntityType] = EntityType.scraping_prospect
     lead_status: Optional[LeadStatus] = LeadStatus.new
 
 
-class ClientCreate(BaseModel):
-    """Campos que envía el frontend al crear un cliente."""
-    company_name: str
-    sector: Optional[str] = None
-    primary_contact: Optional[str] = None
-    email: Optional[str] = None
+class ClientCreate(ClientBase):
+    """
+    PASO 2: Esquema para CREAR.
+    Hereda todo lo de arriba y añade datos de contacto.
+    """
+    primary_contact: Optional[str] = Field(None, min_length=3)
+    email: Optional[EmailStr] = None # Valida que sea un email real
     phone: Optional[str] = None
-    cif: Optional[str] = None
-    address: Optional[str] = None
 
 
 class ClientUpdate(BaseModel):
@@ -57,27 +60,25 @@ class ClientUpdate(BaseModel):
     company_name: Optional[str] = None
     sector: Optional[str] = None
     primary_contact: Optional[str] = None
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
     phone: Optional[str] = None
     cif: Optional[str] = None
     address: Optional[str] = None
+    source_id: Optional[int] = None # Añadido por coherencia
+    original_offer_id: Optional[int] = None # Añadido por coherencia
+    lead_status: Optional[LeadStatus] = None
 
-
-class ClientOut(BaseModel):
+class ClientOut(ClientBase): # <--- HEREDA
     """Respuesta estándar de lista y creación/edición."""
     id: int
-    company_name: str
-    sector: Optional[str] = None
-    primary_contact: Optional[str] = None
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    open_positions: int = 0
-    cif: Optional[str] = None
-    address: Optional[str] = None
+    open_vacancies: int = Field(0, alias="vacantes_abiertas")
 
-    model_config = ConfigDict(from_attributes=False)
+    # Crucial: from_attributes=True permite leer de la base de datos
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class ClientDetailOut(ClientOut):
     """Respuesta extendida con lista de vacantes para el detalle."""
-    positions: List[VacanteOut] = []
+    positions: List[VacancyOut] = Field([], alias="vacantes")
+
+
