@@ -25,11 +25,36 @@ const adaptarVacante = (vacante, cliente) => ({
 
 export default function ClienteDetail({ cliente, onEdit, onDelete }) {
   const [vacanteSeleccionada, setVacanteSeleccionada] = useState(null);
+  const [notaTexto, setNotaTexto] = useState('');
+  const [notas, setNotas] = useState([]);
+  const [activeTab, setActiveTab] = useState('info');
+
+  const agregarNota = () => {
+    if (!notaTexto.trim()) return;
+    const nueva = {
+      id: Date.now(),
+      texto: notaTexto.trim(),
+      fecha: new Date().toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    };
+    setNotas((prev) => [nueva, ...prev]);
+    setNotaTexto('');
+  };
+
+  const eliminarNota = (id) =>
+    setNotas((prev) => prev.filter((n) => n.id !== id));
 
   if (!cliente) {
     return (
       <div className="clientes-empty-state">
-        <i className="bi bi-building fs-1 mb-3 d-block"></i>
+        <div className="empty-icon-wrapper">
+          <i className="bi bi-building"></i>
+        </div>
         <h5>Selecciona un cliente</h5>
         <p className="text-muted">
           Haz clic en un cliente de la lista para ver sus datos y vacantes
@@ -39,14 +64,28 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
     );
   }
 
+  const esPrioritario = cliente.prioritario || false;
+
   return (
     <>
-      {/* Header */}
+      {/* Header con badge prioritario */}
       <div className="cliente-profile-header mb-4">
         <div className="d-flex justify-content-between align-items-start flex-wrap gap-2">
-          <div>
-            <h3 className="cliente-profile-nombre">{cliente.nombre}</h3>
-            <span className="cliente-sector">{cliente.sector}</span>
+          <div className="d-flex align-items-start gap-3">
+            <div className="cliente-avatar">{cliente.nombre.charAt(0)}</div>
+            <div>
+              <div className="d-flex align-items-center gap-2 flex-wrap">
+                <h3 className="cliente-profile-nombre mb-0">
+                  {cliente.nombre}
+                </h3>
+                {esPrioritario && (
+                  <span className="badge-prioritario">
+                    <i className="bi bi-star-fill me-1"></i>VIP
+                  </span>
+                )}
+              </div>
+              <span className="cliente-sector">{cliente.sector}</span>
+            </div>
           </div>
           <div className="d-flex align-items-center gap-2 flex-wrap">
             <span className="cliente-vacantes-badge grande">
@@ -68,121 +107,32 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
             </button>
           </div>
         </div>
-      </div>
 
-      <div className="row g-3 mb-4">
-        {/* Datos de contacto */}
-        <div className="col-12 col-lg-6">
-          <div className="cliente-info-card h-100">
-            <h6 className="info-card-title">
-              <i className="bi bi-person-badge me-2"></i>Datos de contacto
-            </h6>
-            <div className="info-grid">
-              <div className="info-item">
-                <span className="info-label">Contacto principal</span>
-                <span className="info-value">{cliente.contactoPrincipal}</span>
-              </div>
-              <div className="info-item">
-                <span className="info-label">Email</span>
-                <a
-                  href={`mailto:${cliente.email}`}
-                  className="info-value text-decoration-none"
-                >
-                  <i className="bi bi-envelope me-1 text-muted"></i>
-                  {cliente.email}
-                </a>
-              </div>
-              <div className="info-item">
-                <span className="info-label">Teléfono</span>
-                <a
-                  href={`tel:${cliente.telefono}`}
-                  className="info-value text-decoration-none"
-                >
-                  <i className="bi bi-telephone me-1 text-muted"></i>
-                  {cliente.telefono}
-                </a>
-              </div>
-            </div>
-            <div className="d-flex gap-2 mt-3">
-              <a
-                href={`mailto:${cliente.email}`}
-                className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
-              >
-                <i className="bi bi-envelope"></i>
-                <span>Email</span>
-              </a>
-              <a
-                href={`tel:${cliente.telefono}`}
-                className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
-              >
-                <i className="bi bi-telephone"></i>
-                <span>Llamar</span>
-              </a>
-            </div>
+        {/* Estadísticas rápidas */}
+        <div className="cliente-stats-row mt-3">
+          <div className="cliente-stat">
+            <span className="stat-value stat-purple">
+              {cliente.vacantesAbiertas}
+            </span>
+            <span className="stat-label">Vacantes activas</span>
           </div>
-        </div>
-
-        {/* Datos fiscales */}
-        <div className="col-12 col-lg-6">
-          <div className="cliente-info-card h-100">
-            <h6 className="info-card-title">
-              <i className="bi bi-building me-2"></i>Datos fiscales
-            </h6>
-            <div className="info-grid">
-              <div className="info-item">
-                <span className="info-label">CIF</span>
-                <span className="info-value">{cliente.cif || '—'}</span>
-              </div>
-              <div className="info-item">
-                <span className="info-label">Dirección</span>
-                <span className="info-value">{cliente.direccion || '—'}</span>
-              </div>
-            </div>
+          <div className="cliente-stat">
+            <span className="stat-value stat-cyan">
+              {cliente.vacantes?.filter((v) => v.estado === 'Contactada')
+                .length || 0}
+            </span>
+            <span className="stat-label">Contactadas</span>
+          </div>
+          <div className="cliente-stat">
+            <span className="stat-value stat-amber">
+              {cliente.vacantes?.filter((v) => v.estado === 'En proceso')
+                .length || 0}
+            </span>
+            <span className="stat-label">En proceso</span>
+          </div>
+          <div className="cliente-stat">
+            <span className="stat-value stat-green">{notas.length}</span>
+            <span className="stat-label">Notas</span>
           </div>
         </div>
       </div>
-
-      {/* Vacantes vinculadas — clicables */}
-      <div className="cliente-info-card">
-        <h6 className="info-card-title mb-3">
-          <i className="bi bi-briefcase me-2"></i>
-          Vacantes vinculadas ({cliente.vacantes.length})
-        </h6>
-        {cliente.vacantes.length > 0 ? (
-          cliente.vacantes.map((v) => (
-            <div
-              key={v.id}
-              className="vacante-vinculada d-flex align-items-center justify-content-between mb-2"
-              style={{ cursor: 'pointer' }}
-              onClick={() => setVacanteSeleccionada(adaptarVacante(v, cliente))}
-            >
-              <div>
-                <p className="mb-0 vacante-vinculada-titulo">{v.titulo}</p>
-                <span className="activity-time">{v.fecha}</span>
-              </div>
-              <div className="d-flex align-items-center gap-2">
-                <span className={`badge ${getBadgeEstado(v.estado)}`}>
-                  {v.estado}
-                </span>
-                <i
-                  className="bi bi-chevron-right text-muted"
-                  style={{ fontSize: '12px' }}
-                ></i>
-              </div>
-            </div>
-          ))
-        ) : (
-          <p className="text-muted small mb-0">No hay vacantes vinculadas.</p>
-        )}
-      </div>
-
-      {/* Modal vacante */}
-      {vacanteSeleccionada && (
-        <VacancyModal
-          job={vacanteSeleccionada}
-          onClose={() => setVacanteSeleccionada(null)}
-        />
-      )}
-    </>
-  );
-}
