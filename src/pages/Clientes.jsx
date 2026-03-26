@@ -51,4 +51,84 @@ export default function Clientes() {
     const coincidePrioritario = !filtroPrioritario || c.prioritario === true;
     return coincideNombre && coincideSector && coincidePrioritario;
   });
-}
+
+  const abrirModalNuevo = () => {
+    setForm(formVacio);
+    setErrores({});
+    setClienteEditando(null);
+    setModalAbierto('nuevo');
+  };
+
+  const abrirModalEditar = (e, cliente) => {
+    e.stopPropagation();
+    setForm({
+      nombre: cliente.nombre,
+      sector: cliente.sector,
+      contactoPrincipal: cliente.contactoPrincipal,
+      email: cliente.email,
+      telefono: cliente.telefono,
+      cif: cliente.cif || '',
+      direccion: cliente.direccion || '',
+      prioritario: cliente.prioritario || false,
+    });
+    setErrores({});
+    setClienteEditando(cliente);
+    setModalAbierto('editar');
+  };
+
+  const abrirModalEliminar = (e, cliente) => {
+    e.stopPropagation();
+    setClienteAEliminar(cliente);
+    setModalEliminar(true);
+  };
+
+  const handleFormChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+    if (errores[name]) setErrores((prev) => ({ ...prev, [name]: undefined }));
+  };
+
+  const guardarCliente = () => {
+    const nuevosErrores = validarForm(form);
+    if (Object.keys(nuevosErrores).length > 0) {
+      setErrores(nuevosErrores);
+      return;
+    }
+    if (modalAbierto === 'nuevo') {
+      const nuevo = {
+        ...form,
+        id: `c${Date.now()}`,
+        vacantesAbiertas: 0,
+        vacantes: [],
+      };
+      setClientes((prev) => [...prev, nuevo]);
+    } else {
+      setClientes((prev) =>
+        prev.map((c) => (c.id === clienteEditando.id ? { ...c, ...form } : c))
+      );
+      if (clienteSeleccionado?.id === clienteEditando.id)
+        setClienteSeleccionado((prev) => ({ ...prev, ...form }));
+    }
+    setModalAbierto(false);
+  };
+
+  const confirmarEliminar = () => {
+    setClientes((prev) => prev.filter((c) => c.id !== clienteAEliminar.id));
+    if (clienteSeleccionado?.id === clienteAEliminar.id)
+      setClienteSeleccionado(null);
+    setModalEliminar(false);
+    setClienteAEliminar(null);
+  };
+
+  const togglePrioritario = (e, cliente) => {
+    e.stopPropagation();
+    const actualizado = { ...cliente, prioritario: !cliente.prioritario };
+    setClientes((prev) =>
+      prev.map((c) => (c.id === cliente.id ? actualizado : c))
+    );
+    if (clienteSeleccionado?.id === cliente.id)
+      setClienteSeleccionado(actualizado);
+  };
