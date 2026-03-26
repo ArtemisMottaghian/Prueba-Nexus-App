@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
 from app.db.models import OfferStatus
 
@@ -25,3 +25,21 @@ class VacancyDetail(VacancySummary):
     contract_type: Optional[str] = None
     work_modality: Optional[str] = None
     sector: Optional[str] = None
+
+# Schema para vacantes filtradas
+class VacancyFiltered(VacancySummary):
+    location: Optional[str] = None
+    sector: Optional[str] = None
+
+# Schema para marcar como favorita
+class FavoriteRequest(BaseModel):
+    favorite: bool
+
+# Schema para acciones masivas
+class BulkActionRequest(BaseModel):
+    vacancy_ids: List[int]
+    action: str
+
+# Schema para respuestas de mensaje
+class MessageResponse(BaseModel):
+    message: str
