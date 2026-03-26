@@ -90,7 +90,7 @@ async def create_vacancy(job_data: dict) -> JobOffer:
             # 4. Mapear al modelo exacto
             new_job = JobOffer(
                 external_id=str(job_data.get("external_id", "")),
-                title=job_data.get("title", "Sin título")[:255], 
+                title=job_data.get("title", "No title")[:255],
                 company_name=job_data.get("company", "")[:255], 
                 location=job_data.get("location", "")[:255],
                 offer_url=job_data.get("offer_url", ""),
@@ -126,8 +126,8 @@ async def create_vacancy(job_data: dict) -> JobOffer:
 
 async def apply_bulk_action(
     db: AsyncSession,
-    ids_vacantes: List[int],
-    accion: str
+    vacancy_ids: List[int],
+    action: str
 ) -> None:
     """
     Aplica una acción masiva sobre un listado de vacantes.
@@ -136,15 +136,15 @@ async def apply_bulk_action(
     """
     try:
         async with AsyncSessionLocal() as session:
-            query = select(JobOffer).where(JobOffer.id.in_(ids_vacantes))
+            query = select(JobOffer).where(JobOffer.id.in_(vacancy_ids))
             result = await session.execute(query)
-            vacantes = result.scalars().all()
+            vacancies = result.scalars().all()
 
-            for vacante in vacantes:
-                if accion == "descartar":
-                    vacante.status = OfferStatus.discarded
-                elif accion == "eliminar":
-                    await session.delete(vacante)
+            for vacancy in vacancies:
+                if action == "discard":
+                    vacancy.status = OfferStatus.discarded
+                elif action == "delete":
+                    await session.delete(vacancy)
 
             await session.commit()
     except Exception as e:
@@ -153,11 +153,11 @@ async def apply_bulk_action(
 
 
 
-async def get_vacantes_filtradas(
+async def get_vacancies_filtered(
     db: AsyncSession,
-    estado: Optional[str] = None,
+    status: Optional[str] = None,
     sector: Optional[str] = None,
-    ubicacion: Optional[str] = None
+    location: Optional[str] = None
 ) -> List[JobOffer]:
     """
     Obtiene vacantes filtrando por estado, sector y/o ubicación.
@@ -167,12 +167,12 @@ async def get_vacantes_filtradas(
         async with AsyncSessionLocal() as session:
             query = select(JobOffer)
 
-            if estado:
-                query = query.where(JobOffer.status == estado)
+            if status:
+                query = query.where(JobOffer.status == status)
             if sector:
                 query = query.where(JobOffer.sector == sector)
-            if ubicacion:
-                query = query.where(JobOffer.location == ubicacion)
+            if location:
+                query = query.where(JobOffer.location == location)
 
             query = query.order_by(JobOffer.published_at.desc())
 
@@ -181,10 +181,10 @@ async def get_vacantes_filtradas(
     except Exception as e:
         raise e
 
-async def set_favorito(
+async def set_favorite(
     db: AsyncSession,
     vacancy_id: int,
-    favorito: bool
+    favorite: bool
 ) -> None:
     """
     Marca o desmarca una vacante como favorita.
@@ -193,10 +193,10 @@ async def set_favorito(
         async with AsyncSessionLocal() as session:
             query = select(JobOffer).where(JobOffer.id == vacancy_id)
             result = await session.execute(query)
-            vacante = result.scalar_one_or_none()
+            vacancy = result.scalar_one_or_none()
 
-            if vacante:
-                vacante.is_favorite = favorito
+            if vacancy:
+                vacancy.is_favorite = favorite
                 await session.commit()
     except Exception as e:
         await session.rollback()
