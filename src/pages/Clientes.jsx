@@ -383,3 +383,53 @@ export default function Clientes() {
           </div>
         </>
       )}
+
+      {/* MODAL ELIMINAR */}
+      {modalEliminar && (
+        <>
+          <div className="modal-backdrop fade show"></div>
+          <div className="modal fade show d-block" tabIndex="-1" role="dialog">
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header border-0 pb-0">
+                  <h5 className="modal-title text-danger">
+                    <i className="bi bi-exclamation-triangle me-2"></i>Eliminar
+                    cliente
+                  </h5>
+                  <button
+                    className="btn-close"
+                    onClick={() => setModalEliminar(false)}
+                  ></button>
+                </div>
+                <div className="modal-body pt-2">
+                  <p className="mb-1">Estas seguro de que quieres eliminar a</p>
+                  <p className="fw-semibold mb-3">
+                    &quot;{clienteAEliminar?.nombre}&quot;?
+                  </p>
+                  <p className="text-muted small mb-0">
+                    <i className="bi bi-info-circle me-1"></i>
+                    Esta accion no se puede deshacer.
+                  </p>
+                </div>
+                <div className="modal-footer border-0">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setModalEliminar(false)}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    className="btn btn-danger"
+                    onClick={confirmarEliminar}
+                  >
+                    <i className="bi bi-trash me-2"></i>Si, eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
