@@ -225,3 +225,161 @@ export default function Clientes() {
           />
         </div>
       </div>
+
+      {/* MODAL NUEVO / EDITAR */}
+      {modalAbierto && (
+        <>
+          <div className="modal-backdrop fade show"></div>
+          <div className="modal fade show d-block" tabIndex="-1" role="dialog">
+            <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    <i
+                      className={`bi bi-${modalAbierto === 'nuevo' ? 'plus-circle' : 'pencil'} me-2`}
+                    ></i>
+                    {modalAbierto === 'nuevo'
+                      ? 'Nuevo cliente'
+                      : `Editar — ${clienteEditando?.nombre}`}
+                  </h5>
+                  <button
+                    className="btn-close"
+                    onClick={() => setModalAbierto(false)}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label">Nombre empresa *</label>
+                      <input
+                        name="nombre"
+                        value={form.nombre}
+                        onChange={handleFormChange}
+                        className={`form-control ${errores.nombre ? 'is-invalid' : ''}`}
+                        placeholder="Ej: TechCorp Solutions"
+                      />
+                      {errores.nombre && (
+                        <div className="invalid-feedback">{errores.nombre}</div>
+                      )}
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Sector *</label>
+                      <input
+                        name="sector"
+                        value={form.sector}
+                        onChange={handleFormChange}
+                        className={`form-control ${errores.sector ? 'is-invalid' : ''}`}
+                        placeholder="Ej: Tecnologia"
+                      />
+                      {errores.sector && (
+                        <div className="invalid-feedback">{errores.sector}</div>
+                      )}
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Contacto principal *</label>
+                      <input
+                        name="contactoPrincipal"
+                        value={form.contactoPrincipal}
+                        onChange={handleFormChange}
+                        className={`form-control ${errores.contactoPrincipal ? 'is-invalid' : ''}`}
+                        placeholder="Nombre y apellidos"
+                      />
+                      {errores.contactoPrincipal && (
+                        <div className="invalid-feedback">
+                          {errores.contactoPrincipal}
+                        </div>
+                      )}
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Email *</label>
+                      <input
+                        name="email"
+                        type="email"
+                        value={form.email}
+                        onChange={handleFormChange}
+                        className={`form-control ${errores.email ? 'is-invalid' : ''}`}
+                        placeholder="contacto@empresa.com"
+                      />
+                      {errores.email && (
+                        <div className="invalid-feedback">{errores.email}</div>
+                      )}
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Telefono *</label>
+                      <input
+                        name="telefono"
+                        type="tel"
+                        value={form.telefono}
+                        onChange={handleFormChange}
+                        className={`form-control ${errores.telefono ? 'is-invalid' : ''}`}
+                        placeholder="+34 600 000 000"
+                      />
+                      {errores.telefono && (
+                        <div className="invalid-feedback">
+                          {errores.telefono}
+                        </div>
+                      )}
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">CIF</label>
+                      <input
+                        name="cif"
+                        value={form.cif}
+                        onChange={handleFormChange}
+                        className="form-control"
+                        placeholder="Ej: B12345678"
+                      />
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label">Direccion</label>
+                      <input
+                        name="direccion"
+                        value={form.direccion}
+                        onChange={handleFormChange}
+                        className="form-control"
+                        placeholder="Calle, numero, ciudad"
+                      />
+                    </div>
+                    <div className="col-12">
+                      <div className="form-check">
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          id="prioritario"
+                          name="prioritario"
+                          checked={form.prioritario}
+                          onChange={handleFormChange}
+                        />
+                        <label
+                          className="form-check-label"
+                          htmlFor="prioritario"
+                        >
+                          <i className="bi bi-star-fill text-warning me-1"></i>
+                          Marcar como cliente VIP / prioritario
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-muted small mt-3 mb-0">
+                    * Campos obligatorios
+                  </p>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setModalAbierto(false)}
+                  >
+                    Cancelar
+                  </button>
+                  <button className="btn btn-primary" onClick={guardarCliente}>
+                    <i className="bi bi-check-circle me-2"></i>
+                    {modalAbierto === 'nuevo'
+                      ? 'Crear cliente'
+                      : 'Guardar cambios'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
