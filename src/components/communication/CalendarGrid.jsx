@@ -1,191 +1,189 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './CalendarGrid.css';
 
 export default function Calendario() {
+  const REDIRECT_URL = "https://accounts.google.com/o/oauth2/auth?client_id=TU_CLIENT_ID&redirect_uri=https://[…]=code&scope=https://www.googleapis.com/auth/calendar.events"; 
+  
+  const EVENT_TYPES = {
+    "Reunión 🤝": "#28a745",
+    "Enviar correo ✉️": "#007bff",
+    "Conferencia 🎤": "#ffc107",
+    "Llamada urgente 📞": "#dc3545",
+    "Seguimiento 📋": "#fd7e14",
+    "Otro...": "#6c757d"
+  };
+
+  const PREDEFINED_OPTIONS = Object.keys(EVENT_TYPES);
+
   const [events, setEvents] = useState(() => {
     const saved = localStorage.getItem('events');
     return saved ? JSON.parse(saved) : [];
   });
+  
   const [selectedDate, setSelectedDate] = useState(null);
-  const [text, setText] = useState('');
+  const [editingEventId, setEditingEventId] = useState(null); 
+  const [type, setType] = useState(PREDEFINED_OPTIONS[0]); // Tipo (Select)
+  const [description, setDescription] = useState('');      // Nueva Descripción (Text)
   const [time, setTime] = useState('');
   const [currentDate, setCurrentDate] = useState(new Date());
 
+  const eventsRef = useRef(events);
   useEffect(() => {
+    eventsRef.current = events;
     localStorage.setItem('events', JSON.stringify(events));
   }, [events]);
 
   useEffect(() => {
-    if ('Notification' in window) {
-      if (Notification.permission !== 'granted') {
-        Notification.requestPermission();
-      }
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && selectedDate) closeModal();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedDate]);
+
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission !== 'granted') {
+      Notification.requestPermission();
     }
-
-    const interval = setInterval(() => {
+    const checkEvents = () => {
       const now = new Date();
-
-      setEvents((prevEvents) =>
-        prevEvents.map((e) => {
-          if (!e.time) return e;
-
-          const eventDateTime = new Date(`${e.date}T${e.time}`);
-          const diff = eventDateTime - now;
-
-          if (
-            'Notification' in window &&
-            Notification.permission === 'granted' &&
-            diff > 0 &&
-            diff < 60000 &&
-            !e.notified
-          ) {
-            new Notification('⏰ Recordatorio', { body: e.text });
-            return { ...e, notified: true };
-          }
-
-          return e;
-        })
-      );
-    }, 30000);
-
+      let hasChanged = false;
+      const updatedEvents = eventsRef.current.map((e) => {
+        if (!e.time || e.notified) return e;
+        const [hours, minutes] = e.time.split(':');
+        const eventDate = new Date(e.date + 'T00:00:00'); 
+        eventDate.setHours(parseInt(hours), parseInt(minutes), 0);
+        const diff = eventDate - now;
+        if (diff > 0 && diff < 60000) {
+          if (Notification.permission === 'granted') new Notification('⏰ ' + e.text, { body: e.description });
+          hasChanged = true;
+          return { ...e, notified: true };
+        }
+        return e;
+      });
+      if (hasChanged) setEvents(updatedEvents);
+    };
+    const interval = setInterval(checkEvents, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  const addEvent = () => {
-    if (!selectedDate || !text) return;
-
-    if (
-      events.some(
-        (e) => e.date === selectedDate && e.time === time && e.text === text
-      )
-    ) {
-      return;
-    }
-
-    setEvents([
-      ...events,
-      {
-        id: crypto.randomUUID(),
-        date: selectedDate,
-        text,
-        time,
-        notified: false,
-      },
-    ]);
-
-    setText('');
-    setTime('');
+  const closeModal = () => {
     setSelectedDate(null);
+    setEditingEventId(null);
+    setType(PREDEFINED_OPTIONS[0]);
+    setDescription('');
+    setTime('');
   };
 
-  const deleteEvent = (id) => {
-    setEvents(events.filter((e) => e.id !== id));
+  const openEditModal = (e, event) => {
+    e.stopPropagation();
+    setSelectedDate(event.date);
+    setEditingEventId(event.id);
+    setType(event.text); // 'text' guarda el tipo
+    setDescription(event.description || ''); 
+    setTime(event.time);
   };
 
-  // eslint-disable-next-line no-unused-vars
-  const _moveEvent = (id, newDate) => {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(newDate)) return;
-    setEvents(events.map((e) => (e.id === id ? { ...e, date: newDate } : e)));
+  const saveEvent = () => {
+    if (!selectedDate || !type) return;
+    const eventData = { 
+      text: type, 
+      description, 
+      time, 
+      date: selectedDate, 
+      notified: false 
+    };
+
+    if (editingEventId) {
+      setEvents(events.map(e => e.id === editingEventId ? { ...e, ...eventData, id: e.id } : e));
+    } else {
+      setEvents([...events, { ...eventData, id: crypto.randomUUID() }]);
+    }
+    closeModal();
   };
+
+  const deleteEvent = (id) => setEvents(events.filter((e) => e.id !== id));
+  const clearAllEvents = () => { if (window.confirm("¿Borrar todos?")) setEvents([]); };
+  const goToToday = () => setCurrentDate(new Date());
 
   const generateMonth = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const firstDay = new Date(year, month, 1).getDay();
+    const offset = firstDay === 0 ? 6 : firstDay - 1; 
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-
     const days = [];
-    for (let i = 0; i < firstDay; i++) days.push(null);
+    for (let i = 0; i < offset; i++) days.push(null);
     for (let d = 1; d <= daysInMonth; d++) days.push(d);
     return days;
   };
 
   const formatDate = (day) =>
-    `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(
-      2,
-      '0'
-    )}-${String(day).padStart(2, '0')}`;
+    `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-  const today = new Date().toISOString().split('T')[0];
+  const todayStr = new Date().toISOString().split('T');
 
   return (
     <div className="calendar-container">
       <div className="calendar-box">
-        <h1 className="calendar-title">Calendario</h1>
+        
+        <div className="calendar-top-bar">
+          <h1 className="calendar-title">Calendario</h1>
+          <div className="top-actions">
+            <button className="clear-btn" onClick={clearAllEvents}>Limpiar 🗑️</button>
+            <button className="action-btn" onClick={() => window.open(REDIRECT_URL, '_blank')}>Web 🌐</button>
+          </div>
+        </div>
 
-        {/* Navegación */}
         <div className="calendar-header">
-          <button
-            onClick={() =>
-              setCurrentDate(
-                (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1)
-              )
-            }
-            className="nav-btn"
-          >
-            ◀
-          </button>
-
+          <div className="nav-controls">
+            <button onClick={() => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))} className="nav-btn">◀</button>
+            <button onClick={goToToday} className="nav-btn today-btn">Hoy</button>
+            <button onClick={() => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))} className="nav-btn">▶</button>
+          </div>
           <span className="calendar-month-text">
-            {currentDate.toLocaleDateString('es-ES', {
-              month: 'long',
-              year: 'numeric',
-            })}
+            {currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
           </span>
-
-          <button
-            onClick={() =>
-              setCurrentDate(
-                (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
-              )
-            }
-            className="nav-btn"
-          >
-            ▶
-          </button>
         </div>
 
-        {/* Días */}
         <div className="days-header">
-          {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map((d) => (
-            <div key={d}>{d}</div>
-          ))}
+          {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(d => <div key={d}>{d}</div>)}
         </div>
 
-        {/* Calendario */}
         <div className="calendar-grid">
           {generateMonth().map((day, i) => {
             const date = day ? formatDate(day) : null;
-            const isToday = date === today;
-            const isEmpty = !day;
-
-            const dayEvents = events
-              .filter((e) => e.date === date)
-              .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+            const isToday = date === todayStr;
+            const dayEvents = events.filter(e => e.date === date).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
 
             return (
               <div
                 key={i}
                 onClick={() => day && setSelectedDate(date)}
-                className={`day-cell ${isToday ? 'today' : ''} ${isEmpty ? 'empty' : ''}`}
+                className={`day-cell ${isToday ? 'today' : ''} ${!day ? 'empty' : ''}`}
               >
-                {day && <div className="day-number">{day}</div>}
-
-                {dayEvents.map((e) => (
-                  <div key={e.id} className="event-item">
-                    <span className="event-text">
-                      {e.time} {e.text}
-                    </span>
-
-                    <button
-                      onClick={(ev) => {
-                        ev.stopPropagation();
-                        deleteEvent(e.id);
-                      }}
-                      className="event-delete-btn"
-                    >
-                      ✕
-                    </button>
+                {day && (
+                  <>
+                    <div className="day-number">{day}</div>
+                    <div className="dots-container">
+                      {dayEvents.map(e => (
+                        <div key={e.id} className="event-dot" style={{ backgroundColor: EVENT_TYPES[e.text] }}></div>
+                      ))}
+                    </div>
+                  </>
+                )}
+                {dayEvents.map(e => (
+                  <div 
+                    key={e.id} 
+                    className="event-item" 
+                    onClick={(ev) => openEditModal(ev, e)}
+                    style={{ backgroundColor: EVENT_TYPES[e.text] }}
+                  >
+                    <div className="event-content">
+                      <span className="event-time-type">{e.time} {e.text}</span>
+                      {e.description && <span className="event-desc-small">{e.description}</span>}
+                    </div>
+                    <button onClick={(ev) => { ev.stopPropagation(); deleteEvent(e.id); }} className="event-delete-btn">✕</button>
                   </div>
                 ))}
               </div>
@@ -193,36 +191,37 @@ export default function Calendario() {
           })}
         </div>
 
-        {/* Modal */}
         {selectedDate && (
-          <div className="modal-overlay">
-            <div className="modal-box">
-              <h3>Nuevo evento</h3>
-
-              <input
-                placeholder="Descripción"
-                value={text}
-                onChange={(e) => setText(e.target.value)}
+          <div className="modal-overlay" onClick={closeModal}>
+            <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+              <h3>{editingEventId ? 'Editar evento' : 'Nuevo evento'}</h3>
+              
+              <label className="input-label">Tipo de evento:</label>
+              <select 
+                value={type} 
+                onChange={(e) => setType(e.target.value)}
                 className="input-field"
+              >
+                {PREDEFINED_OPTIONS.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+
+              <label className="input-label">Descripción:</label>
+              <input 
+                placeholder= "Detalles..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="input-field"
+                onKeyDown={(e) => e.key === 'Enter' && saveEvent()}
               />
 
-              <input
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="input-field"
-              />
+              <label className="input-label">Hora:</label>
+              <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="input-field" />
 
               <div className="modal-actions">
-                <button
-                  onClick={() => setSelectedDate(null)}
-                  className="nav-btn"
-                >
-                  Cancelar
-                </button>
-                <button onClick={addEvent} className="primary-btn">
-                  Guardar
-                </button>
+                <button onClick={closeModal} className="nav-btn">Cancelar</button>
+                <button onClick={saveEvent} className="primary-btn">{editingEventId ? 'Actualizar' : 'Guardar'}</button>
               </div>
             </div>
           </div>
