@@ -136,3 +136,110 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
           </div>
         </div>
       </div>
+
+      {/* Tabs */}
+      <div className="cliente-tabs mb-4">
+        <button
+          className={`cliente-tab ${activeTab === 'info' ? 'active' : ''}`}
+          onClick={() => setActiveTab('info')}
+        >
+          <i className="bi bi-info-circle me-2"></i>Información
+        </button>
+        <button
+          className={`cliente-tab ${activeTab === 'vacantes' ? 'active' : ''}`}
+          onClick={() => setActiveTab('vacantes')}
+        >
+          <i className="bi bi-briefcase me-2"></i>
+          Vacantes
+          {cliente.vacantes?.length > 0 && (
+            <span className="tab-badge">{cliente.vacantes.length}</span>
+          )}
+        </button>
+        <button
+          className={`cliente-tab ${activeTab === 'notas' ? 'active' : ''}`}
+          onClick={() => setActiveTab('notas')}
+        >
+          <i className="bi bi-journal-text me-2"></i>
+          Notas
+          {notas.length > 0 && (
+            <span className="tab-badge">{notas.length}</span>
+          )}
+        </button>
+      </div>
+
+      {/* TAB: Información */}
+      {activeTab === 'info' && (
+        <div className="row g-3">
+          <div className="col-12 col-lg-6">
+            <div className="cliente-info-card h-100">
+              <h6 className="info-card-title">
+                <i className="bi bi-person-badge me-2"></i>Datos de contacto
+              </h6>
+              <div className="info-grid">
+                <div className="info-item">
+                  <span className="info-label">Contacto principal</span>
+                  <span className="info-value">
+                    {cliente.contactoPrincipal}
+                  </span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Email</span>
+                  <a
+                    href={`mailto:${cliente.email}`}
+                    className="info-value text-decoration-none info-link"
+                  >
+                    <i className="bi bi-envelope me-1"></i>
+                    {cliente.email}
+                  </a>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Teléfono</span>
+                  <a
+                    href={`tel:${cliente.telefono}`}
+                    className="info-value text-decoration-none info-link"
+                  >
+                    <i className="bi bi-telephone me-1"></i>
+                    {cliente.telefono}
+                  </a>
+                </div>
+              </div>
+              <div className="d-flex gap-2 mt-3">
+                <a
+                  href={`mailto:${cliente.email}`}
+                  className="btn btn-sm btn-contact"
+                >
+                  <i className="bi bi-envelope me-1"></i>Email
+                </a>
+                <a
+                  href={`tel:${cliente.telefono}`}
+                  className="btn btn-sm btn-contact"
+                >
+                  <i className="bi bi-telephone me-1"></i>Llamar
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-12 col-lg-6">
+            <div className="cliente-info-card h-100">
+              <h6 className="info-card-title">
+                <i className="bi bi-building me-2"></i>Datos fiscales
+              </h6>
+              <div className="info-grid">
+                <div className="info-item">
+                  <span className="info-label">CIF</span>
+                  <span className="info-value">{cliente.cif || '—'}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Dirección</span>
+                  <span className="info-value">{cliente.direccion || '—'}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Sector</span>
+                  <span className="info-value">{cliente.sector}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
