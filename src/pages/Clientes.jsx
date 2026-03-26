@@ -132,3 +132,96 @@ export default function Clientes() {
     if (clienteSeleccionado?.id === cliente.id)
       setClienteSeleccionado(actualizado);
   };
+
+  return (
+    <div className="clientes-page">
+      {/* Cabecera */}
+      <div className="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+          <h2 className="page-title mb-1">Directorio de Clientes</h2>
+          <p className="text-muted mb-0">
+            {clientes.length} clientes registrados
+            {clientes.filter((c) => c.prioritario).length > 0 && (
+              <span className="ms-2" style={{ color: '#f59e0b' }}>
+                · {clientes.filter((c) => c.prioritario).length} VIP
+              </span>
+            )}
+          </p>
+        </div>
+        <button
+          className="btn btn-primary d-flex align-items-center gap-2"
+          onClick={abrirModalNuevo}
+        >
+          <i className="bi bi-plus-circle"></i>
+          <span>Nuevo cliente</span>
+        </button>
+      </div>
+
+      <div className="clientes-split">
+        {/* Panel izquierdo */}
+        <div className="clientes-list-panel">
+          <div className="clientes-search-bar mb-2">
+            <i className="bi bi-search"></i>
+            <input
+              type="text"
+              placeholder="Buscar por nombre, contacto o email..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+            />
+            {busqueda && (
+              <button className="search-clear" onClick={() => setBusqueda('')}>
+                <i className="bi bi-x"></i>
+              </button>
+            )}
+          </div>
+
+          <div className="d-flex gap-2 mb-3">
+            <select
+              className="form-select form-select-sm clientes-select"
+              value={filtroSector}
+              onChange={(e) => setFiltroSector(e.target.value)}
+            >
+              {sectores.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            <button
+              className={`btn btn-sm btn-filter-vip ${filtroPrioritario ? 'active' : ''}`}
+              onClick={() => setFiltroPrioritario(!filtroPrioritario)}
+              title="Mostrar solo VIP"
+            >
+              <i className="bi bi-star-fill"></i>
+            </button>
+          </div>
+
+          {clientesFiltrados.length === 0 ? (
+            <div className="text-center text-muted py-4">
+              <i className="bi bi-search fs-3 d-block mb-2"></i>
+              <p className="mb-0 small">No se encontraron clientes</p>
+            </div>
+          ) : (
+            clientesFiltrados.map((c) => (
+              <ClienteCard
+                key={c.id}
+                cliente={c}
+                isSelected={clienteSeleccionado?.id === c.id}
+                onClick={setClienteSeleccionado}
+                onEdit={abrirModalEditar}
+                onDelete={abrirModalEliminar}
+                onTogglePrioritario={togglePrioritario}
+              />
+            ))
+          )}
+        </div>
+
+        {/* Panel derecho */}
+        <div className="clientes-detail-panel">
+          <ClienteDetail
+            cliente={clienteSeleccionado}
+            onEdit={abrirModalEditar}
+            onDelete={abrirModalEliminar}
+          />
+        </div>
+      </div>
