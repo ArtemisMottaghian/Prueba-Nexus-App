@@ -23,7 +23,6 @@ async def endpoint_list_clients(db: AsyncSession = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-router = APIRouter()
 # --------------------
 # Obtener un cliente con detalles de la vacante 
 # GET /api/clients/{client_id}
@@ -31,7 +30,7 @@ router = APIRouter()
 @router.get("/{client_id}", response_model=ClientDetailOut)
 async def get_client(client_id: int, db: AsyncSession = Depends(get_db)):
     try:
-        client = clients_service.get_client_by_id(db, client_id)
+        client = await clients_service.get_client_by_id(db, client_id)
         return client
     except IntegrityError as e:
         await db.rollback()
