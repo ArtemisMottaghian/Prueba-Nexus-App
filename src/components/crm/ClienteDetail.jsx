@@ -243,3 +243,43 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
           </div>
         </div>
       )}
+
+      {/* TAB: Vacantes */}
+      {activeTab === 'vacantes' && (
+        <div className="cliente-info-card">
+          <h6 className="info-card-title mb-3">
+            <i className="bi bi-briefcase me-2"></i>
+            Vacantes vinculadas ({cliente.vacantes?.length || 0})
+          </h6>
+          {cliente.vacantes?.length > 0 ? (
+            cliente.vacantes.map((v) => (
+              <div
+                key={v.id}
+                className="vacante-vinculada d-flex align-items-center justify-content-between mb-2"
+                onClick={() =>
+                  setVacanteSeleccionada(adaptarVacante(v, cliente))
+                }
+              >
+                <div>
+                  <p className="mb-0 vacante-vinculada-titulo">{v.titulo}</p>
+                  <span className="activity-time">
+                    <i className="bi bi-clock me-1"></i>
+                    {v.fecha}
+                  </span>
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  <span className={`badge ${getBadgeEstado(v.estado)}`}>
+                    {v.estado}
+                  </span>
+                  <i
+                    className="bi bi-chevron-right text-muted"
+                    style={{ fontSize: '12px' }}
+                  ></i>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-muted small mb-0">No hay vacantes vinculadas.</p>
+          )}
+        </div>
+      )}
