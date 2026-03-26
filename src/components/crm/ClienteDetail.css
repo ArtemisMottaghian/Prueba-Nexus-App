@@ -293,3 +293,44 @@
   color: var(--text-primary);
   line-height: 1.5;
 }
+
+/* --- MODO CLARO --- */
+[data-bs-theme='light'] .cliente-info-card,
+[data-bs-theme='light'] .nota-content,
+[data-bs-theme='light'] .cliente-stat {
+  background: #ffffff;
+  border-color: #e5e7eb;
+}
+
+[data-bs-theme='light'] .cliente-tabs {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+[data-bs-theme='light'] .cliente-tab.active {
+  background: linear-gradient(135deg, var(--color-purple-primary), var(--color-purple-secondary));
+}
+
+[data-bs-theme='light'] .vacante-vinculada {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+}
+
+[data-bs-theme='light'] .nota-textarea {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+  color: #111827;
+}
+
+[data-bs-theme='light'] .empty-icon-wrapper {
+  background: rgba(124, 63, 255, 0.08);
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+  .cliente-tabs { flex-wrap: wrap; }
+  .cliente-tab { flex: none; flex-grow: 1; font-size: 12px; padding: 8px 10px; }
+  .cliente-stats-row { gap: 8px; }
+  .cliente-stat { padding: 10px 8px; }
+  .stat-value { font-size: 20px; }
+}
