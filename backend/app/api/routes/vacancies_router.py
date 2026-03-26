@@ -8,9 +8,9 @@ from app.schemas.vacancies_schemas import (
     VacancySummary,
     VacancyDetail,
     VacancyFiltered,
-    FavoritoRequest,
-    AccionMasivaRequest,
-    MensajeResponse
+    FavoriteRequest,
+    BulkActionRequest,
+    MessageResponse
 )
 
 router = APIRouter()
@@ -24,8 +24,8 @@ async def read_vacancies(
     status: Optional[str] = None,
     db: AsyncSession = Depends(get_db)
 ):
-    vacantes = await vacancies_service.get_vacancies_list(db, status)
-    return vacantes
+    vacancies = await vacancies_service.get_vacancies_list(db, status)
+    return vacancies
 
 
 # -----------------
@@ -37,12 +37,12 @@ async def read_vacancy(
     vacancy_id: int,
     db: AsyncSession = Depends(get_db)
 ):
-    vacante = await vacancies_service.get_vacancy_by_id(db, vacancy_id)
+    vacancy = await vacancies_service.get_vacancy_by_id(db, vacancy_id)
 
-    if vacante is None:
+    if vacancy is None:
         raise HTTPException(status_code=404, detail="La vacante no existe")
 
-    return vacante
+    return vacancy
 
 
 # -----------------
@@ -56,43 +56,43 @@ async def read_vacancies_filtered(
     location: Optional[str] = None,
     db: AsyncSession = Depends(get_db)
 ):
-    vacantes = await vacancies_service.get_vacantes_filtradas(db, status, sector, location)
-    return vacantes
+    vacancies = await vacancies_service.get_vacancies_filtered(db, status, sector, location)
+    return vacancies
 
 
 # -----------------
 # Marcar vacante como favorita
 # PATCH /api/vacantes/{vacancy_id}/favorito
 # -----------------
-@router.patch("/{vacancy_id}/favorite", response_model=MensajeResponse)
+@router.patch("/{vacancy_id}/favorite", response_model=MessageResponse)
 async def marck_favorite(
     vacancy_id: int,
-    body: FavoritoRequest,
+    body: FavoriteRequest,
     db: AsyncSession = Depends(get_db)
 ):
-    vacante = await vacancies_service.get_vacancy_by_id(db, vacancy_id)
+    vacancy = await vacancies_service.get_vacancy_by_id(db, vacancy_id)
 
-    if vacante is None:
+    if vacancy is None:
         raise HTTPException(status_code=404, detail="La vacante no existe")
 
-    await vacancies_service.set_favorito(db, vacancy_id, body.favorito)
-    return {"mensaje": f"Vacante {'marcada' if body.favorito else 'desmarcada'} como favorita"}
+    await vacancies_service.set_favorite(db, vacancy_id, body.favorite)
+    return {"mensaje": f"Vacante {'marcada' if body.favorite else 'desmarcada'} como favorita"}
 
 
 # -----------------
 # Acciones masivas sobre vacantes (cambiar estado o eliminar)
 # POST /api/vacantes/acciones-masivas
 # -----------------
-@router.post("/bulk-actions", response_model=MensajeResponse)
+@router.post("/bulk-actions", response_model=MessageResponse)
 async def bulk_actions(
-    body: AccionMasivaRequest,
+    body: BulkActionRequest,
     db: AsyncSession = Depends(get_db)
 ):
-    if body.accion not in ("descartar", "eliminar"):
+    if body.accion not in ("discard", "delete"):
         raise HTTPException(
             status_code=400,
-            detail="Acción no válida. Usa 'descartar' o 'eliminar'"
+            detail="Acción no válida. Usa 'discard' o 'delete'"
         )
 
-    await vacancies_service.apply_bulk_action(db, body.ids_vacantes, body.accion)
-    return {"mensaje": f"Acción '{body.accion}' aplicada a {len(body.ids_vacantes)} vacantes"}
+    await vacancies_service.apply_bulk_action(db, body.ids_vacantes, body.action)
+    return {"mensaje": f"Acción '{body.action}' aplicada a {len(body.vacancy_ids)} vacantes"}
