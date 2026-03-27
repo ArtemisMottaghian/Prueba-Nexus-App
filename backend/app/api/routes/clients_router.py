@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from typing import List
 
-from app.schemas.clients_schemas import ClientUpdate, ClientOut, ClientDetailOut, ClientCreate, VacanteOut
+from app.schemas.clients_schemas import ClientUpdate, ClientOut, ClientDetailOut, ClientCreate, VacancyOut
 from app.services import clients_service
 from app.db.connection import get_db
 
@@ -42,7 +42,7 @@ async def get_client(client_id: int, db: AsyncSession = Depends(get_db)):
 # Obtener un cliente con las vacantes asociadas
 # GET /api/clients/{client_id}/vacantes
 # --------------------
-@router.get("/{client_id}/vacantes", response_model=List[VacanteOut])
+@router.get("/{client_id}/vacantes", response_model=List[VacancyOut])
 async def get_client_vacantes(client_id: int, db: AsyncSession = Depends(get_db)):
     try:
         client_vacantes = await clients_service.get_client_vacantes(db, client_id)
