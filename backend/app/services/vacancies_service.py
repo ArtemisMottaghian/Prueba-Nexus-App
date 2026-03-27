@@ -7,18 +7,11 @@ import re
 from datetime import datetime
 
 from app.db.session import AsyncSessionLocal
-from app.db.models import JobOffer, OfferStatus, JobPortal
+from app.db.models import JobOffer, OfferStatus, JobPortal, Client, Contact, EntityType, LeadStatus
 
 # Funcion para obtener el listado (Dashboard y Pantalla de Vacantes)
 async def get_vacancies_list(db: AsyncSession, status: Optional[str] = None) -> List[JobOffer]:
-    """
-    Obtiene todas las vacantes.
-    Si se pasa 'status' (ej: 'detected), filtra por ese estado
-    Mapping de estados habituales:
-    - 'nuevas' -> OfferStatus.detected
-    - 'en contacto' -> OfferStatus.contacted
-    - 'en negociacion' -> OfferStatus.negotiating
-    """
+    """Obtiene todas las vacantes filtradas opcionalmente por estado."""
     try:
         async with AsyncSessionLocal() as session:
             query = select(JobOffer)
@@ -36,7 +29,7 @@ async def get_vacancies_list(db: AsyncSession, status: Optional[str] = None) -> 
     except Exception as e:
         raise e
 
-# detalle de una vacante
+# detalle de una vacante por el ID
 async def get_vacancy_by_id(db: AsyncSession, vacancy_id: int) -> Optional[JobOffer]:
     try:
         async with AsyncSessionLocal() as session:
@@ -53,8 +46,8 @@ async def get_vacancy_by_id(db: AsyncSession, vacancy_id: int) -> Optional[JobOf
 
 async def create_vacancy(job_data: dict) -> JobOffer:
     """
-    Guarda una nueva vacante en la base de datos desde el scraper,
-    adaptando los datos crudos al modelo de SQLAlchemy.
+    Guarda una nueva vacante, genera el Cliente prospecto si no existe,
+    y añade al Reclutador como Contacto.
     """
     try:
         async with AsyncSessionLocal() as session:
@@ -87,10 +80,20 @@ async def create_vacancy(job_data: dict) -> JobOffer:
                 except Exception:
                     pass
 
-            # 4. Mapear al modelo exacto
+            # 4. Obtener o crear el Portal (LinkedIn)
+            portal_query = select(JobPortal).where(JobPortal.name.ilike("%linkedin"))
+            portal_result = await session.execute(portal_query)
+            portal = portal_result.scalar_one_or_none()
+
+            if not portal:
+                portal = JobPortal(name="LinkedIn", base_url="https://linkedin.com")
+                session.add(portal)
+                await session.flush() #Obtenemos portal.id
+                
+            # 5. Mapear al modelo exacto
             new_job = JobOffer(
                 external_id=str(job_data.get("external_id", "")),
-                title=job_data.get("title", "No title")[:255],
+                title=job_data.get("title", "Sin título")[:255], 
                 company_name=job_data.get("company", "")[:255], 
                 location=job_data.get("location", "")[:255],
                 offer_url=job_data.get("offer_url", ""),
@@ -102,102 +105,62 @@ async def create_vacancy(job_data: dict) -> JobOffer:
                 salary_max=s_max,
                 contract_type=job_data.get("contract_type", "")[:50],
                 contract_time=job_data.get("contract_time", "")[:50],
-                work_modality=job_data.get("modality", "")[:50]
+                work_modality=job_data.get("modality", "")[:50],
+                portal_id=portal.id
             )
 
-            # Opcional: Si tienes LinkedIn registrado en tu tabla JobPortal, lo asociamos
-            portal_query = select(JobPortal).where(JobPortal.name.ilike("%linkedin%"))
-            portal_result = await session.execute(portal_query)
-            portal = portal_result.scalar_one_or_none()
-            if portal:
-                new_job.portal_id = portal.id
-
-            # 5. Guardar en BD
+            # Obtenemos new_job.id para vincular al cliente
             session.add(new_job)
+            await session.flush()
+
+            # 6. Lógica de Cliente (Empresa)
+            company_name = job_data.get("company")
+            client = None
+            if company_name:
+                # ¿Ya existe esta empresa en nuestra BBDD?
+                client_query = select(Client).where(Client.company_name == company_name)
+                client_result = await session.execute(client_query)
+                client = client_result.scalar_one_or_none()
+
+                if not client:
+                    # Si no existe, la creamos como prospecto
+                    client = Client(
+                        company_name=company_name[:255],
+                        source_id=portal.id,
+                        original_offer_id=new_job.id,
+                        entity_type=EntityType.scraping_prospect,
+                        lead_status=LeadStatus.new
+                    )
+                    session.add(client)
+                    await session.flush() # Obtenemos client.id para vincular al reclutador
+
+                # 7. Lógica de Contacto (Reclutador)
+                recruiter_name = job_data.get("recruiter_name")
+                recruiter_url = job_data.get("recruiter_url", "")
+
+                if recruiter_name and recruiter_name not in ["No especificado", "Nombre no extraíble limpiamente", ""]:
+                    # Comprobamos que no hayamos guardado ya a este reclutador en esta empresa
+                    contact_query = select(Contact).where(
+                        Contact.client_id == client.id, 
+                        Contact.full_name == recruiter_name
+                    )
+                    contact_result = await session.execute(contact_query)
+                    existing_contact = contact_result.scalar_one_or_none()
+
+                    if not existing_contact:
+                        new_contact = Contact(
+                            client_id=client.id,
+                            full_name=recruiter_name[:255],
+                            job_title="Reclutador HR",
+                            linkedin_url=recruiter_url[:255]
+                        )
+                        session.add(new_contact)
+
+            # 8. Guardado final de toda la cadena
             await session.commit()
             
             return new_job
             
     except Exception as e:
         print(f"Error específico en create_vacancy: {type(e).__name__} - {e}")
-        raise e
-
-
-
-async def apply_bulk_action(
-    db: AsyncSession,
-    vacancy_ids: List[int],
-    action: str
-) -> None:
-    """
-    Aplica una acción masiva sobre un listado de vacantes.
-    - 'descartar' → cambia el estado a 'discarded'
-    - 'eliminar'  → borra las vacantes de la BD
-    """
-    try:
-        async with AsyncSessionLocal() as session:
-            query = select(JobOffer).where(JobOffer.id.in_(vacancy_ids))
-            result = await session.execute(query)
-            vacancies = result.scalars().all()
-
-            for vacancy in vacancies:
-                if action == "discard":
-                    vacancy.status = OfferStatus.discarded
-                elif action == "delete":
-                    await session.delete(vacancy)
-
-            await session.commit()
-    except Exception as e:
-        await session.rollback()
-        raise e
-
-
-
-async def get_vacancies_filtered(
-    db: AsyncSession,
-    status: Optional[str] = None,
-    sector: Optional[str] = None,
-    location: Optional[str] = None
-) -> List[JobOffer]:
-    """
-    Obtiene vacantes filtrando por estado, sector y/o ubicación.
-    Todos los filtros son opcionales.
-    """
-    try:
-        async with AsyncSessionLocal() as session:
-            query = select(JobOffer)
-
-            if status:
-                query = query.where(JobOffer.status == status)
-            if sector:
-                query = query.where(JobOffer.sector == sector)
-            if location:
-                query = query.where(JobOffer.location == location)
-
-            query = query.order_by(JobOffer.published_at.desc())
-
-            result = await session.execute(query)
-            return result.scalars().all()
-    except Exception as e:
-        raise e
-
-async def set_favorite(
-    db: AsyncSession,
-    vacancy_id: int,
-    favorite: bool
-) -> None:
-    """
-    Marca o desmarca una vacante como favorita.
-    """
-    try:
-        async with AsyncSessionLocal() as session:
-            query = select(JobOffer).where(JobOffer.id == vacancy_id)
-            result = await session.execute(query)
-            vacancy = result.scalar_one_or_none()
-
-            if vacancy:
-                vacancy.is_favorite = favorite
-                await session.commit()
-    except Exception as e:
-        await session.rollback()
         raise e
