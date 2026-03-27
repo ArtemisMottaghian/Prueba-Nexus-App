@@ -22,7 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-<<<<<<< HEAD
 
 # .ENV
 .env
@@ -33,6 +32,4 @@ __pycache__/
 # .vscode
 .vscode/
 
-.venv/
-=======
->>>>>>> 004a3a9ece6eb29fc8a90756905d6faac13b52ec
+venv/
