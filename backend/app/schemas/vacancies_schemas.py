@@ -1,8 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict,Field,field_validator,HttpUrl
-from app.db.models import OfferStatus
-
+from app.schemas.job_offer import OfferStatus
 # Schema base para la tarjeta (Dashboard y Lista)
 class VacancySummary(BaseModel):
     id: int

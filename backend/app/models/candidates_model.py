@@ -2,6 +2,7 @@ from sqlalchemy import Column, String, BigInteger, Text, DateTime, func
 from sqlalchemy.dialects.postgresql import ENUM
 from app.db.connection import Base
 from app.schemas.candidates_schemas import CandidateStatus 
+import enum
 
 class Candidate(Base):
     __tablename__ = "candidates"
@@ -37,3 +38,9 @@ class Candidate(Base):
         server_default=func.now(), 
         onupdate=func.now()
     )
+
+class CandidateStatus(str, enum.Enum):
+    active = "active"
+    passive = "passive"
+    hired_elsewhere = "hired_elsewhere"
+    blacklisted = "blacklisted"
