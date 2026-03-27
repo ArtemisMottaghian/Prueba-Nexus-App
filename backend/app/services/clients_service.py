@@ -7,7 +7,7 @@ from typing import List
 
 from app.models.clients_model import Client
 from app.models.contacts_model import Contact
-from app.models.job_offers_model import JobOffer
+from app.models.job_model import JobOffer
 from app.schemas.clients_schemas import (
     ClientCreate, ClientUpdate, ClientOut, ClientDetailOut, VacanteOut
 )

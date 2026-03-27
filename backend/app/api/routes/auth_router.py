@@ -67,6 +67,7 @@ async def google_callback(code: str, db:AsyncSession = Depends(get_db)):
     # Codigo -> Tokens
     async with httpx.AsyncClient() as client:
         token_res = await client.post(
+            GOOGLE_TOKEN_URL,
             data={
                 "code": code,
                 "client_id": settings.GOOGLE_CLIENT_ID,
