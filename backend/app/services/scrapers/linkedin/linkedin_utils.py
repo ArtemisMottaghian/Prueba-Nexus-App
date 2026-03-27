@@ -27,8 +27,8 @@ def build_linkedin_url(keyword, location, exp_levels, workplace_types, date_post
     return url
 
 def parse_salary(text):
-    if not text or text == "No especificado":
-        return "No especificado"
+    if not text or text == None:
+        return None
     
     text_clean = text.lower().replace(" ", "").replace("€", "").replace("euros", "")
     

@@ -32,8 +32,4 @@ __pycache__/
 # .vscode
 .vscode/
 
-.venv/
-
-# Python Virtual Environments
 venv/
-backend/venv/

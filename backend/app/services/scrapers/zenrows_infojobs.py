@@ -1,13 +1,16 @@
 import asyncio
 import httpx
-from core.config import settings
+from app.core.config import settings
+from app.db.models import JobOffer
 from sqlalchemy.dialects.postgresql import insert
 from app.schemas.job_offer import JobOfferRequest
+from app.db.session import AsyncSessionLocal as SessionLocal
 
 from bs4 import BeautifulSoup
 import re
 import json
 import urllib.parse
+from datetime import datetime, timedelta
 
 
 # -----------
@@ -85,6 +88,37 @@ def construir_url_infojobs(palabra_clave=None, provincia=None, pagina=1, filtro_
          
     return url_base + parametros_finales
 
+# -----------
+# FUNCION parsear fecha
+# -----------
+def parsear_fecha_infojobs(texto_fecha):
+    """
+    Convierte textos como 'Hace 28m' o 'Hace 2h' en un objeto datetime real.
+    """
+    if not texto_fecha:
+        return None
+        
+    ahora = datetime.now()
+    texto = texto_fecha.lower()
+    
+    # Buscamos el número dentro del texto
+    numeros = re.findall(r'\d+', texto)
+    if not numeros:
+        return ahora  
+        
+    cantidad = int(numeros[0])
+    
+    # Restamos el tiempo correspondiente
+    if 'm' in texto and 'h' not in texto and 'd' not in texto:
+        return ahora - timedelta(minutes=cantidad)
+    elif 'h' in texto:
+        return ahora - timedelta(hours=cantidad)
+    elif 'd' in texto:
+        return ahora - timedelta(days=cantidad)
+        
+    return ahora
+
+
 
 # -----------
 # FUNCION EXTRACCION DATOS
@@ -127,16 +161,36 @@ async def extraer_ofertas_infojobs(url_busqueda, apikey, nombre_sector, limite=N
         'js_instructions': json.dumps(instrucciones_scroll)
     }
     '''
-    
+    url_objetivo_codificada = urllib.parse.quote(url_busqueda)
+    instrucciones_codificadas = urllib.parse.quote(json.dumps(instrucciones_scroll))
+
+    # Construimos la URL de ZenRows con todos los parámetros incrustados
+    zenrows_url = (
+        f"https://api.zenrows.com/v1/?apikey={apikey}"
+        f"&url={url_objetivo_codificada}"
+        f"&js_render=true"
+        f"&premium_proxy=true"
+        f"&js_instructions={instrucciones_codificadas}"
+    )
+
     # Conexión asíncrona segura con el context manager
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=60.0) as client:
         try:
-            response = await client.get('https://api.zenrows.com/v1/', params=params)
-            response.raise_for_status()
-        except Exception as e:
-            print(f"Error de conexión: {str(e)}")
+            print(f" Conectando a ZenRows para la URL...")
+            response = await client.get(zenrows_url)
+            
+            # Si ZenRows devuelve error (ej. falta saldo, API key mala), lo capturamos aquí
+            if response.status_code != 200:
+                print(f" Error ZenRows: HTTP {response.status_code} - {response.text}")
+                return []
+                
+        except httpx.RequestError as e:
+            print(f" Error de red con httpx: {str(e)}")
             return []
-    
+        except Exception as e:
+            print(f" Error desconocido: {str(e)}")
+            return []
+            
     # Codificacion para tildes y caracteres especiales
     response.encoding = 'utf-8'  
 
@@ -205,6 +259,10 @@ async def extraer_ofertas_infojobs(url_busqueda, apikey, nombre_sector, limite=N
         elementos_lista = tarjeta.select('li.ij-OfferCardContent-description-list-item')
         textos_lista = [el.text.strip() for el in elementos_lista if el]
 
+        #procesar fecha publicacion
+        texto_fecha_publicacion = get_text('span[data-testid="sincedate-tag"]')
+        fecha_real = parsear_fecha_infojobs(texto_fecha_publicacion)
+
         # Procesar salario
         salario_texto = get_text('span.ij-OfferCardContent-description-salary-info')
         salary_min_val = None
@@ -231,9 +289,9 @@ async def extraer_ofertas_infojobs(url_busqueda, apikey, nombre_sector, limite=N
                 company_name=nombre_empresa,
                 location=get_text('span.ij-OfferCardContent-description-list-item-truncate'),
                 offer_url=offer_url,
-
+                
                 job_description=get_text('p.ij-OfferCardContent-description-description'),
-                published_at=get_text('span[data-testid="sincedate-tag"]'),
+                published_at=fecha_real,
                 sector=nombre_sector,
                 
                 salary_min=salary_min_val,
@@ -299,24 +357,28 @@ async def main():
 
     # Comentado hasta que la BBDD este disponible y usable, probar viabilidad del script
     
-    # if todas_las_ofertas:
-    #     insert_valid = [offer.model_dump() for offer in todas_las_ofertas]
-    #     session = SessionLocal()
+    if todas_las_ofertas:
+        insert_valid = []
+        for offer in todas_las_ofertas:
+            data = offer.model_dump()
+            if data.get("offer_url"):
+                data["offer_url"] = str(data["offer_url"])  
+            insert_valid.append(data)
 
-    #     try:
-    #         inserts = insert(JobOfferRequest).values(insert_valid)
+        try:
+            async with SessionLocal() as session:
+                stmt = insert(JobOffer).values(insert_valid)
 
-    #         inserts = inserts.on_conflict_do_nothing(
-    #             index_element=['portal_id', 'external_id']
-    #         )
+                stmt = stmt.on_conflict_do_nothing(
+                index_elements=['portal_id', 'external_id']
+                )
 
-    #         session.execute(inserts)
-    #         session.commit()
+                await session.execute(stmt)
+                await session.commit()
 
-    #     except Exception as e:
-    #         session.rollback()
-    #     finally:
-    #         session.close()
+        except Exception as e:
+            print(f" Error al guardar en la base de datos: {e}")
+        
 
 if __name__ == "__main__":
     asyncio.run(main())
