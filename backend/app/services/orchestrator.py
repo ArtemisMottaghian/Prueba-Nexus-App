@@ -10,7 +10,7 @@ from app.db.session import AsyncSessionLocal
 from app.db.models import JobOffer, Client, Contact
 from app.schemas.job_offer import ScrapedJobOffer
 from app.services.scrapers.linkedin.linkedin_runner import extract_linked
-from app.services.scrapers.adzuna import extract_adzuna
+from app.services.scrapers.adzyna import extract_adzuna
 from app.services.scrapers.infojobs.infojobs_runner import extract_infojobs
 
 
@@ -18,9 +18,9 @@ async def run_scrapers():
     print("Comenzando busqueda de ofertas...")
 
     results = await asyncio.gather(
-        extract_adzuna(),
+        # extract_adzuna(),
         # Activar las funciones cuando se sepa que funcionan bien
-        # extract_zenrows()
+        # extract_zenrows(),
         # extract_linked(),
         extract_infojobs(),
         return_exceptions=True,
