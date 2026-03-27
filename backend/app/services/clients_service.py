@@ -7,9 +7,9 @@ from typing import List
 
 from app.models.clients_model import Client
 from app.models.contacts_model import Contact
-from app.models.job_offers_model import JobOffer
+from app.models.job_model import JobOffer
 from app.schemas.clients_schemas import (
-    ClientCreate, ClientUpdate, ClientOut, ClientDetailOut, VacanteOut
+    ClientCreate, ClientUpdate, ClientOut, ClientDetailOut, VacancyOut
 )
 
 
@@ -86,7 +86,7 @@ async def get_client_by_id(db: AsyncSession, client_id: int) -> ClientDetailOut:
         vacantes_raw = vacantes_result.scalars().all()
 
         positions = [
-            VacanteOut(
+            VacancyOut(
                 id=v.id,
                 title=v.title,
                 status=v.status.value if v.status else "unknown",
@@ -214,7 +214,7 @@ async def delete_client(db: AsyncSession, client_id: int) -> dict:
         raise HTTPException(status_code=500, detail="Error deleting client")
 
 
-async def get_client_positions(db: AsyncSession, client_id: int) -> List[VacanteOut]:
+async def get_client_positions(db: AsyncSession, client_id: int) -> List[VacancyOut]:
     try:
         await _get_client_or_404(db, client_id)  # Valida que existe
 
@@ -228,7 +228,7 @@ async def get_client_positions(db: AsyncSession, client_id: int) -> List[Vacante
         positions_raw = result.scalars().all()
 
         return [
-            VacanteOut(
+            VacancyOut(
                 id=v.id,
                 title=v.title,
                 status=v.status.value if v.status else "unknown",
