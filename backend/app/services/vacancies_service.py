@@ -7,7 +7,11 @@ import re
 from datetime import datetime
 
 from app.db.session import AsyncSessionLocal
-from app.db.models import JobOffer, OfferStatus, JobPortal, Client, Contact, EntityType, LeadStatus
+from app.models.job_model import JobOffer, JobPortal
+from app.models.clients_model import Client
+from app.models.contacts_model import Contact
+from app.models.entity_model import EntityType
+from app.models.leadStatus_model import LeadStatus
 
 # Funcion para obtener el listado (Dashboard y Pantalla de Vacantes)
 async def get_vacancies_list(db: AsyncSession, status: Optional[str] = None) -> List[JobOffer]:
