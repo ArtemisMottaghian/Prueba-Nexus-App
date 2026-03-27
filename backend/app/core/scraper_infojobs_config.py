@@ -1,9 +1,13 @@
 # Palabras clave que el scraper va a buscar en InfoJobs
 JOB_KEYWORDS = [
     #"Tecnología",
-    "Software", #"IT", #"Ciberseguridad",
-    #"Ingeniería", "Engineering",
-    #"Finanzas", "Banca", "Banking",
+    "Software", 
+    #"IT",
+    #"Ciberseguridad",
+    #"Ingeniería",
+    #"Engineering",
+    #"Finanzas", 
+    #"Banca", "Banking",
     #"Legal", "Abogado", "Jurídico",
     #"Ventas", "Comercial", "Sales",
     #"Logística", "Supply Chain", "Almacén",

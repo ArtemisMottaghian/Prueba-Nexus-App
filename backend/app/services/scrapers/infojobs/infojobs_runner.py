@@ -1,4 +1,5 @@
 import asyncio
+import re
 import time
 import json
 import urllib.parse
@@ -152,15 +153,31 @@ async def extract_infojobs():
                         # 3. Llamada al navegador para sacar descripciones largas
                         job_description, company_description, driver = await fetch_infojobs_details(driver, url_o, u_company)
 
-                        # Sacar Salario (Plan B)
-                        # Si en el JSON devuelve None, buscamos el salario en la descripción
-                        if not salary_min and job_description and "€" in job_description:
-                            nums = extract_salary(job_description)
-                            if nums and len(nums) == 1:
-                                salary_min = nums[0]
-                            elif nums and len(nums) >= 2:
-                                salary_min, salary_max = nums[0], nums[1]
 
+                        # Rescate de salario
+                        if not salary_min and job_description:
+                            # Intento 1: Buscamos el simbolo tradicional del euro
+                            if "€" in job_description:
+                                nums = extract_salary(job_description)
+                                if nums and len(nums) == 1:
+                                    salary_min = nums[0]
+                                elif nums and len(nums) >= 2:
+                                    salary_min, salary_max = nums[0], nums[1]
+
+                            # Intento 2 Si siggue sin haber salrio, buscamos el formato K
+                            if not salary_min:
+                                #Busca un numero de dos digitos un espacio opcional y la letra K o k
+                                k_match = re.findall(r'\b(\d{2})[ \t]*[kK]\b', job_description)
+                                if k_match:
+                                    # Convertimos el texto a entero y multiplicamos por mil
+                                    salary_min = int(k_match[0]) * 1000
+                                    # Si pusieron un rango atrapamos tambien el maximo
+                                    if len(k_match) >= 2:
+                                        salary_max = int(k_match[1]) * 1000
+                        if job_description:
+                            job_description = re.split(r'\n\s*(?:Referencia|Categoría)\s*\n', job_description, flags=re.IGNORECASE)[0].strip()
+
+                            
                         job_data = {
                             "portal_id": 2,  # 2 = InfoJobs
                             "external_id": f"IJ-{jid}", 

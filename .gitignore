@@ -33,3 +33,7 @@ __pycache__/
 .vscode/
 
 venv/
+
+# --- Archivos temporales de SeleniumBase ---
+downloaded_files/
+*.lock
