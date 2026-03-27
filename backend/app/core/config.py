@@ -5,7 +5,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 RUTA_ENV = os.path.join(BASE_DIR, ".env")
 
 class Settings(BaseSettings):
-    ZENROWS_API_KEY: str
     ADZUNA_APP_ID: str
     ADZUNA_APP_KEY: str
     ADZUNA_PAIS: str

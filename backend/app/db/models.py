@@ -19,11 +19,13 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.base import Base
 
+
 # Definicion de ENUMS
 class UserRole(str, enum.Enum):
     admin = "admin"
     company = "company"
     hr_manager = "hr_manager"
+
 
 class OfferStatus(str, enum.Enum):
     detected = "detected"
@@ -32,6 +34,7 @@ class OfferStatus(str, enum.Enum):
     discarded = "discarded"
     won = "won"
 
+
 class LeadStatus(str, enum.Enum):
     new = "new"
     qualifying = "qualifying"
@@ -39,15 +42,18 @@ class LeadStatus(str, enum.Enum):
     converted = "converted"
     lost = "lost"
 
+
 class EntityType(str, enum.Enum):
     scraping_prospect = "scraping_prospect"
     confirmed_client = "confirmed_client"
+
 
 class CandidateStatus(str, enum.Enum):
     active = "active"
     passive = "passive"
     hired_elsewhere = "hired_elsewhere"
     blacklisted = "blacklisted"
+
 
 class ApplicationStatus(str, enum.Enum):
     proposed = "proposed"
@@ -59,9 +65,10 @@ class ApplicationStatus(str, enum.Enum):
     rejected_by_candidate = "rejected_by_candidate"
     pool = "pool"
 
+
 # Modelos (Tablas)
 class User(Base):
-    __tablename__= "users"
+    __tablename__ = "users"
 
     id = Column(BigInteger, primary_key=True, index=True)
     email = Column(String(255), unique=True, nullable=False, index=True)
@@ -72,6 +79,7 @@ class User(Base):
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+
     # Relaciones
     # 'searches' nos permite acceder a search.user
     searches = relationship("Search", back_populates="user")
@@ -80,8 +88,9 @@ class User(Base):
     
     client_profile = relationship("Client", back_populates="user", uselist=False)
 
+
 class JobPortal(Base):
-    __tablename__= "job_portals"
+    __tablename__ = "job_portals"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
@@ -90,6 +99,7 @@ class JobPortal(Base):
 
     offers = relationship("JobOffer", back_populates="portal")
     clients = relationship("Client", back_populates="source_portal")
+
 
 class Search(Base):
     __tablename__ = "searches"
@@ -106,6 +116,8 @@ class Search(Base):
     results = relationship(
             "SearchResult", back_populates="search", cascade="all, delete-orphan"
         )
+    
+
 class JobOffer(Base):
     __tablename__ = "job_offers"
 
@@ -129,11 +141,13 @@ class JobOffer(Base):
     status = Column(PgEnum(OfferStatus, name="offer_status", create_type=False), default=OfferStatus.detected, index=True)
     priority = Column(Integer, default=3)
     scraped_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-
+    updated_at = Column(
+            DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+        )
+    
     __table_args__ = (
-        CheckConstraint('salary_min <= salary_max', name='check_salary_range'),
-        UniqueConstraint('portal_id', 'external_id', name='unique_offer_per_portal'),
+        CheckConstraint("salary_min <= salary_max", name="check_salary_range"),
+        UniqueConstraint("portal_id", "external_id", name="unique_offer_per_portal"),
     )
 
     portal = relationship("JobPortal", back_populates="offers")
