@@ -90,3 +90,16 @@ class JobOfferResponse(JobOfferRequest):
     )
 
     model_config = ConfigDict(from_attributes=True)
+
+class ScrapedJobOffer(JobOfferRequest):
+    """
+    Esquema que se utiliza en el orchestrator.py.
+    Contiene todos los datos de la oferta, más los datos del reclutador.
+    """
+    recruiter_name: Optional[str] = Field(
+        default=None, description="Nombre extraído por el scraper crudo."
+    )
+
+    recruiter_email: Optional[str] = Field(
+        default=None, description="Email extraído."
+    )

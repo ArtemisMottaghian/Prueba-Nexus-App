@@ -7,7 +7,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 
-from app.services.scrapers.linkedin_utils import parse_salary
+from backend.app.services.scrapers.linkedin_mi.linkedin_utils import parse_salary
 
 def get_webdriver():
     options = Options()
@@ -54,8 +54,8 @@ def scroll_page(driver, max_scrolls, scroll_pause):
 
 def fetch_job_details(driver, job_url, detail_pause, max_retries = 2):
     job_desc, company_desc, recruiter_name, recruiter_url = "", "", "", ""
-    salary, sector_id, modality = "No especificado", "No especificado", "No especificado"
-    contract_time, contract_type = "no especificado", "No especificado"
+    salary, sector_id, modality = None, None, None
+    contract_time, contract_type = None, None
     exito = False
 
     for intento in range(max_retries):
@@ -127,23 +127,42 @@ def fetch_job_details(driver, job_url, detail_pause, max_retries = 2):
             if salary != "No especificado": salary = parse_salary(salary)
 
             # Empresa
-            company_div = soup.find("div", class_="about-a-company-module__description")
-            if not company_div: 
-                seccion_about = soup.find("section", {"data-test-id": "about-us"})
-                if seccion_about:
-                    company_div = seccion_about.find("div", class_="core-section-container__content")
+            company_desc = ""
+            #Buscamos cualquier sección o div que hable de la empresa
+            company_section = soup.find(["section", "div"], class_=re.compile(r"about-a-company|company-description|core-section-container"))
+            if company_section:
+                content = company_section.find("div", class_="core-section-container__content")
+                if not content:
+                    content = company_section.find("p")
                 
-            if company_div:
-                company_desc = company_div.get_text(separator="\n", strip=True)
-
+                if content:
+                    company_desc = content.get_text(separator="\n", strip=True)
+                    if "Ver más" in company_desc:
+                        company_desc = company_desc.replace("Ver más", "").strip()
             #  Reclutador
-            recruiter_link = soup.find("a", href=lambda x: x and "/in/" in x)
-            if recruiter_link:
-                recruiter_url = recruiter_link["href"]
-                recruiter_name = recruiter_link.get_text(strip=True)
+            hirer_container = soup.find("div", class_=re.compile(r"hirer-card|message-the-recruiter1job-details-jobs-unified-top-card__hirer-profile|meet-the-team"))
+            
+            if hirer_container:
+                name_tag = hirer_container.find(["h3", "strong", "span", "h4"], calss:=re.compile(r"name|title|subtitle|profile-title"))
+                if name_tag: recruiter_name = name_tag.get_text(separator= " ", strip=True)
+                link_tag = hirer_container.find("a", href=lambda x: x and ("/in/" in x or "/pub/"in x))
+                if link_tag:
+                    recruiter_url = link_tag["href"].split("?")[0]
+                    if not recruiter_name: recruiter_name = link_tag.get_text(separator= " ", strip=True)
 
-            exito = True
-            break 
+            if not recruiter_name or not recruiter_url:
+                top_card = soup.find("div", class_=re.compile(r"top-card|job-details-header"))
+                if top_card:
+                    fallback_link = top_card.find("a", href=lambda x: x and ("/in/" in x or "/pub/" in x))
+                    if fallback_link:
+                        recruiter_url = fallback_link["href"].split("?")[0]
+                        recruiter_name = fallback_link.get_text(separator= " ", strip = True)
+
+            if (not recruiter_name or not recruiter_url) and job_div:
+                desc_links = job_div.find_all("a", href=lambda x: x and ("/in/" in x or "/pub/" in x))
+                if desc_links:
+                    recruiter_url = desc_links[0]["href"].split("?")[0]
+                    recruiter_name = desc_links[0].get_text(separator=" ", strip=True)
 
         except Exception as e:
             print(f"      Bloqueo de LinkedIn detectado (Intento {intento+1}/{max_retries}).")
