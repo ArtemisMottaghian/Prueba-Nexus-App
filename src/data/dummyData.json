@@ -5,34 +5,63 @@
     "companyName": "TechCorp Solutions",
     "isClient": true,
     "activeVacancies": 3,
+    "industry": "Technology",
     "location": "Madrid",
     "salary": "45K - 60K €",
     "source": "LinkedIn",
-    "status": "Nueva",
-    "time": "Hace 2 horas"
+    "status": "New",
+    "time": "2 hours ago"
   },
   {
     "id": "v2",
-    "title": "Backend Python",
-    "companyName": "Desconocida SA",
+    "title": "Backend Python Developer",
+    "companyName": "Unknown Inc.",
     "isClient": false,
     "activeVacancies": 0,
-    "location": "Remoto",
-    "salary": "30K - 40K €",
+    "industry": "Finance",
+    "location": "Remote",
+    "salary": "35K - 45K €",
     "source": "Adzuna",
-    "status": "Contactada",
-    "time": "Hace 5 horas"
+    "status": "Contacted",
+    "time": "5 hours ago"
   },
   {
     "id": "v3",
     "title": "Data Scientist",
-    "companyName": "Meliá Hotels",
+    "companyName": "Melia Hotels",
     "isClient": true,
     "activeVacancies": 5,
+    "industry": "Hospitality",
     "location": "Barcelona",
     "salary": "50K - 70K €",
     "source": "InfoJobs",
-    "status": "En proceso",
-    "time": "Hace 1 día"
+    "status": "In progress",
+    "time": "1 day ago"
+  },
+  {
+    "id": "v4",
+    "title": "Fullstack JS Engineer",
+    "companyName": "CloudScale",
+    "isClient": true,
+    "activeVacancies": 2,
+    "industry": "Technology",
+    "location": "Madrid",
+    "salary": "40K - 55K €",
+    "source": "LinkedIn",
+    "status": "New",
+    "time": "3 hours ago"
+  },
+  {
+    "id": "v5",
+    "title": "UX/UI Designer",
+    "companyName": "HealthTrack",
+    "isClient": false,
+    "activeVacancies": 1,
+    "industry": "Healthcare",
+    "location": "Remote",
+    "salary": "30K - 40K €",
+    "source": "LinkedIn",
+    "status": "Rejected",
+    "time": "2 days ago"
   }
 ]

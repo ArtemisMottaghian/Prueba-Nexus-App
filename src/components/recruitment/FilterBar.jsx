@@ -1,82 +1,82 @@
 import './FilterBar.css';
+
 export default function FilterBar({ filters, onFilterChange, onClearFilters }) {
   const hasActiveFilters =
-    filters.estado !== 'Todas' ||
-    filters.sector !== 'Todos' ||
-    filters.ubicacion !== 'Todas' ||
-    filters.origen !== 'Todos';
+    filters.status !== 'All' ||
+    filters.industry !== 'All' ||
+    filters.location !== 'All' ||
+    filters.source !== 'All';
 
   return (
     <div className="filter-bar mb-4">
       <div className="row g-2 align-items-end">
-        {/* Filtro Estado */}
         <div className="col-12 col-md-3">
-          <label className="filter-label">Estado</label>
+          <label className="filter-label">Status</label>
           <select
             className="form-select filter-select"
-            value={filters.estado}
-            onChange={(e) => onFilterChange('estado', e.target.value)}
+            value={filters.status}
+            onChange={(e) => onFilterChange('status', e.target.value)}
           >
-            <option value="Todas">Todas</option>
-            <option value="Nueva">Nueva</option>
-            <option value="Contactada">Contactada</option>
-            <option value="En proceso">En proceso</option>
-            <option value="Descartada">Descartada</option>
+            <option value="All">All Statuses</option>
+            <option value="New">New</option>
+            <option value="Contacted">Contacted</option>
+            <option value="In progress">In progress</option>
+            <option value="Rejected">Rejected</option>
           </select>
         </div>
 
-        {/* Filtro Sector */}
         <div className="col-12 col-md-3">
-          <label className="filter-label">Sector</label>
+          <label className="filter-label">Industry</label>
           <select
             className="form-select filter-select"
-            value={filters.sector}
-            onChange={(e) => onFilterChange('sector', e.target.value)}
+            value={filters.industry}
+            onChange={(e) => onFilterChange('industry', e.target.value)}
           >
-            <option value="Todos">Todos</option>
-            <option value="Tecnología">Tecnología</option>
-            <option value="Finanzas">Finanzas</option>
-            <option value="Salud">Salud</option>
+            <option value="All">All Industries</option>
+            <option value="Technology">Technology</option>
+            <option value="Finance">Finance</option>
+            <option value="Healthcare">Healthcare</option>
+            <option value="Hospitality">Hospitality</option>
           </select>
         </div>
 
-        {/* Filtro Ubicación */}
+        {/* Location Filter */}
         <div className="col-12 col-md-3">
-          <label className="filter-label">Ubicación</label>
+          <label className="filter-label">Location</label>
           <select
             className="form-select filter-select"
-            value={filters.ubicacion}
-            onChange={(e) => onFilterChange('ubicacion', e.target.value)}
+            value={filters.location}
+            onChange={(e) => onFilterChange('location', e.target.value)}
           >
-            <option value="Todas">Todas</option>
+            <option value="All">All Locations</option>
             <option value="Madrid">Madrid</option>
             <option value="Barcelona">Barcelona</option>
-            <option value="Remoto">Remoto</option>
+            <option value="Remote">Remote</option>
           </select>
         </div>
 
-        {/* Filtro Origen */}
+        {/* Source Filter (Origen) */}
         <div className="col-12 col-md-2">
-          <label className="filter-label">Origen</label>
+          <label className="filter-label">Source</label>
           <select
             className="form-select filter-select"
-            value={filters.origen}
-            onChange={(e) => onFilterChange('origen', e.target.value)}
+            value={filters.source}
+            onChange={(e) => onFilterChange('source', e.target.value)}
           >
-            <option value="Todos">Todos</option>
+            <option value="All">All Sources</option>
             <option value="InfoJobs">InfoJobs</option>
             <option value="LinkedIn">LinkedIn</option>
             <option value="Adzuna">Adzuna</option>
           </select>
         </div>
 
-        {/* Botón Limpiar */}
+        {/* Clear Button */}
         <div className="col-12 col-md-1">
           <button
             className="btn btn-clear w-100"
             onClick={onClearFilters}
             disabled={!hasActiveFilters}
-            title="Limpiar filtros"
+            title="Clear filters"
           >
             <i className="bi bi-x-lg"></i>
           </button>
