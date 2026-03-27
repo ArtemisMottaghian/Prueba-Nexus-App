@@ -37,6 +37,19 @@ async def extract_adzuna() -> list[dict]:
                 if external_id in ids_watched or url_text in urls_watched:
                     continue
 
+                job_title = job.get("title", "")
+                job_description = job.get("description", "")
+                job_ubication = job.get("ubication", "")
+                lead_description = f"{job_title} {job_description} {job_ubication}".lower()
+                work_modality = None
+
+                if any(modality in lead_description for modality in ["híbrid", "hibrid", "hybrid"]):
+                    work_modality = "Híbrido"
+                elif any(modality in lead_description for modality in ["remoto", "teletrabajo", "100% remote", "fully remote"]):
+                    work_modality = "Remoto"
+                elif any(modality in lead_description for modality in ["presencial", "on-site", "onsite", "en oficina", "in office"]):
+                    work_modality = "Presencial"
+
                 raw_lead = {
                     "portal_id": 1,
                     "external_id": external_id,
@@ -52,6 +65,7 @@ async def extract_adzuna() -> list[dict]:
                     "sector": job.get("category", {}).get("label"),
                     "salary_min": job.get("salary_min"),
                     "salary_max": job.get("salary_max"),
+                    "work_modality": work_modality,
                     "contract_type": job.get("contract_type"),
                     "contract_time": job.get("contract_time"),
 

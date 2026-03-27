@@ -7,7 +7,10 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.dialects.postgresql import insert
 
 from app.db.session import AsyncSessionLocal
-from app.db.models import JobOffer, Client, Contact
+from app.models.job_model import JobOffer
+from app.models.clients_model import Client
+from app.models.contacts_model import Contact
+
 from app.schemas.job_offer import ScrapedJobOffer
 from app.services.scrapers.linkedin.linkedin_runner import extract_linked
 from app.services.scrapers.adzuna import extract_adzuna
@@ -22,7 +25,7 @@ async def run_scrapers():
         # Activar las funciones cuando se sepa que funcionan bien
         # extract_zenrows()
         # extract_linked(),
-        extract_infojobs(),
+        # extract_infojobs(),
         return_exceptions=True,
     )
 
