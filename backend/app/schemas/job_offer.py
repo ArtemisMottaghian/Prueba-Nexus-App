@@ -1,10 +1,9 @@
 from pydantic import BaseModel, ConfigDict, HttpUrl, Field, model_validator
 from typing import Optional
 from datetime import datetime
-from enum import Enum
+import enum
 
-
-class OfferStatus(str, Enum):
+class OfferStatus(str, enum.Enum):
     detected = "detected"
     contacted = "contacted"
     negotiating = "negotiating"

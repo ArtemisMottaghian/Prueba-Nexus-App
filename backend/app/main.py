@@ -3,7 +3,7 @@ import uvicorn
 from app.api.routes.main_router import api_router
 
 from app.db.session import engine
-from app.db.models import Base
+from app.db.connection import Base
 
 # Inicializacion
 app = FastAPI()
