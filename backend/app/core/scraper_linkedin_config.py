@@ -1,24 +1,26 @@
-# CONFIGURACIÓN DE LINKEDIN
-SECTORES_LINKEDIN = {
-    "SECTOR TECNOLÓGICO": "Tecnología OR Software OR IT OR Ciberseguridad",
-    "SECTOR INGENIERÍA": "Ingeniería OR Engineering",
-    "SECTOR FINANCIERO Y BANCA": "Finanzas OR Banca OR Banking",
-    "SECTOR LEGAL": "Legal OR Abogado OR Jurídico",
-    "SECTOR VENTAS": "Ventas OR Comercial OR Sales",
-    "SECTOR LOGÍSTICA": "Logística OR Supply Chain OR Almacén",
-    "SECTOR SERVICIOS": "Servicios OR Atención al cliente",
-    "SECTOR SEGUROS": "Seguros OR Insurance"
+# Palabras clave que el scraper va a buscar en InfoJobs
+JOB_KEYWORDS = [
+    #"Tecnología",
+    "Software", #"IT", #"Ciberseguridad",
+    #"Ingeniería", "Engineering",
+    #"Finanzas", "Banca", "Banking",
+    #"Legal", "Abogado", "Jurídico",
+    #"Ventas", "Comercial", "Sales",
+    #"Logística", "Supply Chain", "Almacén",
+    #"Servicios", "Atención al cliente",
+    #"Seguros", "Insurance"
+]
+
+PAGES = 1
+MAX_DAYS_OLD = 14
+
+INFOJOBS_HEADERS = {
+    'accept': 'application/json, text/plain, */*',
+    'accept-language': 'es-ES,es;q=0.7',
+    'portalid': '0',
+    'priority': 'u=1, i',
+    'referer': 'https://www.infojobs.net/jobsearch/search-results/list.xhtml',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
+    'x-adevinta-channel': 'web',
+    'x-schibsted-tenant': 'infojobs'
 }
-
-COUNTRIES = ["Spain"]
-PAGES = 5
-
-DATE_POSTED = "14d" 
-EXPERIENCE_LEVELS = []
-WORKPLACE_TYPES = []
-SECTORS = []
-
-# Configuraciones de rendimiento para el navegador
-MAX_SCROLL_ATTEMPTS = 100
-SCROLL_PAUSE = 3
-DETAIL_PAUSE = 2

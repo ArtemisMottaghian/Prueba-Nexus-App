@@ -3,9 +3,17 @@ from datetime import datetime
 from typing import Optional, List
 
 from sqlalchemy import (
-    Column, Integer, String, Boolean, ForeignKey,
-    DateTime, Text, BigInteger, Enum as PgEnum,
-    CheckConstraint, UniqueConstraint
+    Column, 
+    Integer, 
+    String, 
+    Boolean, 
+    ForeignKey,
+    DateTime, 
+    Text, 
+    BigInteger, 
+    Enum as PgEnum,
+    CheckConstraint, 
+    UniqueConstraint
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -61,8 +69,9 @@ class User(Base):
     role = Column(PgEnum(UserRole, name="user_role", create_type=False), nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
     # Relaciones
     # 'searches' nos permite acceder a search.user
     searches = relationship("Search", back_populates="user")
@@ -94,8 +103,9 @@ class Search(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", back_populates="searches")
-    results = relationship("SearchResult", back_populates="search", cascade="all, delete-orphan")
-
+    results = relationship(
+            "SearchResult", back_populates="search", cascade="all, delete-orphan"
+        )
 class JobOffer(Base):
     __tablename__ = "job_offers"
 
