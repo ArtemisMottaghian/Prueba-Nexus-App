@@ -21,6 +21,3 @@ class UserResponse(BaseModel):
 
     # Permite leer datos directamente desde objetos SQLAlchemy
     model_config = ConfigDict(from_attributes=True)
-
-    class Config:
-        from_attributes = True 
