@@ -7,7 +7,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 
+<<<<<<< Updated upstream:backend/app/services/scrapers/linkedin_browser.py
 from app.services.scrapers.linkedin_utils import parse_salary
+=======
+from app.services.scrapers.linkedin.linkedin_utils import parse_salary
+>>>>>>> Stashed changes:backend/app/services/scrapers/linkedin/linkedin_browser.py
 
 def get_webdriver():
     options = Options()
