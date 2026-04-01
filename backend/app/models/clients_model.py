@@ -3,6 +3,8 @@ from sqlalchemy.orm import relationship
 from app.db.connection import Base
 from app.schemas.clients_schemas import EntityType, LeadStatus
 from sqlalchemy import Enum as PgEnum
+from sqlalchemy.orm import relationship
+from app.models.user_model import User
 
 class Client(Base):
     __tablename__ = "clients"

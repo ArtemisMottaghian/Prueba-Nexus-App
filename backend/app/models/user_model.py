@@ -19,7 +19,6 @@ from sqlalchemy import (
 
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from app.db.base import Base
 
 class UserRole(str, enum.Enum):
     admin = "admin"

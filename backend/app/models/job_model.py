@@ -4,6 +4,10 @@ from sqlalchemy.orm import relationship
 from app.db.connection import Base
 from app.schemas.job_offer import OfferStatus
 from app.models.aplication_model import ApplicationStatus
+from app.models.candidates_model import Candidate
+from app.models.user_model import User
+from app.models.search_model import Search
+#from app.models.interviews_model import Interview
 
 class JobPortal(Base):
     __tablename__ = "job_portals"
@@ -20,7 +24,7 @@ class JobOffer(Base):
     __tablename__ = "job_offers"
 
     id = Column(BigInteger, primary_key=True, index=True)
-    portal_id = Column(Integer, nullable=False)
+    portal_id = Column(Integer, ForeignKey("job_portals.id"))   
     managed_by_id = Column(BigInteger, ForeignKey("users.id"), nullable=True)
     external_id = Column(String(255), nullable=True)
     title = Column(String(255), nullable=False)
@@ -46,6 +50,12 @@ class JobOffer(Base):
     is_favorite = Column(Boolean, default=False)
     scraped_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    portal = relationship("JobPortal", back_populates="offers")
+    applications = relationship("JobApplication", back_populates="offer")
+    related_client = relationship("Client", back_populates="original_offer", uselist=False)
+    manager = relationship("User", back_populates="managed_offers", foreign_keys=[managed_by_id])
+    tracking_entries = relationship("TrackingHistory", back_populates="offer", cascade="all, delete-orphan")
+    search_matches = relationship("SearchResult", back_populates="offer", cascade="all, delete-orphan")
 
     __table_args__ = (
         CheckConstraint('salary_min <= salary_max', name='check_salary_range'),
@@ -81,10 +91,8 @@ class JobApplication(Base):
 
     candidate = relationship("Candidate", back_populates="applications")
 
-    # AÑADIDO: Relación inversa con ofertas
     offer = relationship("JobOffer", back_populates="applications")
 
-    # AÑADIDO: Relación con entrevistas (Plural)
-    interviews = relationship(
-        "Interview", back_populates="application", cascade="all, delete-orphan"
-    )
+    #interviews = relationship(
+   #     "Interview", back_populates="application", cascade="all, delete-orphan"
+    #)

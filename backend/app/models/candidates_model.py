@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, BigInteger, Text, DateTime, func
+from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import ENUM
 from app.db.connection import Base
 from app.schemas.candidates_schemas import CandidateStatus 
@@ -38,6 +39,8 @@ class Candidate(Base):
         server_default=func.now(), 
         onupdate=func.now()
     )
+
+    applications = relationship("JobApplication", back_populates="candidate")
 
 class CandidateStatus(str, enum.Enum):
     active = "active"

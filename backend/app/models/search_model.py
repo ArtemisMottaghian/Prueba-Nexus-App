@@ -1,4 +1,4 @@
-from app.db.base import Base
+from app.db.connection import Base
 
 from sqlalchemy import (
     Column,
@@ -10,6 +10,7 @@ from sqlalchemy import (
 )
 
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 
 class Search(Base):
     __tablename__ = "searches"
