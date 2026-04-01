@@ -77,6 +77,7 @@ CREATE TABLE job_offers (
     work_modality VARCHAR(50), -- Remoto, Híbrido, Presencial
     status offer_status DEFAULT 'detected',
     priority INT DEFAULT 3, -- Prioridad de 1 a 5
+    is_favourite BOOLEAN DEFAULT 'false',
     scraped_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 

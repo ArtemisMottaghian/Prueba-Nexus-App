@@ -17,8 +17,13 @@ class Settings(BaseSettings):
 
     BROWSE_AI_ROBOT_ID: str
     BROWSE_AI_API_KEY: str
+
+    DROPCONTACT_API_KEY:str
     
     HUNTER_API_KEY: str
+
+    PHANTOMBUSTER_API_KEY:str
+    PB_LINKEDIN_SEARCH_ID:str
 
     ZENROWS_API_KEY: str
     
@@ -36,6 +41,9 @@ class Settings(BaseSettings):
     # GOOGLE_CLIENT_ID: str
     # GOOGLE_CLIENT_SECRET: str
     # GOOGLE_REDIRECT_URI: str
+
+    LINKEDIN_SESSION_COOKIE:str
+    LINKEDIN_USER_AGENT:str
 
     model_config = SettingsConfigDict(
         env_file=RUTA_ENV,
