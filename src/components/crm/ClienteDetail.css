@@ -58,6 +58,19 @@
   box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
 }
 
+/* --- BOTÓN ELIMINAR --- */
+.btn-outline-danger,
+.btn-outline-danger:focus,
+.btn-outline-danger:active {
+  color: #ef4444 !important;
+  border-color: #ef4444 !important;
+}
+.btn-outline-danger:hover {
+  background: rgba(239, 68, 68, 0.12) !important;
+  color: #ef4444 !important;
+  border-color: #ef4444 !important;
+}
+
 /* --- ESTADÍSTICAS --- */
 .cliente-stats-row {
   display: flex;
