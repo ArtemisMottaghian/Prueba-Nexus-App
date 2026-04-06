@@ -27,6 +27,7 @@ jobs:
           script: |
             cd ~/nexus-app
             git pull origin main
+            cd backend  
             source venv/bin/activate
             pip install -r requirements.txt
             echo "✅ Deploy completado"
