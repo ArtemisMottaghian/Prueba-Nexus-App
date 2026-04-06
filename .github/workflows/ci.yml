@@ -1,0 +1,38 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Ejecutar lint
+        run: npm run lint
+
+      - name: Build del proyecto
+        run: npm run build
