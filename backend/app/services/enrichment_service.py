@@ -1,23 +1,37 @@
 import httpx
 import asyncio
+from typing import Optional
 from app.core.config import settings
 
 #busqueda en dropcontact
-async def search_in_dropcontact(name: str, company: str) -> str | None:
-    url = "https://api.dropcontact.io/batch"
+async def search_in_dropcontact(first_name: str, last_name:str, company: str, website: Optional[str]) -> dict | None:
+    url = "https://api.dropcontact.io/v1/enrich/all"
     headers = {"X-Access-Token": settings.DROPCONTACT_API_KEY, "Content-Type": "application/json"}
-    payload = {"data": [{"full_name": name, "company": company}]}
+    payload= {
+        "daata": [{
+            "firstName": first_name,
+            "lastName": last_name,
+            "company": company,
+            "website": website
+        }],
+        "siren": True #Util para obtener datos legales si la empresa es francesa
+    }
 
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(url, json=payload, headers=headers)
-            if resp.status_code == 200:
-                data = resp.json().get("data", [])
-                if data and data[0].get("email"):
-                    emails = data[0]["email"]
-                    return emails[0]["email"] if isinstance(emails, list) else emails
+        resp = await httpx.AsyncClient(timeout=30.0).post(url, json=payload, headers=headers)
+        resp.raise_for_status() # Lanza una excepcion si hay errores
+
+        result = resp.json()
+        
+        # IMPORTANTE: Dropcontact suele devolver {"success": True, "request_id": "..."}
+        # El email no suele venir en la primera llamada
+        if result.get("success"):
+            return result
+        
+    except httpx.HTTPStatusError as e:
+        print(f"Error Dropcontact: {e.response.status_code} - {e.response.text}")
     except Exception as e:
-        print(f"⚠️ Error Dropcontact: {e}")
+        print(f"Error Dropcontact: {e}")
     return None
 
 #reclutador en phantom
