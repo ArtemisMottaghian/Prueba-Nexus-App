@@ -31,3 +31,5 @@ jobs:
             source venv/bin/activate
             pip install -r requirements.txt
             echo "✅ Deploy completado"
+            sudo systemctl restart aratalent
+            
