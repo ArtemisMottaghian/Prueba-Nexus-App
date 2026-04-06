@@ -1,36 +1,41 @@
-from fastapi import APIRouter, HTTPException
-from schemas.services_schemas import NewUser 
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 
-from services.users_service import crear_usuario, obtener_usuario_email 
-
+from app.schemas.users_schemas import NewUser, UserResponse
+from app.services import users_service
+from app.db.connection import get_db
 
 router = APIRouter() 
-# --------------------
-# CREAr usuario
-# POST /api/usuarios
-# -----------------
 
-@router.post("")
-def endpoint_crear_usuario(datos_cliente: NewUser):
-    nuevo_user = crear_usuario(
-        email=datos_cliente.email, 
-        password_hash=datos_cliente.password_hash, 
-        rol=datos_cliente.role
-    )
-    
-    if not nuevo_user:
-        raise HTTPException(status_code=400, detail="Error al guardar en la base de datos")
+# --------------------
+# CREAR usuario
+# POST /api/users
+# -----------------
+@router.post("", response_model=UserResponse)
+async def endpoint_newUser(
+    datos_cliente: NewUser, 
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        nuevo_user = await users_service.newUser(db, datos_cliente)
+        return nuevo_user
         
-    return nuevo_user 
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="El email ya está registrado")
 
 
 # -----------------
 # Obtener usuario por email
-# GET /api/usuarios/{email} 
+# GET /api/users/{email} 
 # -----------------
-@router.get("/{email}")
-def endpoint_obtener_usuario(email: str):
-    usuario = obtener_usuario_email(email)
+@router.get("/{email}", response_model=UserResponse)
+async def endpoint_getUser(
+    email: str, 
+    db: AsyncSession = Depends(get_db)
+):
+    usuario = await users_service.getUser(db, email)
     
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
