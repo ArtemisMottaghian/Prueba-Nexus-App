@@ -1,15 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import './CalendarGrid.css';
 
-const REDIRECT_URL = "https://accounts.google.com/o/oauth2/auth?client_id=TU_CLIENT_ID&redirect_uri=https://[…]=code&scope=https://www.googleapis.com/auth/calendar.events";
+const REDIRECT_URL =
+  'https://accounts.google.com/o/oauth2/auth?client_id=TU_CLIENT_ID&redirect_uri=https://[…]=code&scope=https://www.googleapis.com/auth/calendar.events';
 
 const EVENT_TYPES = {
-  "Reunión :handshake:": "#28A745",
-  "Enviar correo :email:": "#007BFF",
-  "Conferencia :microphone:": "#FFC107",
-  "Llamada urgente :telephone_receiver:": "#DC3545",
-  "Seguimiento :clipboard:": "#FD7E14",
-  "Otro...": "#6C757D"
+  'Reunión :handshake:': '#28A745',
+  'Enviar correo :email:': '#007BFF',
+  'Conferencia :microphone:': '#FFC107',
+  'Llamada urgente :telephone_receiver:': '#DC3545',
+  'Seguimiento :clipboard:': '#FD7E14',
+  'Otro...': '#6C757D',
 };
 
 const PREDEFINED_OPTIONS = Object.keys(EVENT_TYPES);
@@ -34,16 +35,14 @@ export default function Calendario() {
     localStorage.setItem('events', JSON.stringify(events));
   }, [events]);
 
-  
   const closeModal = useCallback(() => {
     setSelectedDate(null);
     setEditingEventId(null);
     setType(PREDEFINED_OPTIONS[0]);
     setDescription('');
     setTime('');
-  }, []); 
+  }, []);
 
-  
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && selectedDate) closeModal();
@@ -66,7 +65,10 @@ export default function Calendario() {
         eventDate.setHours(parseInt(hours), parseInt(minutes), 0);
         const diff = eventDate - now;
         if (diff > 0 && diff < 60000) {
-          if (Notification.permission === 'granted') new Notification(':alarm_clock: ' + e.text, { body: e.description });
+          if (Notification.permission === 'granted')
+            new Notification(':alarm_clock: ' + e.text, {
+              body: e.description,
+            });
           hasChanged = true;
           return { ...e, notified: true };
         }
@@ -94,10 +96,14 @@ export default function Calendario() {
       description,
       time,
       date: selectedDate,
-      notified: false
+      notified: false,
     };
     if (editingEventId) {
-      setEvents(events.map(e => e.id === editingEventId ? { ...e, ...eventData, id: e.id } : e));
+      setEvents(
+        events.map((e) =>
+          e.id === editingEventId ? { ...e, ...eventData, id: e.id } : e
+        )
+      );
     } else {
       setEvents([...events, { ...eventData, id: crypto.randomUUID() }]);
     }
@@ -106,7 +112,9 @@ export default function Calendario() {
 
   const deleteEvent = (id) => setEvents(events.filter((e) => e.id !== id));
 
-  const clearAllEvents = () => { if (window.confirm("¿Borrar todos?")) setEvents([]); };
+  const clearAllEvents = () => {
+    if (window.confirm('¿Borrar todos?')) setEvents([]);
+  };
 
   const goToToday = () => setCurrentDate(new Date());
 
@@ -130,35 +138,68 @@ export default function Calendario() {
   return (
     <div className="calendar-container">
       <div className="calendar-box">
-
         <div className="calendar-top-bar">
           <h1 className="calendar-title">Calendario</h1>
           <div className="top-actions">
-            <button className="clear-btn" onClick={clearAllEvents}>Limpiar :wastebasket:</button>
-            <button className="action-btn" onClick={() => window.open(REDIRECT_URL, '_blank')}>Web :globe_with_meridians:</button>
+            <button className="clear-btn" onClick={clearAllEvents}>
+              Limpiar :wastebasket:
+            </button>
+            <button
+              className="action-btn"
+              onClick={() => window.open(REDIRECT_URL, '_blank')}
+            >
+              Web :globe_with_meridians:
+            </button>
           </div>
         </div>
 
         <div className="calendar-header">
           <div className="nav-controls">
-            <button onClick={() => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))} className="nav-btn">:arrow_backward:</button>
-            <button onClick={goToToday} className="nav-btn today-btn">Hoy</button>
-            <button onClick={() => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))} className="nav-btn">:arrow_forward:</button>
+            <button
+              onClick={() =>
+                setCurrentDate(
+                  (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1)
+                )
+              }
+              className="nav-btn"
+            >
+              :arrow_backward:
+            </button>
+            <button onClick={goToToday} className="nav-btn today-btn">
+              Hoy
+            </button>
+            <button
+              onClick={() =>
+                setCurrentDate(
+                  (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
+                )
+              }
+              className="nav-btn"
+            >
+              :arrow_forward:
+            </button>
           </div>
           <span className="calendar-month-text">
-            {currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+            {currentDate.toLocaleDateString('es-ES', {
+              month: 'long',
+              year: 'numeric',
+            })}
           </span>
         </div>
 
         <div className="days-header">
-          {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(d => <div key={d}>{d}</div>)}
+          {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((d) => (
+            <div key={d}>{d}</div>
+          ))}
         </div>
 
         <div className="calendar-grid">
           {generateMonth().map((day, i) => {
             const date = day ? formatDate(day) : null;
             const isToday = date === todayStr;
-            const dayEvents = events.filter(e => e.date === date).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+            const dayEvents = events
+              .filter((e) => e.date === date)
+              .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
             return (
               <div
                 key={i}
@@ -169,13 +210,17 @@ export default function Calendario() {
                   <>
                     <div className="day-number">{day}</div>
                     <div className="dots-container">
-                      {dayEvents.map(e => (
-                        <div key={e.id} className="event-dot" style={{ backgroundColor: EVENT_TYPES[e.text] }}></div>
+                      {dayEvents.map((e) => (
+                        <div
+                          key={e.id}
+                          className="event-dot"
+                          style={{ backgroundColor: EVENT_TYPES[e.text] }}
+                        ></div>
                       ))}
                     </div>
                   </>
                 )}
-                {dayEvents.map(e => (
+                {dayEvents.map((e) => (
                   <div
                     key={e.id}
                     className="event-item"
@@ -183,10 +228,24 @@ export default function Calendario() {
                     style={{ backgroundColor: EVENT_TYPES[e.text] }}
                   >
                     <div className="event-content">
-                      <span className="event-time-type">{e.time} {e.text}</span>
-                      {e.description && <span className="event-desc-small">{e.description}</span>}
+                      <span className="event-time-type">
+                        {e.time} {e.text}
+                      </span>
+                      {e.description && (
+                        <span className="event-desc-small">
+                          {e.description}
+                        </span>
+                      )}
                     </div>
-                    <button onClick={(ev) => { ev.stopPropagation(); deleteEvent(e.id); }} className="event-delete-btn">✕</button>
+                    <button
+                      onClick={(ev) => {
+                        ev.stopPropagation();
+                        deleteEvent(e.id);
+                      }}
+                      className="event-delete-btn"
+                    >
+                      ✕
+                    </button>
                   </div>
                 ))}
               </div>
@@ -205,14 +264,16 @@ export default function Calendario() {
                 onChange={(e) => setType(e.target.value)}
                 className="input-field"
               >
-                {PREDEFINED_OPTIONS.map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
+                {PREDEFINED_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
                 ))}
               </select>
 
               <label className="input-label">Descripción:</label>
               <input
-                placeholder= "Detalles..."
+                placeholder="Detalles..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="input-field"
@@ -220,11 +281,20 @@ export default function Calendario() {
               />
 
               <label className="input-label">Hora:</label>
-              <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="input-field" />
+              <input
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="input-field"
+              />
 
               <div className="modal-actions">
-                <button onClick={closeModal} className="nav-btn">Cancelar</button>
-                <button onClick={saveEvent} className="primary-btn">{editingEventId ? 'Actualizar' : 'Guardar'}</button>
+                <button onClick={closeModal} className="nav-btn">
+                  Cancelar
+                </button>
+                <button onClick={saveEvent} className="primary-btn">
+                  {editingEventId ? 'Actualizar' : 'Guardar'}
+                </button>
               </div>
             </div>
           </div>
