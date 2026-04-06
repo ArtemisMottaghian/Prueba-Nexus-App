@@ -26,9 +26,9 @@ jobs:
           key: ${{ secrets.VM_SSH_KEY }}      # Clave SSH privada
           script: |
             cd ~/nexus-app
-            git pull origin main
-            cd backend  
-            source venv/bin/activate
+            git pull origin develop
+            cd backend
+            source ~/nexus-app/venv/bin/activate
             pip install -r requirements.txt
             echo "✅ Deploy completado"
             sudo systemctl restart aratalent
