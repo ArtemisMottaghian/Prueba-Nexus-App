@@ -157,7 +157,9 @@ export default function Clientes() {
         </button>
       </div>
 
-      <div className="clientes-split">
+      <div
+        className={`clientes-split${clienteSeleccionado ? ' has-selected' : ''}`}
+      >
         {/* Panel izquierdo */}
         <div className="clientes-list-panel">
           <div className="clientes-search-bar mb-2">
@@ -218,6 +220,15 @@ export default function Clientes() {
 
         {/* Panel derecho */}
         <div className="clientes-detail-panel">
+          {clienteSeleccionado && (
+            <button
+              className="btn-volver-mobile"
+              onClick={() => setClienteSeleccionado(null)}
+            >
+              <i className="bi bi-arrow-left"></i>
+              Volver a clientes
+            </button>
+          )}
           <ClienteDetail
             cliente={clienteSeleccionado}
             onEdit={abrirModalEditar}

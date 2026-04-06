@@ -81,6 +81,13 @@ body {
 .btn-icon:hover { background: rgba(255, 255, 255, 0.08); color: var(--text-primary); }
 .btn-icon-sm { width: 28px; height: 28px; }
 
+/* Forzar color rojo consistente en botones danger dentro de btn-icon — independiente de la tab */
+.btn-icon .bi-trash,
+.btn-icon .text-danger,
+.btn-icon.text-danger {
+  color: #ef4444 !important;
+}
+
 /* activity-time */
 .activity-time { font-size: 11px; color: #9ca3af; display: flex; align-items: center; gap: 4px; }
 
@@ -103,9 +110,38 @@ body {
    5. RESPONSIVE MÓVIL
    ========================================== */
 @media (max-width: 991px) {
-  .clientes-split { flex-direction: column !important; overflow: visible !important; }
-  .clientes-list-panel { width: 100% !important; overflow: visible !important; }
-  .clientes-detail-panel { overflow: visible !important; }
+  .clientes-split {
+    flex-direction: column !important;
+    overflow: visible !important;
+    gap: 0 !important;
+  }
+
+  /* En móvil mostramos sólo un panel a la vez */
+  .clientes-list-panel {
+    width: 100% !important;
+    overflow: visible !important;
+    flex-shrink: 0;
+    /* Fix: sin padding extra que cause el efecto "pegado" */
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .clientes-detail-panel {
+    overflow: visible !important;
+    padding-right: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Cuando hay cliente seleccionado: ocultar lista, mostrar detalle */
+  .clientes-split.has-selected .clientes-list-panel {
+    display: none !important;
+  }
+
+  /* Cuando NO hay cliente seleccionado: ocultar detalle */
+  .clientes-split:not(.has-selected) .clientes-detail-panel {
+    display: none !important;
+  }
 
   .ara-content,
   .content-scroll,
@@ -113,6 +149,11 @@ body {
     overflow: visible !important;
     height: auto !important;
     max-height: none !important;
+  }
+
+  /* Padding compensado: menos izquierda para igualar el hueco con la derecha */
+  .content-scroll {
+    padding: 16px 16px 16px 10px !important;
   }
 
   html, body {
@@ -126,6 +167,46 @@ body {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     height: 100dvh;
+  }
+
+  /* Fix panel lista sin cliente */
+  .clientes-split:not(.has-selected) .clientes-list-panel {
+    padding-top: 4px !important;
+  }
+}
+
+/* Botón volver (solo móvil) */
+.btn-volver-mobile {
+  display: none;
+}
+
+@media (max-width: 991px) {
+  .btn-volver-mobile {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 14px;
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
+  }
+
+  .btn-volver-mobile:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--color-purple-secondary);
+    color: var(--text-primary);
+  }
+
+  [data-bs-theme='light'] .btn-volver-mobile {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+    color: #374151;
   }
 }
 
