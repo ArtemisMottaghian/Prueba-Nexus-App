@@ -21,13 +21,12 @@ jobs:
       - name: Deploy en VM GCP
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ secrets.VM_HOST }}        # IP de la VM
+          host: ${{ secrets.VM_HOST }}        # IP de la VM (34.38.44.48)
           username: ${{ secrets.VM_USER }}    # Usuario de la VM (desarrollo)
           key: ${{ secrets.VM_SSH_KEY }}      # Clave SSH privada
           script: |
             cd ~/nexus-app
             git pull origin main
-            cd backend  
             source venv/bin/activate
             pip install -r requirements.txt
             echo "✅ Deploy completado"
