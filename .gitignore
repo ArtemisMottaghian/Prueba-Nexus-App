@@ -7,13 +7,21 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Node
 node_modules
 dist
 dist-ssr
 *.local
 
+# Entorno
+.env
+venv/
+
+# Python cache
+__pycache__/
+
 # Editor directories and files
-.vscode/*
+.vscode/
 !.vscode/extensions.json
 .idea
 .DS_Store
@@ -23,11 +31,6 @@ dist-ssr
 *.sln
 *.sw?
 
-.env
-# Python - Backend
-.venv/
-backend/.venv/
-backend/app/**/__pycache__/
-**/__pycache__/
-**/*.pyc
-**/*.pyo
+# Archivos temporales de SeleniumBase
+downloaded_files/
+*.lock
