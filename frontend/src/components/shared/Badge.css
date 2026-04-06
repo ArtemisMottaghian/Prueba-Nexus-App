@@ -1,0 +1,34 @@
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-nueva {
+  background: #3b82f6;
+  color: #ffffff;
+}
+
+.badge-contactada {
+  background: var(--color-cyan-primary);
+  color: #ffffff;
+}
+
+.badge-en-proceso {
+  background: #f59e0b;
+  color: #ffffff;
+}
+
+.badge-descartada {
+  background: #6b7280;
+  color: #ffffff;
+}
+
+.badge-client {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  font-size: 10px;
+}
