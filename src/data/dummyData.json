@@ -1,0 +1,38 @@
+[
+  {
+    "id": "v1",
+    "title": "Senior Frontend Developer",
+    "companyName": "TechCorp Solutions",
+    "isClient": true,
+    "activeVacancies": 3,
+    "location": "Madrid",
+    "salary": "45K - 60K €",
+    "source": "LinkedIn",
+    "status": "Nueva",
+    "time": "Hace 2 horas"
+  },
+  {
+    "id": "v2",
+    "title": "Backend Python",
+    "companyName": "Desconocida SA",
+    "isClient": false,
+    "activeVacancies": 0,
+    "location": "Remoto",
+    "salary": "30K - 40K €",
+    "source": "Adzuna",
+    "status": "Contactada",
+    "time": "Hace 5 horas"
+  },
+  {
+    "id": "v3",
+    "title": "Data Scientist",
+    "companyName": "Meliá Hotels",
+    "isClient": true,
+    "activeVacancies": 5,
+    "location": "Barcelona",
+    "salary": "50K - 70K €",
+    "source": "InfoJobs",
+    "status": "En proceso",
+    "time": "Hace 1 día"
+  }
+]

@@ -1,1 +1,0 @@
-import './ModalBase.css';
