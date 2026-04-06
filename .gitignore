@@ -33,4 +33,5 @@ __pycache__/
 
 # Archivos temporales de SeleniumBase
 downloaded_files/
-*.lockbackend/.venv/
+*.lock
+.venv/
