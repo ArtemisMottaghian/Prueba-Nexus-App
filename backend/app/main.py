@@ -5,6 +5,8 @@ from app.api.routes.main_router import api_router
 from app.db.session import engine
 from app.db.connection import Base
 
+import app.models
+
 # Inicializacion
 app = FastAPI()
 
