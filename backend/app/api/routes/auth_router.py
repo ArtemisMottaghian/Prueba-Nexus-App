@@ -105,7 +105,7 @@ async def google_callback(code: str, db:AsyncSession = Depends(get_db)):
     # Generar el mismo JWT que usa el resto de la app
     token_data = {
         "sub": usuario.email,
-        "role": usuario.role,
+        "role": usuario.role.value,
         "id": usuario.id
     }
     access_token = create_access_token(data=token_data)
