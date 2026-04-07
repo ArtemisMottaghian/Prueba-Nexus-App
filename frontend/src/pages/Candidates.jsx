@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import FilterBar from '../components/recruitment/FilterBar';
-import CandidateGrid from '../components/recruitment/CandidateGrid';
-import BulkActions from '../components/recruitment/BulkActions';
+import FilterBar from '../components/recruitment/shared/FilterBar';
+import CandidateGrid from '../components/recruitment/candidates/CandidateGrid';
+import BulkActions from '../components/recruitment/shared/BulkActions';
 import initialCandidatesData from '../data/candidatesData.json';
 
 export default function Candidates() {
