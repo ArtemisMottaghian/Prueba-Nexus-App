@@ -45,7 +45,7 @@ async def get_client(client_id: int, db: AsyncSession = Depends(get_db)):
 @router.get("/{client_id}/vacancies", response_model=List[VacancyOut])
 async def get_client_vacancies(client_id: int, db: AsyncSession = Depends(get_db)):
     try:
-        client_vacancies = await clients_service.get_client_vacantes(db, client_id)
+        client_vacancies = await clients_service.get_client_vacancies(db, client_id)
         return client_vacancies
     except IntegrityError as e:
         await db.rollback()
