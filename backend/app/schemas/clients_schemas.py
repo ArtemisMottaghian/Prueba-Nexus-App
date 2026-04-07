@@ -21,11 +21,11 @@ class EntityType(str, Enum):
 
 class VacancyOut(BaseModel):
     id: int
-    title: str = Field(..., alias="titulo")
-    status: str = Field(..., alias="estado")
+    title: str
+    status: str
     date: Optional[datetime] = None
 
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+    model_config = ConfigDict(from_attributes=True)
 
 
 # --- Schemas de Cliente ---
@@ -52,7 +52,7 @@ class ClientCreate(ClientBase):
     """
     primary_contact: Optional[str] = Field(None, min_length=3)
     email: Optional[EmailStr] = None # Valida que sea un email real
-    phone: Optional[str] = None
+    phone: Optional[str] =  Field(None, pattern=r'^\+?[\d\s\-]{7,20}$')
 
 
 class ClientUpdate(BaseModel):
@@ -61,8 +61,8 @@ class ClientUpdate(BaseModel):
     sector: Optional[str] = None
     primary_contact: Optional[str] = None
     email: Optional[EmailStr] = None
-    phone: Optional[str] = None
-    cif: Optional[str] = None
+    phone: Optional[str] = Field(None, pattern=r'^\+?[\d\s\-]{7,20}$')
+    cif: Optional[str] = Field(None, min_length=8, max_length=9)
     address: Optional[str] = None
     source_id: Optional[int] = None # Añadido por coherencia
     original_offer_id: Optional[int] = None # Añadido por coherencia
@@ -71,7 +71,7 @@ class ClientUpdate(BaseModel):
 class ClientOut(ClientBase): # <--- HEREDA
     """Respuesta estándar de lista y creación/edición."""
     id: int
-    open_vacancies: int = Field(0, alias="vacantes_abiertas")
+    open_vacancies: int = 0
 
     # Crucial: from_attributes=True permite leer de la base de datos
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
@@ -79,6 +79,6 @@ class ClientOut(ClientBase): # <--- HEREDA
 
 class ClientDetailOut(ClientOut):
     """Respuesta extendida con lista de vacantes para el detalle."""
-    positions: List[VacancyOut] = Field([], alias="vacantes")
+    positions: List[VacancyOut] = []
 
 
