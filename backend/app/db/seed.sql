@@ -215,7 +215,7 @@ $$ LANGUAGE plpgsql;
 
 -- Funcion para registrar cambios de estado en tracking_history
 CREATE OR REPLACE FUNCTION log_client_lead_status_change()
-RETURN TRIGGER AS $$
+RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.lead_status IS DISTINCT FROM OLD.lead_status THEN
         INSERT INTO tracking_history (client_id, offer_id, action_type, previous_status, new_status, comments, recorded_at)
