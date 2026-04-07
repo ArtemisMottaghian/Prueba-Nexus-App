@@ -10,13 +10,15 @@ const mapToFrontend = (client) => ({
   vacantesAbiertas: client.open_positions || 0,
   cif: client.cif || '',
   direccion: client.address || '',
-  prioritario: false, // El API no tiene este campo, usamos por defecto falso en local
-  vacantes: client.positions ? client.positions.map(p => ({
-    id: p.id,
-    titulo: p.title,
-    estado: p.status,
-    fecha: p.date,
-  })) : []
+  prioritario: false,
+  vacantes: client.positions
+    ? client.positions.map((p) => ({
+        id: p.id,
+        titulo: p.title,
+        estado: p.status,
+        fecha: p.date,
+      }))
+    : [],
 });
 
 const mapToBackend = (client) => ({
@@ -26,7 +28,7 @@ const mapToBackend = (client) => ({
   email: client.email,
   phone: client.telefono,
   cif: client.cif,
-  address: client.direccion
+  address: client.direccion,
 });
 
 export const getClientes = async () => {
@@ -77,7 +79,7 @@ export const getClienteVacantes = async (id) => {
   const response = await fetch(`${BASE_URL}/clients/${id}/vacants`);
   if (!response.ok) throw new Error('Error al obtener vacantes del cliente');
   const data = await response.json();
-  return data.map(p => ({
+  return data.map((p) => ({
     id: p.id,
     titulo: p.title,
     estado: p.status,
