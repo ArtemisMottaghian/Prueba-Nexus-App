@@ -6,11 +6,11 @@ export const ENDPOINTS = {
     register: `${BASE_URL}/auth/register`,
   },
   crm: {
-    clientes: `${BASE_URL}/clientes`,
-    clienteDetalle: (id) => `${BASE_URL}/clientes/${id}`,
+    clientes: `${BASE_URL}/clients`,
+    clienteDetalle: (id) => `${BASE_URL}/clients/${id}`,
   },
   recruitment: {
-    vacantes: `${BASE_URL}/vacantes`,
-    candidatos: `${BASE_URL}/candidatos`,
+    vacantes: `${BASE_URL}/vacancies`,
+    candidatos: `${BASE_URL}/candidates`,
   },
 };
