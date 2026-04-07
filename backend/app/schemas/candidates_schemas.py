@@ -61,7 +61,7 @@ class CandidateFrontendOut(BaseModel):
     location: str
     status: str
     source: str
-    experience: str
+    experience: Optional[str] = "Consultar CV"
     isAvailable: bool
     time: str
 
@@ -86,7 +86,7 @@ class CandidateFrontendOut(BaseModel):
                 "location":getattr(data, "city", "No indicada"),
                 # Lógica de origen: Si viene del scraper tendrá un ID de origen
                 "source": "Scraper InfoJobs" if getattr(data, "source_id", None) else "Carga Manual",
-                "experience": getattr(data, "experience", "Consultar CV"),
+                "experience": getattr(data, "experience") or "Consultar CV",
                 # Extraemos el valor del Enum (ej: "active")
                 "status": data.status.value if hasattr(data.status, 'value') else str(data.status),
                 # El Front usa un booleano para mostrar el check de disponibilidad
