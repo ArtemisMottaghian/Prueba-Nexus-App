@@ -81,4 +81,5 @@ class ClientDetailOut(ClientOut):
     """Respuesta extendida con lista de vacantes para el detalle."""
     positions: List[VacancyOut] = []
 
-
+class MessageResponse(BaseModel):
+    message: str

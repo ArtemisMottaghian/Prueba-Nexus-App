@@ -4,7 +4,15 @@ from typing import List
 
 from app.db.connection import get_db
 from app.services import candidates_service
-from app.schemas.candidates_schemas import CandidateFrontendOut, CandidateStatusUpdate, CandidateStatusOut
+from app.schemas.candidates_schemas import (
+    CandidateFrontendOut,
+    CandidateStatusUpdate,
+    CandidateStatusOut,
+    CandidateCreate,
+    CandidateUpdate,
+    CandidateOut,
+    MessageResponse
+)
 
 router = APIRouter()
 
@@ -31,6 +39,37 @@ async def read_candidate(candidate_id: int, db: AsyncSession = Depends(get_db)):
     return candidate
 
 # --------------------
+# CREAR candidato
+# POST /api/candidates
+# --------------------
+
+@router.post("", response_model=CandidateOut, status_code=201)
+async def create_candidate(
+    payload: CandidateCreate,
+    db: AsyncSession = Depends(get_db)
+):
+    """Crea un nuevo candidato."""
+    return await candidates_service.create_candidate(db, payload)
+
+# --------------------
+# ACTUALIZAR candidato
+# PATCH /api/candidates/{candidate_id}
+# --------------------
+
+@router.patch("/{candidate_id}", response_model=CandidateOut)
+async def update_candidate(
+    candidate_id: int,
+    payload: CandidateUpdate,
+    db: AsyncSession = Depends(get_db)
+):
+    """Actualiza los datos de un candidato."""
+    candidate = await candidates_service.update_candidate(db, candidate_id, payload)
+    if not candidate:
+        raise HTTPException(status_code=404, detail="Candidato no encontrado")
+    return candidate
+
+
+# --------------------
 # ACTUALIZAR ESTATUS candidato 
 # PATCH /api/candidates/{candidate_id}/status
 # --------------------
@@ -46,14 +85,14 @@ async def update_candidate_status(
     if not candidate:
         raise HTTPException(status_code=404, detail="Candidato no encontrado")
     
-    return {"id": candidate.id, "status": candidate.status.value}
+    return candidate
 
 # --------------------
 # ELIMINAR candidato 
 # DELETE /api/candidates/{candidate_id}
 # --------------------
 
-@router.delete("/{candidate_id}")
+@router.delete("/{candidate_id}", response_model=MessageResponse)
 async def delete_candidate(candidate_id: int, db: AsyncSession = Depends(get_db)):
     """Elimina un candidato del sistema."""
     success = await candidates_service.delete_candidate(db, candidate_id)

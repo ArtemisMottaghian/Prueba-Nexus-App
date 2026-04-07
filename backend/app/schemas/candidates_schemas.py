@@ -46,9 +46,13 @@ class CandidateOut(CandidateBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+
+
 class CandidateStatusOut(BaseModel):
     id: int
     status: CandidateStatus
+
+    model_config = ConfigDict(from_attributes=True)
 
 class CandidateFrontendOut(BaseModel):
     """
