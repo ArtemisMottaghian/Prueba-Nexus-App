@@ -6,7 +6,7 @@ import {
   getClienteById,
   createCliente,
   updateCliente,
-  deleteCliente
+  deleteCliente,
 } from '../services/clientesService';
 
 const formVacio = {
@@ -130,7 +130,7 @@ export default function Clientes() {
       setErrores(nuevosErrores);
       return;
     }
-    
+
     try {
       if (modalAbierto === 'nuevo') {
         const nuevo = await createCliente(form);
@@ -138,7 +138,9 @@ export default function Clientes() {
       } else {
         const actualizado = await updateCliente(clienteEditando.id, form);
         setClientes((prev) =>
-          prev.map((c) => (c.id === clienteEditando.id ? { ...c, ...actualizado } : c))
+          prev.map((c) =>
+            c.id === clienteEditando.id ? { ...c, ...actualizado } : c
+          )
         );
         if (clienteSeleccionado?.id === clienteEditando.id)
           setClienteSeleccionado((prev) => ({ ...prev, ...actualizado }));
