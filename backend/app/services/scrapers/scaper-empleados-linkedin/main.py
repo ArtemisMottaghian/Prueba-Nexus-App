@@ -74,31 +74,24 @@ async def extract_profile_data(page, url, keyword, search_location):
                 # Quitamos los saltos de linea 
                 puesto_limpio = puesto.replace('\n', ' ').strip()
                 time = company_time.replace('\n', ' ').strip()
-
                 exp = f"{puesto_limpio} | {time}" 
         except Exception as e:
-            print(f" -> Aviso menor al extraer experiencia corta: {e}")
+            pass
 
         experience_text = exp.strip()[:95]
-
-
-        # Extraer descripción / titular
-        desc_element = await page.query_selector('div.text-body-medium, h2.top-card-layout__headline')
-        description = await desc_element.inner_text() if desc_element else "Sin descripción"
-
         
         # Preparación de datos
         return{
            "first_name": first_name.strip(),
             "last_name": last_name.strip(),
             "email": f"pendiente_{random.randint(10000, 99999)}@scraping.local",
+            "phone": None,
             "location": search_location,
             "source": "LinkedIn",
             "experience": experience_text,
             "linkedin_url": url,
             "cv_url": None, 
             "skills": keyword,
-            "phone": None,
             "status": "active",
             "notes": None
         }
