@@ -15,11 +15,11 @@ class CandidateBase(BaseModel):
     first_name: str = Field(..., min_length=2, max_length=50)
     last_name: str = Field(..., min_length=2, max_length=50)
     email: EmailStr # valida formato de correo
-    phone: Optional[str] = None
+    phone: Optional[str] = Field(None, pattern=r'^\+?[\d\s\-]{7,20}$')
     linkedin_url: Optional[HttpUrl] = None # Valida que sea una URL válida
     cv_url: Optional[HttpUrl] = None
-    skills: Optional[str] = None
-    notes: Optional[str] = None
+    skills: Optional[str] = Field(None, max_length=500)
+    notes: Optional[str] = Field(None, max_length=1000)
     status: Optional[CandidateStatus] = CandidateStatus.active
 
 
@@ -34,8 +34,8 @@ class CandidateUpdate(BaseModel):
     phone: Optional[str] = Field(None, pattern=r'^\+?[\d\s\-]{7,20}$')  # Formato internacional de teléfono
     linkedin_url: Optional[HttpUrl] = None # Valida que sea una URL válida
     cv_url: Optional[HttpUrl] = None
-    skills: Optional[str] = None
-    notes: Optional[str] = None
+    skills: Optional[str] = Field(None, max_length=500)
+    notes: Optional[str] = Field(None, max_length=1000)
     status: Optional[CandidateStatus] = None
 
 # Salida (CandidateOut / CandidateResponse)
@@ -48,7 +48,7 @@ class CandidateOut(CandidateBase):
 
 class CandidateStatusOut(BaseModel):
     id: int
-    status: str
+    status: CandidateStatus
 
 class CandidateFrontendOut(BaseModel):
     """
@@ -81,7 +81,7 @@ class CandidateFrontendOut(BaseModel):
                 # Combinamos nombre y apellido en un solo campo 'name'
                 "name": f"{data.first_name} {data.last_name}".strip(),
                 # Si skills es None, devolvemos un texto amigable
-                "specialty": getattr(data, "skills", "Sin especificar"),
+                "specialty": getattr(data, "skills",None) or "Sin especificar",
                 # Usamos location según lo tengamos en la base de datos
                 "location":getattr(data, "city", "No indicada"),
                 # Lógica de origen: Si viene del scraper tendrá un ID de origen
