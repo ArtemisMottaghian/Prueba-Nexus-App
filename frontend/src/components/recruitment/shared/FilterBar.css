@@ -59,3 +59,18 @@
   transform: scale(1.05);
   filter: brightness(1.1);
 }
+[data-bs-theme='light'] .filter-bar {
+  background: #ffffff;
+  border-color: #e5e7eb;
+}
+ 
+[data-bs-theme='light'] .filter-select {
+  background-color: #f3f4f6;
+  border-color: #e5e7eb;
+  color: #111827;
+}
+ 
+[data-bs-theme='light'] .filter-select option {
+  background-color: #ffffff;
+  color: #111827;
+}

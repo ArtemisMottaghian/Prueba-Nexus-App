@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import VacancyModal from '../recruitment/VacancyModal';
+import VacancyModal from '../recruitment/vacancies/VacancyModal';
 import './ClienteDetail.css';
 
 const getBadgeEstado = (estado) => {
