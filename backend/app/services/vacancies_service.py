@@ -15,32 +15,30 @@ from app.models.leadStatus_model import LeadStatus
 
 # Funcion para obtener el listado (Dashboard y Pantalla de Vacantes)
 async def get_vacancies_list(db: AsyncSession, status: Optional[str] = None) -> List[JobOffer]:
+
     """Obtiene todas las vacantes filtradas opcionalmente por estado."""
+
     try:
-        async with AsyncSessionLocal() as session:
-            query = select(JobOffer)
+        query = select(JobOffer)
+        # Filtro si nos pasan un estado
+        if status:
+            query = query.where(JobOffer.status == status)
 
-            # Filtro si nos pasan un estado
-            if status:
-                query = query.where(JobOffer.status == status)
+        # Ordenamos por las mas recientes primero
+        query = query.order_by(JobOffer.published_at.desc())
+        result = await db.execute(query)
+        return result.scalars().all()
 
-            # Ordenamos por las mas recientes primero
-            query = query.order_by(JobOffer.published_at.desc())
-
-            result = await session.execute(query)
-
-            return result.scalars().all()
     except Exception as e:
         raise e
 
 # detalle de una vacante por el ID
 async def get_vacancy_by_id(db: AsyncSession, vacancy_id: int) -> Optional[JobOffer]:
+
     try:
-        async with AsyncSessionLocal() as session:
             # buscar por id
             query = select(JobOffer).where(JobOffer.id == vacancy_id)
-
-            result = await session.execute(query)
+            result = await db.execute(query)
 
             # Devuelve el objeto o None si no existe
             return result.scalar_one_or_none()

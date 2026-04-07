@@ -1,35 +1,39 @@
 name: Deploy Nexus Agent
 
-# Cuándo se ejecuta este pipeline
 on:
   push:
     branches:
-      - main        # Cuando alguien sube código a main
-      - develop     # O a develop
+      - main
+      - develop
 
 jobs:
   deploy:
     name: Deploy a la VM
-    runs-on: ubuntu-latest  # GitHub usa una máquina Ubuntu para ejecutar esto
+    runs-on: ubuntu-latest
 
     steps:
-      # 1. Descarga el código del repo
       - name: Checkout código
         uses: actions/checkout@v3
 
-      # 2. Se conecta a la VM por SSH y actualiza el código
-      - name: Deploy en VM GCP
-        uses: appleboy/ssh-action@v1.0.0
+      - name: Autenticar en GCP
+        uses: google-github-actions/auth@v2
         with:
-          host: ${{ secrets.VM_HOST }}        # IP de la VM
-          username: ${{ secrets.VM_USER }}    # Usuario de la VM (desarrollo)
-          key: ${{ secrets.VM_SSH_KEY }}      # Clave SSH privada
-          script: |
-            cd ~/nexus-app
-            git pull origin main
-            cd backend  
-            source venv/bin/activate
-            pip install -r requirements.txt
-            echo "✅ Deploy completado"
-            sudo systemctl restart aratalent
-            
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy en VM GCP
+        run: |
+          gcloud compute ssh desarrollo@nexus-agent-dev \
+            --zone=europe-southwest1-c \
+            --tunnel-through-iap \
+            --command="
+              cd ~/nexus-app &&
+              git pull origin develop &&
+              cd backend &&
+              source ~/nexus-app/venv/bin/activate &&
+              pip install -r requirements.txt --quiet &&
+              sudo systemctl restart aratalent &&
+              echo '✅ Deploy completado'
+            "
