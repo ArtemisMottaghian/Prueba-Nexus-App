@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from typing import List
 
-from app.schemas.clients_schemas import ClientUpdate, ClientOut, ClientDetailOut, ClientCreate, VacancyOut
+from app.schemas.clients_schemas import ClientUpdate, ClientOut, ClientDetailOut, ClientCreate, VacancyOut,MessageResponse
 from app.services import clients_service
 from app.db.connection import get_db
 
@@ -21,7 +21,7 @@ async def endpoint_list_clients(db: AsyncSession = Depends(get_db)):
         await db.rollback()
         raise HTTPException(status_code=400, detail="Error de integridad en la base de datos")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 # --------------------
 # Obtener un cliente con detalles de la vacante 
@@ -36,22 +36,22 @@ async def get_client(client_id: int, db: AsyncSession = Depends(get_db)):
         await db.rollback()
         raise HTTPException(status_code=400, detail="Error de integridad en la base de datos")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 # --------------------
 # Obtener un cliente con las vacantes asociadas
 # GET /api/clients/{client_id}/vacantes
 # --------------------
-@router.get("/{client_id}/vacantes", response_model=List[VacancyOut])
-async def get_client_vacantes(client_id: int, db: AsyncSession = Depends(get_db)):
+@router.get("/{client_id}/vacancies", response_model=List[VacancyOut])
+async def get_client_vacancies(client_id: int, db: AsyncSession = Depends(get_db)):
     try:
-        client_vacantes = await clients_service.get_client_vacantes(db, client_id)
-        return client_vacantes
+        client_vacancies = await clients_service.get_client_vacantes(db, client_id)
+        return client_vacancies
     except IntegrityError as e:
         await db.rollback()
         raise HTTPException(status_code=400, detail="Error de integridad en la base de datos")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
     
 # --------------------
 # Crear un cliente
@@ -66,14 +66,14 @@ async def create_client(client_data: ClientCreate, db: AsyncSession = Depends(ge
         await db.rollback()
         raise HTTPException(status_code=400, detail="Error de la integridad en la base de datos")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 # --------------------
 # ACTUALIZAR cliente parcialmente
 # PUT /api/clients/{client_id}
 # --------------------
-@router.put("/{client_id}", response_model=ClientOut)
-async def endpoint_update_client(
+@router.patch("/{client_id}", response_model=ClientOut)
+async def update_client(
     client_id: int,
     client_data: ClientUpdate,
     db: AsyncSession = Depends(get_db)
@@ -88,13 +88,13 @@ async def endpoint_update_client(
         await db.rollback()
         raise HTTPException(status_code=400, detail="Error de integridad en la base de datos")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
     
 # --------------------
 # DELETE cliente 
 # DELETE /api/clients/{client_id}
 # --------------------
-@router.delete("/{client_id}")
+@router.delete("/{client_id}",response_model=MessageResponse)
 async def delete_client(client_id: int, db: AsyncSession = Depends(get_db)):
     try:
         cliente_eliminado = await clients_service.delete_client(db, client_id)
@@ -103,4 +103,4 @@ async def delete_client(client_id: int, db: AsyncSession = Depends(get_db)):
         await db.rollback()
         raise HTTPException(status_code=400, detail="Error de integridad en la base de datos")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
