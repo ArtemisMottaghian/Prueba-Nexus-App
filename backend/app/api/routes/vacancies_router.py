@@ -29,9 +29,9 @@ async def read_vacancies(
 
 # -----------------
 # Listado filtrado de vacantes (estado, sector, ubicación)
-# GET /api/vacantes?estado=Nueva&sector=Tecnologia&ubicacion=Madrid
+# GET /api/vacancies?status=new&sector=Tecnologia&location=Madrid
 # -----------------
-@router.get("/filter/list", response_model=List[VacancyFiltered])
+@router.get("/filter/list",response_model=List[VacancyFiltered])
 async def read_vacancies_filtered(
     status: Optional[str] = None,
     sector: Optional[str] = None,
@@ -63,10 +63,10 @@ async def read_vacancy(
 
 # -----------------
 # Marcar vacante como favorita
-# PATCH /api/vacantes/{vacancy_id}/favorito
+# PATCH /api/vacancies/{vacancy_id}/favorito
 # -----------------
 @router.patch("/{vacancy_id}/favorite", response_model=MessageResponse)
-async def marck_favorite(
+async def mark_favorite(
     vacancy_id: int,
     body: FavoriteRequest,
     db: AsyncSession = Depends(get_db)
@@ -82,18 +82,13 @@ async def marck_favorite(
 
 # -----------------
 # Acciones masivas sobre vacantes (cambiar estado o eliminar)
-# POST /api/vacantes/acciones-masivas
+# POST /api/vacancies/bulk-actions
 # -----------------
 @router.post("/bulk-actions", response_model=MessageResponse)
 async def bulk_actions(
     body: BulkActionRequest,
     db: AsyncSession = Depends(get_db)
 ):
-    if body.action not in ("discard", "delete"):
-        raise HTTPException(
-            status_code=400,
-            detail="Acción no válida. Usa 'discard' o 'delete'"
-        )
 
     await vacancies_service.apply_bulk_action(db, body.vacancy_ids, body.action)
     return {"message": f"Acción '{body.action}' aplicada a {len(body.vacancy_ids)} vacantes"}
