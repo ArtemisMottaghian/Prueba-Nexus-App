@@ -27,6 +27,20 @@ async def read_vacancies(
     vacancies = await vacancies_service.get_vacancies_list(db, status)
     return vacancies
 
+# -----------------
+# Listado filtrado de vacantes (estado, sector, ubicación)
+# GET /api/vacantes?estado=Nueva&sector=Tecnologia&ubicacion=Madrid
+# -----------------
+@router.get("/filter/list", response_model=List[VacancyFiltered])
+async def read_vacancies_filtered(
+    status: Optional[str] = None,
+    sector: Optional[str] = None,
+    location: Optional[str] = None,
+    db: AsyncSession = Depends(get_db)
+):
+    vacancies = await vacancies_service.get_vacancies_filtered(db, status, sector, location)
+    return vacancies
+
 
 # -----------------
 # Obtener detalle de vacante
@@ -45,19 +59,6 @@ async def read_vacancy(
     return vacancy
 
 
-# -----------------
-# Listado filtrado de vacantes (estado, sector, ubicación)
-# GET /api/vacantes?estado=Nueva&sector=Tecnologia&ubicacion=Madrid
-# -----------------
-@router.get("/filter/list", response_model=List[VacancyFiltered])
-async def read_vacancies_filtered(
-    status: Optional[str] = None,
-    sector: Optional[str] = None,
-    location: Optional[str] = None,
-    db: AsyncSession = Depends(get_db)
-):
-    vacancies = await vacancies_service.get_vacancies_filtered(db, status, sector, location)
-    return vacancies
 
 
 # -----------------
@@ -76,7 +77,7 @@ async def marck_favorite(
         raise HTTPException(status_code=404, detail="La vacante no existe")
 
     await vacancies_service.set_favorite(db, vacancy_id, body.favorite)
-    return {"mensaje": f"Vacante {'marcada' if body.favorite else 'desmarcada'} como favorita"}
+    return {"message": f"Vacante {'marcada' if body.favorite else 'desmarcada'} como favorita"}
 
 
 # -----------------
@@ -88,11 +89,11 @@ async def bulk_actions(
     body: BulkActionRequest,
     db: AsyncSession = Depends(get_db)
 ):
-    if body.accion not in ("discard", "delete"):
+    if body.action not in ("discard", "delete"):
         raise HTTPException(
             status_code=400,
             detail="Acción no válida. Usa 'discard' o 'delete'"
         )
 
-    await vacancies_service.apply_bulk_action(db, body.ids_vacantes, body.action)
-    return {"mensaje": f"Acción '{body.action}' aplicada a {len(body.vacancy_ids)} vacantes"}
+    await vacancies_service.apply_bulk_action(db, body.vacancy_ids, body.action)
+    return {"message": f"Acción '{body.action}' aplicada a {len(body.vacancy_ids)} vacantes"}
