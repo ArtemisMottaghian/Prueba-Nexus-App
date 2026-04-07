@@ -11,7 +11,25 @@ export const ENDPOINTS = {
     clienteVacantes: (id) => `${BASE_URL}/clients/${id}/vacants`,
   },
   recruitment: {
-    candidatos: `${BASE_URL}/candidatos`,
+    candidatos: {
+      // 1. Obtener todas
+      list: `${BASE_URL}/api/candidates`,
+
+      // 2. Filtrar
+      filter: (params) => {
+          const query = new URLSearchParams(params).toString();
+          return `${BASE_URL}/api/candidates/filter/list?${query}`;
+       },
+
+      // 3. Detalle de una sola
+      detail: (id) => `${BASE_URL}/api/candidates/${id}`,
+
+      // 4. Marcar favorito
+      favorite: (id) => `${BASE_URL}/api/candidates/${id}/favorite`,
+
+      // 5. Acciones masivas
+      bulkActions: `${BASE_URL}/api/candidates/bulk-actions`,
+    },
     vacantes: {
       // 1. Obtener todas
       list: `${BASE_URL}/api/vacancies`,
