@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import ENUM
 from app.db.connection import Base
 from app.schemas.candidates_schemas import CandidateStatus 
-import enum
+
 
 class Candidate(Base):
     __tablename__ = "candidates"
@@ -14,7 +14,7 @@ class Candidate(Base):
     email = Column(String(255), unique=True, nullable=False, index=True) 
     location = Column(String(255), nullable=True)
     source = Column(String(100), nullable=True)
-    experience = Column(String(100), nullable=True)
+    experience = Column(Text, nullable=True)
     phone = Column(String(50), nullable=True)
     linkedin_url = Column(String(255), nullable=True)
     cv_url = Column(Text, nullable=True)
@@ -41,9 +41,3 @@ class Candidate(Base):
     )
 
     applications = relationship("JobApplication", back_populates="candidate")
-
-class CandidateStatus(str, enum.Enum):
-    active = "active"
-    passive = "passive"
-    hired_elsewhere = "hired_elsewhere"
-    blacklisted = "blacklisted"
