@@ -94,7 +94,7 @@ async def endpoint_update_client(
 # DELETE cliente 
 # DELETE /api/clients/{client_id}
 # --------------------
-@router.delete("/client_id")
+@router.delete("/{client_id}")
 async def delete_client(client_id: int, db: AsyncSession = Depends(get_db)):
     try:
         cliente_eliminado = await clients_service.delete_client(db, client_id)

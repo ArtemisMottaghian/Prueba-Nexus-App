@@ -33,3 +33,6 @@ class Client(Base):
     history = relationship(
         "TrackingHistory", back_populates="client", cascade="all, delete-orphan"
     )
+    sector = Column(String(255))
+    cif = Column(String(255))
+    address = Column("direccion", String(500))
