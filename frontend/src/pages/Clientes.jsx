@@ -1,7 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ClienteCard from '../components/crm/ClienteCard';
 import ClienteDetail from '../components/crm/ClienteDetail';
-import clientesIniciales from '../data/clientesData.json';
+import {
+  getClientes,
+  getClienteById,
+  createCliente,
+  updateCliente,
+  deleteCliente,
+} from '../services/clientesService';
 
 const formVacio = {
   nombre: '',
@@ -26,8 +32,35 @@ const validarForm = (datos) => {
 };
 
 export default function Clientes() {
-  const [clientes, setClientes] = useState(clientesIniciales);
+  const [clientes, setClientes] = useState([]);
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    cargarClientes();
+  }, []);
+
+  const cargarClientes = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getClientes();
+      setClientes(data);
+    } catch (error) {
+      console.error('Error al cargar clientes:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const seleccionarCliente = async (cliente) => {
+    try {
+      const detalle = await getClienteById(cliente.id);
+      setClienteSeleccionado(detalle);
+    } catch (error) {
+      console.error('Error al cargar detalle del cliente:', error);
+      setClienteSeleccionado(cliente);
+    }
+  };
   const [busqueda, setBusqueda] = useState('');
   const [filtroSector, setFiltroSector] = useState('Todos');
   const [filtroPrioritario, setFiltroPrioritario] = useState(false);
@@ -91,36 +124,46 @@ export default function Clientes() {
     if (errores[name]) setErrores((prev) => ({ ...prev, [name]: undefined }));
   };
 
-  const guardarCliente = () => {
+  const guardarCliente = async () => {
     const nuevosErrores = validarForm(form);
     if (Object.keys(nuevosErrores).length > 0) {
       setErrores(nuevosErrores);
       return;
     }
-    if (modalAbierto === 'nuevo') {
-      const nuevo = {
-        ...form,
-        id: `c${Date.now()}`,
-        vacantesAbiertas: 0,
-        vacantes: [],
-      };
-      setClientes((prev) => [...prev, nuevo]);
-    } else {
-      setClientes((prev) =>
-        prev.map((c) => (c.id === clienteEditando.id ? { ...c, ...form } : c))
-      );
-      if (clienteSeleccionado?.id === clienteEditando.id)
-        setClienteSeleccionado((prev) => ({ ...prev, ...form }));
+
+    try {
+      if (modalAbierto === 'nuevo') {
+        const nuevo = await createCliente(form);
+        setClientes((prev) => [...prev, nuevo]);
+      } else {
+        const actualizado = await updateCliente(clienteEditando.id, form);
+        setClientes((prev) =>
+          prev.map((c) =>
+            c.id === clienteEditando.id ? { ...c, ...actualizado } : c
+          )
+        );
+        if (clienteSeleccionado?.id === clienteEditando.id)
+          setClienteSeleccionado((prev) => ({ ...prev, ...actualizado }));
+      }
+      setModalAbierto(false);
+    } catch (error) {
+      console.error('Error al guardar el cliente:', error);
+      alert('Error al guardar el cliente. Por favor, intente de nuevo.');
     }
-    setModalAbierto(false);
   };
 
-  const confirmarEliminar = () => {
-    setClientes((prev) => prev.filter((c) => c.id !== clienteAEliminar.id));
-    if (clienteSeleccionado?.id === clienteAEliminar.id)
-      setClienteSeleccionado(null);
-    setModalEliminar(false);
-    setClienteAEliminar(null);
+  const confirmarEliminar = async () => {
+    try {
+      await deleteCliente(clienteAEliminar.id);
+      setClientes((prev) => prev.filter((c) => c.id !== clienteAEliminar.id));
+      if (clienteSeleccionado?.id === clienteAEliminar.id)
+        setClienteSeleccionado(null);
+      setModalEliminar(false);
+      setClienteAEliminar(null);
+    } catch (error) {
+      console.error('Error al eliminar cliente:', error);
+      alert('Error al eliminar el cliente. Por favor, intente de nuevo.');
+    }
   };
 
   const togglePrioritario = (e, cliente) => {
@@ -198,7 +241,14 @@ export default function Clientes() {
             </button>
           </div>
 
-          {clientesFiltrados.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center text-muted py-4">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Cargando...</span>
+              </div>
+              <p className="mt-2 mb-0 small">Cargando clientes...</p>
+            </div>
+          ) : clientesFiltrados.length === 0 ? (
             <div className="text-center text-muted py-4">
               <i className="bi bi-search fs-3 d-block mb-2"></i>
               <p className="mb-0 small">No se encontraron clientes</p>
@@ -209,7 +259,7 @@ export default function Clientes() {
                 key={c.id}
                 cliente={c}
                 isSelected={clienteSeleccionado?.id === c.id}
-                onClick={setClienteSeleccionado}
+                onClick={seleccionarCliente}
                 onEdit={abrirModalEditar}
                 onDelete={abrirModalEliminar}
                 onTogglePrioritario={togglePrioritario}
