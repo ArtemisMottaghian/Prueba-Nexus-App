@@ -4,7 +4,7 @@ KEYWORDS = [
     "Tecnología",
     "Software", 
     "IT",
-    #"Ciberseguridad",
+    "Ciberseguridad",
     #"Ingeniería",
     #"Engineering",
     #"Finanzas", 

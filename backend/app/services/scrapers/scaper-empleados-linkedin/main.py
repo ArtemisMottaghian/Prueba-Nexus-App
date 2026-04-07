@@ -1,7 +1,6 @@
 import asyncio
 import random
 import urllib.parse
-#Ajuste de rutas para la estructura de carpetas
 from app.db.session import AsyncSessionLocal
 from .browser import get_browser_context
 from .scraper_repository import upsert_scraped_candidate
@@ -19,9 +18,9 @@ async def extract_profile_data(page, url, keyword, search_location):
         await page.goto(url, wait_until="domcontentloaded", timeout=20000)
         
         # Scroll para cargar secciones ocultas
-        await page.mouse.wheel(0,800)
+        await page.mouse.wheel(delta_x=0, delta_y=800)
         await asyncio.sleep(1.5)
-        await page.mouse.wheel(0.800)
+        await page.mouse.wheel(delta_x=0, delta_y=800)
         await asyncio.sleep(2)
 
         # Depuración visual para ver en consola que pagina esta viendo el bot
@@ -46,9 +45,13 @@ async def extract_profile_data(page, url, keyword, search_location):
         full_name = full_name.strip()
         
         # Filtrar que las empresas no entren por el nombre
+        word_trap = [
+            ' s.l.', ' s.a.', ' s.l', ' s.a', ' inc', ' sl', ' sa', ' ltd', ' llc', 'agencia', 'servicios', 'solutions', 'consulting', 'Dpto', 'Departamento', 'Departament', 'master', 'máster', 'universidad', 'escuela'
+        ]
         name_lower = full_name.lower()
-        if any(word in name_lower for word in [' s.l.', ' s.a.', ' s.l', ' s.a', ' inc', ' sl', ' sa']):
+        if any(word in name_lower for word in word_trap):
             print(f"Saltando {url} Parece ser una empresa: {full_name}")
+            return None
             
         #Limpiamos el nombre
         name_parts = full_name.strip().split(' ', 1)
@@ -60,26 +63,40 @@ async def extract_profile_data(page, url, keyword, search_location):
         scraped_location = await loc_element.inner_text() if loc_element else "No especificada"
 
         # Extraer experiencia
-        exp = "No visible"
+        full_experience = "No visible"
         try:
-            # Buscamos el título del puesto EJ: backend Developer
-            title_el = await page.query_selector('h3.profile-section-card__title, span.experience-item__subtitle,, li.experience-item h3')
-            # Buscamos el subtitulo EJ: nombre de la empresa - 3 años
-            subtitle_el = await page.query_selector('h4.profile-section-card__subtitle, span.experience-item__subtitle, li.experience-item h4')
-
-            puesto = await title_el.inner_text() if title_el else ""
-            company_time = await subtitle_el.inner_text() if subtitle_el else ""
-
-            if puesto:
-                # Quitamos los saltos de linea 
-                puesto_limpio = puesto.replace('\n', ' ').strip()
-                time = company_time.replace('\n', ' ').strip()
-                exp = f"{puesto_limpio} | {time}" 
+            # 1. Buscamos la caja entera usando query_selector (que funciona perfecto con await)
+            exp_section = await page.query_selector('section:has(h2:has-text("Experiencia")), section:has(h2:has-text("Experience")), div:has(h2:has-text("Experiencia"))')
+            
+            if exp_section:
+                raw_text = await exp_section.inner_text()
+                
+                # Limpiamos el texto resultante
+                lineas = [linea.strip() for linea in raw_text.split('\n') if linea.strip()]
+                
+                # Borramos la palabra "Experiencia" del principio
+                if lineas and (lineas[0].lower() == "experiencia" or lineas[0].lower() == "experience"):
+                    lineas.pop(0)
+                
+                full_experience = "\n".join(lineas)
+            else:
+                # Plan B: Extraer los bloques de trabajo uno a uno
+                exp_items = await page.query_selector_all('li.experience-item, li.profile-section-card')
+                if exp_items:
+                    experiencias_limpias = []
+                    for item in exp_items:
+                        texto = await item.inner_text()
+                        lineas = [linea.strip() for linea in texto.split('\n') if linea.strip()]
+                        experiencias_limpias.append(" • ".join(lineas)) 
+                    full_experience = "\n\n".join(experiencias_limpias)
+                    
         except Exception as e:
-            pass
+            print(f"   -> Aviso al extraer experiencia: {e}")
 
-        experience_text = exp.strip()[:95]
-        
+        # Imprimimos la previa en consola
+        preview_exp = full_experience[:80].replace("\n", " ") + "..." if full_experience != "No visible" else "No visible"
+        print(f"   -> Experiencia extraída: {preview_exp}")
+
         # Preparación de datos
         return{
            "first_name": first_name.strip(),
@@ -88,7 +105,7 @@ async def extract_profile_data(page, url, keyword, search_location):
             "phone": None,
             "location": search_location,
             "source": "LinkedIn",
-            "experience": experience_text,
+            "experience": full_experience,
             "linkedin_url": url,
             "cv_url": None, 
             "skills": keyword,
@@ -152,6 +169,12 @@ async def run_scraper(keywords: list, sectors: list, locations:list, headless: b
                             unique_links.append(link)
 
                     unique_links = list(set(unique_links))
+                    
+                    # Salto por si hay 0 resultados
+                    if not unique_links:
+                        print(f" 0 resultados encontrados, pasando a la siguiente")
+                        continue
+                    
                     print(f"Encontrados {len(unique_links)} posibles perfiles")
 
                     # Guardamos en la BD
