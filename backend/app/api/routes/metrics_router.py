@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,timezone
 from app.db.connection import get_db
 from app.services import metrics_service
 from app.schemas.metrics_schemas import LeadMetrics
@@ -20,7 +20,7 @@ async def read_metrics(
 ):
     # ultimos 30 dias por defecto
     if not end:
-        end = datetime.now()
+        end = datetime.now(timezone.utc)
     if not start:
         start = end - timedelta(days=30)
 
