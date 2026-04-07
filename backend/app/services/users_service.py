@@ -13,7 +13,7 @@ async def newUser(db: AsyncSession, datos: NewUser):
         datos_dict = datos.model_dump()
 
         # Se extrae la contraseña plana y se hashea
-        plain_password = datos_dict.pop('password_hash')
+        plain_password = datos_dict.pop('password')
         hashed_pasword = hash_password(plain_password)
 
         # Se asigna la contraseña hasheada al diccionario
