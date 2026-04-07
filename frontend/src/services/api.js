@@ -17,9 +17,9 @@ export const ENDPOINTS = {
 
       // 2. Filtrar
       filter: (params) => {
-          const query = new URLSearchParams(params).toString();
-          return `${BASE_URL}/api/candidates/filter/list?${query}`;
-       },
+        const query = new URLSearchParams(params).toString();
+        return `${BASE_URL}/api/candidates/filter/list?${query}`;
+      },
 
       // 3. Detalle de una sola
       detail: (id) => `${BASE_URL}/api/candidates/${id}`,

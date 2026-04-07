@@ -16,30 +16,28 @@ export default function Candidates() {
   const [selectedCandidates, setSelectedCandidates] = useState([]);
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
-  
 
-    // Carga inicial de datos
-    useEffect(() => {
-      const fetchCandidates = async () => {
-        try {
-          const data = await candidatesService.getAllCandidates();
-          setCandidates(data);
-        } catch {
-          console.log('Backend offline. Using candidatesData.json...');
-          setCandidates(initialCandidatesData);
-        } finally {
-          setLoading(false);
-        }
-      };
-  
-      fetchCandidates();
-    }, []);
-  
-    // Manejadores de eventos
-    const handleFilterChange = (filterName, value) => {
-      setFilters((prevFilters) => ({ ...prevFilters, [filterName]: value }));
+  // Carga inicial de datos
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      try {
+        const data = await candidatesService.getAllCandidates();
+        setCandidates(data);
+      } catch {
+        console.log('Backend offline. Using candidatesData.json...');
+        setCandidates(initialCandidatesData);
+      } finally {
+        setLoading(false);
+      }
     };
 
+    fetchCandidates();
+  }, []);
+
+  // Manejadores de eventos
+  const handleFilterChange = (filterName, value) => {
+    setFilters((prevFilters) => ({ ...prevFilters, [filterName]: value }));
+  };
 
   const handleClearFilters = () => {
     setFilters({
@@ -68,7 +66,7 @@ export default function Candidates() {
     );
   };
 
-    // Lógica de filtrado
+  // Lógica de filtrado
   const filteredCandidates = candidates.filter((candidate) => {
     const matchEstado =
       filters.estado === 'Todos' || candidate.status === filters.estado;
@@ -76,8 +74,7 @@ export default function Candidates() {
       filters.especialidad === 'Todas' ||
       candidate.specialty === filters.especialidad;
     const matchUbicacion =
-      filters.ubicacion === 'Todas' ||
-      candidate.location === filters.ubicacion;
+      filters.ubicacion === 'Todas' || candidate.location === filters.ubicacion;
     const matchOrigen =
       filters.origen === 'Todos' || candidate.source === filters.origen;
 
@@ -100,7 +97,8 @@ export default function Candidates() {
 
       {!loading && (
         <div className="mb-3 text-muted small">
-          Mostrando {filteredCandidates.length} candidatos de {candidates.length}
+          Mostrando {filteredCandidates.length} candidatos de{' '}
+          {candidates.length}
         </div>
       )}
 

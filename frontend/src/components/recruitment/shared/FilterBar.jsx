@@ -36,7 +36,6 @@ export default function FilterBar({ filters, onFilterChange, onClearFilters }) {
             <option value="Technology">Tecnología</option>
             <option value="Finance">Finanzas</option>
             <option value="Healthcare">Legal</option>
-  
           </select>
         </div>
 
