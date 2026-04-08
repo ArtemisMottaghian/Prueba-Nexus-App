@@ -17,6 +17,7 @@ sys.path.append(carpeta_raiz)
 from app.core import scraper_linkedin_config as config
 from app.services.scrapers.linkedin.linkedin_utils import build_linkedin_url
 from app.services.scrapers.linkedin.linkedin_browser import get_webdriver, scroll_page, fetch_job_details
+from app.services.scraper_logs_service import log_scraper_error
 
 #from app.services.vacancies_service import create_vacancy
 
@@ -131,6 +132,10 @@ async def extract_linked():
                                 job_desc, company_desc, recruiter_name, recruiter_url, salary, sector_text,modality,contract_time,contract_type, exito = fetch_job_details(driver, job_url, config.DETAIL_PAUSE)
                             except Exception as e:
                                 print(f" [!] Error al raspar oferta interna: {e}")
+                                await log_scraper_error(
+                                    error_code="SCRAPER_LINKEDIN_OFFER",
+                                    message=f"scraper=linkedin | stage=offer_detail | url={job_url} | exc={e}"
+                                )
 
                             if not exito:
                                 errores_consecutivos += 1
@@ -294,6 +299,10 @@ async def extract_linked():
                             job_desc, company_desc, recruiter_name, recruiter_url, salary, sector_text, modality, contract_time, contract_type, exito = fetch_job_details(driver, job_url, config.DETAIL_PAUSE)
                         except Exception as e:
                             print(f"        [!] Error al raspar oferta interna: {e}")
+                            await log_scraper_error(
+                                    error_code="SCRAPER_LINKEDIN_OFFER",
+                                    message=f"scraper=linkedin | stage=offer_detail | url={job_url} | exc={e}"
+                                )
 
                         if not exito:
                             errores_consecutivos += 1
@@ -366,6 +375,10 @@ async def extract_linked():
 
     except Exception as e:
         import traceback
+        await log_scraper_error(
+            error_code="SCRAPER_LINKEDIN_CRITICAL",
+            message=f"scraper=linkedin | stage=critical | exc={e}"
+        )
         print(" ERROR CRÍTICO DETECTADO:")
         traceback.print_exc()
     finally:
