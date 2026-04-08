@@ -105,6 +105,9 @@ class CandidateStatusUpdate(BaseModel):
     """Esquema específico para el endpoint PATCH"""
     status: CandidateStatus
 
+class MessageResponse(BaseModel):
+    message: str
+
 
 if __name__ == "__main__":
     print("--- 🧪 TEST DE ESQUEMAS DE CANDIDATOS ---")
