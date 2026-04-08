@@ -11,9 +11,15 @@
 }
 
 /* Efecto de brillo sutil en el borde según el estado */
-.source-card.status-success { border-left: 4px solid #10b981; }
-.source-card.status-warning { border-left: 4px solid #f59e0b; }
-.source-card.status-danger  { border-left: 4px solid #ef4444; }
+.source-card.status-success {
+  border-left: 4px solid #10b981;
+}
+.source-card.status-warning {
+  border-left: 4px solid #f59e0b;
+}
+.source-card.status-danger {
+  border-left: 4px solid #ef4444;
+}
 
 .source-card:hover {
   background: rgba(255, 255, 255, 0.06);
@@ -32,18 +38,18 @@
 }
 
 /* Colores de iconos con resplandor */
-.bg-success-soft { 
-  background: rgba(16, 185, 129, 0.15); 
+.bg-success-soft {
+  background: rgba(16, 185, 129, 0.15);
   color: #10b981;
   text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
 }
-.bg-warning-soft { 
-  background: rgba(245, 158, 11, 0.15); 
+.bg-warning-soft {
+  background: rgba(245, 158, 11, 0.15);
   color: #f59e0b;
   text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
 }
-.bg-danger-soft  { 
-  background: rgba(239, 68, 68, 0.15); 
+.bg-danger-soft {
+  background: rgba(239, 68, 68, 0.15);
   color: #ef4444;
   text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
 }

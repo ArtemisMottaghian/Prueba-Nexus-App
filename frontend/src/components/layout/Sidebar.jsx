@@ -7,11 +7,11 @@ const Sidebar = ({ isOpen, onClose }) => {
   // 1. Función de Logout
   const handleLogout = () => {
     // Eliminamos el token del almacenamiento local
-    localStorage.removeItem("token");
+    localStorage.removeItem('token');
     // Cerramos el sidebar si esta el movil
     if (onClose) onClose();
     // Redirigimos al login
-    navigate("/login");
+    navigate('/login');
   };
 
   return (

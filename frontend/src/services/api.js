@@ -49,6 +49,5 @@ export const ENDPOINTS = {
       // 5. Acciones masivas
       bulkActions: `${BASE_URL}/api/vacancies/bulk-actions`,
     },
-    
   },
 };

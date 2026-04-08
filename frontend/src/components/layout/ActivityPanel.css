@@ -45,9 +45,21 @@
 }
 
 /* Clases de colores para los iconos */
-.bg-purple { background-color: #6b2fee !important; box-shadow: 0 0 20px rgba(107, 47, 238, 0.6); }
-.bg-cyan { background-color: #00d4ff !important; box-shadow: 0 0 20px rgba(0, 212, 255, 0.6); }
+.bg-purple {
+  background-color: #6b2fee !important;
+  box-shadow: 0 0 20px rgba(107, 47, 238, 0.6);
+}
+.bg-cyan {
+  background-color: #00d4ff !important;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+}
 
 /* Modo Claro Activity Panel */
-.theme-light .activity-panel { background: #ffffff !important; border-left: 1px solid #f3f4f6 !important; }
-.theme-light .activity-card-dark { background: #ffffff !important; border: 1px solid #e5e7eb !important; }
+.theme-light .activity-panel {
+  background: #ffffff !important;
+  border-left: 1px solid #f3f4f6 !important;
+}
+.theme-light .activity-card-dark {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+}

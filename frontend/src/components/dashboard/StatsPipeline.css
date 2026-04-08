@@ -22,9 +22,9 @@
 .stats-accent {
   height: 3px;
   background: linear-gradient(
-    90deg, 
-    var(--color-purple-primary), 
-    var(--color-cyan-primary), 
+    90deg,
+    var(--color-purple-primary),
+    var(--color-cyan-primary),
     var(--color-violet)
   );
   opacity: 0.8;
@@ -38,13 +38,18 @@
 
 /* Separadores sutiles entre columnas */
 .stats-col:not(:last-child)::after {
-  content: "";
+  content: '';
   position: absolute;
   right: 0;
   top: 20%;
   height: 60%;
   width: 1px;
-  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
 }
 
 .stat-label {
