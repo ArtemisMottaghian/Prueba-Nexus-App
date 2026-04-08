@@ -52,4 +52,3 @@ export const ENDPOINTS = {
     
   },
 };
-console.log(ENDPOINTS.recruitment.vacantes.list);
