@@ -45,9 +45,10 @@ async def upsert_scraped_candidate(db: AsyncSession, data: dict):
         # 4. ejecutamos la consulta y hacemos commit
         await db.execute(on_conflict_stmt)
         await db.commit()
-        print(f"Candidato guardado/actualizado -> {data.get('email')}")
+        return True
 
     except Exception as e:
         # Si algo falla hacemos un roolback apra no dejar la BD conlada
         await db.rollback()
         print(f"Error al guardar en la BD: {str(e)}\n")
+        return False
