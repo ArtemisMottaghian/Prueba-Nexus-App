@@ -28,30 +28,39 @@ function App() {
 
         {/* RUTAS PRIVADAS: Protegidas por ProtectedRoute */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/*" element={
-            <div className="ara-container">
-              <Sidebar isOpen={sidebarAbierto} onClose={() => setSidebarAbierto(false)} />
-              <main className="ara-main">
-                <Topbar 
-                  onMenuToggle={() => setSidebarAbierto(prev => !prev)} 
-                  onActivityToggle={() => setActivityAbierto(prev => !prev)} 
+          <Route
+            path="/*"
+            element={
+              <div className="ara-container">
+                <Sidebar
+                  isOpen={sidebarAbierto}
+                  onClose={() => setSidebarAbierto(false)}
                 />
-                <div className="ara-content">
-                  <div className="content-scroll">
-                    <Routes>
-                      <Route path="/" element={<Dashboard />} />
-                      <Route path="/vacantes" element={<Vacancies />} />
-                      <Route path="/Calendar" element={<Calendario />} />
-                      <Route path="/clientes" element={<Clientes />} />
-                      <Route path="/candidatos" element={<Candidates />} />
-                      <Route path="*" element={<Navigate to="/" />} />
-                    </Routes>
+                <main className="ara-main">
+                  <Topbar
+                    onMenuToggle={() => setSidebarAbierto((prev) => !prev)}
+                    onActivityToggle={() => setActivityAbierto((prev) => !prev)}
+                  />
+                  <div className="ara-content">
+                    <div className="content-scroll">
+                      <Routes>
+                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/vacantes" element={<Vacancies />} />
+                        <Route path="/Calendar" element={<Calendario />} />
+                        <Route path="/clientes" element={<Clientes />} />
+                        <Route path="/candidatos" element={<Candidates />} />
+                        <Route path="*" element={<Navigate to="/" />} />
+                      </Routes>
+                    </div>
                   </div>
-                </div>
-              </main>
-              <ActivityPanel isOpen={activityAbierto} onClose={() => setActivityAbierto(false)} />
-            </div>
-          } />
+                </main>
+                <ActivityPanel
+                  isOpen={activityAbierto}
+                  onClose={() => setActivityAbierto(false)}
+                />
+              </div>
+            }
+          />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,6 +1,10 @@
 .ara-sidebar {
   width: 80px; /* Vuelve a su tamaño pequeño por defecto */
-  background: linear-gradient(180deg, var(--color-purple-primary), var(--color-purple-secondary));
+  background: linear-gradient(
+    180deg,
+    var(--color-purple-primary),
+    var(--color-purple-secondary)
+  );
   display: flex;
   flex-direction: column;
   padding: 24px 0;
@@ -17,12 +21,14 @@
   }
 
   /* Ocultamos textos y logo grande si no hay hover */
-  .sidebar-text, 
-  .sidebar-group-header, 
+  .sidebar-text,
+  .sidebar-group-header,
   .logo-large {
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
+    transition:
+      opacity 0.3s ease,
+      visibility 0.3s ease;
   }
 
   .logo-small {
@@ -45,21 +51,64 @@
 }
 
 /* --- ESTILOS COMUNES --- */
-.sidebar-content { display: flex; flex-direction: column; height: 100%; }
-.sidebar-logo { position: relative; height: 48px; margin-bottom: 32px; }
-.logo-small, .logo-large { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); }
-.logo-small { width: 33px; }
-.logo-large { height: 32px; }
-
-.sidebar-nav { padding: 0 12px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
-.sidebar-item {
-  display: flex; align-items: center; gap: 12px; padding: 12px 16px;
-  color: rgba(255, 255, 255, 0.7); text-decoration: none; border-radius: 12px;
-  transition: all 0.2s ease; white-space: nowrap;
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
-.sidebar-item:hover, .sidebar-item.active { background: rgba(255, 255, 255, 0.15); color: #ffffff; }
-.sidebar-item i { font-size: 20px; min-width: 20px; }
-.sidebar-group-header { font-size: 11px; font-weight: 700; color: rgba(255, 255, 255, 0.5); margin: 16px 0 8px; padding: 0 16px; }
+.sidebar-logo {
+  position: relative;
+  height: 48px;
+  margin-bottom: 32px;
+}
+.logo-small,
+.logo-large {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.logo-small {
+  width: 33px;
+}
+.logo-large {
+  height: 32px;
+}
+
+.sidebar-nav {
+  padding: 0 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.sidebar-item:hover,
+.sidebar-item.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+.sidebar-item i {
+  font-size: 20px;
+  min-width: 20px;
+}
+.sidebar-group-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 16px 0 8px;
+  padding: 0 16px;
+}
 
 /* --- DISEÑO MÓVIL (DRAWER) --- */
 @media (max-width: 991px) {
@@ -78,14 +127,21 @@
   }
 
   /* En móvil, los textos siempre se ven (porque el menú ya está "abierto") */
-  .sidebar-text, .sidebar-group-header, .logo-large {
+  .sidebar-text,
+  .sidebar-group-header,
+  .logo-large {
     opacity: 1 !important;
     visibility: visible !important;
   }
-  .logo-small { display: none !important; }
+  .logo-small {
+    display: none !important;
+  }
 }
 
 .sidebar-overlay {
-  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px); z-index: 1999;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1999;
 }

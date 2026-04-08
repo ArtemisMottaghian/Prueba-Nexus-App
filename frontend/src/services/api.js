@@ -1,4 +1,5 @@
-const BASE_URL = process.env.VITE_API_URL
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+//const BASE_URL = process.env.VITE_API_URL
 
 export const ENDPOINTS = {
   auth: {
@@ -48,7 +49,5 @@ export const ENDPOINTS = {
       // 5. Acciones masivas
       bulkActions: `${BASE_URL}/api/vacancies/bulk-actions`,
     },
-    
   },
 };
-console.log(ENDPOINTS.recruitment.vacantes.list);
