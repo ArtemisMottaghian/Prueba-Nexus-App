@@ -1,15 +1,20 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+// Asegúrate de que las rutas a los logos son correctas según tu proyecto
 import logoNexus from '../../assets/logo-nexus.svg';
 import isotipoNexus from '../../assets/isotipo-nexus.svg';
 import './Sidebar.css';
 
 export default function Sidebar({ isOpen, onClose }) {
-  
-  // Función para cerrar sesión
+  const navigate = useNavigate();
+
+  // Función de Logout real (Traída de develop)
   const handleLogout = () => {
-    console.log("Cerrando sesión...");
-    // Aquí iría tu lógica: localStorage.clear(), auth.signOut(), etc.
-    onClose(); // Opcional: cerrar sidebar en móvil al desloguear
+    // Eliminamos el token del almacenamiento local
+    localStorage.removeItem('token');
+    // Cerramos el sidebar si está en móvil
+    if (onClose) onClose();
+    // Redirigimos al login
+    navigate('/login');
   };
 
   return (
@@ -99,14 +104,10 @@ export default function Sidebar({ isOpen, onClose }) {
                 <span className="sidebar-text">Clientes</span>
               </NavLink>
             </div>
-
+            
             {/* GRUPO: COMUNICACIÓN */}
             <div className="sidebar-group">
               <div className="sidebar-group-header">COMUNICACIÓN</div>
-              <a href="#" className="sidebar-item">
-                <i className="bi bi-envelope"></i>
-                <span className="sidebar-text">Inbox</span>
-              </a>
               <NavLink
                 to="/calendar"
                 className={({ isActive }) =>
@@ -118,32 +119,21 @@ export default function Sidebar({ isOpen, onClose }) {
                 <span className="sidebar-text">Calendario</span>
               </NavLink>
             </div>
-
-            {/* GRUPO: NEXUS ENGINE */}
-            <div className="sidebar-group">
-              <div className="sidebar-group-header">NEXUS ENGINE</div>
-              <a href="#" className="sidebar-item">
-                <i className="bi bi-stars"></i>
-                <span className="sidebar-text">Smart Match</span>
-              </a>
-              <a href="#" className="sidebar-item">
-                <i className="bi bi-robot"></i>
-                <span className="sidebar-text">Scraping & Fuentes</span>
-              </a>
-            </div>
           </nav>
 
           {/* FOOTER: Configuración y Logout */}
           <div className="sidebar-footer px-2 pb-4">
-            <NavLink 
-              to="/settings" 
-              className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
+            <NavLink
+              to="/settings"
+              className={({ isActive }) =>
+                `sidebar-item ${isActive ? 'active' : ''}`
+              }
               onClick={onClose}
             >
               <i className="bi bi-gear"></i>
               <span className="sidebar-text">Configuración</span>
             </NavLink>
-            
+
             <button
               className="sidebar-item logout-btn-link w-100 border-0 bg-transparent text-start"
               onClick={handleLogout}
@@ -156,4 +146,4 @@ export default function Sidebar({ isOpen, onClose }) {
       </aside>
     </>
   );
-}
+}>> develop

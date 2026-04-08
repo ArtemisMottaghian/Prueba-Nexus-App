@@ -4,7 +4,7 @@ const mapVacancyData = (v) => ({
   title: v.title,
   companyName: v.company_name,
   industry: v.sector || 'N/A',
-  location: v.location || 'Remote',
+  location: v.location || 'No especificada',
   status: v.status,
   // Convertimos la fecha de Python a algo legible
   time: v.published_at

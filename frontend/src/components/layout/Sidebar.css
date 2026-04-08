@@ -1,6 +1,38 @@
+/* ===================================================
+   LoginForm.css — NexusAI Login
+   Paleta: dark (#0d0d14), morado (#7c3aed / #9b5de5),
+   cyan acento (#00d4ff), texto blanco/gris
+   =================================================== */
+
+/* ---------- Variables ---------- */
+:root {
+  --clr-bg: #0d0d14;
+  --clr-surface: #13131f;
+  --clr-surface-2: #1a1a2e;
+  --clr-border: rgba(124, 58, 237, 0.25);
+  --clr-purple: #7c3aed;
+  --clr-purple-light: #9b5de5;
+  --clr-cyan: #00d4ff;
+  --clr-text: #e8e8f0;
+  --clr-text-muted: #7a7a9a;
+  --clr-error: #f87171;
+  --clr-error-bg: rgba(248, 113, 113, 0.08);
+  --clr-error-border: rgba(248, 113, 113, 0.45);
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+
+  --transition: 0.22s ease;
+}
+
 .ara-sidebar {
-  width: 80px;
-  background: linear-gradient(180deg, var(--color-purple-primary), var(--color-purple-secondary));
+  width: 80px; /* Vuelve a su tamaño pequeño por defecto */
+  background: linear-gradient(
+    180deg,
+    var(--color-purple-primary),
+    var(--color-purple-secondary)
+  );
   display: flex;
   flex-direction: column;
   padding: 24px 0;
@@ -22,7 +54,9 @@
   .logo-large {
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
+    transition:
+      opacity 0.3s ease,
+      visibility 0.3s ease;
   }
 
   .logo-small {
@@ -113,10 +147,14 @@
 /* Estilo específico para el botón de logout para que no parezca un botón HTML estándar */
 .logout-btn-link {
   outline: none;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
 }
 
 .logout-btn-link:hover {
-  color: #ff4d4d; /* Opcional: Un tono rojizo suave al hacer hover en logout */
+  color: #ff4d4d; /* Un tono rojizo suave al hacer hover en logout */
 }
 
 .sidebar-item i {
@@ -148,16 +186,18 @@
     left: 0;
   }
 
+  /* En móvil, los textos siempre se ven (porque el menú ya está "abierto") */
   .sidebar-text,
   .sidebar-group-header,
   .logo-large {
     opacity: 1 !important;
     visibility: visible !important;
   }
+
   .logo-small {
     display: none !important;
   }
-  
+
   .btn-close-sidebar {
     background: transparent;
     border: none;

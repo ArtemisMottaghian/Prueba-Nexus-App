@@ -17,7 +17,9 @@
 }
 
 .filter-select {
-  background-color: var(--bg-dark-elevated); /* Color sólido para evitar transparencias raras */
+  background-color: var(
+    --bg-dark-elevated
+  ); /* Color sólido para evitar transparencias raras */
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
@@ -63,13 +65,13 @@
   background: #ffffff;
   border-color: #e5e7eb;
 }
- 
+
 [data-bs-theme='light'] .filter-select {
   background-color: #f3f4f6;
   border-color: #e5e7eb;
   color: #111827;
 }
- 
+
 [data-bs-theme='light'] .filter-select option {
   background-color: #ffffff;
   color: #111827;

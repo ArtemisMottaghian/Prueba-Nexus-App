@@ -22,7 +22,11 @@
 
 /* Header */
 .modal-header {
-  background: linear-gradient(135deg, rgba(68, 37, 167, 0.4), rgba(124, 63, 255, 0.2));
+  background: linear-gradient(
+    135deg,
+    rgba(68, 37, 167, 0.4),
+    rgba(124, 63, 255, 0.2)
+  );
   border-bottom: 1px solid rgba(124, 63, 255, 0.2);
   padding: 24px 28px 20px;
   position: relative;
@@ -35,7 +39,12 @@
   left: 28px;
   right: 28px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(124, 63, 255, 0.4), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(124, 63, 255, 0.4),
+    transparent
+  );
 }
 
 .modal-title {
@@ -69,7 +78,9 @@
   opacity: 0.6;
   transition: opacity 0.2s;
 }
-.btn-close-white:hover { opacity: 1; }
+.btn-close-white:hover {
+  opacity: 1;
+}
 
 /* Body */
 .modal-body {
@@ -163,7 +174,9 @@
 }
 
 @media (max-width: 576px) {
-  .detail-grid { grid-template-columns: 1fr; }
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .detail-field {
@@ -174,7 +187,9 @@
   border: 1px solid #374151;
   border-radius: 12px;
   padding: 14px 16px;
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
 }
 
 .detail-field:hover {
@@ -422,8 +437,12 @@
   overflow-y: auto;
 }
 
-.tab-content .tab-pane::-webkit-scrollbar { width: 5px; }
-.tab-content .tab-pane::-webkit-scrollbar-track { background: transparent; }
+.tab-content .tab-pane::-webkit-scrollbar {
+  width: 5px;
+}
+.tab-content .tab-pane::-webkit-scrollbar-track {
+  background: transparent;
+}
 .tab-content .tab-pane::-webkit-scrollbar-thumb {
   background: rgba(124, 63, 255, 0.3);
   border-radius: 3px;
@@ -439,8 +458,12 @@
   }
 }
 
-.modal-body-scroll::-webkit-scrollbar { width: 6px; }
-.modal-body-scroll::-webkit-scrollbar-track { background: transparent; }
+.modal-body-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.modal-body-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
 .modal-body-scroll::-webkit-scrollbar-thumb {
   background: rgba(124, 63, 255, 0.3);
   border-radius: 3px;
@@ -454,13 +477,23 @@
 }
 
 [data-bs-theme='light'] .modal-header {
-  background: linear-gradient(135deg, rgba(124, 63, 255, 0.08), rgba(68, 37, 167, 0.05));
+  background: linear-gradient(
+    135deg,
+    rgba(124, 63, 255, 0.08),
+    rgba(68, 37, 167, 0.05)
+  );
   border-bottom-color: #e5e7eb;
 }
 
-[data-bs-theme='light'] .modal-title { color: #111827; }
-[data-bs-theme='light'] .modal-subtitle { color: #6b7280; }
-[data-bs-theme='light'] .modal-body { background: #ffffff; }
+[data-bs-theme='light'] .modal-title {
+  color: #111827;
+}
+[data-bs-theme='light'] .modal-subtitle {
+  color: #6b7280;
+}
+[data-bs-theme='light'] .modal-body {
+  background: #ffffff;
+}
 
 [data-bs-theme='light'] .detail-field,
 [data-bs-theme='light'] .vacancy-description,
@@ -470,9 +503,13 @@
   border-color: #e5e7eb;
 }
 
-[data-bs-theme='light'] .field-value { color: #111827; }
+[data-bs-theme='light'] .field-value {
+  color: #111827;
+}
 [data-bs-theme='light'] .vacancy-description p,
-[data-bs-theme='light'] .seguimiento-card p { color: #374151; }
+[data-bs-theme='light'] .seguimiento-card p {
+  color: #374151;
+}
 
 [data-bs-theme='light'] .select-status-inline {
   background: #f3f4f6;
@@ -480,15 +517,28 @@
   color: #111827;
 }
 
-[data-bs-theme='light'] .nav-tabs { border-bottom-color: #e5e7eb; }
-[data-bs-theme='light'] .nav-tabs .nav-link { color: #6b7280; }
-[data-bs-theme='light'] .nav-tabs .nav-link:hover { color: #374151; }
-[data-bs-theme='light'] .nav-tabs .nav-link.active { color: #7c3fff; }
+[data-bs-theme='light'] .nav-tabs {
+  border-bottom-color: #e5e7eb;
+}
+[data-bs-theme='light'] .nav-tabs .nav-link {
+  color: #6b7280;
+}
+[data-bs-theme='light'] .nav-tabs .nav-link:hover {
+  color: #374151;
+}
+[data-bs-theme='light'] .nav-tabs .nav-link.active {
+  color: #7c3fff;
+}
 
-[data-bs-theme='light'] .modal-footer { background: #f9fafb; border-top-color: #e5e7eb; }
+[data-bs-theme='light'] .modal-footer {
+  background: #f9fafb;
+  border-top-color: #e5e7eb;
+}
 [data-bs-theme='light'] .modal-footer .btn-secondary {
   background: #f3f4f6;
   border-color: #e5e7eb;
   color: #374151;
 }
-[data-bs-theme='light'] .btn-close-white { filter: none; }
+[data-bs-theme='light'] .btn-close-white {
+  filter: none;
+}

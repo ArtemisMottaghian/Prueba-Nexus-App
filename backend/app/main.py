@@ -16,8 +16,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         #server
-        f"{settings.SERVER_IP}:5173", 
-        f"{settings.SERVER_IP}:3000",
+        "http://nexus.ara-tech.es",
+        f"http://{settings.SERVER_IP}",
         
         #local
         "http://localhost:5173",
