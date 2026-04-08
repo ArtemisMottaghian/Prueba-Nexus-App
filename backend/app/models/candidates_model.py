@@ -21,7 +21,7 @@ class Candidate(Base):
     skills = Column(Text, nullable=True, index=True) 
     
     status = Column(
-        ENUM(CandidateStatus, name="candidate_status", create_type=False),
+        ENUM(CandidateStatus, name="candidate_status", create_type=True),
         server_default="active",
         nullable=True,
         index=True 

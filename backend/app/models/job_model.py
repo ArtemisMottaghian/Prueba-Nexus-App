@@ -42,7 +42,7 @@ class JobOffer(Base):
     work_modality = Column(String(50))
 
     status = Column(
-        ENUM(OfferStatus, name="offer_status", create_type=False),
+        ENUM(OfferStatus, name="offer_status", create_type=True),
         default=OfferStatus.detected
     )
 
