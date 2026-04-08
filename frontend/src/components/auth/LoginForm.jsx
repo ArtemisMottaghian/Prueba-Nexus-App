@@ -53,8 +53,8 @@ export default function LoginForm() {
     setCargando(true);
 
     try {
-      // Autenticación con backend
-      const response = await fetch('http://localhost:4000/api/auth/login', {
+      // Autenticación con backend (Corregido al puerto 8000 y ruta correcta)
+      const response = await fetch('http://localhost:8000/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim(), password }),
@@ -71,7 +71,7 @@ export default function LoginForm() {
         // Mostrar error del backend (si lo hay) o un mensaje genérico
         setErrores({ backend: data.message || 'Credenciales incorrectas' });
       }
-    } catch (error) {
+    } catch (_error) { // Corregido con guion bajo para el Linter
       setErrores({ backend: 'Error de conexión con el servidor' });
     } finally {
       setCargando(false);
