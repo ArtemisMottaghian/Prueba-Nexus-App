@@ -1,27 +1,20 @@
 import asyncio
 import random
 import urllib.parse
-# Ajuste de rutas para la estructura de carpetas
 from app.db.session import AsyncSessionLocal
 from .browser import get_browser_context
 from .scraper_repository import upsert_scraped_candidate
 from app.core.scraper_linkedin_candidatos_config import KEYWORDS, SECTORS, LOCATIONS, HEADLESS_MODE, MAX_PROFILES_PER_SEARCH
 
 async def extract_profile_data(page, url, keyword, search_location):
-    # Si topamos con una empresa la salta
+    # Si topamos con una empresa la salta 
     if '/company/' in url or '/school/' in url:
         return None
     
-    # Entra al perfil y obtiene la información visible publicamente
     print (f"Entrando al perfil: {url}")
     try:
-        #Cogemos el perfil y que cargue el DOM
-        await page.goto(url, wait_until="domcontentloaded", timeout=20000)
-        
-        # Scroll para cargar secciones ocultas
-        await page.mouse.wheel(delta_x=0, delta_y=800)
-        await asyncio.sleep(1.5)
-        await page.mouse.wheel(delta_x=0, delta_y=800)
+        # Carga el DOM de la página
+        await page.goto(url, wait_until="domcontentloaded", timeout=30000)
         await asyncio.sleep(2)
 
         page_title = await page.title()
@@ -31,7 +24,7 @@ async def extract_profile_data(page, url, keyword, search_location):
         name_element = await page.query_selector('h1.text-heading-xlarge, h1.top-card-layout__title, h1')
         if name_element:
             full_name = await name_element.inner_text()
-
+        
         if not name_element or not full_name.strip() or full_name == "Candidato LinkedIn":
             if page_title and '-' in page_title:
                 full_name = page_title.split('-')[0]
@@ -39,7 +32,7 @@ async def extract_profile_data(page, url, keyword, search_location):
                 full_name = page_title.split('|')[0]
 
         full_name = full_name.strip()
-
+        
         # Filtrar que las empresas no entren por el nombre
         word_trap = [
             ' s.l.', ' s.a.', ' inc', ' sl', ' sa', ' ltd', ' llc', 
@@ -51,10 +44,9 @@ async def extract_profile_data(page, url, keyword, search_location):
 
         name_lower = full_name.lower()
         if any(word in name_lower for word in word_trap):
-            print(f"Saltando {url} Parece ser una empresa: {full_name}")
+            print(f" Saltando {url} Parece ser una empresa: {full_name}")
             return None
             
-        #Limpiamos el nombre
         name_parts = full_name.strip().split(' ', 1)
         first_name = name_parts[0]
         last_name = name_parts[1] if len(name_parts) > 1 else ""
@@ -121,31 +113,61 @@ async def extract_profile_data(page, url, keyword, search_location):
         full_experience = None 
         
         try:
-            # 1. Buscamos la caja entera usando query_selector (que funciona perfecto con await)
-            exp_section = await page.query_selector('section:has(h2:has-text("Experiencia")), section:has(h2:has-text("Experience")), div:has(h2:has-text("Experiencia"))')
-            
-            if exp_section:
-                raw_text = await exp_section.inner_text()
+            # Inyectamos el DOM Walker directamente. Si bajó la página, esto lo encontrará.
+            texto_crudo = await page.evaluate('''() => {
+                // 1. Buscamos cualquier elemento que contenga el título Experiencia
+                const headers = Array.from(document.querySelectorAll('h2, h3, span, div.pvs-header__title'));
+                const expH2 = headers.find(h => {
+                    const txt = h.innerText ? h.innerText.toLowerCase().trim() : '';
+                    return txt === 'experiencia' || txt === 'experience';
+                });
                 
-                # Limpiamos el texto resultante
-                lineas = [linea.strip() for linea in raw_text.split('\n') if linea.strip()]
+                if (!expH2) return null;
+
+                // 2. Buscamos la "tarjeta" principal que engloba toda la experiencia
+                let card = expH2.closest('.artdeco-card') || expH2.closest('section');
                 
-                # Borramos la palabra "Experiencia" del principio
-                if lineas and (lineas[0].lower() == "experiencia" or lineas[0].lower() == "experience"):
-                    lineas.pop(0)
+                // Si no hay tarjeta clara, subimos 3 niveles genealógicos
+                if (!card && expH2.parentElement && expH2.parentElement.parentElement) {
+                    card = expH2.parentElement.parentElement.parentElement;
+                }
+
+                if (!card) return null;
+
+                // 3. Buscamos los bloques de trabajos individuales
+                const items = card.querySelectorAll('li.artdeco-list__item, div[componentkey*="entity-collection-item"]');
                 
-                full_experience = "\n".join(lineas)
-            else:
-                # Plan B: Extraer los bloques de trabajo uno a uno
-                exp_items = await page.query_selector_all('li.experience-item, li.profile-section-card')
-                if exp_items:
+                if (items && items.length > 0) {
+                    return Array.from(items).map(item => item.innerText).join('|||');
+                }
+                
+                // 4. Plan de emergencia: Devolver todo el texto de la tarjeta
+                return card.innerText;
+            }''')
+
+            # Procesamos lo que haya encontrado JavaScript
+            if texto_crudo:
+                if '|||' in texto_crudo:
                     experiencias_limpias = []
-                    for item in exp_items:
-                        texto = await item.inner_text()
-                        lineas = [linea.strip() for linea in texto.split('\n') if linea.strip()]
-                        experiencias_limpias.append(" • ".join(lineas)) 
+                    for bloque in texto_crudo.split('|||'):
+                        lineas = []
+                        for linea in bloque.split('\n'):
+                            l_limpia = linea.strip()
+                            basura = ['mostrar más', 'ver más', '...', 'aptitudes:', 'skills:', 'ver todas']
+                            if l_limpia and l_limpia.lower() not in basura:
+                                lineas.append(l_limpia)
+                        if lineas:
+                            experiencias_limpias.append(" • ".join(lineas))
                     full_experience = "\n\n".join(experiencias_limpias)
-                    
+                else:
+                    lineas = []
+                    for linea in texto_crudo.split('\n'):
+                        l_limpia = linea.strip()
+                        basura = ['experiencia', 'experience', 'mostrar más', 'ver más', '...']
+                        if l_limpia and l_limpia.lower() not in basura:
+                            lineas.append(l_limpia)
+                    full_experience = "\n".join(lineas) if lineas else None
+
         except Exception as e:
             print(f"   -> Aviso al procesar experiencia: {e}")
 
@@ -155,56 +177,10 @@ async def extract_profile_data(page, url, keyword, search_location):
         preview_exp = full_experience[:80].replace("\n", " ") + "..." if full_experience else "Null"
         print(f"   -> Experiencia extraída: {preview_exp}")
 
-        # Extraer descripción / titular
-        desc_element = await page.query_selector('div.text-body-medium, h2.top-card-layout__headline')
-        description = await desc_element.inner_text() if desc_element else "Sin descripción"
-
-        skill_list = []
-        try:
-            # 1. Navegamos a la pestaña de aptitudes
-            clean_url = url.rstrip("/")
-            skills_url = f"{clean_url}/details/skills/"
-
-            print(f" -> Navegando a la sección de aptitudes: {skills_url}")
-            await page.goto(skills_url, wait_until="domcontentloaded", timeout=15000)
-
-            # 2. Scroll para forzar la carga de la lista completa
-            await page.mouse.wheel(0, 800)
-            await asyncio.sleep(1)
-            await page.mouse.wheel(0, 800)
-            await asyncio.sleep(1.5)
-
-            # 3. Buscamos TODOS los contenedores que tengan "profile.skill" en su componentkey
-            # Esto es a prueba de balas contra los cambios de diseño de LinkedIn
-            skill_containers = await page.query_selector_all(
-                'div[componentkey*="profile.skill"]'
-            )
-
-            for container in skill_containers:
-                # 4. Por cada contenedor, cogemos su primer párrafo <p> (que es donde vimos que está el título)
-                title_el = await container.query_selector("p")
-                if title_el:
-                    skill_text = await title_el.inner_text()
-                    # A veces hay párrafos vacíos o saltos de línea, nos aseguramos de que haya texto
-                    if skill_text and skill_text.strip():
-                        skill_list.append(skill_text.strip())
-
-            # 5. Limpiamos posibles duplicados
-            skill_list = list(dict.fromkeys(skill_list))
-
-            print(
-                f" -> ¡Se han extraído {len(skill_list)} aptitudes reales de la página!"
-            )
-
-        except Exception as e:
-            print(f" -> Aviso al extraer skills en la página de detalles: {e}")
-
-        # Si encontramos skills las unimos con comas, si falla, usamos la keyword
-        final_skills = ", ".join(skill_list) if skill_list else keyword
-
-        # Preparación de datos
+        final_email = real_email.strip() if real_email else fake_email
+        
         return{
-           "first_name": first_name.strip(),
+            "first_name": first_name.strip(),
             "last_name": last_name.strip(),
             "email": final_email,
             "phone": None,
@@ -212,9 +188,8 @@ async def extract_profile_data(page, url, keyword, search_location):
             "source": "LinkedIn",
             "experience": full_experience, 
             "linkedin_url": url,
-            "cv_url": None,
-            "skills": final_skills,
-            "phone": None,
+            "cv_url": None, 
+            "skills": keyword,
             "status": "active",
             "notes": None
         }
@@ -234,18 +209,18 @@ async def run_scraper(keywords: list, sectors: list, locations:list, headless: b
     browser = None
     context = None
 
-    try:
+    try: 
         pw, browser, context = await get_browser_context(headless=headless)
         # Si el navegador no se inicio bien, detemeos el script
         if context is None:
             print("Error no se pudo cargar el navegador desde browse.py")
             return
-
+        
         page = await context.new_page()
 
         for loc in locations:
             for sector in sectors:
-                for kw in keywords:
+                for kw in keywords: 
                     #Busqueda en Google
                     query = f'site:es.linkedin.com/in/ "{kw}" "{sector}" "{loc}"'
                     print (f"Buscando: '{kw}' en '{sector}' en '{loc}'")
@@ -322,4 +297,4 @@ if __name__ == "__main__":
         sectors= SECTORS,
         locations=LOCATIONS,
         headless= HEADLESS_MODE
-    ))
+    ))                
