@@ -18,6 +18,7 @@ from app.services.scrapers.linkedin.linkedin_runner import extract_linked
 from app.services.scrapers.adzuna import extract_adzuna
 from app.services.scrapers.infojobs.infojobs_runner import extract_infojobs
 from app.services.enrichment_service import search_in_dropcontact, search_with_phantombuster
+from app.services.scraper_logs_service import log_scraper_error
 
 async def run_scrapers():
     print("Comenzando busqueda de ofertas...")
@@ -33,8 +34,15 @@ async def run_scrapers():
 
     raw_offers = []
     # Volcamos todos los resultados en raw_offer
-    for result in results:
-        if isinstance(result, list):
+    for i, result in enumerate(results):
+        if isinstance(result, Exception):
+            scraper_names = ["adzuna", "zenrows", "linkedin", "infojobs"]
+            name = scraper_names[i] if i < len(scraper_names) else f"scraper_{i}"
+            await log_scraper_error(
+                error_code=f"SCRAPER_{name.upper()}_CRITICAL",
+                message=f"scraper={name} | stage=gather | exc={result}"
+            )
+        elif isinstance(result, list):
             raw_offers.extend(result)
 
     print(f"OFERTAS TOTALES RECOGIDAS: {len(raw_offers)}")
@@ -172,6 +180,10 @@ async def run_scrapers():
 
         except Exception as e:
             await session.rollback()
+            await log_scraper_error(
+                error_code="SCRAPPER_ORCHESTRATOR_DB",
+                message=f"stage=db_save | exc={e}"
+            )
             print("❌ Error crítico al guardar en base de datos")
             import traceback
             traceback.print_exc()
