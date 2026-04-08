@@ -92,20 +92,45 @@ async def extract_profile_data(page, url, keyword, search_location):
 
         skill_list = []
         try:
-            skill_elements = await page.query_selector_all(
-                'a[data-field="skill_card_pass_through"] span[aria-hidden="true"], '
-                'div[data-view-name="profile-component-entity"] span.t-bold span[aria-hidden="true"]'
+            # 1. Navegamos a la pestaña de aptitudes
+            clean_url = url.rstrip("/")
+            skills_url = f"{clean_url}/details/skills/"
+
+            print(f" -> Navegando a la sección de aptitudes: {skills_url}")
+            await page.goto(skills_url, wait_until="domcontentloaded", timeout=15000)
+
+            # 2. Scroll para forzar la carga de la lista completa
+            await page.mouse.wheel(0, 800)
+            await asyncio.sleep(1)
+            await page.mouse.wheel(0, 800)
+            await asyncio.sleep(1.5)
+
+            # 3. Buscamos TODOS los contenedores que tengan "profile.skill" en su componentkey
+            # Esto es a prueba de balas contra los cambios de diseño de LinkedIn
+            skill_containers = await page.query_selector_all(
+                'div[componentkey*="profile.skill"]'
             )
 
-            for el in skill_elements:
-                skill_text = await el.inner_text()
-                if skill_text and skill_text.strip():
-                    skill_list.append(skill_text.strip())
+            for container in skill_containers:
+                # 4. Por cada contenedor, cogemos su primer párrafo <p> (que es donde vimos que está el título)
+                title_el = await container.query_selector("p")
+                if title_el:
+                    skill_text = await title_el.inner_text()
+                    # A veces hay párrafos vacíos o saltos de línea, nos aseguramos de que haya texto
+                    if skill_text and skill_text.strip():
+                        skill_list.append(skill_text.strip())
 
+            # 5. Limpiamos posibles duplicados
             skill_list = list(dict.fromkeys(skill_list))
-        except Exception as e:
-            print(f"Error al extraer skill: {e}")
 
+            print(
+                f" -> ¡Se han extraído {len(skill_list)} aptitudes reales de la página!"
+            )
+
+        except Exception as e:
+            print(f" -> Aviso al extraer skills en la página de detalles: {e}")
+
+        # Si encontramos skills las unimos con comas, si falla, usamos la keyword
         final_skills = ", ".join(skill_list) if skill_list else keyword
 
         # Preparación de datos
