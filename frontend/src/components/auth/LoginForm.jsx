@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Para redirigir tras login exitoso
+import { useNavigate } from 'react-router-dom';
 import './LoginForm.css';
 
 // Funciones de validación
@@ -21,7 +21,7 @@ export default function LoginForm() {
   const [password, setPassword] = useState('');
   const [errores, setErrores] = useState({});
   const [tocado, setTocado] = useState({});
-  const [cargando, setCargando] = useState(false); // Estado para mostrar carga durante autenticación
+  const [cargando, setCargando] = useState(false);
   const navigate = useNavigate();
 
   const handleBlur = (campo) => {
@@ -53,7 +53,7 @@ export default function LoginForm() {
     setCargando(true);
 
     try {
-      // Autenticación con backend (Corregido al puerto 8000 y ruta correcta)
+      // Autenticación real con backend (FastAPI puerto 8000)
       const response = await fetch('http://localhost:8000/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -63,7 +63,7 @@ export default function LoginForm() {
       const data = await response.json();
 
       if (response.ok) {
-        // Almacenar token en localStorage
+        // Almacenar token real en localStorage
         localStorage.setItem('token', data.token);
         // Redirigir al dashboard
         navigate('/');
@@ -72,6 +72,7 @@ export default function LoginForm() {
         setErrores({ backend: data.message || 'Credenciales incorrectas' });
       }
     } catch {
+      // Manejo de error si el backend está apagado (Linter OK)
       setErrores({ backend: 'Error de conexión con el servidor' });
     } finally {
       setCargando(false);
@@ -88,7 +89,6 @@ export default function LoginForm() {
 
       <div className="login-card">
         <div className="login-card__logo">
-          {/* ... Tu SVG de logo ... */}
           <span className="login-card__logo-text">
             Nexus<span className="login-card__logo-accent">AI</span>
           </span>
@@ -105,6 +105,8 @@ export default function LoginForm() {
             <div
               className={`login-form__input-wrapper ${errores.email && tocado.email ? 'login-form__input-wrapper--error' : ''}`}
             >
+              {/* Icono de correo recuperado de tu rama demo */}
+              <i className="bi bi-envelope login-form__input-icon"></i>
               <input
                 className="login-form__input"
                 type="email"
@@ -124,6 +126,8 @@ export default function LoginForm() {
             <div
               className={`login-form__input-wrapper ${errores.password && tocado.password ? 'login-form__input-wrapper--error' : ''}`}
             >
+              {/* Icono de candado recuperado de tu rama demo */}
+              <i className="bi bi-lock login-form__input-icon"></i>
               <input
                 className="login-form__input"
                 type="password"
@@ -153,7 +157,21 @@ export default function LoginForm() {
             type="submit"
             disabled={cargando}
           >
-            <span>{cargando ? 'Entrando...' : 'Iniciar sesión'}</span>
+            {/* Botón dinámico recuperado de tu rama demo */}
+            {cargando ? (
+              <>
+                <span
+                  className="spinner-border spinner-border-sm me-2"
+                  role="status"
+                ></span>
+                <span>Entrando...</span>
+              </>
+            ) : (
+              <>
+                <span>Iniciar sesión</span>
+                <i className="bi bi-arrow-right-short ms-1"></i>
+              </>
+            )}
           </button>
         </form>
       </div>
