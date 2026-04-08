@@ -9,10 +9,12 @@ from app.services import users_service
 from app.core.security import verify_password
 from app.core.jwt import create_access_token
 from app.core.config import settings
+from app.schemas.users_schemas import TokenResponse
+
 
 router = APIRouter(tags=["Autenticación"])
 
-@router.post("")
+@router.post("",response_model=TokenResponse)
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db)
@@ -35,16 +37,6 @@ async def login_for_access_token(
 
     return {"access_token": access_token, "token_type": "bearer"}
 
-# --- Google OAuth ---
-GOOGLE_AUTH_URL="https://accounts.google.com/o/oauth2/v2/auth"
-GOOGLE_TOKEN_URL="https://oauth2.googleapis.com/token"
-GOOGLE_USERINFO_URL="https://www.googleapis.com/oauth2/v3/userinfo"
-
-GOOGLE_SCOPES = [
-    "openid",
-    "https://www.googleapis.com/auth/userinfo.email",
-    "https://www.googleapis.com/auth/userinfo.profile",
-]
 
 @router.get("/google/login")
 def google_login():
@@ -53,12 +45,12 @@ def google_login():
         "client_id": settings.GOOGLE_CLIENT_ID,
         "redirect_uri": settings.GOOGLE_REDIRECT_URI,
         "response_type": "code",
-        "scope": " ".join(GOOGLE_SCOPES),
+        "scope": " ".join(settings.GOOGLE_SCOPES),
         "access_type": "offline",
         "prompt": "consent",
     }
     query = "&".join(f"{k}={v}" for k, v in params.items())
-    return RedirectResponse(f"{GOOGLE_AUTH_URL}?{query}")
+    return RedirectResponse(f"{settings.GOOGLE_AUTH_URL}?{query}")
 
 @router.get("/google/callback")
 async def google_callback(code: str, db:AsyncSession = Depends(get_db)):
@@ -67,7 +59,7 @@ async def google_callback(code: str, db:AsyncSession = Depends(get_db)):
     # Codigo -> Tokens
     async with httpx.AsyncClient() as client:
         token_res = await client.post(
-            GOOGLE_TOKEN_URL,
+            settings.GOOGLE_TOKEN_URL,
             data={
                 "code": code,
                 "client_id": settings.GOOGLE_CLIENT_ID,
@@ -85,7 +77,7 @@ async def google_callback(code: str, db:AsyncSession = Depends(get_db)):
     # Access token -> datos del usuario
     async with httpx.AsyncClient() as client:
         userinfo_res = await client.get(
-            GOOGLE_USERINFO_URL,
+            settings.GOOGLE_USERINFO_URL,
             headers={"Authorization": f"Bearer {tokens['access_token']}"},
         )
     
