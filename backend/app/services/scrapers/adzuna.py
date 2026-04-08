@@ -1,6 +1,7 @@
 import asyncio
 import httpx
 from app.core.config import settings
+from app.services.scraper_logs_service import log_scraper_error
 
 async def extract_adzuna() -> list[dict]:
 
@@ -27,57 +28,68 @@ async def extract_adzuna() -> list[dict]:
                 response.raise_for_status()
                 data = response.json()
             except Exception as e:
+                await log_scraper_error(
+                    error_code="SCRAPER_ADZUNA_HTTP",
+                    message=f"scraper=adzuna | stage=request | category={category} | exc={e}"
+                )
                 print(f"Error al conectar con Adzuna: {str(e)}")
                 continue
 
             for job in data.get("results", []):
-                external_id = str(job.get("id"))
-                url_text = str(job.get("redirect_url"))
+                try:
+                    external_id = str(job.get("id"))
+                    url_text = str(job.get("redirect_url"))
 
-                if external_id in ids_watched or url_text in urls_watched:
+                    if external_id in ids_watched or url_text in urls_watched:
+                        continue
+
+                    job_title = job.get("title", "")
+                    job_description = job.get("description", "")
+                    job_ubication = job.get("ubication", "")
+                    lead_description = f"{job_title} {job_description} {job_ubication}".lower()
+                    work_modality = None
+
+                    if any(modality in lead_description for modality in ["híbrid", "hibrid", "hybrid"]):
+                        work_modality = "Híbrido"
+                    elif any(modality in lead_description for modality in ["remoto", "teletrabajo", "100% remote", "fully remote"]):
+                        work_modality = "Remoto"
+                    elif any(modality in lead_description for modality in ["presencial", "on-site", "onsite", "en oficina", "in office"]):
+                        work_modality = "Presencial"
+
+                    raw_lead = {
+                        "portal_id": 1,
+                        "external_id": external_id,
+                        "title": job.get("title", "Sin título"),
+                        "company_name": job.get("company", {}).get(
+                            "display_name", "Empresa Oculta"),
+                        'location': job.get("location", {}).get(
+                            "display_name", "Sin ubicación"
+                        ),
+                        "offer_url": url_text,
+                        "job_description": job.get("description"),
+                        "published_at": job.get("created"),
+                        "sector": job.get("category", {}).get("label"),
+                        "salary_min": job.get("salary_min"),
+                        "salary_max": job.get("salary_max"),
+                        "work_modality": work_modality,
+                        "contract_type": job.get("contract_type"),
+                        "contract_time": job.get("contract_time"),
+
+                        "recruiter_name": None,
+                        "recruiter_email": None
+                    }
+
+                    raw_leads.append(raw_lead)
+                    ids_watched.add(external_id)
+                    urls_watched.add(url_text)
+
+                    url_text = str(job.get("redirect_url"))
+                except Exception as e:
+                    await log_scraper_error(
+                        error_code="SCRAPER_ADZUNA_PARSE",
+                        message=f"scraper=adzuna | stage=parse | external_id={external_id} | exc={e}"
+                    )
                     continue
-
-                job_title = job.get("title", "")
-                job_description = job.get("description", "")
-                job_ubication = job.get("ubication", "")
-                lead_description = f"{job_title} {job_description} {job_ubication}".lower()
-                work_modality = None
-
-                if any(modality in lead_description for modality in ["híbrid", "hibrid", "hybrid"]):
-                    work_modality = "Híbrido"
-                elif any(modality in lead_description for modality in ["remoto", "teletrabajo", "100% remote", "fully remote"]):
-                    work_modality = "Remoto"
-                elif any(modality in lead_description for modality in ["presencial", "on-site", "onsite", "en oficina", "in office"]):
-                    work_modality = "Presencial"
-
-                raw_lead = {
-                    "portal_id": 1,
-                    "external_id": external_id,
-                    "title": job.get("title", "Sin título"),
-                    "company_name": job.get("company", {}).get(
-                        "display_name", "Empresa Oculta"),
-                    'location': job.get("location", {}).get(
-                        "display_name", "Sin ubicación"
-                    ),
-                    "offer_url": url_text,
-                    "job_description": job.get("description"),
-                    "published_at": job.get("created"),
-                    "sector": job.get("category", {}).get("label"),
-                    "salary_min": job.get("salary_min"),
-                    "salary_max": job.get("salary_max"),
-                    "work_modality": work_modality,
-                    "contract_type": job.get("contract_type"),
-                    "contract_time": job.get("contract_time"),
-
-                    "recruiter_name": None,
-                    "recruiter_email": None
-                }
-
-                raw_leads.append(raw_lead)
-                ids_watched.add(external_id)
-                urls_watched.add(url_text)
-
-                url_text = str(job.get("redirect_url"))
 
     return raw_leads
 

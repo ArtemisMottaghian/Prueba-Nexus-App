@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     DB_PORT: str
     DB_NAME: str
 
+    SERVER_IP: str
+
     PEPPER: str
     SECRET_KEY: str
     ALGORITHM: str
@@ -41,6 +43,17 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
     GOOGLE_REDIRECT_URI: str = ""
+
+    # URLs de Google OAuth
+    GOOGLE_AUTH_URL: str = "https://accounts.google.com/o/oauth2/v2/auth"
+    GOOGLE_TOKEN_URL: str = "https://oauth2.googleapis.com/token"
+    GOOGLE_USERINFO_URL: str = "https://www.googleapis.com/oauth2/v3/userinfo"
+    GOOGLE_SCOPES: list = [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email",
+        "https://www.googleapis.com/auth/userinfo.profile",
+    ]
+
 
     LINKEDIN_SESSION_COOKIE:str
     LINKEDIN_USER_AGENT:str

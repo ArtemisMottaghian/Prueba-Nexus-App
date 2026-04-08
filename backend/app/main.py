@@ -1,19 +1,29 @@
 from fastapi import FastAPI
-import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 from app.api.routes.main_router import api_router
 
 from app.db.session import engine
 from app.db.connection import Base
 
 import app.models
+from app.core.config import settings
 
 # Inicializacion
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"], 
+    allow_origins=[
+        #server
+        f"{settings.SERVER_IP}:5173", 
+        f"{settings.SERVER_IP}:3000",
+        
+        #local
+        "http://localhost:5173",
+        "http://localhost:3000",
+    ],
+
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

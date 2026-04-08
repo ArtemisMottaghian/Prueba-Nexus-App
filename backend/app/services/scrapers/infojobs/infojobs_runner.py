@@ -7,6 +7,7 @@ from datetime import datetime
 import sys
 import os 
 from selenium.webdriver.common.by import By
+from app.services.scraper_logs_service import log_scraper_error
 
 # --- PARCHE DE RUTAS ROBUSTO ---
 directorio_actual = os.path.dirname(os.path.abspath(__file__))
@@ -93,6 +94,10 @@ async def extract_infojobs():
                         
                     except Exception as e:
                         print(f"      [Reintento API {intentos_api + 1}/3] Fallo al leer página {page}: {e}")
+                        await log_scraper_error(
+                            error_code="SCRAPER_INFOJOBS_CAPTCHA",
+                            message=f"scraper=infojobs | stage=api_page | page={page} | kw={kw} | attempt={intentos_api + 1} | exc={e}"
+                        )
                         driver = restart_nav(driver)
                         intentos_api += 1
 
@@ -203,11 +208,19 @@ async def extract_infojobs():
 
                     except Exception as e:
                         print(f"      [!] Error procesando la oferta '{title}': {e}")
+                        await log_scraper_error(
+                            error_code="SCRAPER_INFOJOBS_OFFER",
+                            message=f"scraper=infojobs | stage=parse | title={title} | exc={e}"
+                        )
                         continue # Pasamos a la siguiente oferta sin romper la página
                     
     except Exception as e:
         import traceback
         print(f"Error crítico en el scrapeo de InfoJobs: {e}")
+        await log_scraper_error(
+            error_code="SCRAPER_INFOJOBS_CRITICAL",
+            message=f"scraper=infojobs | stage=critical | exc={e}"
+        )
         traceback.print_exc()
     finally:
         if driver:

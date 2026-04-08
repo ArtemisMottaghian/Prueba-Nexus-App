@@ -190,6 +190,16 @@ CREATE TABLE interviews (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Tabla para registrar los errores 
+CREATE TABLE error_logs (
+    id BIGSERIAL PRIMARY KEY,
+    error_code VARCHAR(100) NOT NULL,
+    message TEXT NOT NULL,
+    is_resolved BOOLEAN DEFAULT FALSE,
+    occurred_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+COMMENT ON TABLE error_logs IS 'Registro de errores del sistema';
+
 -- FUNCIONES Y TRIGGERS
 
 -- Funcion para actualizar la fecha de modificacion automaticamente
@@ -289,6 +299,11 @@ CREATE INDEX idx_clients_company ON clients(company_name);
 CREATE INDEX idx_candidates_skills ON candidates(skills);
 CREATE INDEX idx_candidates_email ON candidates(email);
 
+-- Indices para logs de errores
+CREATE INDEX idx_error_logs_occurred_at ON error_logs(occurred_at DESC);
+CREATE INDEX idx_error_logs_is_resolved ON error_logs(is_resolved);
+CREATE INDEX idx_error_logs_error_code ON error_logs(error_code);
+
 -- Vista para el resumen de candidaturas
 CREATE OR REPLACE VIEW v_application_metrics AS
 SELECT
@@ -302,3 +317,14 @@ SELECT
 FROM job_applications ja
 JOIN candidates c ON ja.candidate_id = c.id
 JOIN job_offers jo ON ja.offer_id = jo.id;
+
+-- Vista para ver los errores pendientes de resolver
+CREATE OR REPLACE VIEW v_pending_errors AS
+SELECT
+    id,
+    error_code,
+    message,
+    occurred_at
+FROM error_logs
+WHERE is_resolved = FALSE
+ORDER BY occurred_at DESC;

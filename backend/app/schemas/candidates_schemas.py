@@ -15,11 +15,11 @@ class CandidateBase(BaseModel):
     first_name: str = Field(..., min_length=2, max_length=50)
     last_name: str = Field(..., min_length=2, max_length=50)
     email: EmailStr # valida formato de correo
-    phone: Optional[str] = None
+    phone: Optional[str] = Field(None, pattern=r'^\+?[\d\s\-]{7,20}$')
     linkedin_url: Optional[HttpUrl] = None # Valida que sea una URL válida
     cv_url: Optional[HttpUrl] = None
-    skills: Optional[str] = None
-    notes: Optional[str] = None
+    skills: Optional[str] = Field(None, max_length=500)
+    notes: Optional[str] = Field(None, max_length=1000)
     status: Optional[CandidateStatus] = CandidateStatus.active
 
 
@@ -34,8 +34,8 @@ class CandidateUpdate(BaseModel):
     phone: Optional[str] = Field(None, pattern=r'^\+?[\d\s\-]{7,20}$')  # Formato internacional de teléfono
     linkedin_url: Optional[HttpUrl] = None # Valida que sea una URL válida
     cv_url: Optional[HttpUrl] = None
-    skills: Optional[str] = None
-    notes: Optional[str] = None
+    skills: Optional[str] = Field(None, max_length=500)
+    notes: Optional[str] = Field(None, max_length=1000)
     status: Optional[CandidateStatus] = None
 
 # Salida (CandidateOut / CandidateResponse)
@@ -46,9 +46,13 @@ class CandidateOut(CandidateBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+
+
 class CandidateStatusOut(BaseModel):
     id: int
-    status: str
+    status: CandidateStatus
+
+    model_config = ConfigDict(from_attributes=True)
 
 class CandidateFrontendOut(BaseModel):
     """
@@ -61,7 +65,7 @@ class CandidateFrontendOut(BaseModel):
     location: str
     status: str
     source: str
-    experience: str
+    experience: Optional[str] = "Consultar CV"
     isAvailable: bool
     time: str
 
@@ -81,12 +85,12 @@ class CandidateFrontendOut(BaseModel):
                 # Combinamos nombre y apellido en un solo campo 'name'
                 "name": f"{data.first_name} {data.last_name}".strip(),
                 # Si skills es None, devolvemos un texto amigable
-                "specialty": getattr(data, "skills", "Sin especificar"),
+                "specialty": getattr(data, "skills",None) or "Sin especificar",
                 # Usamos location según lo tengamos en la base de datos
                 "location":getattr(data, "city", "No indicada"),
                 # Lógica de origen: Si viene del scraper tendrá un ID de origen
                 "source": "Scraper InfoJobs" if getattr(data, "source_id", None) else "Carga Manual",
-                "experience": getattr(data, "experience", "Consultar CV"),
+                "experience": getattr(data, "experience") or "Consultar CV",
                 # Extraemos el valor del Enum (ej: "active")
                 "status": data.status.value if hasattr(data.status, 'value') else str(data.status),
                 # El Front usa un booleano para mostrar el check de disponibilidad
@@ -100,6 +104,9 @@ class CandidateFrontendOut(BaseModel):
 class CandidateStatusUpdate(BaseModel):
     """Esquema específico para el endpoint PATCH"""
     status: CandidateStatus
+
+class MessageResponse(BaseModel):
+    message: str
 
 
 if __name__ == "__main__":

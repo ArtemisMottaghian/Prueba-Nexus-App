@@ -37,7 +37,7 @@ async def _get_primary_contact(db: AsyncSession, client_id: int) -> Contact | No
     return result.scalars().first()
 
 
-def _build_client_out(client: Client, contact: Contact | None, open_positions: int = 0) -> dict:
+def _build_client_out(client: Client, contact: Contact | None, open_vacancies: int = 0) -> dict:
     """Construye el dict de salida combinando Client + Contact."""
     return {
         "id": client.id,
@@ -46,7 +46,7 @@ def _build_client_out(client: Client, contact: Contact | None, open_positions: i
         "primary_contact": contact.full_name if contact else None,
         "email": contact.email if contact else None,
         "phone": contact.phone if contact else None,
-        "open_positions": open_positions,
+        "open_vacancies": open_vacancies,
         "cif": client.cif,
         "address": client.address,
     }
@@ -95,7 +95,7 @@ async def get_client_by_id(db: AsyncSession, client_id: int) -> ClientDetailOut:
             for v in vacantes_raw
         ]
 
-        data = _build_client_out(client, contact, open_positions=len(positions))
+        data = _build_client_out(client, contact, open_vacancies=len(positions))
         return ClientDetailOut(**data, positions=positions)
 
     except HTTPException:
@@ -214,7 +214,7 @@ async def delete_client(db: AsyncSession, client_id: int) -> dict:
         raise HTTPException(status_code=500, detail="Error deleting client")
 
 
-async def get_client_positions(db: AsyncSession, client_id: int) -> List[VacancyOut]:
+async def get_client_vacancies(db: AsyncSession, client_id: int) -> List[VacancyOut]:
     try:
         await _get_client_or_404(db, client_id)  # Valida que existe
 
