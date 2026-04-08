@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     DB_PORT: str
     DB_NAME: str
 
+    SERVER_IP: str
+
     PEPPER: str
     SECRET_KEY: str
     ALGORITHM: str
