@@ -32,16 +32,14 @@ async def get_vacancies_list(db: AsyncSession, status: Optional[str] = None) -> 
     except Exception as e:
         raise e
 
-# detalle de una vacante por el ID
+# Detalle de una vacante por el ID
 async def get_vacancy_by_id(db: AsyncSession, vacancy_id: int) -> Optional[JobOffer]:
 
+    """Obtiene una vacante por su ID."""
     try:
-            # buscar por id
-            query = select(JobOffer).where(JobOffer.id == vacancy_id)
-            result = await db.execute(query)
-
-            # Devuelve el objeto o None si no existe
-            return result.scalar_one_or_none()
+        query = select(JobOffer).where(JobOffer.id == vacancy_id)
+        result = await db.execute(query)
+        return result.scalar_one_or_none()
     except Exception as e:
         raise e
 
@@ -165,4 +163,55 @@ async def create_vacancy(job_data: dict) -> JobOffer:
             
     except Exception as e:
         print(f"Error específico en create_vacancy: {type(e).__name__} - {e}")
+        raise e
+
+async def get_vacancies_filtered(
+    db: AsyncSession,
+    status: Optional[str] = None,
+    sector: Optional[str] = None,
+    location: Optional[str] = None
+) -> List[JobOffer]:
+    """Obtiene vacantes filtradas por estado, sector y ubicación."""
+    try:
+        query = select(JobOffer)
+        if status:
+            query = query.where(JobOffer.status == status)
+        if sector:
+            query = query.where(JobOffer.sector == sector)
+        if location:
+            query = query.where(JobOffer.location == location)
+        query = query.order_by(JobOffer.published_at.desc())
+        result = await db.execute(query)
+        return result.scalars().all()
+    except Exception as e:
+        raise e
+
+async def set_favorite(db: AsyncSession, vacancy_id: int, favorite: bool) -> None:
+    """Marca o desmarca una vacante como favorita."""
+    try:
+        query = select(JobOffer).where(JobOffer.id == vacancy_id)
+        result = await db.execute(query)
+        vacancy = result.scalar_one_or_none()
+        if vacancy:
+            vacancy.is_favorite = favorite
+            await db.commit()
+    except Exception as e:
+        raise e
+
+async def apply_bulk_action(db: AsyncSession, vacancy_ids: List[int], action: str) -> None:
+    """Aplica una acción masiva sobre un conjunto de vacantes."""
+    try:
+        query = select(JobOffer).where(JobOffer.id.in_(vacancy_ids))
+        result = await db.execute(query)
+        vacancies = result.scalars().all()
+
+        for vacancy in vacancies:
+            if action == "discard":
+                vacancy.status = "discarded"
+            elif action == "delete":
+                await db.delete(vacancy)
+
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
         raise e

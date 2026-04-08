@@ -1,12 +1,23 @@
 from fastapi import FastAPI
 import uvicorn
+from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes.main_router import api_router
 
 from app.db.session import engine
 from app.db.connection import Base
 
+import app.models
+
 # Inicializacion
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:5173"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Al iniciar
 @app.on_event("startup")

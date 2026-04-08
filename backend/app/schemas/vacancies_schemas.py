@@ -1,7 +1,9 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List,Literal
 from pydantic import BaseModel, ConfigDict,Field,field_validator,HttpUrl
 from app.schemas.job_offer import OfferStatus
+
+
 # Schema base para la tarjeta (Dashboard y Lista)
 class VacancySummary(BaseModel):
     id: int
@@ -30,8 +32,8 @@ class VacancySummary(BaseModel):
 class VacancyDetail(VacancySummary):
     location: Optional[str] = Field(None, max_length=255)
     offer_url: Optional[HttpUrl] = None  # Valida que sea una URL válida con http:// o https://
-    job_description: Optional[str] = None
-    company_description: Optional[str] = None
+    job_description: Optional[str] = Field(None, max_length=5000)
+    company_description: Optional[str] = Field(None, max_length=2000)
     contract_type: Optional[str] = Field(None, max_length=50)
     work_modality: Optional[str] = Field(None, max_length=50)
     sector: Optional[str] = Field(None, max_length=255)
@@ -48,7 +50,7 @@ class FavoriteRequest(BaseModel):
 # Schema para acciones masivas
 class BulkActionRequest(BaseModel):
     vacancy_ids: List[int] = Field(..., min_length=1)  # Al menos una vacante
-    action: str= Field(..., min_length=1, max_length=50)  # Acción a aplicar
+    action: Literal["discard","delete"]  # Acción a aplicar
 
 # Schema para respuestas de mensaje
 class MessageResponse(BaseModel):

@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import FilterBar from '../components/recruitment/FilterBar';
-import CandidateGrid from '../components/recruitment/CandidateGrid';
-import BulkActions from '../components/recruitment/BulkActions';
+import { useState, useEffect } from 'react';
+import FilterBar from '../components/recruitment/shared/FilterBar';
+import CandidateGrid from '../components/recruitment/candidates/CandidateGrid';
+import BulkActions from '../components/recruitment/shared/BulkActions';
 import initialCandidatesData from '../data/candidatesData.json';
+import { candidatesService } from '../services/candidatesService';
 
 export default function Candidates() {
   const [filters, setFilters] = useState({
@@ -13,9 +14,27 @@ export default function Candidates() {
   });
 
   const [selectedCandidates, setSelectedCandidates] = useState([]);
+  const [candidates, setCandidates] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [candidates, setCandidates] = useState(initialCandidatesData);
+  // Carga inicial de datos
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      try {
+        const data = await candidatesService.getAllCandidates();
+        setCandidates(data);
+      } catch {
+        console.log('Backend offline. Using candidatesData.json...');
+        setCandidates(initialCandidatesData);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchCandidates();
+  }, []);
+
+  // Manejadores de eventos
   const handleFilterChange = (filterName, value) => {
     setFilters((prevFilters) => ({ ...prevFilters, [filterName]: value }));
   };
@@ -47,6 +66,20 @@ export default function Candidates() {
     );
   };
 
+  // Lógica de filtrado
+  const filteredCandidates = candidates.filter((candidate) => {
+    const matchEstado =
+      filters.estado === 'Todos' || candidate.status === filters.estado;
+    const matchEspecialidad =
+      filters.especialidad === 'Todas' ||
+      candidate.specialty === filters.especialidad;
+    const matchUbicacion =
+      filters.ubicacion === 'Todas' || candidate.location === filters.ubicacion;
+    const matchOrigen =
+      filters.origen === 'Todos' || candidate.source === filters.origen;
+
+    return matchEstado && matchEspecialidad && matchUbicacion && matchOrigen;
+  });
   return (
     <>
       <div className="mb-4">
@@ -62,6 +95,13 @@ export default function Candidates() {
         onClearFilters={handleClearFilters}
       />
 
+      {!loading && (
+        <div className="mb-3 text-muted small">
+          Mostrando {filteredCandidates.length} candidatos de{' '}
+          {candidates.length}
+        </div>
+      )}
+
       {selectedCandidates.length > 0 && (
         <BulkActions
           selectedCount={selectedCandidates.length}
@@ -69,13 +109,17 @@ export default function Candidates() {
         />
       )}
 
-      <CandidateGrid
-        candidates={candidates}
-        activeFilters={filters}
-        selectedCandidates={selectedCandidates}
-        onSelectCandidate={handleSelectCandidate}
-        onUpdateCandidateStatus={handleUpdateCandidateStatus}
-      />
+      {loading ? (
+        <div className="text-center p-5 text-muted">Cargando candidatos...</div>
+      ) : (
+        <CandidateGrid
+          candidates={filteredCandidates}
+          activeFilters={filters}
+          selectedCandidates={selectedCandidates}
+          onSelectCandidate={handleSelectCandidate}
+          onUpdateCandidateStatus={handleUpdateCandidateStatus}
+        />
+      )}
     </>
   );
 }

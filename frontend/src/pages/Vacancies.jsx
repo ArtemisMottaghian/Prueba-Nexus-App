@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import FilterBar from '../components/recruitment/FilterBar';
-import VacancyGrid from '../components/recruitment/VacancyGrid';
-import BulkActions from '../components/recruitment/BulkActions';
+import FilterBar from '../components/recruitment/shared/FilterBar';
+import BulkActions from '../components/recruitment/shared/BulkActions';
+import VacancyGrid from '../components/recruitment/vacancies/VacancyGrid';
 import initialJobsData from '../data/dummyData.json';
-import { ENDPOINTS } from '../services/api';
+import { vacanciesService } from '../services/vacanciesService';
 
 export default function Vacancies() {
   const [filters, setFilters] = useState({
@@ -17,16 +17,13 @@ export default function Vacancies() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 2. Carga de datos
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await fetch(ENDPOINTS.recruitment.vacantes);
-        if (!response.ok) throw new Error('Server not responding');
-        const data = await response.json();
+        const data = await vacanciesService.getAllVacancies();
         setJobs(data);
-      } catch {
-        console.log('Backend offline. Using updated dummyData.json...');
+      } catch (error) {
+        console.log('Backend offline o error. Usando dummyData.json...', error);
         setJobs(initialJobsData.vacantes || initialJobsData);
       } finally {
         setLoading(false);
@@ -36,7 +33,6 @@ export default function Vacancies() {
     fetchJobs();
   }, []);
 
-  // 3. Manejadores de eventos
   const handleFilterChange = (filterName, value) => {
     setFilters((prevFilters) => ({ ...prevFilters, [filterName]: value }));
   };
@@ -59,6 +55,7 @@ export default function Vacancies() {
   };
 
   const handleUpdateJobStatus = (jobId, newStatus) => {
+    // endpoint para actualizar el estado individual de una vacante.:
     setJobs((prevJobs) =>
       prevJobs.map((job) =>
         job.id === jobId ? { ...job, status: newStatus } : job
@@ -66,7 +63,21 @@ export default function Vacancies() {
     );
   };
 
-  // 4. Lógica de Filtrado
+  const handleBulkDiscard = async () => {
+    try {
+      await vacanciesService.applyBulkActions(selectedVacancies, 'discard');
+      setJobs((prevJobs) =>
+        prevJobs.filter((job) => !selectedVacancies.includes(job.id))
+      );
+      setSelectedVacancies([]);
+      console.log('Vacantes descartadas con éxito');
+    } catch (error) {
+      console.error('Error al descartar vacantes masivamente', error);
+      alert('Hubo un problema descartando las vacantes en el servidor.');
+    }
+  };
+
+  // 4. Lógica de Filtrado (Local)
   const filteredJobs = jobs.filter((job) => {
     const matchStatus =
       filters.status === 'All' || job.status === filters.status;
@@ -93,6 +104,8 @@ export default function Vacancies() {
         filters={filters}
         onFilterChange={handleFilterChange}
         onClearFilters={handleClearFilters}
+        statusOptions={['Nueva', 'Contactada', 'En proceso', 'Descartada']}
+        industryOptions={['Technology', 'Finance', 'Healthcare', 'Hospitality']}
       />
 
       {!loading && (
@@ -104,6 +117,8 @@ export default function Vacancies() {
       {selectedVacancies.length > 0 && (
         <BulkActions
           selectedCount={selectedVacancies.length}
+          label="vacante"
+          onDiscard={handleBulkDiscard}
           onClear={() => setSelectedVacancies([])}
         />
       )}

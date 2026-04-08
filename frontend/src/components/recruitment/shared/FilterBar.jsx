@@ -11,59 +11,58 @@ export default function FilterBar({ filters, onFilterChange, onClearFilters }) {
     <div className="filter-bar mb-4">
       <div className="row g-2 align-items-end">
         <div className="col-12 col-md-3">
-          <label className="filter-label">Status</label>
+          <label className="filter-label">ESTADO</label>
           <select
             className="form-select filter-select"
             value={filters.status}
             onChange={(e) => onFilterChange('status', e.target.value)}
           >
-            <option value="All">All Statuses</option>
-            <option value="New">New</option>
-            <option value="Contacted">Contacted</option>
-            <option value="In progress">In progress</option>
-            <option value="Rejected">Rejected</option>
+            <option value="All">Todas</option>
+            <option value="New">Nuevas</option>
+            <option value="Contacted">Contactados</option>
+            <option value="In progress">En progreso</option>
+            <option value="Rejected">Descartados</option>
           </select>
         </div>
 
         <div className="col-12 col-md-3">
-          <label className="filter-label">Industry</label>
+          <label className="filter-label">SECTOR</label>
           <select
             className="form-select filter-select"
             value={filters.industry}
             onChange={(e) => onFilterChange('industry', e.target.value)}
           >
-            <option value="All">All Industries</option>
-            <option value="Technology">Technology</option>
-            <option value="Finance">Finance</option>
-            <option value="Healthcare">Healthcare</option>
-            <option value="Hospitality">Hospitality</option>
+            <option value="All">Todas</option>
+            <option value="Technology">Tecnología</option>
+            <option value="Finance">Finanzas</option>
+            <option value="Healthcare">Legal</option>
           </select>
         </div>
 
         {/* Location Filter */}
         <div className="col-12 col-md-3">
-          <label className="filter-label">Location</label>
+          <label className="filter-label">LOCALIZACIÓN</label>
           <select
             className="form-select filter-select"
             value={filters.location}
             onChange={(e) => onFilterChange('location', e.target.value)}
           >
-            <option value="All">All Locations</option>
+            <option value="All">Todas</option>
             <option value="Madrid">Madrid</option>
             <option value="Barcelona">Barcelona</option>
-            <option value="Remote">Remote</option>
+            <option value="Remote">Remoto</option>
           </select>
         </div>
 
         {/* Source Filter (Origen) */}
         <div className="col-12 col-md-2">
-          <label className="filter-label">Source</label>
+          <label className="filter-label">ORIGEN</label>
           <select
             className="form-select filter-select"
             value={filters.source}
             onChange={(e) => onFilterChange('source', e.target.value)}
           >
-            <option value="All">All Sources</option>
+            <option value="All">Todas</option>
             <option value="InfoJobs">InfoJobs</option>
             <option value="LinkedIn">LinkedIn</option>
             <option value="Adzuna">Adzuna</option>
