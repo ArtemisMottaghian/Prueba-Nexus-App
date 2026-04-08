@@ -5,6 +5,7 @@ from app.db.models import JobOffer
 from sqlalchemy.dialects.postgresql import insert
 from app.schemas.job_offer import JobOfferRequest
 from app.db.session import AsyncSessionLocal as SessionLocal
+from app.services.scraper_logs_service import log_scraper_error
 
 from bs4 import BeautifulSoup
 import re
@@ -185,9 +186,17 @@ async def extraer_ofertas_infojobs(url_busqueda, apikey, nombre_sector, limite=N
                 return []
                 
         except httpx.RequestError as e:
+            await log_scraper_error(
+                error_code="SCRAPER_ZENROWS_HTTP",
+                message=f"scraper=zenrows_infojobs | stage=request | url={url_busqueda} | exc={e}"
+            )
             print(f" Error de red con httpx: {str(e)}")
             return []
         except Exception as e:
+            await log_scraper_error(
+                error_code="SCRAPER_ZENROWS_HTTP",
+                message=f"scraper=zenrows_infojobs | stage=request | url={url_busqueda} | exc={e}"
+            )
             print(f" Error desconocido: {str(e)}")
             return []
             
@@ -303,6 +312,10 @@ async def extraer_ofertas_infojobs(url_busqueda, apikey, nombre_sector, limite=N
             resultados_db.append(valid_lead)
 
         except ValueError as e:
+            await log_scraper_error(
+                error_code="SCRAPER_ZENROWS_PARSE",
+                message=f"scraper=zenrows_infojobs | stage=parse | exc={e}"
+            )
             print(f"Descartando oferta inválida: {e}")
             continue
 
