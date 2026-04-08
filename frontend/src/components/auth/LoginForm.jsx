@@ -71,7 +71,7 @@ export default function LoginForm() {
         // Mostrar error del backend (si lo hay) o un mensaje genérico
         setErrores({ backend: data.message || 'Credenciales incorrectas' });
       }
-    } catch (_error) { // Corregido con guion bajo para el Linter
+    } catch {
       setErrores({ backend: 'Error de conexión con el servidor' });
     } finally {
       setCargando(false);
