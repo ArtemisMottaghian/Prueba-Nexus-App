@@ -19,9 +19,9 @@ async def extract_profile_data(page, url, keyword, search_location):
         await page.goto(url, wait_until="domcontentloaded", timeout=20000)
 
         # Scroll para cargar secciones ocultas
-        await page.mouse.wheel(0,800)
+        await page.mouse.wheel(delta_x=0, delta_y=800)
         await asyncio.sleep(1.5)
-        await page.mouse.wheel(0.800)
+        await page.mouse.wheel(delta_x=0, delta_y=800)
         await asyncio.sleep(2)
 
         # Depuración visual para ver en consola que pagina esta viendo el bot
@@ -46,8 +46,11 @@ async def extract_profile_data(page, url, keyword, search_location):
         full_name = full_name.strip()
 
         # Filtrar que las empresas no entren por el nombre
+        word_trap = [
+            ' s.l.', ' s.a.', ' s.l', ' s.a', ' inc', ' sl', ' sa', ' ltd', ' llc', 'agencia', 'servicios', 'solutions', 'consulting', 'Dpto', 'Departamento', 'Departament', 'master', 'máster', 'universidad', 'escuela'
+        ]
         name_lower = full_name.lower()
-        if any(word in name_lower for word in [' s.l.', ' s.a.', ' s.l', ' s.a', ' inc', ' sl', ' sa']):
+        if any(word in name_lower for word in word_trap):
             print(f"Saltando {url} Parece ser una empresa: {full_name}")
 
         # Limpiamos el nombre
@@ -60,7 +63,7 @@ async def extract_profile_data(page, url, keyword, search_location):
         scraped_location = await loc_element.inner_text() if loc_element else "No especificada"
 
         # Extraer experiencia
-        exp = "No visible"
+        full_experience = "No visible"
         try:
             # Buscamos el título del puesto EJ: backend Developer
             title_el = await page.query_selector('h3.profile-section-card__title, span.experience-item__subtitle,, li.experience-item h3')
@@ -77,15 +80,16 @@ async def extract_profile_data(page, url, keyword, search_location):
 
                 exp = f"{puesto_limpio} | {time}"
         except Exception as e:
-            print(f" -> Aviso menor al extraer experiencia corta: {e}")
+            print(f"   -> Aviso al extraer experiencia: {e}")
 
-        experience_text = exp.strip()[:95]
+        # Imprimimos la previa en consola
+        preview_exp = full_experience[:80].replace("\n", " ") + "..." if full_experience != "No visible" else "No visible"
+        print(f"   -> Experiencia extraída: {preview_exp}")
 
         # Extraer descripción / titular
         desc_element = await page.query_selector('div.text-body-medium, h2.top-card-layout__headline')
         description = await desc_element.inner_text() if desc_element else "Sin descripción"
 
-        skill_list = []
         skill_list = []
         try:
             skill_elements = await page.query_selector_all(
@@ -109,9 +113,10 @@ async def extract_profile_data(page, url, keyword, search_location):
            "first_name": first_name.strip(),
             "last_name": last_name.strip(),
             "email": f"pendiente_{random.randint(10000, 99999)}@scraping.local",
+            "phone": None,
             "location": search_location,
             "source": "LinkedIn",
-            "experience": experience_text,
+            "experience": full_experience,
             "linkedin_url": url,
             "cv_url": None,
             "skills": final_skills,
@@ -176,6 +181,12 @@ async def run_scraper(keywords: list, sectors: list, locations:list, headless: b
                             unique_links.append(link)
 
                     unique_links = list(set(unique_links))
+                    
+                    # Salto por si hay 0 resultados
+                    if not unique_links:
+                        print(f" 0 resultados encontrados, pasando a la siguiente")
+                        continue
+                    
                     print(f"Encontrados {len(unique_links)} posibles perfiles")
 
                     # Guardamos en la BD
