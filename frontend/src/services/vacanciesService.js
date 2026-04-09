@@ -6,10 +6,12 @@ const mapVacancyData = (v) => ({
   industry: v.sector || 'N/A',
   location: v.location || 'No especificada',
   status: v.status,
+  source: v.portal_id || 'N/A',
   // Convertimos la fecha de Python a algo legible
   time: v.published_at
     ? new Date(v.published_at).toLocaleDateString()
-    : 'Reciente',
+    : 'Sin fecha',
+  rawDate: v.published_at || v.scraped_at || null,
   description: v.job_description,
   salaryMin: v.salary_min,
   salaryMax: v.salary_max,
