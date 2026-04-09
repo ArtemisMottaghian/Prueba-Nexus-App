@@ -191,11 +191,6 @@ export default function Vacancies() {
     return matchStatus && matchIndustry && matchLocation && matchSource;
   });
 
-  console.log('Filtro Origen seleccionado:', filters.source);
-  if (jobs.length > 0) {
-    console.log('Origen de la primera oferta traducido:', jobs[0].source);
-  }
-
   return (
     <>
       <div className="mb-4">
