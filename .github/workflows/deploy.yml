@@ -30,10 +30,14 @@ jobs:
             --tunnel-through-iap \
             --command="
               cd ~/nexus-app &&
+              git config pull.rebase false &&
               git pull origin develop &&
               cd backend &&
               source ~/nexus-app/venv/bin/activate &&
               pip install -r requirements.txt --quiet &&
               sudo systemctl restart aratalent &&
+              cd ~/nexus-app/frontend &&
+              npm install --quiet &&
+              npm run build &&
               echo '✅ Deploy completado'
             "
