@@ -1,0 +1,63 @@
+/* ===================================================
+   LoginForm.css — NexusAI Login
+   Paleta: dark (#0d0d14), morado (#7c3aed / #9b5de5),
+   cyan acento (#00d4ff), texto blanco/gris
+   =================================================== */
+
+/* ---------- Variables ---------- */
+:root {
+  --clr-bg: #0d0d14;
+  --clr-surface: #13131f;
+  --clr-surface-2: #1a1a2e;
+  --clr-border: rgba(124, 58, 237, 0.25);
+  --clr-purple: #7c3aed;
+  --clr-purple-light: #9b5de5;
+  --clr-cyan: #00d4ff;
+  --clr-text: #e8e8f0;
+  --clr-text-muted: #7a7a9a;
+  --clr-error: #f87171;
+  --clr-error-bg: rgba(248, 113, 113, 0.08);
+  --clr-error-border: rgba(248, 113, 113, 0.45);
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+
+  --transition: 0.22s ease;
+}
+
+/* ---------- Wrapper y fondo ---------- */
+.login-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: var(--clr-bg);
+  overflow: hidden;
+  font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+}
+
+/* Orbes de gradiente en el fondo */
+.login-bg__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  opacity: 0.35;
+}
+
+.login-bg__orb--1 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, #7c3aed 0%, transparent 70%);
+  top: -150px;
+  left: -150px;
+  animation: orbFloat 8s ease-in-out infinite alternate;
+}
+
+.login-bg__orb--2 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, #00d4ff 0%, transparent 70%);
+  bottom: -120

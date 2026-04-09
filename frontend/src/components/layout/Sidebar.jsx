@@ -1,22 +1,27 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import logoNexus from '../../assets/logo-nexus.svg';
 import isotipoNexus from '../../assets/isotipo-nexus.svg';
 import './Sidebar.css';
 
 export default function Sidebar({ isOpen, onClose }) {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    if (onClose) onClose();
+    navigate('/login');
+  };
+
   return (
     <>
-      {/* Overlay: El fondo oscuro que cierra el menú al tocar fuera */}
       {isOpen && (
         <div className="sidebar-overlay d-lg-none" onClick={onClose}></div>
       )}
-
       <aside
         className={`ara-sidebar ${isOpen ? 'sidebar-open' : ''}`}
         id="sidebar"
       >
         <div className="sidebar-content">
-          {/* Logo + Botón cerrar en móvil */}
           <div className="sidebar-logo d-flex justify-content-between align-items-center px-3">
             <div className="logo-wrapper">
               <img
@@ -26,8 +31,6 @@ export default function Sidebar({ isOpen, onClose }) {
               />
               <img src={logoNexus} alt="NexusAI Full" className="logo-large" />
             </div>
-
-            {/* Botón X: Solo se ve en móviles/tablets */}
             <button
               className="btn-close-sidebar d-lg-none"
               onClick={onClose}
@@ -36,9 +39,7 @@ export default function Sidebar({ isOpen, onClose }) {
               <i className="bi bi-x-lg"></i>
             </button>
           </div>
-
           <nav className="sidebar-nav">
-            {/* GRUPO: VISIÓN GENERAL */}
             <div className="sidebar-group">
               <div className="sidebar-group-header">VISIÓN GENERAL</div>
               <NavLink
@@ -57,8 +58,6 @@ export default function Sidebar({ isOpen, onClose }) {
                 <span className="sidebar-text">Analítica</span>
               </a>
             </div>
-
-            {/* GRUPO: RECLUTAMIENTO */}
             <div className="sidebar-group">
               <div className="sidebar-group-header">RECLUTAMIENTO</div>
               <NavLink
@@ -92,14 +91,8 @@ export default function Sidebar({ isOpen, onClose }) {
                 <span className="sidebar-text">Clientes</span>
               </NavLink>
             </div>
-
-            {/* GRUPO: COMUNICACIÓN */}
             <div className="sidebar-group">
               <div className="sidebar-group-header">COMUNICACIÓN</div>
-              <a href="#" className="sidebar-item">
-                <i className="bi bi-envelope"></i>
-                <span className="sidebar-text">Inbox</span>
-              </a>
               <NavLink
                 to="/calendar"
                 className={({ isActive }) =>
@@ -111,28 +104,25 @@ export default function Sidebar({ isOpen, onClose }) {
                 <span className="sidebar-text">Calendario</span>
               </NavLink>
             </div>
-
-            {/* GRUPO: NEXUS ENGINE */}
-            <div className="sidebar-group">
-              <div className="sidebar-group-header">NEXUS ENGINE</div>
-              <a href="#" className="sidebar-item">
-                <i className="bi bi-stars"></i>
-                <span className="sidebar-text">Smart Match</span>
-              </a>
-              <a href="#" className="sidebar-item">
-                <i className="bi bi-robot"></i>
-                <span className="sidebar-text">Scraping & Fuentes</span>
-              </a>
-            </div>
           </nav>
-
-          <div className="flex-grow-1"></div>
-
-          <div className="sidebar-footer">
-            <a href="#" className="sidebar-item">
+          <div className="sidebar-footer px-2 pb-4">
+            <NavLink
+              to="/settings"
+              className={({ isActive }) =>
+                `sidebar-item ${isActive ? 'active' : ''}`
+              }
+              onClick={onClose}
+            >
               <i className="bi bi-gear"></i>
               <span className="sidebar-text">Configuración</span>
-            </a>
+            </NavLink>
+            <button
+              className="sidebar-item logout-btn-link w-100 border-0 bg-transparent text-start"
+              onClick={handleLogout}
+            >
+              <i className="bi bi-box-arrow-right"></i>
+              <span className="sidebar-text">Cerrar Sesión</span>
+            </button>
           </div>
         </div>
       </aside>

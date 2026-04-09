@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter,Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +12,7 @@ from app.core.config import settings
 from app.schemas.users_schemas import TokenResponse
 
 
-router = APIRouter(tags=["Autenticación"])
+router = APIRouter()
 
 @router.post("",response_model=TokenResponse)
 async def login_for_access_token(

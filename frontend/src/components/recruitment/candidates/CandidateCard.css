@@ -38,8 +38,14 @@
   justify-content: center;
 }
 
-.icon-purple { background: #4325a7ad; color: #bba6ff; }
-.icon-cyan { background: rgba(0, 212, 255, 0.15); color: var(--color-cyan-primary); }
+.icon-purple {
+  background: #4325a7ad;
+  color: #bba6ff;
+}
+.icon-cyan {
+  background: rgba(0, 212, 255, 0.15);
+  color: var(--color-cyan-primary);
+}
 
 .checkbox-lg {
   width: 1.2rem;

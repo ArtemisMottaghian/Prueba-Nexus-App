@@ -9,6 +9,7 @@ class VacancySummary(BaseModel):
     id: int
     title: str = Field(..., min_length=3, max_length=255)  # Obligatorio, entre 3 y 255 caracteres
     company_name: Optional[str] = Field(None, max_length=255)  # Opcional, max 255 caracteres
+    location: Optional[str] = None
     salary_min: Optional[int] = Field(None, ge=0)  # No puede ser negativo
     salary_max: Optional[int] = Field(None, ge=0)  # No puede ser negativo
     published_at: Optional[datetime] = None
