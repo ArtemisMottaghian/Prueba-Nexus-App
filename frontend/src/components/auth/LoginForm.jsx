@@ -51,23 +51,28 @@ export default function LoginForm() {
     setCargando(true);
 
     try {
+      // 1. Preparamos los datos en formato Formulario (OAuth2)
+      const formData = new URLSearchParams();
+      formData.append("username", email.trim());
+      formData.append("password", password);
+
       // Autenticación con backend
-      const response = await fetch("http://localhost:4000/api/auth/login", {
+      const response = await fetch("http://localhost:8000/api/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password }),
+        headers: { "Content-Type": "application/x-www-form-urlencoded" }, // 2. Cambiamos el header
+        body: formData.toString(), // 3. Enviamos el formulario
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        // Almacenar token en localStorage
-        localStorage.setItem("token", data.token);
+        // Almacenar token en localStorage (FastAPI devuelve "access_token")
+        localStorage.setItem("token", data.access_token); 
         // Redirigir al dashboard
         navigate("/"); 
       } else {
         // Mostrar error del backend (si lo hay) o un mensaje genérico
-        setErrores({ backend: data.message || "Credenciales incorrectas" });
+        setErrores({ backend: data.detail || "Credenciales incorrectas" }); // FastAPI suele devolver el error en "detail"
       }
     } catch (error) {
       setErrores({ backend: "Error de conexión con el servidor" });

@@ -77,12 +77,84 @@ export default function Vacancies() {
     }
   };
 
+  // Traductor de sectores
+  const getBroadIndustry = (rawSector) => {
+    if (!rawSector) return 'Otros';
+
+    const text = rawSector.toLowerCase();
+
+    // Palabras clave para Technology
+    if (
+      text.includes('tech') ||
+      text.includes('software') ||
+      text.includes('it') ||
+      text.includes('informática') ||
+      text.includes('informatica') ||
+      text.includes('datos') ||
+      text.includes('sistemas')
+    ) {
+      return 'Technology';
+    }
+
+    // Palabras clave para Finance
+    if (
+      text.includes('finan') ||
+      text.includes('banc') ||
+      text.includes('bank') ||
+      text.includes('contabil') ||
+      text.includes('seguros')
+    ) {
+      return 'Finance';
+    }
+
+    // Palabras clave para Healthcare
+    if (
+      text.includes('salud') ||
+      text.includes('health') ||
+      text.includes('médic') ||
+      text.includes('medic') ||
+      text.includes('clinic') ||
+      text.includes('farmacia')
+    ) {
+      return 'Healthcare';
+    }
+
+    // Palabras clave para Hospitality
+    if (
+      text.includes('hostel') ||
+      text.includes('hospit') ||
+      text.includes('turism') ||
+      text.includes('restaur') ||
+      text.includes('hotel')
+    ) {
+      return 'Hospitality';
+    }
+
+    // Palabras clave para Legal
+    if (
+      text.includes('legal') ||
+      text.includes('abogad') ||
+      text.includes('derecho') ||
+      text.includes('jurídic') ||
+      text.includes('juridic') ||
+      text.includes('ley') ||
+      text.includes('law')
+    ) {
+      return 'Legal';
+    }
+
+    // Si no coincide con nada, devuelve el original o "Otros"
+    return 'Otros';
+  };
+
   // 4. Lógica de Filtrado (Local)
   const filteredJobs = jobs.filter((job) => {
     const matchStatus =
       filters.status === 'All' || job.status === filters.status;
     const matchIndustry =
-      filters.industry === 'All' || job.industry === filters.industry;
+      filters.industry === 'All' ||
+      getBroadIndustry(job.industry) === filters.industry;
+
     const matchLocation =
       filters.location === 'All' || job.location === filters.location;
     const matchSource =
