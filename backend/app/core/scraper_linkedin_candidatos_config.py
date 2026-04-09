@@ -3,12 +3,12 @@
 KEYWORDS = [
     "Tecnología",
     "Software", 
-    "IT",
-    "Ciberseguridad",
+    #"IT",
+    #"Ciberseguridad",
     #"Ingeniería",
     #"Engineering",
-    #"Finanzas", 
-    #"Banca",
+    "Finanzas", 
+    "Banca",
     #"Banking",
     #"Legal", "Abogado", "Jurídico",
     #"Ventas", "Comercial", "Sales",
@@ -18,7 +18,7 @@ KEYWORDS = [
     ]
 
 SECTORS = {
-    "Tecnología"
+    #"Tecnología"
     #"Software",
     #"IT",
     #"Ciberseguridad",
@@ -30,14 +30,14 @@ SECTORS = {
     #"Legal",
     #"Abogado",
     #"Jurídico",
-    #"Ventas",
+    "Ventas",
     #"Comercial",
     #"Sales",
     #"Logística",
     #"Supply Chain",
-    #"Almacén",
+    "Almacén",
     #"Servicios",
-    #"Atención al cliente",
+    "Atención al cliente",
     #"Seguros",
     #"Insurance"
 }
@@ -47,4 +47,4 @@ LOCATIONS = [
 ]
 
 HEADLESS_MODE = False # Si lo ponemos en True no abre navegador
-MAX_PROFILES_PER_SEARCH = 2 # Para ejecutar pruebas
+MAX_PROFILES_PER_SEARCH = 5 # Para ejecutar pruebas
