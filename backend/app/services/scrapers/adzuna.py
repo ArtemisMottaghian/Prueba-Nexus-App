@@ -8,7 +8,16 @@ async def extract_adzuna() -> list[dict]:
     url = f"https://api.adzuna.com/v1/api/jobs/{settings.ADZUNA_PAIS}/search/1"
     # En esta lista se recogen las categorias de los trabajos que queremos buscar
     # Se puede añadir las que se quieran y Adzuna devolvera una respuesta por cada una de ellas
-    search_categories = ["it-jobs", "engineering-jobs"]
+    search_categories = [
+    "it-jobs",
+    "engineering-jobs",
+    "sales-jobs",
+    "legal-jobs",
+    "finance-jobs",
+    "logistics-jobs",
+    "hr-jobs",
+    "management-jobs",
+    ]
 
     raw_leads = []
     ids_watched = set()
@@ -19,7 +28,7 @@ async def extract_adzuna() -> list[dict]:
             params = {
                 "app_id": settings.ADZUNA_APP_ID,
                 "app_key": settings.ADZUNA_APP_KEY,
-                "results_per_page": 5,
+                "results_per_page": 20,
                 "category": category,
             }
 
