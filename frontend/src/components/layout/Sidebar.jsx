@@ -1,67 +1,131 @@
 import { NavLink, useNavigate } from 'react-router-dom';
+import logoNexus from '../../assets/logo-nexus.svg';
+import isotipoNexus from '../../assets/isotipo-nexus.svg';
 import './Sidebar.css';
 
-const Sidebar = ({ isOpen, onClose }) => {
+export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
 
-  // 1. Función de Logout
   const handleLogout = () => {
-    // Eliminamos el token del almacenamiento local
-    localStorage.removeItem("token");
-    // Cerramos el sidebar si esta el movil
+    localStorage.removeItem('token');
     if (onClose) onClose();
-    // Redirigimos al login
-    navigate("/login");
+    navigate('/login');
   };
 
   return (
-    <aside className={`ara-sidebar ${isOpen ? 'is-open' : ''}`}>
-      <div className="sidebar-header">
-        <div className="sidebar-logo">
-          <div className="logo-icon">N</div>
-          <span>NexusAI</span>
+    <>
+      {isOpen && (
+        <div className="sidebar-overlay d-lg-none" onClick={onClose}></div>
+      )}
+      <aside
+        className={`ara-sidebar ${isOpen ? 'sidebar-open' : ''}`}
+        id="sidebar"
+      >
+        <div className="sidebar-content">
+          <div className="sidebar-logo d-flex justify-content-between align-items-center px-3">
+            <div className="logo-wrapper">
+              <img
+                src={isotipoNexus}
+                alt="NexusAI Icon"
+                className="logo-small"
+              />
+              <img src={logoNexus} alt="NexusAI Full" className="logo-large" />
+            </div>
+            <button
+              className="btn-close-sidebar d-lg-none"
+              onClick={onClose}
+              aria-label="Cerrar menú"
+            >
+              <i className="bi bi-x-lg"></i>
+            </button>
+          </div>
+          <nav className="sidebar-nav">
+            <div className="sidebar-group">
+              <div className="sidebar-group-header">VISIÓN GENERAL</div>
+              <NavLink
+                to="/"
+                end
+                className={({ isActive }) =>
+                  `sidebar-item ${isActive ? 'active' : ''}`
+                }
+                onClick={onClose}
+              >
+                <i className="bi bi-house"></i>
+                <span className="sidebar-text">Inicio</span>
+              </NavLink>
+              <a href="#" className="sidebar-item">
+                <i className="bi bi-bar-chart"></i>
+                <span className="sidebar-text">Analítica</span>
+              </a>
+            </div>
+            <div className="sidebar-group">
+              <div className="sidebar-group-header">RECLUTAMIENTO</div>
+              <NavLink
+                to="/vacantes"
+                className={({ isActive }) =>
+                  `sidebar-item ${isActive ? 'active' : ''}`
+                }
+                onClick={onClose}
+              >
+                <i className="bi bi-briefcase"></i>
+                <span className="sidebar-text">Vacantes</span>
+              </NavLink>
+              <NavLink
+                to="/candidatos"
+                className={({ isActive }) =>
+                  `sidebar-item ${isActive ? 'active' : ''}`
+                }
+                onClick={onClose}
+              >
+                <i className="bi bi-people"></i>
+                <span className="sidebar-text">Candidatos</span>
+              </NavLink>
+              <NavLink
+                to="/clientes"
+                className={({ isActive }) =>
+                  `sidebar-item ${isActive ? 'active' : ''}`
+                }
+                onClick={onClose}
+              >
+                <i className="bi bi-building"></i>
+                <span className="sidebar-text">Clientes</span>
+              </NavLink>
+            </div>
+            <div className="sidebar-group">
+              <div className="sidebar-group-header">COMUNICACIÓN</div>
+              <NavLink
+                to="/calendar"
+                className={({ isActive }) =>
+                  `sidebar-item ${isActive ? 'active' : ''}`
+                }
+                onClick={onClose}
+              >
+                <i className="bi bi-calendar-check"></i>
+                <span className="sidebar-text">Calendario</span>
+              </NavLink>
+            </div>
+          </nav>
+          <div className="sidebar-footer px-2 pb-4">
+            <NavLink
+              to="/settings"
+              className={({ isActive }) =>
+                `sidebar-item ${isActive ? 'active' : ''}`
+              }
+              onClick={onClose}
+            >
+              <i className="bi bi-gear"></i>
+              <span className="sidebar-text">Configuración</span>
+            </NavLink>
+            <button
+              className="sidebar-item logout-btn-link w-100 border-0 bg-transparent text-start"
+              onClick={handleLogout}
+            >
+              <i className="bi bi-box-arrow-right"></i>
+              <span className="sidebar-text">Cerrar Sesión</span>
+            </button>
+          </div>
         </div>
-      </div>
-
-      <nav className="sidebar-nav">
-        <div className="nav-section">
-          <p className="section-title">Reclutamiento</p>
-          <NavLink to="/" className="nav-item" onClick={onClose}>
-            <span className="nav-icon">📊</span>
-            Dashboard
-          </NavLink>
-          <NavLink to="/vacantes" className="nav-item" onClick={onClose}>
-            <span className="nav-icon">💼</span>
-            Vacantes
-          </NavLink>
-          <NavLink to="/candidatos" className="nav-item" onClick={onClose}>
-            <span className="nav-icon">👥</span>
-            Candidatos
-          </NavLink>
-        </div>
-
-        <div className="nav-section">
-          <p className="section-title">Gestión</p>
-          <NavLink to="/clientes" className="nav-item" onClick={onClose}>
-            <span className="nav-icon">🏢</span>
-            Clientes (CRM)
-          </NavLink>
-          <NavLink to="/Calendar" className="nav-item" onClick={onClose}>
-            <span className="nav-icon">📅</span>
-            Calendario
-          </NavLink>
-        </div>
-      </nav>
-
-      {/* 2. Botón de Logout al final del Sidebar */}
-      <div className="sidebar-footer">
-        <button className="nav-item logout-btn" onClick={handleLogout}>
-          <span className="nav-icon">🚪</span>
-          Cerrar Sesión
-        </button>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
-};
-
-export default Sidebar;
+}

@@ -1,4 +1,18 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+/**
+ * Origen del backend (host + puerto), sin /api final.
+ * Las rutas abajo ya incluyen /api/...
+ * Si VITE_API_URL lleva .../api al final, se normaliza para evitar /api/api/...
+ */
+function resolveApiOrigin() {
+  const raw = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  let base = raw.trim().replace(/\/+$/, '');
+  if (base.endsWith('/api')) {
+    base = base.slice(0, -4);
+  }
+  return base;
+}
+
+const BASE_URL = resolveApiOrigin();
 
 export const ENDPOINTS = {
   auth: {
@@ -12,41 +26,28 @@ export const ENDPOINTS = {
   },
   recruitment: {
     candidatos: {
-      // 1. Obtener todas
       list: `${BASE_URL}/api/candidates`,
-
-      // 2. Filtrar
       filter: (params) => {
         const query = new URLSearchParams(params).toString();
         return `${BASE_URL}/api/candidates/filter/list?${query}`;
       },
-
-      // 3. Detalle de una sola
       detail: (id) => `${BASE_URL}/api/candidates/${id}`,
-
-      // 4. Marcar favorito
       favorite: (id) => `${BASE_URL}/api/candidates/${id}/favorite`,
-
-      // 5. Acciones masivas
       bulkActions: `${BASE_URL}/api/candidates/bulk-actions`,
     },
     vacantes: {
-      // 1. Obtener todas
       list: `${BASE_URL}/api/vacancies`,
-
-      // 2. Filtrar
       filter: (params) => {
         const query = new URLSearchParams(params).toString();
         return `${BASE_URL}/api/vacancies/filter/list?${query}`;
       },
-      // 3. Detalle de una sola
       detail: (id) => `${BASE_URL}/api/vacancies/${id}`,
-
-      // 4. Marcar favorito
       favorite: (id) => `${BASE_URL}/api/vacancies/${id}/favorite`,
-
-      // 5. Acciones masivas
       bulkActions: `${BASE_URL}/api/vacancies/bulk-actions`,
     },
+  },
+  metrics: {
+    leadStats: (fromIso, toIso) =>
+      `${BASE_URL}/api/metrics?from=${encodeURIComponent(fromIso)}&to=${encodeURIComponent(toIso)}`,
   },
 };

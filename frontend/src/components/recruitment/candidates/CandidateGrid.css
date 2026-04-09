@@ -32,7 +32,7 @@
 .view-btn {
   padding: 8px 12px;
   background: transparent; /* Quita el fondo gris feo */
-  border: none;            /* Quita el borde de botón antiguo */
+  border: none; /* Quita el borde de botón antiguo */
   border-radius: 8px;
   color: var(--text-muted);
   transition: all 0.2s ease;
