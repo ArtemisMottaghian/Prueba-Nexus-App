@@ -1,4 +1,5 @@
 import './ActivityPanel.css';
+
 export default function ActivityPanel({ isOpen, onClose }) {
   if (!isOpen) return null;
 
@@ -26,7 +27,7 @@ export default function ActivityPanel({ isOpen, onClose }) {
             <i className="bi bi-lightning-charge me-2 text-warning"></i>
             Recent Activity
           </h3>
-          <button className="btn-icon" onClick={onClose}>
+          <button type="button" className="btn-icon" onClick={onClose}>
             <i className="bi bi-x-lg"></i>
           </button>
         </div>
@@ -87,12 +88,13 @@ export default function ActivityPanel({ isOpen, onClose }) {
 
         <div className="activity-footer d-flex justify-content-between align-items-center">
           <button
+            type="button"
             className="btn btn-link btn-clear-hover text-decoration-none"
             onClick={onClose}
           >
             Clear
           </button>
-          <button className="btn btn-view-all" onClick={onClose}>
+          <button type="button" className="btn btn-view-all" onClick={onClose}>
             View All
           </button>
         </div>
