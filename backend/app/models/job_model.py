@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, BigInteger, Text, DateTime, ForeignKey, CheckConstraint, UniqueConstraint,Boolean, DateTime, Enum as PgEnum, func,Boolean
+from sqlalchemy import Column, Integer, String, BigInteger, Text, ForeignKey, CheckConstraint, UniqueConstraint,DateTime, Enum as PgEnum, func,Boolean
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import relationship
 from app.db.connection import Base
@@ -49,7 +49,7 @@ class JobOffer(Base):
     priority = Column(Integer, default=3)
     is_favorite = Column(Boolean, default=False)
     scraped_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(),server_default=func.now())
     portal = relationship("JobPortal", back_populates="offers")
     applications = relationship("JobApplication", back_populates="offer")
     related_client = relationship("Client", back_populates="original_offer", uselist=False)
