@@ -5,8 +5,8 @@
   --bg-cell: #ffffff;
   --bg-cell-empty: transparent;
   --bg-today: #e8f0fe;
-  --bg-hover: rgba(0,0,0,0.05);
-  --bg-modal-overlay: rgba(0,0,0,0.3);
+  --bg-hover: rgba(0, 0, 0, 0.05);
+  --bg-modal-overlay: rgba(0, 0, 0, 0.3);
   --text-main: #1a1a1a;
   --text-muted: #666666;
   --border-color: #eeeeee;
@@ -24,8 +24,8 @@
     --bg-cell: #252525;
     --bg-cell-empty: transparent;
     --bg-today: #1a365d;
-    --bg-hover: rgba(255,255,255,0.05);
-    --bg-modal-overlay: rgba(0,0,0,0.7);
+    --bg-hover: rgba(255, 255, 255, 0.05);
+    --bg-modal-overlay: rgba(0, 0, 0, 0.7);
     --text-main: #e0e0e0;
     --text-muted: #aaaaaa;
     --border-color: #333333;
@@ -50,7 +50,7 @@
 .calendar-box {
   background: var(--bg-card);
   border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   padding: 1.5rem;
   width: 100%;
   max-width: 900px;
@@ -105,7 +105,7 @@
 .day-cell:not(.empty):hover {
   transform: translateY(-2px);
   background: var(--bg-hover);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .day-cell.today {
@@ -168,7 +168,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
   color: var(--text-main);
 }
 
@@ -192,7 +192,8 @@
   color: var(--text-main);
 }
 
-.primary-btn, .action-btn {
+.primary-btn,
+.action-btn {
   padding: 8px 16px;
   border-radius: 6px;
   border: none;
@@ -202,7 +203,8 @@
   font-weight: bold;
 }
 
-.primary-btn:hover, .action-btn:hover {
+.primary-btn:hover,
+.action-btn:hover {
   background: var(--primary-hover);
 }
 
@@ -246,7 +248,7 @@
 .event-item {
   /* Eliminamos el color fijo anterior */
   color: white;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   font-weight: 500;
   transition: opacity 0.2s;
 }
