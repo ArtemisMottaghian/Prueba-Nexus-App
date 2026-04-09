@@ -21,14 +21,11 @@ export default function Sidebar({ isOpen, onClose }) {
         className={`ara-sidebar ${isOpen ? 'sidebar-open' : ''}`}
         id="sidebar"
       >
+        {/* Este contenedor ahora tiene el overflow-y: auto en el CSS */}
         <div className="sidebar-content">
           <div className="sidebar-logo d-flex justify-content-between align-items-center px-3">
             <div className="logo-wrapper">
-              <img
-                src={isotipoNexus}
-                alt="NexusAI Icon"
-                className="logo-small"
-              />
+              <img src={isotipoNexus} alt="NexusAI Icon" className="logo-small" />
               <img src={logoNexus} alt="NexusAI Full" className="logo-large" />
             </div>
             <button
@@ -39,17 +36,12 @@ export default function Sidebar({ isOpen, onClose }) {
               <i className="bi bi-x-lg"></i>
             </button>
           </div>
+
           <nav className="sidebar-nav">
+            {/* Grupo Visión General */}
             <div className="sidebar-group">
               <div className="sidebar-group-header">VISIÓN GENERAL</div>
-              <NavLink
-                to="/"
-                end
-                className={({ isActive }) =>
-                  `sidebar-item ${isActive ? 'active' : ''}`
-                }
-                onClick={onClose}
-              >
+              <NavLink to="/" end className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`} onClick={onClose}>
                 <i className="bi bi-house"></i>
                 <span className="sidebar-text">Inicio</span>
               </NavLink>
@@ -58,56 +50,38 @@ export default function Sidebar({ isOpen, onClose }) {
                 <span className="sidebar-text">Analítica</span>
               </a>
             </div>
+
+            {/* Grupo Reclutamiento */}
             <div className="sidebar-group">
               <div className="sidebar-group-header">RECLUTAMIENTO</div>
-              <NavLink
-                to="/vacantes"
-                className={({ isActive }) =>
-                  `sidebar-item ${isActive ? 'active' : ''}`
-                }
-                onClick={onClose}
-              >
+              <NavLink to="/vacantes" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`} onClick={onClose}>
                 <i className="bi bi-briefcase"></i>
                 <span className="sidebar-text">Vacantes</span>
               </NavLink>
-              <NavLink
-                to="/candidatos"
-                className={({ isActive }) =>
-                  `sidebar-item ${isActive ? 'active' : ''}`
-                }
-                onClick={onClose}
-              >
+              <NavLink to="/candidatos" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`} onClick={onClose}>
                 <i className="bi bi-people"></i>
                 <span className="sidebar-text">Candidatos</span>
               </NavLink>
-              <NavLink
-                to="/clientes"
-                className={({ isActive }) =>
-                  `sidebar-item ${isActive ? 'active' : ''}`
-                }
-                onClick={onClose}
-              >
+              <NavLink to="/clientes" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`} onClick={onClose}>
                 <i className="bi bi-building"></i>
                 <span className="sidebar-text">Clientes</span>
               </NavLink>
             </div>
+
+            {/* Grupo Comunicación */}
             <div className="sidebar-group">
               <div className="sidebar-group-header">COMUNICACIÓN</div>
               <a href="#" className="sidebar-item">
                 <i className="bi bi-envelope"></i>
                 <span className="sidebar-text">Inbox</span>
               </a>
-              <NavLink
-                to="/calendar"
-                className={({ isActive }) =>
-                  `sidebar-item ${isActive ? 'active' : ''}`
-                }
-                onClick={onClose}
-              >
+              <NavLink to="/calendar" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`} onClick={onClose}>
                 <i className="bi bi-calendar-check"></i>
                 <span className="sidebar-text">Calendario</span>
               </NavLink>
             </div>
+
+            {/* Grupo Nexus Engine */}
             <div className="sidebar-group">
               <div className="sidebar-group-header">NEXUS ENGINE</div>
               <a href="#" className="sidebar-item">
@@ -120,23 +94,16 @@ export default function Sidebar({ isOpen, onClose }) {
               </a>
             </div>
           </nav>
-          <div className="flex-grow-1"></div>
 
-          <div className="sidebar-footer px-2 pb-4">
-            <NavLink
-              to="/settings"
-              className={({ isActive }) =>
-                `sidebar-item ${isActive ? 'active' : ''}`
-              }
-              onClick={onClose}
-            >
+          {/* Espaciador dinámico */}
+          <div className="flex-grow-1" style={{ minHeight: '20px' }}></div>
+
+          <div className="sidebar-footer px-2">
+            <NavLink to="/settings" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`} onClick={onClose}>
               <i className="bi bi-gear"></i>
               <span className="sidebar-text">Configuración</span>
             </NavLink>
-            <button
-              className="sidebar-item logout-btn-link w-100 border-0 bg-transparent text-start"
-              onClick={handleLogout}
-            >
+            <button className="sidebar-item logout-btn-link w-100" onClick={handleLogout}>
               <i className="bi bi-box-arrow-right"></i>
               <span className="sidebar-text">Cerrar Sesión</span>
             </button>
