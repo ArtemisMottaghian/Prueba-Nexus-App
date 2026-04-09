@@ -1,7 +1,5 @@
 /* ===================================================
-   LoginForm.css — NexusAI Login
-   Paleta: dark (#0d0d14), morado (#7c3aed / #9b5de5),
-   cyan acento (#00d4ff), texto blanco/gris
+   LoginForm.css — NexusAI Login (Variables)
    =================================================== */
 
 /* ---------- Variables ---------- */
@@ -26,17 +24,18 @@
   --transition: 0.22s ease;
 }
 
+/* --- CONTENEDOR PRINCIPAL DEL SIDEBAR --- */
 .ara-sidebar {
-  width: 80px; /* Vuelve a su tamaño pequeño por defecto */
+  width: 80px; /* Tamaño colapsado por defecto */
   background: linear-gradient(
     180deg,
-    var(--color-purple-primary),
-    var(--color-purple-secondary)
+    var(--clr-purple),
+    var(--clr-purple-light)
   );
   display: flex;
   flex-direction: column;
   padding: 24px 0;
-  position: relative;
+  position: relative; /* Lo mantenemos relative para no romper el layout general */
   z-index: 40;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
@@ -78,17 +77,29 @@
   }
 }
 
-/* --- ESTILOS COMUNES --- */
+/* --- ESTILOS INTERNOS (CONTENEDOR SCROLLABLE) --- */
 .sidebar-content {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;           /* Ocupa el alto restante del padre */
+  min-height: 0;     /* CRÍTICO: Permite que flexbox haga scroll */
+  overflow-y: auto;  /* Activa el scroll vertical */
+  overflow-x: hidden;
+  
+  /* Estilo del scroll para Firefox */
+  scrollbar-width: none; 
+}
+
+/* Estilo del scroll oculto para Chrome/Safari */
+.sidebar-content::-webkit-scrollbar {
+  display: none;
 }
 
 .sidebar-logo {
   position: relative;
   height: 48px;
   margin-bottom: 32px;
+  flex-shrink: 0; /* Evita que el logo se achique */
 }
 
 .logo-small,
@@ -109,20 +120,22 @@
 
 .sidebar-nav {
   padding: 0 12px;
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex-shrink: 0; /* Evita que los iconos se aplasten */
 }
 
 /* Footer y Logout */
 .sidebar-footer {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: 16px;
-  margin-top: auto;
+  padding-bottom: 24px;
+  margin-top: auto; /* Empuja el footer al fondo */
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex-shrink: 0; /* Evita que el footer se aplaste */
 }
 
 .sidebar-item {
@@ -144,7 +157,7 @@
   color: #ffffff;
 }
 
-/* Estilo específico para el botón de logout para que no parezca un botón HTML estándar */
+/* Estilo para botón de logout */
 .logout-btn-link {
   outline: none;
   background: transparent;
@@ -154,7 +167,7 @@
 }
 
 .logout-btn-link:hover {
-  color: #ff4d4d; /* Un tono rojizo suave al hacer hover en logout */
+  color: #ff4d4d;
 }
 
 .sidebar-item i {
@@ -186,7 +199,6 @@
     left: 0;
   }
 
-  /* En móvil, los textos siempre se ven (porque el menú ya está "abierto") */
   .sidebar-text,
   .sidebar-group-header,
   .logo-large {
@@ -212,67 +224,4 @@
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
   z-index: 1999;
-}
-/* --- ACTUALIZACIÓN DE LA BASE --- */
-.ara-sidebar {
-  width: 80px;
-  height: 100vh; /* Altura fija al total de la pantalla */
-  position: fixed; /* O sticky, dependiendo de tu layout */
-  top: 0;
-  left: 0;
-  background: linear-gradient(
-    180deg,
-    var(--clr-purple), /* Usando tus variables corregidas */
-    var(--clr-purple-light)
-  );
-  display: flex;
-  flex-direction: column;
-  z-index: 40;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden; /* El contenedor principal no scrollea... */
-}
-
-/* --- ESTA ES LA CLAVE: EL CONTENEDOR INTERNO --- */
-.sidebar-content {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow-y: auto; /* ...scrollea este! */
-  overflow-x: hidden;
-  padding: 24px 0;
-  
-  /* Estilo del scroll para Firefox */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
-}
-
-/* Estilo del scroll para Chrome, Edge y Safari */
-.sidebar-content::-webkit-scrollbar {
-  width: 5px;
-}
-
-.sidebar-content::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-}
-
-.sidebar-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* Ajuste para el footer en pantallas pequeñas */
-.sidebar-footer {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 16px;
-  margin-top: auto; /* Lo empuja al final del scroll */
-  flex-shrink: 0; /* Evita que el footer se aplaste */
-  padding-bottom: 24px;
-}
-
-.sidebar-nav {
-  padding: 0 12px;
-  flex-shrink: 0; /* Evita que los grupos se colapsen */
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
