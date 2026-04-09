@@ -93,6 +93,10 @@ export default function Sidebar({ isOpen, onClose }) {
             </div>
             <div className="sidebar-group">
               <div className="sidebar-group-header">COMUNICACIÓN</div>
+              <a href="#" className="sidebar-item">
+                <i className="bi bi-envelope"></i>
+                <span className="sidebar-text">Inbox</span>
+              </a>
               <NavLink
                 to="/calendar"
                 className={({ isActive }) =>
@@ -104,7 +108,20 @@ export default function Sidebar({ isOpen, onClose }) {
                 <span className="sidebar-text">Calendario</span>
               </NavLink>
             </div>
+            <div className="sidebar-group">
+              <div className="sidebar-group-header">NEXUS ENGINE</div>
+              <a href="#" className="sidebar-item">
+                <i className="bi bi-stars"></i>
+                <span className="sidebar-text">Smart Match</span>
+              </a>
+              <a href="#" className="sidebar-item">
+                <i className="bi bi-robot"></i>
+                <span className="sidebar-text">Scraping & Fuentes</span>
+              </a>
+            </div>
           </nav>
+          <div className="flex-grow-1"></div>
+
           <div className="sidebar-footer px-2 pb-4">
             <NavLink
               to="/settings"
