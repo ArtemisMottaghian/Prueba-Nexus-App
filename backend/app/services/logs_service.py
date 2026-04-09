@@ -42,21 +42,3 @@ async def delete_log(db: AsyncSession, log_id: int) -> bool:
     except Exception as e:
         raise e
 
-if __name__ == "__main__":
-    import asyncio
-    from app.db.session import AsyncSessionLocal
-
-    async def test():
-        try:
-            async with AsyncSessionLocal() as db:
-                print("🧪 Test 1 — Obtener todos los logs...")
-                logs = await get_all_logs(db)
-                print(f"✅ Total logs: {len(logs)}")
-
-                print("🧪 Test 2 — Obtener solo pendientes...")
-                pending = await get_all_logs(db, only_pending=True)
-                print(f"✅ Total pendientes: {len(pending)}")
-        except Exception as e:
-            print(f"❌ Error: {e}")
-
-    asyncio.run(test())
