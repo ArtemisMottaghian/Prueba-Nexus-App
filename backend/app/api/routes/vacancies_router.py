@@ -1,7 +1,9 @@
+import asyncio
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
-
+from app.services.orchestrator import run_scrapers
 from app.db.connection import get_db
 from app.services import vacancies_service
 from app.schemas.vacancies_schemas import (
@@ -92,3 +94,13 @@ async def bulk_actions(
 
     await vacancies_service.apply_bulk_action(db, body.vacancy_ids, body.action)
     return {"message": f"Acción '{body.action}' aplicada a {len(body.vacancy_ids)} vacantes"}
+
+# -----------------
+# Lanzar scraper manualmente
+# POST /api/vacancies/trigger-scraper
+# -----------------
+@router.post("/trigger-scraper", response_model=MessageResponse)
+async def trigger_scraper():
+    """Lanza el orquestador manualmente para buscar nuevas vacantes."""
+    asyncio.create_task(run_scrapers())
+    return {"message": "Scraper lanzado correctamente, las vacantes se actualizarán en breve"}
