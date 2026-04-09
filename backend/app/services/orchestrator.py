@@ -73,7 +73,7 @@ async def run_scrapers():
                 # FILTRO DE TIEMPO. DESACTIVAR SI NO SE RECIBEN OFERTAS Y SE QUIEREN HACER PRUEBAS.
                 # POR DEFECTO, ESTE FILTRO DESCARTA LAS OFERTAS QUE LLEVEN MAS DE 24 PUBLICADAS.
                 time_filter = today - public_date
-                if time_filter > timedelta(hours=24):
+                if time_filter > timedelta(hours=72):
                     continue
 
             valid_offers.append(validated_offer)
