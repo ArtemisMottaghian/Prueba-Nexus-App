@@ -13,10 +13,7 @@ async def extract_adzuna() -> list[dict]:
     "engineering-jobs",
     "sales-jobs",
     "legal-jobs",
-    "finance-jobs",
-    "logistics-jobs",
     "hr-jobs",
-    "management-jobs",
     ]
 
     raw_leads = []
