@@ -1,14 +1,34 @@
 import { useEffect, useState } from 'react';
-import BotStatusGrid from '../components/dashboard/BotStatusGrid';
+import SourceStatus from '../components/dashboard/SourceStatus';
 import StatsPanel from '../components/dashboard/StatsPanel';
+import DashboardQuickCards from '../components/dashboard/DashboardQuickCards';
+import { ENDPOINTS } from '../services/api';
+import './Dashboard.css';
+
+function getDateRangeForPeriod(periodType) {
+  const end = new Date();
+  const start = new Date();
+  if (periodType === 'day') {
+    start.setHours(0, 0, 0, 0);
+  } else if (periodType === 'week') {
+    start.setDate(end.getDate() - 7);
+    start.setHours(0, 0, 0, 0);
+  } else {
+    start.setDate(end.getDate() - 30);
+    start.setHours(0, 0, 0, 0);
+  }
+  return { from: start.toISOString(), to: end.toISOString() };
+}
+
+const EMPTY_STATS = {
+  newLeads: { value: 0, change: 0 },
+  contacted: { value: 0, change: 0 },
+  inProgress: { value: 0, change: 0 },
+};
 
 export default function Dashboard() {
   const [periodType, setPeriodType] = useState('day');
-  const [stats, setStats] = useState({
-    nuevas: { value: 0, change: 0 },
-    contactadas: { value: 0, change: 0 },
-    enProceso: { value: 0, change: 0 },
-  });
+  const [stats, setStats] = useState(EMPTY_STATS);
   const [loadingStats, setLoadingStats] = useState(false);
 
   useEffect(() => {
@@ -17,140 +37,41 @@ export default function Dashboard() {
     const loadStats = async () => {
       try {
         setLoadingStats(true);
-
-        // Endpoints reales del proyecto.
-        const response = await fetch(`/api/metrics?periodType=${periodType}`);
+        const { from, to } = getDateRangeForPeriod(periodType);
+        const response = await fetch(ENDPOINTS.metrics.leadStats(from, to));
         if (!response.ok) {
-          throw new Error(`Error al cargar stats (${response.status})`);
+          throw new Error(`Failed to load stats (${response.status})`);
         }
 
         const contentType = response.headers.get('content-type') || '';
         if (!contentType.includes('application/json')) {
-          // Si Vite devuelve HTML (fallback) o el backend no responde como JSON,
-          // así lo sabremos al instante.
           const text = await response.text();
           console.error(
-            'API /api/metrics no devolvió JSON. Content-Type:',
+            'Metrics API did not return JSON. Content-Type:',
             contentType,
-            'Response (primeros 500 chars):',
             text.slice(0, 500)
           );
-          throw new Error('Respuesta no-JSON de /api/metrics');
+          throw new Error('Non-JSON response from /api/metrics');
         }
 
         const data = await response.json();
         if (!isMounted) return;
 
-        const toNumber = (v) => {
-          if (typeof v === 'number') return v;
-          if (typeof v === 'string') {
-            const parsed = Number.parseFloat(v);
-            return Number.isNaN(parsed) ? undefined : parsed;
-          }
-          return undefined;
-        };
-
-        const pickFromKeys = (obj, keys, fields) => {
-          for (const key of keys) {
-            if (!obj || obj[key] == null) continue;
-
-            const direct = toNumber(obj[key]);
-            if (direct !== undefined) return direct;
-
-            const candidate = obj[key];
-            if (typeof candidate !== 'object') continue;
-
-            for (const field of fields) {
-              const nested = toNumber(candidate?.[field]);
-              if (nested !== undefined) return nested;
-            }
-          }
-          return 0;
-        };
-
-        // Valor absoluto (número total)
-        const nuevasValue = pickFromKeys(
-          data,
-          ['nuevas', 'newLeads', 'new_leads', 'newCount', 'new_count'],
-          ['value', 'count', 'total']
-        );
-
-        const contactadasValue = pickFromKeys(
-          data,
-          [
-            'contactadas',
-            'contactedLeads',
-            'contacted_leads',
-            'contactedCount',
-            'contacted_count',
-          ],
-          ['value', 'count', 'total']
-        );
-
-        const enProcesoValue = pickFromKeys(
-          data,
-          [
-            'enProceso',
-            'inProgress',
-            'inProgressLeads',
-            'in_progress',
-            'in_progress_leads',
-            'inProgressCount',
-            'in_progress_count',
-          ],
-          ['value', 'count', 'total']
-        );
-
-        // Cambio en porcentaje (%)
-        const nuevasChange = pickFromKeys(
-          data,
-          [
-            'nuevasChange',
-            'newLeadsChange',
-            'new_leads_change',
-            'newChange',
-            'new_change',
-          ],
-          ['change', 'delta', 'percent', 'percentage']
-        );
-
-        const contactadasChange = pickFromKeys(
-          data,
-          [
-            'contactadasChange',
-            'contactedLeadsChange',
-            'contacted_leads_change',
-            'contactedChange',
-            'contacted_change',
-          ],
-          ['change', 'delta', 'percent', 'percentage']
-        );
-
-        const enProcesoChange = pickFromKeys(
-          data,
-          [
-            'enProcesoChange',
-            'inProgressChange',
-            'in_progress_change',
-            'inProgressLeadsChange',
-            'in_progress_leads_change',
-          ],
-          ['change', 'delta', 'percent', 'percentage']
-        );
-
         setStats({
-          nuevas: { value: nuevasValue, change: nuevasChange },
-          contactadas: { value: contactadasValue, change: contactadasChange },
-          enProceso: { value: enProcesoValue, change: enProcesoChange },
+          newLeads: { value: data.new ?? 0, change: data.newChange ?? 0 },
+          contacted: {
+            value: data.contacted ?? 0,
+            change: data.contactedChange ?? 0,
+          },
+          inProgress: {
+            value: data.inProgress ?? 0,
+            change: data.inProgressChange ?? 0,
+          },
         });
       } catch (error) {
-        console.error('No se pudieron cargar las estadísticas:', error);
+        console.error('Could not load dashboard stats:', error);
         if (!isMounted) return;
-        setStats({
-          nuevas: { value: 0, change: 0 },
-          contactadas: { value: 0, change: 0 },
-          enProceso: { value: 0, change: 0 },
-        });
+        setStats(EMPTY_STATS);
       } finally {
         if (isMounted) setLoadingStats(false);
       }
@@ -166,41 +87,57 @@ export default function Dashboard() {
     <>
       <div className="mb-4">
         <h2 className="page-title mb-1">Visión General</h2>
-        <p className="text-muted">Resumen de actividad de los bots y estado comercial.</p>
-        <div className="btn-group mt-3" role="group" aria-label="Filtro de periodo">
+        <p className="text-muted">
+          Resumen de actividad de los bots y estado comercial.
+        </p>
+        <div
+          className="period-segment mt-3"
+          role="group"
+          aria-label="Filtro de periodo"
+        >
           <button
             type="button"
-            className={`btn btn-sm ${
-              periodType === 'day' ? 'btn-primary' : 'btn-outline-primary'
+            className={`period-segment__btn ${
+              periodType === 'day' ? 'period-segment__btn--active' : ''
             }`}
             onClick={() => setPeriodType('day')}
             disabled={loadingStats}
+            aria-pressed={periodType === 'day'}
           >
             Día
           </button>
           <button
             type="button"
-            className={`btn btn-sm ${
-              periodType === 'week' ? 'btn-primary' : 'btn-outline-primary'
+            className={`period-segment__btn ${
+              periodType === 'week' ? 'period-segment__btn--active' : ''
             }`}
             onClick={() => setPeriodType('week')}
             disabled={loadingStats}
+            aria-pressed={periodType === 'week'}
           >
             Semana
           </button>
           <button
             type="button"
-            className={`btn btn-sm ${
-              periodType === 'month' ? 'btn-primary' : 'btn-outline-primary'
+            className={`period-segment__btn ${
+              periodType === 'month' ? 'period-segment__btn--active' : ''
             }`}
             onClick={() => setPeriodType('month')}
             disabled={loadingStats}
+            aria-pressed={periodType === 'month'}
           >
             Mes
           </button>
         </div>
       </div>
-      <BotStatusGrid />
+
+      <DashboardQuickCards
+        stats={stats}
+        periodType={periodType}
+        loading={loadingStats}
+      />
+
+      <SourceStatus />
       <StatsPanel stats={stats} />
     </>
   );
