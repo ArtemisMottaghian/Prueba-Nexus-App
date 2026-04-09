@@ -3,7 +3,7 @@ import SourceStatus from '../components/dashboard/SourceStatus';
 import StatsPanel from '../components/dashboard/StatsPanel';
 import DashboardQuickCards from '../components/dashboard/DashboardQuickCards';
 import { ENDPOINTS } from '../services/api';
-import './Dashboard.css';
+import '../components/dashboard/DashboardQuickCards.css';
 
 function getDateRangeForPeriod(periodType) {
   const end = new Date();

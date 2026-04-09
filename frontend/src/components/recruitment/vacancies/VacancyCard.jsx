@@ -1,4 +1,5 @@
 import './VacancyCard.css';
+
 export default function VacancyCard({
   job,
   isListView,
@@ -41,7 +42,8 @@ export default function VacancyCard({
               checked={isSelected || false}
               onChange={handleCheckboxClick}
             />
-            <h5 className="mb-0 text-white vacante-title-list-sm">
+            {/* CAMBIO: Eliminado text-white, añadido text-body */}
+            <h5 className="mb-0 text-body vacante-title-list-sm">
               {job.title}
             </h5>
             <span className="text-muted small">|</span>
