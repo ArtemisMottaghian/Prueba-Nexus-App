@@ -91,8 +91,9 @@ export default function LoginForm() {
 
       <div className="login-card">
         <div className="login-card__logo">
-           {/* ... Tu SVG de logo ... */}
-           <span className="login-card__logo-text">Nexus<span className="login-card__logo-accent">AI</span></span>
+          <span className="login-card__logo-text">
+            Nexus<span className="login-card__logo-accent">AI</span>
+          </span>
         </div>
 
         <div className="login-card__header">
@@ -103,39 +104,76 @@ export default function LoginForm() {
         <form className="login-form" onSubmit={handleSubmit} noValidate>
           {/* Email */}
           <div className="login-form__group">
-            <div className={`login-form__input-wrapper ${errores.email && tocado.email ? "login-form__input-wrapper--error" : ""}`}>
+            <div
+              className={`login-form__input-wrapper ${errores.email && tocado.email ? 'login-form__input-wrapper--error' : ''}`}
+            >
+              {/* Icono de correo recuperado de tu rama demo */}
+              <i className="bi bi-envelope login-form__input-icon"></i>
               <input
                 className="login-form__input"
                 type="email"
                 placeholder="tu@empresa.com"
                 value={email}
-                onChange={(e) => handleChange("email", e.target.value)}
-                onBlur={() => handleBlur("email")}
+                onChange={(e) => handleChange('email', e.target.value)}
+                onBlur={() => handleBlur('email')}
               />
             </div>
-            {errores.email && tocado.email && <p className="login-form__error">{errores.email}</p>}
+            {errores.email && tocado.email && (
+              <p className="login-form__error">{errores.email}</p>
+            )}
           </div>
 
           {/* Password */}
           <div className="login-form__group">
-            <div className={`login-form__input-wrapper ${errores.password && tocado.password ? "login-form__input-wrapper--error" : ""}`}>
+            <div
+              className={`login-form__input-wrapper ${errores.password && tocado.password ? 'login-form__input-wrapper--error' : ''}`}
+            >
+              {/* Icono de candado recuperado de tu rama demo */}
+              <i className="bi bi-lock login-form__input-icon"></i>
               <input
                 className="login-form__input"
                 type="password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => handleChange("password", e.target.value)}
-                onBlur={() => handleBlur("password")}
+                onChange={(e) => handleChange('password', e.target.value)}
+                onBlur={() => handleBlur('password')}
               />
             </div>
-            {errores.password && tocado.password && <p className="login-form__error">{errores.password}</p>}
+            {errores.password && tocado.password && (
+              <p className="login-form__error">{errores.password}</p>
+            )}
           </div>
 
           {/* Error de backend */}
-          {errores.backend && <p className="login-form__error" style={{textAlign: 'center', marginBottom: '10px'}}>{errores.backend}</p>}
+          {errores.backend && (
+            <p
+              className="login-form__error"
+              style={{ textAlign: 'center', marginBottom: '10px' }}
+            >
+              {errores.backend}
+            </p>
+          )}
 
-          <button className="login-form__submit" type="submit" disabled={cargando}>
-            <span>{cargando ? "Entrando..." : "Iniciar sesión"}</span>
+          <button
+            className="login-form__submit"
+            type="submit"
+            disabled={cargando}
+          >
+            {/* Botón dinámico recuperado de tu rama demo */}
+            {cargando ? (
+              <>
+                <span
+                  className="spinner-border spinner-border-sm me-2"
+                  role="status"
+                ></span>
+                <span>Entrando...</span>
+              </>
+            ) : (
+              <>
+                <span>Iniciar sesión</span>
+                <i className="bi bi-arrow-right-short ms-1"></i>
+              </>
+            )}
           </button>
         </form>
       </div>
