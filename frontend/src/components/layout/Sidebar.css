@@ -213,3 +213,66 @@
   backdrop-filter: blur(4px);
   z-index: 1999;
 }
+/* --- ACTUALIZACIÓN DE LA BASE --- */
+.ara-sidebar {
+  width: 80px;
+  height: 100vh; /* Altura fija al total de la pantalla */
+  position: fixed; /* O sticky, dependiendo de tu layout */
+  top: 0;
+  left: 0;
+  background: linear-gradient(
+    180deg,
+    var(--clr-purple), /* Usando tus variables corregidas */
+    var(--clr-purple-light)
+  );
+  display: flex;
+  flex-direction: column;
+  z-index: 40;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden; /* El contenedor principal no scrollea... */
+}
+
+/* --- ESTA ES LA CLAVE: EL CONTENEDOR INTERNO --- */
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto; /* ...scrollea este! */
+  overflow-x: hidden;
+  padding: 24px 0;
+  
+  /* Estilo del scroll para Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+/* Estilo del scroll para Chrome, Edge y Safari */
+.sidebar-content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Ajuste para el footer en pantallas pequeñas */
+.sidebar-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 16px;
+  margin-top: auto; /* Lo empuja al final del scroll */
+  flex-shrink: 0; /* Evita que el footer se aplaste */
+  padding-bottom: 24px;
+}
+
+.sidebar-nav {
+  padding: 0 12px;
+  flex-shrink: 0; /* Evita que los grupos se colapsen */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

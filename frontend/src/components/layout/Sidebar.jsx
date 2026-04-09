@@ -23,6 +23,7 @@ export default function Sidebar({ isOpen, onClose }) {
         className={`ara-sidebar ${isOpen ? 'sidebar-open' : ''}`}
         id="sidebar"
       >
+        {/* Este contenedor ahora tiene el overflow-y: auto en el CSS */}
         <div className="sidebar-content">
           <div className="sidebar-logo d-flex justify-content-between align-items-center px-3">
             <div className="logo-wrapper">
@@ -137,7 +138,8 @@ export default function Sidebar({ isOpen, onClose }) {
             )}
           </nav>
 
-          <div className="flex-grow-1"></div>
+          {/* Espaciador dinámico */}
+          <div className="flex-grow-1" style={{ minHeight: '20px' }}></div>
 
           <div className="sidebar-footer px-2 pb-4">
             {/* Mostrar con qué correo se ha logueado */}
