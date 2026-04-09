@@ -48,35 +48,11 @@ async def extract_profile_data(page, url, keyword, search_location):
 
         # Filtrar que las empresas no entren por el nombre
         word_trap = [
-            " s.l.",
-            " s.a.",
-            " inc",
-            " sl",
-            " sa",
-            " ltd",
-            " llc",
-            "agencia",
-            "servicios",
-            "tecnología",
-            "solutions",
-            "consulting",
-            "diseño",
-            "marketing",
-            "software",
-            "estudio",
-            "desarrollo",
-            "master",
-            "máster",
-            "universidad",
-            "escuela",
-            "instituto",
-            "academia",
-            "observatorio",
-            "fundación",
-            "asociación",
-            "ministerio",
-            "ayuntamiento",
-            "colegio",
+            ' s.l.', ' s.a.', ' inc', ' sl', ' sa', ' ltd', ' llc', 
+            'agencia', 'servicios', 'tecnología', 'solutions', 'consulting', 
+            'diseño', 'marketing', 'software', 'estudio', 'desarrollo',
+            'master', 'máster', 'universidad', 'escuela', 'instituto', 'academia',
+            'observatorio', 'fundación', 'asociación', 'ministerio', 'ayuntamiento', 'colegio', 'grupo', 'group'
         ]
 
         name_lower = full_name.lower()
@@ -375,6 +351,20 @@ async def run_scraper(
 
         page = await context.new_page()
 
+        # Modo HEADLESS = TRUE para que podamos usarlo sin abrir el navegador
+        if headless:
+            # Falsificamos el user-agent para borrar el rastro de "HeadlessChrome"
+            await page.set_extra_http_headers({
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+                "Accept-Language": "es-ES,es;q=0.9,en;q=0.8"
+            })
+
+            # 2. Borramos la bandera 'webdriver' 
+            await page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+            
+            # 3. Fingimos tener complementos instalados (típico de usuarios reales)
+            await page.add_init_script("Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3]})")
+
         for loc in locations:
             for sector in sectors:
                 for kw in keywords:
@@ -384,42 +374,55 @@ async def run_scraper(
 
                     encoded_query = urllib.parse.quote_plus(query)
 
-                    # Evadir bloqueos de DuckDuckGo
-                    await page.goto(
-                        "https://html.duckduckgo.com/html/",
-                        wait_until="domcontentloaded",
-                    )
-                    await asyncio.sleep(random.uniform(1, 2))
-                    await page.goto(
-                        f"https://html.duckduckgo.com/html/?q={encoded_query}",
-                        wait_until="domcontentloaded",
-                    )
-                    await asyncio.sleep(random.uniform(3, 5))
+                    try:
+                        # Vamos a la portada limpia de la versión lite
+                        await page.goto(f"https://es.search.yahoo.com/search?p={encoded_query}", wait_until="domcontentloaded", timeout=20000) 
+                        # Pausa para que cargue el HTML
+                        await asyncio.sleep(3, 5)
 
-                    raw_links = await page.locator("a").evaluate_all(
-                        "elements => elements.map(e => e.href)"
-                    )
+                        # Si sale el banner de las cookies de Bing lo eliminamos 
+                        try:
+                            btn_cookies = page.locator('button[name="agree"], button.accept-all')
+                            if await btn_cookies() > 0:
+                                await btn_cookies.click()
+                                await asyncio.sleep(1)
+                        # Si no hay banner seguimos
+                        except Exception:
+                            pass
 
-                    unique_links = []
-                    for link in raw_links:
-                        if not link:
-                            continue
+                        # Extraemos todos los enlaces de la página
+                        raw_links = await page.locator('a').evaluate_all(
+                            "elements => elements.map(e => e.href)"
+                        )
 
-                        if "uddg=" in link:
-                            clean_link = urllib.parse.unquote(
-                                link.split("uddg=")[1].split("&")[0]
-                            )
-                            if "linkedin.com/in/" in clean_link:
-                                unique_links.append(clean_link)
-                        elif "linkedin.com/in/" in link:
-                            unique_links.append(link)
+                        unique_links = []
+                        for link in raw_links:
+                            if not link:
+                                continue
+                            
+                            # Yahoo a veces coge los enlaces con una redirección
+                            # la quitamos y sacamos la URL original de LinkedIn
+                            if 'linkedin.com/in/' in link:
+                                clean_link = link
+                                if 'RU=' in link:
+                                    try:
+                                        clean_link = urllib.parse.quote(link.split('RU=')[1].split('/R')[0])
+                                    except Exception:
+                                        pass
+                                # Cogemos unicamente las URLs que vayan a los perfiles de LinkedIn
+                                if 'linkedin.com/in/' in link and 'yahoo.com' not in link:
+                                    unique_links.append(link)
+                        
+                    except Exception as e:
+                        print(f"-> Error en la busqueda de Bing: {e}")
+                        unique_links = []
+                    
 
                     unique_links = list(set(unique_links))
 
                     if not unique_links:
-                        print(
-                            f"0 resultados encontrados, pasando a la siguiente búsqueda."
-                        )
+                        print(f"0 resultados encontrados. Pasando a la siguiente búsqueda")
+                        #await page.screenshot(path="debug_bing.png", full_page=True)
                         continue
 
                     print(f"Encontrados {len(unique_links)} posibles perfiles.")
