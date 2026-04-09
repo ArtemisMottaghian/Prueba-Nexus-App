@@ -48,7 +48,7 @@ async def extract_profile_data(page, url, keyword, search_location):
 
         # Filtrar que las empresas no entren por el nombre
         word_trap = [
-            ' s.l.', ' s.a.', ' inc', ' sl', ' sa', ' ltd', ' llc', 
+            ' s.l.', ' s.a.', ' inc', ' ltd', ' llc', 
             'agencia', 'servicios', 'tecnología', 'solutions', 'consulting', 
             'diseño', 'marketing', 'software', 'estudio', 'desarrollo',
             'master', 'máster', 'universidad', 'escuela', 'instituto', 'academia',
@@ -368,7 +368,7 @@ async def run_scraper(
         for loc in locations:
             for sector in sectors:
                 for kw in keywords:
-                    # Búsqueda normal en DuckDuckGo (Sin filtros extra)
+                    # Búsqueda normal en Yahoo
                     query = f'site:es.linkedin.com/in/ "{kw}" "{sector}" "{loc}"'
                     print(f"Buscando: '{kw}' en '{sector}' en '{loc}'")
 
@@ -380,21 +380,23 @@ async def run_scraper(
                         # Pausa para que cargue el HTML
                         await asyncio.sleep(3, 5)
 
-                        # Si sale el banner de las cookies de Bing lo eliminamos 
+                        # Si sale el banner de las cookies de Yahoo lo eliminamos 
                         try:
-                            # 1. Si sale el botón de "Ir al final", lo pulsamos para revelar los botones
+                            # 1. Si sale el botón de "Ir al final", lo pulsamos a la fuerza
                             btn_scroll = page.locator('button:has-text("Ir al final"), a:has-text("Ir al final")')
                             if await btn_scroll.count() > 0:
-                                await btn_scroll.first.click()
+                                await btn_scroll.first.click(force=True, timeout=3000)
                                 await asyncio.sleep(1)
 
-                            # 2. Buscamos el botón de aceptar (por nombre, clase o texto literal)
-                            btn_cookies = page.locator('button[name="agree"], button.accept-all, button:has-text("Aceptar todo"), button:has-text("Aceptar")')
+                            # 2. Buscamos el botón de aceptar (incluyendo el de didomi que te sale ahora)
+                            btn_cookies = page.locator('button#didomi-notice-agree-button, button[name="agree"], button.accept-all, button:has-text("Aceptar todo"), button:has-text("Aceptar")')
                             if await btn_cookies.count() > 0:
-                                await btn_cookies.first.click()
-                                await asyncio.sleep(2) # Esperamos a que el banner desaparezca del todo
+                                # ¡CLICK FORZADO! Le da igual si está tapado o no
+                                await btn_cookies.first.click(force=True, timeout=3000)
+                                await asyncio.sleep(2) 
                         except Exception as e:
-                            print(f"   -> Aviso: No se pudo cerrar el banner de cookies: {e}")
+                            # Si falla algo aquí, lo ignoramos y seguimos buscando, no detenemos el bot
+                            pass
 
                         # Extraemos todos los enlaces de la página
                         raw_links = await page.locator('a').evaluate_all(
