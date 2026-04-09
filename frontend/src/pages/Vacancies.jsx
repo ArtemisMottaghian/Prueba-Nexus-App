@@ -77,85 +77,9 @@ export default function Vacancies() {
     }
   };
 
-  // Traductor de sectores
-  const getBroadIndustry = (rawSector) => {
-    if (!rawSector) return 'Otros';
-
-    const text = String(rawSector).toLowerCase();
-    // Palabras clave para Technology
-    if (
-      text.includes('tech') ||
-      text.includes('analist') ||
-      text.includes('analyst') ||
-      text.includes('software') ||
-      text.includes('it') ||
-      text.includes('AI') ||
-      text.includes('backend') ||
-      text.includes('frontend') ||
-      text.includes('prompt') ||
-      text.includes('informática') ||
-      text.includes('informatica') ||
-      text.includes('datos') ||
-      text.includes('sistemas')
-    ) {
-      return 'Technology';
-    }
-
-    // Palabras clave para Finance
-    if (
-      text.includes('finan') ||
-      text.includes('banc') ||
-      text.includes('bank') ||
-      text.includes('contabil') ||
-      text.includes('seguros')
-    ) {
-      return 'Finance';
-    }
-
-    // Palabras clave para Healthcare
-    if (
-      text.includes('salud') ||
-      text.includes('health') ||
-      text.includes('médic') ||
-      text.includes('medic') ||
-      text.includes('clinic') ||
-      text.includes('farmacia')
-    ) {
-      return 'Healthcare';
-    }
-
-    // Palabras clave para Hospitality
-    if (
-      text.includes('hostel') ||
-      text.includes('hospit') ||
-      text.includes('turism') ||
-      text.includes('restaur') ||
-      text.includes('hotel')
-    ) {
-      return 'Hospitality';
-    }
-
-    // Palabras clave para Legal
-    if (
-      text.includes('legal') ||
-      text.includes('abogad') ||
-      text.includes('derecho') ||
-      text.includes('jurídic') ||
-      text.includes('juridic') ||
-      text.includes('ley') ||
-      text.includes('law')
-    ) {
-      return 'Legal';
-    }
-
-    // Si no coincide con nada, devuelve el original o "Otros"
-    return 'Otros';
-  };
-
   // Lógica de Filtrado (Local)
   const filteredJobs = jobs.filter((job) => {
-    
-    // ESTADO 
+    // ESTADO
     const safeStatus = String(job.status || '').toLowerCase();
     const filterStat = String(filters.status || '').toLowerCase();
     let matchStatus = false;
@@ -164,8 +88,8 @@ export default function Vacancies() {
       matchStatus = true;
     } else if (filterStat.includes('nueva') || filterStat.includes('new')) {
       matchStatus = ['detected', 'new', 'nueva'].includes(safeStatus);
-    
-    /* VARIANTE NUEVAS = ULTIMAS 24 HORAS
+
+      /* VARIANTE NUEVAS = ULTIMAS 24 HORAS
 
     if (['all', 'todas', 'todos'].includes(filterStat)) {
       matchStatus = true;
@@ -186,8 +110,13 @@ export default function Vacancies() {
     */
     } else if (filterStat.includes('contact')) {
       matchStatus = ['contacted', 'contactada'].includes(safeStatus);
-    } else if (filterStat.includes('proceso') || filterStat.includes('negotiat')) {
-      matchStatus = ['negotiating', 'en proceso', 'interviewing'].includes(safeStatus);
+    } else if (
+      filterStat.includes('proceso') ||
+      filterStat.includes('negotiat')
+    ) {
+      matchStatus = ['negotiating', 'en proceso', 'interviewing'].includes(
+        safeStatus
+      );
     } else if (filterStat.includes('descart')) {
       matchStatus = ['discarded', 'descartada'].includes(safeStatus);
     } else {
@@ -202,28 +131,44 @@ export default function Vacancies() {
       matchIndustry = true;
     } else {
       // Unimos el sector y el TÍTULO para buscar palabras clave
-      const textToAnalyze = `${job.industry || ''} ${job.sector || ''} ${job.title || ''}`.toLowerCase();
+      const textToAnalyze =
+        `${job.industry || ''} ${job.sector || ''} ${job.title || ''}`.toLowerCase();
 
       let assignedIndustry = 'otros';
-      if (textToAnalyze.match(/tech|software|it|informática|informatica|datos|data|sistemas|machine learning|backend|frontend|developer|engineer|sap|ai|artificial/)) {
+      if (
+        textToAnalyze.match(
+          /tech|software|it|informática|informatica|datos|data|sistemas|machine learning|backend|frontend|developer|engineer|sap|ai|artificial/
+        )
+      ) {
         assignedIndustry = 'technology';
-      } else if (textToAnalyze.match(/finan|banc|bank|contabil|seguros|insurance/)) {
+      } else if (
+        textToAnalyze.match(/finan|banc|bank|contabil|seguros|insurance/)
+      ) {
         assignedIndustry = 'finance';
-      } else if (textToAnalyze.match(/salud|health|médic|medic|clinic|farmacia/)) {
+      } else if (
+        textToAnalyze.match(/salud|health|médic|medic|clinic|farmacia/)
+      ) {
         assignedIndustry = 'healthcare';
       } else if (textToAnalyze.match(/hostel|hospit|turism|restaur|hotel/)) {
         assignedIndustry = 'hospitality';
-      } else if (textToAnalyze.match(/legal|abogad|derecho|jurídic|juridic|ley|law/)) {
+      } else if (
+        textToAnalyze.match(/legal|abogad|derecho|jurídic|juridic|ley|law/)
+      ) {
         assignedIndustry = 'legal';
       }
 
       // Normalizamos lo que eligió el usuario
       let targetIndustry = filterInd;
-      if (filterInd.includes('tecnolog') || filterInd.includes('tech')) targetIndustry = 'technology';
-      else if (filterInd.includes('finanz') || filterInd.includes('finance')) targetIndustry = 'finance';
-      else if (filterInd.includes('salud') || filterInd.includes('health')) targetIndustry = 'healthcare';
-      else if (filterInd.includes('hostel') || filterInd.includes('hospit')) targetIndustry = 'hospitality';
-      else if (filterInd.includes('legal') || filterInd.includes('derecho')) targetIndustry = 'legal';
+      if (filterInd.includes('tecnolog') || filterInd.includes('tech'))
+        targetIndustry = 'technology';
+      else if (filterInd.includes('finanz') || filterInd.includes('finance'))
+        targetIndustry = 'finance';
+      else if (filterInd.includes('salud') || filterInd.includes('health'))
+        targetIndustry = 'healthcare';
+      else if (filterInd.includes('hostel') || filterInd.includes('hospit'))
+        targetIndustry = 'hospitality';
+      else if (filterInd.includes('legal') || filterInd.includes('derecho'))
+        targetIndustry = 'legal';
       else if (filterInd.includes('otro')) targetIndustry = 'otros';
 
       matchIndustry = assignedIndustry === targetIndustry;
@@ -231,18 +176,26 @@ export default function Vacancies() {
 
     // LOCALIZACION
     const filterLoc = String(filters.location || '').toLowerCase();
-    const matchLocation = ['all', 'todas', 'todos'].includes(filterLoc) || job.location === filters.location;
+    const matchLocation =
+      ['all', 'todas', 'todos'].includes(filterLoc) ||
+      job.location === filters.location;
 
     // PLATAFORMA
     const filterSrc = String(filters.source || '').toLowerCase();
-    const matchSource = ['all', 'todas', 'todos'].includes(filterSrc) || 
-                        String(job.source).toLowerCase() === filterSrc || 
-                        String(job.portal_id) === filterSrc;
+    const jobSrcStr = String(job.source || '').toLowerCase();
+
+    // Si elige "Todas" o si lo que elige coincide con el nombre traducido
+    const matchSource =
+      ['all', 'todas', 'todos'].includes(filterSrc) || jobSrcStr === filterSrc;
 
     return matchStatus && matchIndustry && matchLocation && matchSource;
   });
 
-  
+  console.log('Filtro Origen seleccionado:', filters.source);
+  if (jobs.length > 0) {
+    console.log('Origen de la primera oferta traducido:', jobs[0].source);
+  }
+
   return (
     <>
       <div className="mb-4">
@@ -258,7 +211,15 @@ export default function Vacancies() {
         onClearFilters={handleClearFilters}
         statusOptions={['Nueva', 'Contactada', 'En proceso', 'Descartada']}
         // Añadidas opciones Legal y Otros
-        industryOptions={['Technology', 'Finance', 'Healthcare', 'Hospitality', 'Legal', 'Otros']}
+        industryOptions={[
+          'Technology',
+          'Finance',
+          'Healthcare',
+          'Hospitality',
+          'Legal',
+          'Otros',
+        ]}
+        sourceOptions={['LinkedIn', 'InfoJobs', 'Adzuna', 'Otro']}
       />
 
       {!loading && (

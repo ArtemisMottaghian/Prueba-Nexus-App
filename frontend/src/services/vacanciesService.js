@@ -1,4 +1,14 @@
 import { ENDPOINTS } from './api';
+
+const getPortalName = (id) => {
+  const numId = Number(id);
+
+  if (numId === 1) return 'LinkedIn';
+  if (numId === 2) return 'InfoJobs';
+  if (numId === 3) return 'Adzuna';
+  return 'Otro';
+};
+
 const mapVacancyData = (v) => ({
   id: v.id,
   title: v.title,
@@ -6,7 +16,7 @@ const mapVacancyData = (v) => ({
   industry: v.sector || 'N/A',
   location: v.location || 'No especificada',
   status: v.status,
-  source: v.portal_id || 'N/A',
+  source: getPortalName(v.portal_id),
   // Convertimos la fecha de Python a algo legible
   time: v.published_at
     ? new Date(v.published_at).toLocaleDateString()
