@@ -382,13 +382,19 @@ async def run_scraper(
 
                         # Si sale el banner de las cookies de Bing lo eliminamos 
                         try:
-                            btn_cookies = page.locator('button[name="agree"], button.accept-all')
-                            if await btn_cookies() > 0:
-                                await btn_cookies.click()
+                            # 1. Si sale el botón de "Ir al final", lo pulsamos para revelar los botones
+                            btn_scroll = page.locator('button:has-text("Ir al final"), a:has-text("Ir al final")')
+                            if await btn_scroll.count() > 0:
+                                await btn_scroll.first.click()
                                 await asyncio.sleep(1)
-                        # Si no hay banner seguimos
-                        except Exception:
-                            pass
+
+                            # 2. Buscamos el botón de aceptar (por nombre, clase o texto literal)
+                            btn_cookies = page.locator('button[name="agree"], button.accept-all, button:has-text("Aceptar todo"), button:has-text("Aceptar")')
+                            if await btn_cookies.count() > 0:
+                                await btn_cookies.first.click()
+                                await asyncio.sleep(2) # Esperamos a que el banner desaparezca del todo
+                        except Exception as e:
+                            print(f"   -> Aviso: No se pudo cerrar el banner de cookies: {e}")
 
                         # Extraemos todos los enlaces de la página
                         raw_links = await page.locator('a').evaluate_all(
@@ -422,7 +428,7 @@ async def run_scraper(
 
                     if not unique_links:
                         print(f"0 resultados encontrados. Pasando a la siguiente búsqueda")
-                        #await page.screenshot(path="debug_bing.png", full_page=True)
+                        await page.screenshot(path="debug_bing.png", full_page=True)
                         continue
 
                     print(f"Encontrados {len(unique_links)} posibles perfiles.")
