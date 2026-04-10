@@ -17,7 +17,12 @@ app.add_middleware(
     allow_origins=[
         #server
         "http://nexus.ara-tech.es",
-        f"http://{settings.SERVER_IP}",
+        "https://nexus.ara-tech.es",
+        f"http://{settings.SERVER_IP}",         
+        f"http://{settings.SERVER_IP}:5173",
+        #https
+        f"https://{settings.SERVER_IP}",         
+        f"https://{settings.SERVER_IP}:5173",
         
         #local
         "http://localhost:5173",

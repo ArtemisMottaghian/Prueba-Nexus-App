@@ -1,8 +1,9 @@
 .ara-topbar {
-  background: rgba(26, 26, 46, 0.8);
+  background: var(--bg-primary); 
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-color);
   padding: 16px 24px;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .topbar-content {
@@ -35,7 +36,7 @@
 }
 
 .btn-icon:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-secondary); 
   color: var(--text-primary);
 }
 
@@ -51,18 +52,23 @@
   height: 8px;
   background: var(--color-cyan-primary);
   border-radius: 50%;
-  border: 2px solid var(--bg-dark-secondary);
+  border: 2px solid var(--bg-primary); 
 }
 
 .topbar-search {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-secondary); 
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 8px 16px;
   min-width: 280px;
+  transition: border-color 0.2s ease;
+}
+
+.topbar-search:focus-within {
+  border-color: var(--color-purple-secondary);
 }
 
 .topbar-search input {
@@ -72,6 +78,10 @@
   color: var(--text-primary);
   font-size: 14px;
   width: 100%;
+}
+
+.topbar-search input::placeholder {
+  color: var(--text-muted);
 }
 
 .topbar-avatar {
@@ -94,10 +104,4 @@
   color: #ffffff;
   font-weight: 700;
   border: 2px solid rgba(255, 255, 255, 0.2);
-}
-
-/* Modo Claro Topbar */
-[data-bs-theme='light'] .ara-topbar {
-  background: rgba(255, 255, 255, 0.95);
-  border-bottom: 1px solid #e5e7eb;
 }

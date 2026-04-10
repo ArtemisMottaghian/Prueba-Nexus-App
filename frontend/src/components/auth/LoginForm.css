@@ -160,6 +160,27 @@
   margin: 0;
 }
 
+/* ---------- Error general ---------- */
+.login-form__general-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  background: var(--clr-error-bg);
+  border: 1px solid var(--clr-error-border);
+  border-radius: var(--radius-sm);
+  color: var(--clr-error);
+  font-size: 0.82rem;
+  animation: errorIn 0.3s ease both;
+}
+
+.login-form__general-error svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
 /* ---------- Formulario ---------- */
 .login-form {
   display: flex;
@@ -225,6 +246,11 @@
   color: var(--clr-purple-light);
 }
 
+.login-form__input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* ── Estado de error en el input ── */
 .login-form__input--error {
   border-color: var(--clr-error-border);
@@ -277,6 +303,7 @@
   gap: 0.45rem;
   color: var(--clr-text-muted);
   cursor: pointer;
+  user-select: none;
 }
 
 .login-form__checkbox {
@@ -284,6 +311,11 @@
   height: 15px;
   accent-color: var(--clr-purple);
   cursor: pointer;
+}
+
+.login-form__checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .login-form__forgot {
@@ -323,19 +355,97 @@
   transition: transform var(--transition);
 }
 
-.login-form__submit:hover {
+.login-form__submit:hover:not(:disabled) {
   opacity: 0.92;
   transform: translateY(-1px);
   box-shadow: 0 6px 28px rgba(124, 58, 237, 0.55);
 }
 
-.login-form__submit:hover svg {
+.login-form__submit:hover:not(:disabled) svg {
   transform: translateX(3px);
 }
 
-.login-form__submit:active {
+.login-form__submit:active:not(:disabled) {
   transform: translateY(0);
   opacity: 1;
+}
+
+.login-form__submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.login-form__submit .spinner-border {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+
+/* ---------- Divisor ---------- */
+.login-form__divider {
+  position: relative;
+  text-align: center;
+  margin: 1.5rem 0 1rem;
+}
+
+.login-form__divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(124, 58, 237, 0.15);
+}
+
+.login-form__divider span {
+  position: relative;
+  display: inline-block;
+  padding: 0 1rem;
+  background: var(--clr-surface);
+  color: var(--clr-text-muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ---------- Botón de Google ---------- */
+.login-form__google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--clr-surface-2);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--clr-text);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.login-form__google-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.login-form__google-btn:hover:not(:disabled) {
+  background: var(--clr-surface);
+  border-color: var(--clr-purple);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.2);
+}
+
+.login-form__google-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.login-form__google-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ---------- Footer ---------- */
@@ -352,5 +462,14 @@
   .login-card {
     margin: 1rem;
     padding: 2rem 1.5rem 1.75rem;
+  }
+
+  .login-card__title {
+    font-size: 1.35rem;
+  }
+
+  .login-form__submit,
+  .login-form__google-btn {
+    font-size: 0.875rem;
   }
 }

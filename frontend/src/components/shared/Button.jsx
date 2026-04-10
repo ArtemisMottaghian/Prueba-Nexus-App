@@ -1,4 +1,5 @@
 import './Button.css';
+
 export default function Button({
   children,
   variant = 'primary',
@@ -9,15 +10,18 @@ export default function Button({
   className = '',
 }) {
   const variants = {
-    primary: 'btn-primary',
+    primary: 'btn-primary-custom',
     secondary: 'btn-secondary',
     danger: 'btn-danger',
     outline: 'btn-outline-secondary',
     ghost: 'btn-link text-decoration-none',
+    clear: 'btn-clear',
+    icon: 'btn-icon',
+    viewAll: 'btn-view-all',
   };
 
   const sizeClass = size ? `btn-${size}` : '';
-  const variantClass = variants[variant] || 'btn-primary';
+  const variantClass = variants[variant] || 'btn-primary-custom';
 
   return (
     <button

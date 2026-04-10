@@ -33,10 +33,7 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
               <div className="flex-grow-1">
                 <h2 className="modal-title">{job.title}</h2>
                 <div className="d-flex align-items-center gap-2 mt-1">
-                  <i
-                    className="bi bi-building"
-                    style={{ color: '#9ca3af', fontSize: '13px' }}
-                  ></i>
+                  <i className="bi bi-building modal-header-icon"></i>
                   <span className="modal-subtitle">{job.companyName}</span>
                   {job.isClient && (
                     <span className="badge-client-sm">Cliente</span>
@@ -46,16 +43,16 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
                   </span>
                 </div>
               </div>
+              {/* Quitamos btn-close-white para soporte multi-tema */}
               <button
                 type="button"
-                className="btn-close btn-close-white"
+                className="btn-close"
                 onClick={onClose}
               ></button>
             </div>
 
             {/* BODY */}
             <div className="modal-body-scroll">
-              {/* Selector estado + estrella */}
               <div className="d-flex align-items-center gap-3 mb-4">
                 <select
                   className="form-select select-status-inline"
@@ -67,8 +64,11 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
                   <option value="En proceso">En proceso</option>
                   <option value="Descartada">Descartada</option>
                 </select>
-                <button className="btn-icon" title="Marcar favorita">
-                  <i className="bi bi-star" style={{ color: '#f59e0b' }}></i>
+                <button
+                  className="btn-icon btn-star-toggle"
+                  title="Marcar favorita"
+                >
+                  <i className="bi bi-star-fill"></i>
                 </button>
               </div>
 
@@ -101,7 +101,6 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
               </ul>
 
               <div className="tab-content">
-                {/* TAB: Detalles */}
                 {activeTab === 'detalles' && (
                   <div className="tab-pane fade show active">
                     <div className="detail-section">
@@ -156,20 +155,18 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
                       <h4 className="section-title">Descripción del puesto</h4>
                       <div className="vacancy-description">
                         <p>
-                          {job.description ||
-                            'No hay descripción disponible para esta vacante. Añade información sobre el perfil requerido, responsabilidades y condiciones del puesto desde el panel de edición.'}
+                          {job.description || 'No hay descripción disponible.'}
                         </p>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* TAB: Seguimiento */}
                 {activeTab === 'seguimiento' && (
                   <div className="tab-pane fade show active">
                     <div className="detail-section">
                       <h4 className="section-title">Historial de actividad</h4>
-                      {job.seguimiento && job.seguimiento.length > 0 ? (
+                      {job.seguimiento?.length > 0 ? (
                         <div className="seguimiento-timeline">
                           {job.seguimiento.map((item, i) => (
                             <div key={i} className="seguimiento-item">
@@ -187,21 +184,18 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
                       ) : (
                         <div className="tab-empty">
                           <i className="bi bi-list-check"></i>
-                          <p>
-                            No hay actividad registrada aún para esta vacante.
-                          </p>
+                          <p>No hay actividad registrada aún.</p>
                         </div>
                       )}
                     </div>
                   </div>
                 )}
 
-                {/* TAB: Documentos */}
                 {activeTab === 'documentos' && (
                   <div className="tab-pane fade show active">
                     <div className="detail-section">
                       <h4 className="section-title">Archivos adjuntos</h4>
-                      {job.documentos && job.documentos.length > 0 ? (
+                      {job.documentos?.length > 0 ? (
                         job.documentos.map((doc, i) => (
                           <div key={i} className="doc-item">
                             <div className="doc-icon">
@@ -217,38 +211,34 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
                               className="btn-icon btn-icon-sm"
                               title="Descargar"
                             >
-                              <i
-                                className="bi bi-download"
-                                style={{ fontSize: '13px' }}
-                              ></i>
+                              <i className="bi bi-download"></i>
                             </button>
                           </div>
                         ))
                       ) : (
                         <div className="tab-empty">
                           <i className="bi bi-file-earmark"></i>
-                          <p>No hay documentos adjuntos a esta vacante.</p>
+                          <p>No hay documentos adjuntos.</p>
                         </div>
                       )}
                     </div>
                   </div>
                 )}
               </div>
-              {/* /tab-content */}
             </div>
 
             {/* FOOTER */}
             <div className="modal-footer">
               <button
                 type="button"
-                className="btn btn-secondary"
+                className="btn btn-secondary-custom"
                 onClick={onClose}
               >
                 Cancelar
               </button>
               <button
                 type="button"
-                className="btn btn-primary"
+                className="btn btn-primary-custom"
                 onClick={handleSave}
               >
                 <i className="bi bi-check-circle me-2"></i>Guardar cambios

@@ -12,17 +12,6 @@ const getBadgeEstado = (estado) => {
   return map[estado] || 'badge-nueva';
 };
 
-const adaptarVacante = (vacante, cliente) => ({
-  id: vacante.id,
-  title: vacante.titulo,
-  companyName: cliente.nombre,
-  location: cliente.direccion || 'No especificada',
-  status: vacante.estado,
-  source: 'Nexus',
-  time: vacante.fecha,
-  salary: null,
-});
-
 export default function ClienteDetail({ cliente, onEdit, onDelete }) {
   const [vacanteSeleccionada, setVacanteSeleccionada] = useState(null);
   const [notaTexto, setNotaTexto] = useState('');
@@ -34,10 +23,9 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
     const nueva = {
       id: Date.now(),
       texto: notaTexto.trim(),
-      fecha: new Date().toLocaleDateString('es-ES', {
+      fecha: new Date().toLocaleString('es-ES', {
         day: '2-digit',
         month: 'short',
-        year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
       }),
@@ -46,89 +34,67 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
     setNotaTexto('');
   };
 
-  const eliminarNota = (id) =>
-    setNotas((prev) => prev.filter((n) => n.id !== id));
-
   if (!cliente) {
     return (
       <div className="clientes-empty-state">
         <div className="empty-icon-wrapper">
-          <i className="bi bi-building"></i>
+          <i className="bi bi-building-dash"></i>
         </div>
-        <h5>Selecciona un cliente</h5>
-        <p className="text-muted">
-          Haz clic en un cliente de la lista para ver sus datos y vacantes
-          asociadas.
-        </p>
+        <h4>Selecciona un cliente</h4>
+        <p>Explora los datos, vacantes y notas de tus socios comerciales.</p>
       </div>
     );
   }
 
-  const esPrioritario = cliente.prioritario || false;
-
   return (
-    <>
-      {/* Header con badge prioritario */}
+    <div className="cliente-detail-container">
+      {/* HEADER SECTION */}
       <div className="cliente-profile-header mb-4">
-        <div className="d-flex justify-content-between align-items-start flex-wrap gap-2">
-          <div className="d-flex align-items-start gap-3">
+        <div className="d-flex justify-content-between align-items-start gap-3">
+          <div className="d-flex align-items-center gap-3">
             <div className="cliente-avatar">{cliente.nombre.charAt(0)}</div>
             <div>
-              <div className="d-flex align-items-center gap-2 flex-wrap">
+              <div className="d-flex align-items-center gap-2">
                 <h3 className="cliente-profile-nombre mb-0">
                   {cliente.nombre}
                 </h3>
-                {esPrioritario && (
-                  <span className="badge-prioritario">
-                    <i className="bi bi-star-fill me-1"></i>VIP
-                  </span>
+                {cliente.prioritario && (
+                  <span className="badge-prioritario">VIP</span>
                 )}
               </div>
               <span className="cliente-sector">{cliente.sector}</span>
             </div>
           </div>
-          <div className="d-flex align-items-center gap-2 flex-wrap">
-            <span className="cliente-vacantes-badge grande">
-              {cliente.vacantesAbiertas} vacantes abiertas
-            </span>
+          <div className="d-flex gap-2">
             <button
-              className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
+              className="btn btn-outline-secondary btn-sm"
               onClick={(e) => onEdit(e, cliente)}
             >
-              <i className="bi bi-pencil"></i>
-              <span className="d-none d-sm-inline">Editar</span>
+              <i className="bi bi-pencil me-1"></i> Editar
             </button>
             <button
-              className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1"
+              className="btn btn-outline-danger btn-sm"
               onClick={(e) => onDelete(e, cliente)}
             >
               <i className="bi bi-trash"></i>
-              <span className="d-none d-sm-inline">Eliminar</span>
             </button>
           </div>
         </div>
 
-        {/* Estadísticas rápidas */}
-        <div className="cliente-stats-row mt-3">
+        {/* STATS ROW */}
+        <div className="cliente-stats-row mt-4">
           <div className="cliente-stat">
             <span className="stat-value stat-purple">
               {cliente.vacantesAbiertas}
             </span>
-            <span className="stat-label">Vacantes activas</span>
+            <span className="stat-label">Abiertas</span>
           </div>
           <div className="cliente-stat">
             <span className="stat-value stat-cyan">
               {cliente.vacantes?.filter((v) => v.estado === 'Contactada')
                 .length || 0}
             </span>
-            <span className="stat-label">Contactadas</span>
-          </div>
-          <div className="cliente-stat">
-            <span className="stat-value stat-amber">
-              {cliente.vacantes?.filter((v) => v.estado === 'En proceso')
-                .length || 0}
-            </span>
-            <span className="stat-label">En proceso</span>
+            <span className="stat-label">Contactos</span>
           </div>
           <div className="cliente-stat">
             <span className="stat-value stat-green">{notas.length}</span>
@@ -137,227 +103,146 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* TABS SELECTOR */}
       <div className="cliente-tabs mb-4">
-        <button
-          className={`cliente-tab ${activeTab === 'info' ? 'active' : ''}`}
-          onClick={() => setActiveTab('info')}
-        >
-          <i className="bi bi-info-circle me-2"></i>Información
-        </button>
-        <button
-          className={`cliente-tab ${activeTab === 'vacantes' ? 'active' : ''}`}
-          onClick={() => setActiveTab('vacantes')}
-        >
-          <i className="bi bi-briefcase me-2"></i>
-          Vacantes
-          {cliente.vacantes?.length > 0 && (
-            <span className="tab-badge">{cliente.vacantes.length}</span>
-          )}
-        </button>
-        <button
-          className={`cliente-tab ${activeTab === 'notas' ? 'active' : ''}`}
-          onClick={() => setActiveTab('notas')}
-        >
-          <i className="bi bi-journal-text me-2"></i>
-          Notas
-          {notas.length > 0 && (
-            <span className="tab-badge">{notas.length}</span>
-          )}
-        </button>
+        {[
+          { id: 'info', label: 'Información', icon: 'info-circle' },
+          {
+            id: 'vacantes',
+            label: 'Vacantes',
+            icon: 'briefcase',
+            count: cliente.vacantes?.length,
+          },
+          {
+            id: 'notas',
+            label: 'Notas',
+            icon: 'journal-text',
+            count: notas.length,
+          },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            className={`cliente-tab ${activeTab === tab.id ? 'active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            <i className={`bi bi-${tab.icon} me-2`}></i>
+            {tab.label}
+            {tab.count > 0 && (
+              <span className="tab-badge ms-2">{tab.count}</span>
+            )}
+          </button>
+        ))}
       </div>
 
-      {/* TAB: Información */}
-      {activeTab === 'info' && (
-        <div className="row g-3">
-          <div className="col-12 col-lg-6">
-            <div className="cliente-info-card h-100">
-              <h6 className="info-card-title">
-                <i className="bi bi-person-badge me-2"></i>Datos de contacto
-              </h6>
-              <div className="info-grid">
-                <div className="info-item">
-                  <span className="info-label">Contacto principal</span>
-                  <span className="info-value">
-                    {cliente.contactoPrincipal}
-                  </span>
+      {/* TAB CONTENT */}
+      <div className="tab-body">
+        {activeTab === 'info' && (
+          <div className="row g-4">
+            <div className="col-md-6">
+              <div className="cliente-info-card">
+                <h6 className="info-card-title">
+                  <i className="bi bi-person-lines-fill me-2"></i>Contacto
+                </h6>
+                <div className="info-grid">
+                  <div className="info-item">
+                    <span className="info-label">Responsable</span>
+                    <span className="info-value">
+                      {cliente.contactoPrincipal}
+                    </span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Email</span>
+                    <a
+                      href={`mailto:${cliente.email}`}
+                      className="info-value info-link text-decoration-none"
+                    >
+                      {cliente.email}
+                    </a>
+                  </div>
                 </div>
-                <div className="info-item">
-                  <span className="info-label">Email</span>
-                  <a
-                    href={`mailto:${cliente.email}`}
-                    className="info-value text-decoration-none info-link"
-                  >
-                    <i className="bi bi-envelope me-1"></i>
-                    {cliente.email}
-                  </a>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Teléfono</span>
-                  <a
-                    href={`tel:${cliente.telefono}`}
-                    className="info-value text-decoration-none info-link"
-                  >
-                    <i className="bi bi-telephone me-1"></i>
-                    {cliente.telefono}
-                  </a>
-                </div>
-              </div>
-              <div className="d-flex gap-2 mt-3">
-                <a
-                  href={`mailto:${cliente.email}`}
-                  className="btn btn-sm btn-contact"
-                >
-                  <i className="bi bi-envelope me-1"></i>Email
-                </a>
-                <a
-                  href={`tel:${cliente.telefono}`}
-                  className="btn btn-sm btn-contact"
-                >
-                  <i className="bi bi-telephone me-1"></i>Llamar
-                </a>
               </div>
             </div>
-          </div>
-
-          <div className="col-12 col-lg-6">
-            <div className="cliente-info-card h-100">
-              <h6 className="info-card-title">
-                <i className="bi bi-building me-2"></i>Datos fiscales
-              </h6>
-              <div className="info-grid">
-                <div className="info-item">
-                  <span className="info-label">CIF</span>
-                  <span className="info-value">{cliente.cif || '—'}</span>
-                </div>
+            <div className="col-md-6">
+              <div className="cliente-info-card">
+                <h6 className="info-card-title">
+                  <i className="bi bi-geo-alt me-2"></i>Ubicación
+                </h6>
                 <div className="info-item">
                   <span className="info-label">Dirección</span>
-                  <span className="info-value">{cliente.direccion || '—'}</span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Sector</span>
-                  <span className="info-value">{cliente.sector}</span>
+                  <span className="info-value">
+                    {cliente.direccion || 'No disponible'}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* TAB: Vacantes */}
-      {activeTab === 'vacantes' && (
-        <div className="cliente-info-card">
-          <h6 className="info-card-title mb-3">
-            <i className="bi bi-briefcase me-2"></i>
-            Vacantes vinculadas ({cliente.vacantes?.length || 0})
-          </h6>
-          {cliente.vacantes?.length > 0 ? (
-            cliente.vacantes.map((v) => (
-              <div
-                key={v.id}
-                className="vacante-vinculada d-flex align-items-center justify-content-between mb-2"
-                onClick={() =>
-                  setVacanteSeleccionada(adaptarVacante(v, cliente))
-                }
-              >
-                <div>
-                  <p className="mb-0 vacante-vinculada-titulo">{v.titulo}</p>
-                  <span className="activity-time">
-                    <i className="bi bi-clock me-1"></i>
-                    {v.fecha}
-                  </span>
-                </div>
-                <div className="d-flex align-items-center gap-2">
+        {activeTab === 'vacantes' && (
+          <div className="cliente-info-card">
+            <h6 className="info-card-title">Listado de Vacantes</h6>
+            {cliente.vacantes?.length > 0 ? (
+              cliente.vacantes.map((v) => (
+                <div
+                  key={v.id}
+                  className="vacante-vinculada d-flex justify-content-between align-items-center mb-2"
+                >
+                  <div>
+                    <div className="vacante-vinculada-titulo">{v.titulo}</div>
+                    <small className="text-muted">{v.fecha}</small>
+                  </div>
                   <span className={`badge ${getBadgeEstado(v.estado)}`}>
                     {v.estado}
                   </span>
-                  <i
-                    className="bi bi-chevron-right text-muted"
-                    style={{ fontSize: '12px' }}
-                  ></i>
                 </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-muted small mb-0">No hay vacantes vinculadas.</p>
-          )}
-        </div>
-      )}
-
-      {/* TAB: Notas */}
-      {activeTab === 'notas' && (
-        <div>
-          <div className="cliente-info-card mb-3">
-            <h6 className="info-card-title mb-3">
-              <i className="bi bi-plus-circle me-2"></i>Nueva nota
-            </h6>
-            <textarea
-              className="nota-textarea mb-2"
-              rows="3"
-              placeholder="Escribe una nota sobre este cliente..."
-              value={notaTexto}
-              onChange={(e) => setNotaTexto(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && e.ctrlKey) agregarNota();
-              }}
-            />
-            <div className="d-flex justify-content-between align-items-center">
-              <span className="text-muted" style={{ fontSize: '11px' }}>
-                Ctrl+Enter para guardar
-              </span>
-              <button
-                className="btn btn-sm btn-primary"
-                onClick={agregarNota}
-                disabled={!notaTexto.trim()}
-              >
-                <i className="bi bi-plus me-1"></i>Añadir nota
-              </button>
-            </div>
+              ))
+            ) : (
+              <p className="text-muted">Sin vacantes vinculadas.</p>
+            )}
           </div>
+        )}
 
-          {notas.length > 0 ? (
+        {activeTab === 'notas' && (
+          <div className="notas-section">
+            <div className="cliente-info-card mb-4">
+              <textarea
+                className="nota-textarea mb-3"
+                rows="3"
+                placeholder="Escribe algo importante sobre este cliente..."
+                value={notaTexto}
+                onChange={(e) => setNotaTexto(e.target.value)}
+              />
+              <div className="text-end">
+                <button
+                  className="btn-primary-custom"
+                  onClick={agregarNota}
+                  disabled={!notaTexto.trim()}
+                >
+                  Guardar Nota
+                </button>
+              </div>
+            </div>
             <div className="notas-timeline">
-              {notas.map((nota) => (
-                <div key={nota.id} className="nota-item">
+              {notas.map((n) => (
+                <div key={n.id} className="nota-item">
                   <div className="nota-dot"></div>
                   <div className="nota-content">
-                    <div className="d-flex justify-content-between align-items-start">
-                      <p className="nota-texto mb-1">{nota.texto}</p>
-                      <button
-                        className="btn-icon btn-icon-sm ms-2 flex-shrink-0"
-                        onClick={() => eliminarNota(nota.id)}
-                        title="Eliminar nota"
-                      >
-                        <i
-                          className="bi bi-trash text-danger"
-                          style={{ fontSize: '12px' }}
-                        ></i>
-                      </button>
-                    </div>
-                    <span className="activity-time">
-                      <i className="bi bi-clock me-1"></i>
-                      {nota.fecha}
-                    </span>
+                    <p className="nota-texto mb-1">{n.texto}</p>
+                    <small className="text-muted">{n.fecha}</small>
                   </div>
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="text-center text-muted py-4">
-              <i className="bi bi-journal-text fs-3 d-block mb-2"></i>
-              <p className="mb-0">No hay notas para este cliente</p>
-            </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
-      {/* Modal vacante */}
       {vacanteSeleccionada && (
         <VacancyModal
           job={vacanteSeleccionada}
           onClose={() => setVacanteSeleccionada(null)}
         />
       )}
-    </>
+    </div>
   );
 }
