@@ -1,16 +1,23 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
 from app.api.routes.main_router import api_router
-
+from app.core.config import settings
 from app.db.session import engine
 from app.db.connection import Base
 
+import uvicorn
+import os
 import app.models
-from app.core.config import settings
+
 
 # Inicializacion
-app = FastAPI()
+ENV = os.getenv("ENV", "development")
+
+app = FastAPI(
+    docs_url="/docs" if ENV != "production" else None,
+    redoc_url="/redoc" if ENV != "production" else None,
+    openapi_url="/openapi.json" if ENV != "production" else None,
+)
 
 app.add_middleware(
     CORSMiddleware,

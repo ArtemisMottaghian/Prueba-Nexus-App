@@ -16,7 +16,7 @@ class CandidateBase(BaseModel):
     last_name: str = Field(..., min_length=2, max_length=50)
     email: EmailStr # valida formato de correo
     phone: Optional[str] = Field(None, pattern=r'^\+?[\d\s\-]{7,20}$')
-    linkedin_url: Optional[HttpUrl] = None # Valida que sea una URL válida
+    candidate_url: Optional[HttpUrl] = None # Valida que sea una URL válida
     cv_url: Optional[HttpUrl] = None
     skills: Optional[str] = Field(None, max_length=500)
     notes: Optional[str] = Field(None, max_length=1000)
@@ -32,7 +32,7 @@ class CandidateUpdate(BaseModel):
     last_name: Optional[str] = Field(None, min_length=2, max_length=50)
     email: Optional[EmailStr] = None
     phone: Optional[str] = Field(None, pattern=r'^\+?[\d\s\-]{7,20}$')  # Formato internacional de teléfono
-    linkedin_url: Optional[HttpUrl] = None # Valida que sea una URL válida
+    candidate_url: Optional[HttpUrl] = None # Valida que sea una URL válida
     cv_url: Optional[HttpUrl] = None
     skills: Optional[str] = Field(None, max_length=500)
     notes: Optional[str] = Field(None, max_length=1000)
@@ -155,7 +155,7 @@ if __name__ == "__main__":
             first_name="Test",
             last_name="Error",
             email="correo-mal-formado",  # Esto debería fallar
-            linkedin_url="esto-no-es-una-url"
+            candidate_url="esto-no-es-una-url"
         )
         print("❌ Error: El sistema ha dejado pasar datos inválidos.")
     except Exception as e:
