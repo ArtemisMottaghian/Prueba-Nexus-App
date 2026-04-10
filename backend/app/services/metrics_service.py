@@ -6,6 +6,7 @@ from fastapi import HTTPException
 
 from app.models.job_model import JobOffer
 from app.schemas.job_offer import OfferStatus
+from app.models.error_log_model import ErrorLog
 
 async def get_lead_stats(db: AsyncSession, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
     try:
@@ -52,3 +53,61 @@ async def get_lead_stats(db: AsyncSession, start_date: datetime, end_date: datet
 
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error al obtener métricas")
+
+PORTAL_IDS = {
+    "adzuna": 1,
+    "infojobs": 2,
+    "linkedin": 3,
+}
+
+async def get_scrapers_status(db: AsyncSession) -> dict:
+    from datetime import timezone
+    today = datetime.now(timezone.utc).date()
+    result = {}
+
+    for scraper, portal_id in PORTAL_IDS.items():
+
+        # Última oferta insertada por este portal
+        last_offer_query = select(JobOffer.scraped_at).where(
+            JobOffer.portal_id == portal_id
+        ).order_by(JobOffer.scraped_at.desc()).limit(1)
+        last_offer_res = await db.execute(last_offer_query)
+        last_extraction = last_offer_res.scalar_one_or_none()
+
+        # Ofertas de hoy
+        offers_today_query = select(func.count(JobOffer.id)).where(
+            JobOffer.portal_id == portal_id,
+            func.date(JobOffer.scraped_at) == today
+        )
+        offers_today_res = await db.execute(offers_today_query)
+        offers_today = offers_today_res.scalar() or 0
+
+        # Último error de este scraper
+        error_query = select(ErrorLog.message, ErrorLog.occurred_at).where(
+            ErrorLog.error_code.ilike(f"%{scraper.upper()}%"),
+            ErrorLog.is_resolved == False
+        ).order_by(ErrorLog.occurred_at.desc()).limit(1)
+        error_res = await db.execute(error_query)
+        last_error = error_res.first()
+
+        # Determinar status
+        if last_error and last_extraction:
+            if last_error.occurred_at > last_extraction:
+                status = "warning"
+            else:
+                status = "online"
+        elif last_error and not last_extraction:
+            status = "error"
+        elif last_extraction:
+            status = "online"
+        else:
+            status = "unknown"
+
+        result[scraper] = {
+            "status": status,
+            "last_extraction": last_extraction,
+            "offers_today": offers_today,
+            "error": last_error.message if last_error else None
+        }
+
+    return result
