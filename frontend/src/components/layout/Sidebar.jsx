@@ -1,15 +1,13 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext'; // Importante: Seguridad
+import { useAuth } from '../../context/AuthContext';
 import logoNexus from '../../assets/logo-nexus.svg';
 import isotipoNexus from '../../assets/isotipo-nexus.svg';
 import './Sidebar.css';
 
 export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
-  const { logout, hasRole, user } = useAuth(); // Pillamos las funciones de Jose
-
-  // Mantenemos TU estado de grupos abiertos
+  const { logout, hasRole, user } = useAuth();
   const [openGroups, setOpenGroups] = useState({
     vision: true,
     reclutamiento: false,
@@ -24,16 +22,14 @@ export default function Sidebar({ isOpen, onClose }) {
     }));
   };
 
-  // Usamos el logout de Jose que es más seguro
   const handleLogout = () => {
     logout();
     if (onClose) onClose();
     navigate('/login');
   };
 
-  // Mantenemos TU función de UX Pro
   const handleMouseLeave = () => {
-    if (isOpen) return; // En móvil no cerramos nada
+    if (isOpen) return;
     setOpenGroups({
       vision: false,
       reclutamiento: false,
@@ -268,5 +264,3 @@ export default function Sidebar({ isOpen, onClose }) {
     </>
   );
 }
-
-
