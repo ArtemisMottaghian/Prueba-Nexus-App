@@ -1,21 +1,52 @@
 # Palabras clave que el scraper va a buscar en InfoJobs
 JOB_KEYWORDS = [
-    #"Tecnología",
-    "Software", 
-    #"IT",
-    #"Ciberseguridad",
-    #"Ingeniería",
-    #"Engineering",
-    #"Finanzas", 
-    #"Banca", "Banking",
-    #"Legal", "Abogado", "Jurídico",
-    #"Ventas", "Comercial", "Sales",
-    #"Logística", "Supply Chain", "Almacén",
-    #"Servicios", "Atención al cliente",
-    #"Seguros", "Insurance"
+    # Tech / IT
+    "Tecnología", "Technology",
+    "Software",
+    "IT",
+    "Desarrollador", "Developer",
+    "Programador", "Programmer",
+    "Backend",
+    "Frontend",
+    "Full Stack",
+    "Data Engineer",
+    "Data Analyst", "Analista de Datos",
+    "Machine Learning",
+    "Inteligencia Artificial", "Artificial Intelligence",
+    "Ciberseguridad", "Cybersecurity",
+    "DevOps",
+    "SAP",
+    "Sistemas", "IT Systems",
+    "Cloud",
+    "Arquitecto de Software", "Software Architect",
+
+    # Ingeniería
+    "Ingeniería", "Ingeniero", "Engineering", "Engineer",
+
+    # Finanzas y Banca
+    "Finanzas", "Finance",
+    "Banca", "Banking",
+
+    # Legal
+    "Legal", "Abogado", "Jurídico",
+
+    # Ventas y Comercial
+    "Ventas", "Comercial", "Sales",
+
+    # Logística
+    "Logística", "Supply Chain", "Almacén",
+
+    # Servicios
+    "Servicios", "Atención al cliente",
+
+    # RRHH
+    "Recursos Humanos", "Human Resources",
+
+    # Seguros
+    "Seguros", "Insurance",
 ]
 
-PAGES = 1
+PAGES = 2
 MAX_DAYS_OLD = 14
 
 INFOJOBS_HEADERS = {
