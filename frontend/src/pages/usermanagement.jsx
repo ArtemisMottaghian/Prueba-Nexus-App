@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import './UserManagement.css';
+import './usermanagement.css';
 
 // ── Datos mock mientras el backend no está listo ──────────────────────────────
 // TODO (BACKEND): Reemplazar almacenamiento local (MOCK_USERS) con llamada a fetch GET /api/users.

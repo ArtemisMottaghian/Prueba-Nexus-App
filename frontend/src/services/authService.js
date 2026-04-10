@@ -15,48 +15,46 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 // TODO (BACKEND): Eliminar lógica mock inferior e integrar llamada real a POST /api/auth.
 // El endpoint debe verificar el hash de la contraseña en BD y emitir un JWT (Bearer).
 // IMPORTANTE: El payload codificado del JWT deberá tener estrictamente los atributos: { sub: email, role: 'admin'|'company'|'hr_manager', id: uuid }
+
+// se pasa esto desde backend
+/*
+token_data = {
+        "sub": usuario.email,
+        "role": usuario.role.value,
+        "id": usuario.id
+    }
+    access_token = create_access_token(data=token_data)
+
+    return {"access_token": access_token, "token_type": "bearer"}
+*/
 export const login = async (email, password) => {
-  // MOCK LOGIN: Devolvemos un token falso validado para fingir inicio de sesión
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      let assignedRole = null;
-      if (email === 'admin@admin.com' && password === 'Admin1234') {
-        assignedRole = 'admin';
-      } else if (
-        email === 'reclutador@reclutador.com' &&
-        password === 'Reclutador1234'
-      ) {
-        assignedRole = 'reclutador';
-      } else if (
-        email === 'negocio@negocio.com' &&
-        password === 'Negocio1234'
-      ) {
-        assignedRole = 'negocio';
-      }
+  try {
+    // Usamos URLSearchParams para emular un formulario web (Requisito de OAuth2)
+    const formData = new URLSearchParams();
 
-      // Bloquear acceso a cuentas no autorizadas en este Mock
-      if (!assignedRole) {
-        return reject(
-          new Error('Credenciales incorrectas o cuenta no autorizada.')
-        );
-      }
+    formData.append('username', email.trim());
+    formData.append('password', password);
 
-      // Creamos un payload válido con expiración en 1 hora
-      const payload = {
-        sub: email,
-        role: assignedRole,
-        id: 1,
-        exp: Math.floor(Date.now() / 1000) + 3600,
-      };
-      // Codificamos en base64 para engañar a decodeToken
-      const fakeToken =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
-        btoa(JSON.stringify(payload)) +
-        '.signature';
+    // peticion a backend
+    const response = await fetch(`${API_URL}/api/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData.toString(),
+    });
 
-      resolve({ access_token: fakeToken, token_type: 'bearer' });
-    }, 1000);
-  });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || 'Error al iniciar sesión');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error en authService.login:', error);
+    throw error;
+  }
 };
 
 /**
