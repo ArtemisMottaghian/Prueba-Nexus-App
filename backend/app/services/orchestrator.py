@@ -36,7 +36,7 @@ async def run_scrapers():
     # Volcamos todos los resultados en raw_offer
     for i, result in enumerate(results):
         if isinstance(result, Exception):
-            scraper_names = ["adzuna", "zenrows", "linkedin", "infojobs"]
+            scraper_names = ["adzuna", "linkedin", "infojobs"]   # añadir "zenrows" cuando se active
             name = scraper_names[i] if i < len(scraper_names) else f"scraper_{i}"
             await log_scraper_error(
                 error_code=f"SCRAPER_{name.upper()}_CRITICAL",
