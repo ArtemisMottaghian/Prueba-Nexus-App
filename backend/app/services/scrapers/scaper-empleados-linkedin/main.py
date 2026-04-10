@@ -11,9 +11,11 @@ from app.core.scraper_linkedin_candidatos_config import (
     HEADLESS_MODE,
     MAX_PROFILES_PER_SEARCH,
 )
+from typing import Optional, Dict, List, Any
+from playwright.async_api import Page
 
 
-async def extract_profile_data(page, url, keyword, search_location):
+async def extract_profile_data(page: Page, url: str, keyword: str, search_location: str) -> Optional[Dict[str, Any]]:
     # Si topamos con una empresa la salta
     if "/company/" in url or "/school/" in url:
         return None
@@ -334,9 +336,7 @@ async def extract_profile_data(page, url, keyword, search_location):
 # ==============================================================================
 # MOTOR PRINCIPAL DEL SCRAPER
 # ==============================================================================
-async def run_scraper(
-    keywords: list, sectors: list, locations: list, headless: bool = False
-):
+async def run_scraper(keywords: List[str], sectors: List[str], locations: List[str], headless: bool = False) -> None:
     print(f"Iniciando la busqueda de candidatos (headless={headless})")
 
     pw = None
