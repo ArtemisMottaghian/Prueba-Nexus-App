@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timedelta,timezone
 from app.db.connection import get_db
 from app.services import metrics_service
-from app.schemas.metrics_schemas import LeadMetrics
+from app.schemas.metrics_schemas import LeadMetrics,  ScrapersStatusResponse
 
 router = APIRouter()
 
@@ -25,3 +25,8 @@ async def read_metrics(
         start = end - timedelta(days=30)
 
     return await metrics_service.get_lead_stats(db, start, end)
+
+@router.get("/scrapers/status", response_model=ScrapersStatusResponse)
+async def get_scrapers_status(db: AsyncSession = Depends(get_db)):
+    return await metrics_service.get_scrapers_status(db)
+
