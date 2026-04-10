@@ -24,10 +24,10 @@ async def run_scrapers():
     print("Comenzando busqueda de ofertas...")
 
     results = await asyncio.gather(
-        extract_adzuna(),
+        #extract_adzuna(),
         # Activar las funciones cuando se sepa que funcionan bien
         # extract_zenrows(),
-        extract_linked(),
+        #extract_linked(),
         extract_infojobs(),
         return_exceptions=True,
     )

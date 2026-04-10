@@ -1,18 +1,18 @@
 # Palabras clave que el scraper va a buscar en InfoJobs
 JOB_KEYWORDS = [
-    #"Tecnología",
-    "Software", 
-    #"IT",
-    #"Ciberseguridad",
-    #"Ingeniería",
-    #"Engineering",
-    #"Finanzas", 
-    #"Banca", "Banking",
-    #"Legal", "Abogado", "Jurídico",
-    #"Ventas", "Comercial", "Sales",
-    #"Logística", "Supply Chain", "Almacén",
-    #"Servicios", "Atención al cliente",
-    #"Seguros", "Insurance"
+    # "Tecnología",
+    # "Software", 
+    "IT",
+    # "Ciberseguridad",
+    # "Ingeniería",
+    # "Engineering",
+    # "Finanzas", 
+    # "Banca", "Banking",
+    # "Legal", "Abogado", "Jurídico",
+    # "Ventas", "Comercial", "Sales",
+    # "Logística", "Supply Chain", "Almacén",
+    # "Servicios", "Atención al cliente",
+    # "Seguros", "Insurance"
 ]
 
 PAGES = 1
