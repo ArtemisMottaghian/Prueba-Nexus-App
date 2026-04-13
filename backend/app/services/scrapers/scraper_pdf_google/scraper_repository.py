@@ -2,9 +2,9 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.candidates_model import Candidate
 from sqlalchemy import func
-from typing import Dict, Any
 
-async def upsert_scraped_candidate(db: AsyncSession, data: Dict[str, Any]) -> bool:
+
+async def upsert_scraped_candidate(db: AsyncSession, data: dict):
     #Inserta un nuevo candidato en la BBDD si el email existe se actualiza con los datos en vez de duplicarlos
     try:
         print(f"Intentando guardar a {data.get('first_name')} en la BD")
@@ -17,7 +17,7 @@ async def upsert_scraped_candidate(db: AsyncSession, data: Dict[str, Any]) -> bo
             location=data.get("location"),
             source=data.get("source"),
             experience=data.get("experience"),
-            linkedin_url=data.get("linkedin_url"),
+            candidate_url=data.get("candidate_url"),
             cv_url=data.get("cv_url"),
             skills=data.get("skills"),
             status=data.get("status", "active"),
@@ -35,7 +35,7 @@ async def upsert_scraped_candidate(db: AsyncSession, data: Dict[str, Any]) -> bo
                 "location": stmt.excluded.location,
                 "source": stmt.excluded.source,
                 "experience": stmt.excluded.experience,
-                "linkedin_url": stmt.excluded.linkedin_url,
+                "candidate_url": stmt.excluded.candidate_url,
                 "skills": stmt.excluded.skills,
                 "notes": stmt.excluded.notes,
                 "updated_at": func.now()
