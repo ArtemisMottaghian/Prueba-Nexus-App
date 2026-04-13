@@ -25,27 +25,27 @@ from app.services.scraper_logs_service import log_scraper_error
 async def run_scrapers():
     print("Comenzando busqueda de ofertas...")
 
-    results = await asyncio.gather(
-        extract_adzuna(),
-        # Activar las funciones cuando se sepa que funcionan bien
-        # extract_zenrows(),
-        extract_linked(),
-        extract_infojobs(),
-        return_exceptions=True,
-    )
-
     raw_offers = []
-    # Volcamos todos los resultados en raw_offer
-    for i, result in enumerate(results):
-        if isinstance(result, Exception):
-            scraper_names = ["adzuna", "linkedin", "infojobs"]   # añadir "zenrows" cuando se active
-            name = scraper_names[i] if i < len(scraper_names) else f"scraper_{i}"
+    scrapers = [
+        ("adzuna",extract_adzuna),
+        ("linkedin",extract_linked),
+        ("infojobs",extract_infojobs),
+    ]
+
+
+    for name, scraper in scrapers:
+        try:
+            print(f"Ejecutando scraper: {name}...")
+            result = await scraper()
+            if isinstance(result, list):
+                raw_offers.extend(result)
+                print(f"  -> {name}: {len(result)} ofertas")
+        except Exception as e:
             await log_scraper_error(
                 error_code=f"SCRAPER_{name.upper()}_CRITICAL",
-                message=f"scraper={name} | stage=gather | exc={result}"
+                message=f"scraper={name} | stage=gather | exc={e}"
             )
-        elif isinstance(result, list):
-            raw_offers.extend(result)
+            print(f"  -> {name}: ERROR - {e}")
 
     print(f"OFERTAS TOTALES RECOGIDAS: {len(raw_offers)}")
     if not raw_offers:
