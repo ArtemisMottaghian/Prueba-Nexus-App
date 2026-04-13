@@ -4,7 +4,7 @@ import VacancyModal from './VacancyModal';
 import './VacancyGrid.css';
 
 export default function VacancyGrid({
-  jobs, // Ya vienen filtrados desde el padre
+  jobs,
   selectedVacancies,
   onSelectVacancy,
   onUpdateJobStatus,
@@ -16,7 +16,6 @@ export default function VacancyGrid({
     <>
       <div className="results-header mb-4 mt-4">
         <h2 className="results-title">
-          {/* Usamos directamente jobs.length porque ya es la lista filtrada */}
           <span className="count-highlight">{jobs.length}</span> Vacancies
         </h2>
 
@@ -42,7 +41,8 @@ export default function VacancyGrid({
         className={viewMode === 'grid' ? 'vacancies-grid' : 'vacancies-list'}
       >
         {jobs.length === 0 ? (
-          <div className="w-100 text-center text-muted py-5 border rounded-3 bg-dark-subtle">
+          /* CAMBIO: Quitamos bg-dark-subtle y usamos nuestra clase adaptativa */
+          <div className="w-100 text-center py-5 rounded-3 empty-state-container">
             <i className="bi bi-search display-4 d-block mb-3"></i>
             <p>No vacancies found with these filters.</p>
           </div>
@@ -58,7 +58,7 @@ export default function VacancyGrid({
                 isListView={viewMode === 'list'}
                 isSelected={selectedVacancies?.includes(job.id)}
                 onSelect={(e) => {
-                  e.stopPropagation(); // Para que no se abra el modal al marcar el checkbox
+                  if (e && e.stopPropagation) e.stopPropagation();
                   onSelectVacancy(job.id);
                 }}
                 onUpdateStatus={onUpdateJobStatus}
@@ -68,7 +68,6 @@ export default function VacancyGrid({
         )}
       </div>
 
-      {/* Modal para ver detalles de la vacante */}
       {selectedJob && (
         <VacancyModal
           job={selectedJob}

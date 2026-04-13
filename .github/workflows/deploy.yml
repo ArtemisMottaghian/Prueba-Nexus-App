@@ -15,29 +15,21 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v3
 
-      - name: Autenticar en GCP
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Setup gcloud
-        uses: google-github-actions/setup-gcloud@v2
-
       - name: Deploy en VM GCP
-        run: |
-          gcloud compute ssh desarrollo@nexus-agent-dev \
-            --zone=europe-southwest1-c \
-            --tunnel-through-iap \
-            --command="
-              cd ~/nexus-app &&
-              git config pull.rebase false &&
-              git pull origin develop &&
-              cd backend &&
-              source ~/nexus-app/venv/bin/activate &&
-              pip install -r requirements.txt --quiet &&
-              sudo systemctl restart aratalent &&
-              cd ~/nexus-app/frontend &&
-              npm install --quiet &&
-              npm run build &&
-              echo '✅ Deploy completado'
-            "
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            cd ~/nexus-app &&
+            git config pull.rebase false &&
+            git pull origin develop &&
+            cd backend &&
+            source ~/nexus-app/venv/bin/activate &&
+            pip install -r requirements.txt --quiet &&
+            sudo systemctl restart aratalent &&
+            cd ~/nexus-app/frontend &&
+            npm install --quiet &&
+            npm run build &&
+            echo '✅ Deploy completado'

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import './Topbar.css';
+
 const TITLES = {
   '/': 'Dashboard',
   '/vacantes': 'Vacantes',
@@ -8,7 +9,7 @@ const TITLES = {
 };
 
 export default function Topbar({ onMenuToggle, onActivityToggle }) {
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const location = useLocation();
 
   const pageTitle = TITLES[location.pathname] || 'Dashboard';
@@ -17,10 +18,8 @@ export default function Topbar({ onMenuToggle, onActivityToggle }) {
     const htmlElement = document.documentElement;
     if (isDarkMode) {
       htmlElement.setAttribute('data-bs-theme', 'dark');
-      htmlElement.classList.remove('theme-light');
     } else {
-      htmlElement.setAttribute('data-bs-theme', 'light');
-      htmlElement.classList.add('theme-light');
+      htmlElement.removeAttribute('data-bs-theme');
     }
   }, [isDarkMode]);
 
@@ -28,7 +27,6 @@ export default function Topbar({ onMenuToggle, onActivityToggle }) {
     <header className="ara-topbar">
       <div className="topbar-content">
         <div className="d-flex align-items-center gap-3">
-          {/* Botón menú lateral — funciona en móvil */}
           <button className="btn-icon d-lg-none" onClick={onMenuToggle}>
             <i className="bi bi-list"></i>
           </button>
@@ -47,13 +45,12 @@ export default function Topbar({ onMenuToggle, onActivityToggle }) {
             title="Cambiar tema"
           >
             {isDarkMode ? (
-              <i className="bi bi-sun-fill text-warning"></i>
-            ) : (
               <i className="bi bi-moon-stars-fill text-primary"></i>
+            ) : (
+              <i className="bi bi-sun-fill text-warning"></i>
             )}
           </button>
 
-          {/* Botón notificaciones — abre el panel de actividad */}
           <button
             className="btn-icon position-relative"
             onClick={onActivityToggle}

@@ -21,6 +21,7 @@ export default function DashboardQuickCards({ stats, periodType, loading }) {
 
   return (
     <div className="row g-3 mb-4">
+      {/* 1. TARJETA RESUMEN */}
       <div className="col-12 col-sm-6 col-xl-3">
         <div className="dashboard-quick-card">
           <div className="dashboard-quick-card__icon dashboard-quick-card__icon--purple">
@@ -33,8 +34,9 @@ export default function DashboardQuickCards({ stats, periodType, loading }) {
             >
               Resumen del periodo
             </div>
+            {/* CAMBIO AQUI: text-white -> text-body para que adapte el color al tema */}
             <div
-              className="fs-3 fw-bold text-white mb-0"
+              className="fs-3 fw-bold text-body mb-0"
               style={{ lineHeight: 1.2 }}
             >
               {loading ? '—' : pipelineTotal}
@@ -47,6 +49,7 @@ export default function DashboardQuickCards({ stats, periodType, loading }) {
         </div>
       </div>
 
+      {/* 2. TARJETA VACANTES */}
       <div className="col-12 col-sm-6 col-xl-3">
         <Link
           to="/vacantes"
@@ -57,7 +60,8 @@ export default function DashboardQuickCards({ stats, periodType, loading }) {
               <i className="bi bi-briefcase"></i>
             </div>
             <div className="flex-grow-1 min-w-0">
-              <div className="fw-semibold text-white mb-1">Vacantes</div>
+              {/* CAMBIO AQUI: text-white -> text-body */}
+              <div className="fw-semibold text-body mb-1">Vacantes</div>
               <div className="small text-muted">Directorio y filtros</div>
               <div className="small text-primary mt-2 mb-0">
                 Ir <i className="bi bi-arrow-right-short"></i>
@@ -67,6 +71,7 @@ export default function DashboardQuickCards({ stats, periodType, loading }) {
         </Link>
       </div>
 
+      {/* 3. TARJETA CLIENTES */}
       <div className="col-12 col-sm-6 col-xl-3">
         <Link
           to="/clientes"
@@ -77,7 +82,8 @@ export default function DashboardQuickCards({ stats, periodType, loading }) {
               <i className="bi bi-building"></i>
             </div>
             <div className="flex-grow-1 min-w-0">
-              <div className="fw-semibold text-white mb-1">Clientes</div>
+              {/* CAMBIO AQUI: text-white -> text-body */}
+              <div className="fw-semibold text-body mb-1">Clientes</div>
               <div className="small text-muted">CRM y detalle</div>
               <div className="small text-primary mt-2 mb-0">
                 Ir <i className="bi bi-arrow-right-short"></i>
@@ -87,6 +93,7 @@ export default function DashboardQuickCards({ stats, periodType, loading }) {
         </Link>
       </div>
 
+      {/* 4. TARJETA CANDIDATOS */}
       <div className="col-12 col-sm-6 col-xl-3">
         <Link
           to="/candidatos"
@@ -97,7 +104,8 @@ export default function DashboardQuickCards({ stats, periodType, loading }) {
               <i className="bi bi-people"></i>
             </div>
             <div className="flex-grow-1 min-w-0">
-              <div className="fw-semibold text-white mb-1">Candidatos</div>
+              {/* CAMBIO AQUI: text-white -> text-body */}
+              <div className="fw-semibold text-body mb-1">Candidatos</div>
               <div className="small text-muted">Listado y selección</div>
               <div className="small text-primary mt-2 mb-0">
                 Ir <i className="bi bi-arrow-right-short"></i>

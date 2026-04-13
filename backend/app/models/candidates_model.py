@@ -16,7 +16,7 @@ class Candidate(Base):
     source = Column(String(100), nullable=True)
     experience = Column(Text, nullable=True)
     phone = Column(String(50), nullable=True)
-    linkedin_url = Column(String(255), nullable=True)
+    candidate_url = Column(Text, nullable=True)
     cv_url = Column(Text, nullable=True)
     skills = Column(Text, nullable=True, index=True) 
     
