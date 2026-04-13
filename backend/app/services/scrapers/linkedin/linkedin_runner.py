@@ -161,7 +161,7 @@ async def extract_linked() -> list[dict]:
                     (
                         "KEYWORD",
                         kw.replace('"', "").strip(),
-                        f"Keyword: {kw.replace('"', '').strip()}",
+                        f"Keyword: {kw.strip()}",
                         [],
                     )
                 )
