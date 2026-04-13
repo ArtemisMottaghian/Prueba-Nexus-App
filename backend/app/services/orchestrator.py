@@ -1,4 +1,6 @@
 import asyncio
+from dotenv import load_dotenv
+load_dotenv()
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.dialects.postgresql import insert
 
