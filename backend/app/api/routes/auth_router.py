@@ -102,4 +102,5 @@ async def google_callback(code: str, db:AsyncSession = Depends(get_db)):
     }
     access_token = create_access_token(data=token_data)
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    frontend_url = f"http://nexus.ara-tech.es/auth/google/callback?token={access_token}"
+    return RedirectResponse(url=frontend_url)

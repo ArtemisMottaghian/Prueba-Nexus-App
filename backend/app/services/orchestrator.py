@@ -23,6 +23,7 @@ from app.services.scraper_logs_service import log_scraper_error
 
 SKIP_ENRICHMENT = True
 
+
 async def gather_raw_offers() -> list[dict]:
     """
     Ejecuta todos los scrapers de forma concurrente, gestiona los errores individuales
@@ -117,13 +118,13 @@ async def enrich_single_offer(offer: ScrapedJobOffer) -> dict[str, Any]:
     recruiter = offer_dict.get("recruiter_name")
 
     if offer_dict.get("offer_url"):
-            offer_dict["offer_url"] = str(offer_dict["offer_url"])
+        offer_dict["offer_url"] = str(offer_dict["offer_url"])
 
     if SKIP_ENRICHMENT:
         return {
             "offer_data": offer_dict,
             "recruiter_name": recruiter,
-            "recruiter_email": obtained_email
+            "recruiter_email": obtained_email,
         }
 
     if not obtained_email:

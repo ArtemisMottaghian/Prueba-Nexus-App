@@ -1,3 +1,4 @@
+
 .modal-backdrop {
   z-index: 1050;
   position: fixed;
@@ -5,24 +6,42 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: #000;
-  opacity: 0.5;
+  background-color: rgba(0, 0, 0, 0.6); 
+  backdrop-filter: blur(4px);
+  transition: opacity 0.3s ease;
 }
 
 .modal {
   z-index: 1060;
-  display: block;
+  display: block; /
 }
 
 .modal-content {
-  background: var(--bg-dark-tertiary);
+  background: var(--bg-primary); 
   border: 1px solid var(--border-color);
   border-radius: 16px;
   color: var(--text-primary);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); 
+  transition: background 0.3s ease, border-color 0.3s ease;
+  overflow: hidden;
 }
 
-/* Soporte para modo claro */
-[data-bs-theme='light'] .modal-content {
-  background: #ffffff;
-  border-color: #e5e7eb;
+.modal-header {
+  border-bottom: 1px solid var(--border-color);
+  padding: 1.5rem;
+  background: var(--bg-secondary); 
+}
+
+.modal-footer {
+  border-top: 1px solid var(--border-color);
+  padding: 1.25rem;
+  background: var(--bg-secondary);
+}
+
+.btn-close {
+  transition: transform 0.2s ease;
+}
+
+.btn-close:hover {
+  transform: rotate(90deg);
 }
