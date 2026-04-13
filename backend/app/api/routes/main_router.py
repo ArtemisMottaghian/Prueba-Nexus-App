@@ -17,7 +17,7 @@ api_router.include_router(clients_router.router, prefix="/clients", tags=["Gesti
 api_router.include_router(candidates_router.router, prefix="/candidates", tags=["Gestion de candidatos"])
 api_router.include_router(calendar_router.router, prefix="/calendar", tags=["Calendario"])
 api_router.include_router(logs_router.router, prefix="/logs", tags=["Logs / Auditoría"])
-#
+
 #api_router.include_router(vacancies_router.router, prefix="/vacancies", tags=["Gestión de Vacantes"], dependencies=[Depends(get_current_user)])
 #api_router.include_router(metrics_router.router, prefix="/metrics", tags=["Métricas"], dependencies=[Depends(get_current_user)])
 #api_router.include_router(clients_router.router, prefix="/clients", tags=["Gestion de clientes"], dependencies=[Depends(get_current_user)])
