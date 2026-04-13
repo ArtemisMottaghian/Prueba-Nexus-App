@@ -1,5 +1,5 @@
 # CONFIGURACIÓN DE LINKEDIN
-SECTORES_LINKEDIN = {
+LINKEDIN_SECTORS = {
     "SECTOR TECNOLÓGICO": "Tecnología OR Software OR IT OR Ciberseguridad",
     "SECTOR INGENIERÍA": "Ingeniería OR Engineering",
     "SECTOR FINANCIERO Y BANCA": "Finanzas OR Banca OR Banking",

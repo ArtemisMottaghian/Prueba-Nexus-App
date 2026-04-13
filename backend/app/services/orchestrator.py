@@ -27,8 +27,8 @@ async def run_scrapers():
         extract_adzuna(),
         # Activar las funciones cuando se sepa que funcionan bien
         # extract_zenrows(),
-        extract_linked(),
-        extract_infojobs(),
+       # extract_linked(),
+       # extract_infojobs(),
         return_exceptions=True,
     )
 
