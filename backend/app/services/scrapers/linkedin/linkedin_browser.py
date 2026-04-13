@@ -24,6 +24,8 @@ def get_webdriver() -> webdriver.Chrome:
     options.add_argument("--incognito")
     options.add_argument("--headless=new") 
     options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
 
     driver = webdriver.Chrome(options=options)
     driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
