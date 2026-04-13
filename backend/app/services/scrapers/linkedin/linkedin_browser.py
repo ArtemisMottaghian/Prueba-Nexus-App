@@ -20,12 +20,15 @@ def get_webdriver() -> webdriver.Chrome:
     """
 
     options = Options()
-    options.add_argument("--start-maximized")
-    options.add_argument("--incognito")
-    options.add_argument("--headless=new") 
-    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument("--remote-debugging-port=9222")
+    options.add_argument("--disable-extensions")
+    options.add_argument("--incognito")
 
     driver = webdriver.Chrome(options=options)
     driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
@@ -35,6 +38,7 @@ def get_webdriver() -> webdriver.Chrome:
 def scroll_page(driver: webdriver.Chrome, max_scrolls: int, scroll_pause: float) -> None:
     """
     Hace scroll infinito en la página de resultados de LinkedIn haciendo clic en 'Ver más' si es necesario.
+
 
     Args:
         driver: Instancia de Selenium WebDriver.
