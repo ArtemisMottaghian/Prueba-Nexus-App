@@ -29,8 +29,8 @@ def determine_work_modality(title:str, description: str, location: str) -> str |
     text_to_search = f"{title} {description} {location}".lower()
 
     if any(mod in text_to_search for mod in ["híbrid", "hibrid", "hybrid"]):
-        return "Hibrido"
-    elif any(mod in text_to_search for mod in ["remoto", "teletrabajo", "100% remoto", "fully remote"]):
+        return "Híbrido"
+    elif any(mod in text_to_search for mod in ["remoto", "remote", "teletrabajo", "100% remoto", "fully remote"]):
         return "Remoto"
     elif any(mod in text_to_search for mod in ["presencial", "on-site", "onsite", "en oficina", "in office"]):
         return "Presencial"

@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 from seleniumbase import Driver
 
-def get_webdriver() -> Driver:
+def get_webdriver() -> Any:
     """
     Inicia el navegador vitaminado de SeleniumBase.
     """
@@ -17,7 +17,7 @@ def get_webdriver() -> Driver:
     #headless= True lo hace invisible para que funcione en Google Cloud
     return Driver(uc=True, headless=True, no_sandbox=True)
 
-def restart_nav(old_driver: Driver | None) ->Driver:
+def restart_nav(old_driver: Any) -> Any:
     """Resucita el navegador si hay captcha o colapso"""
 
     if old_driver:
@@ -36,7 +36,7 @@ def restart_nav(old_driver: Driver | None) ->Driver:
 
     return new_driver
 
-async def fetch_infojobs_details(driver: Driver, job_url: str, company_url: str) -> tuple[dict[str, Any], Driver]:
+async def fetch_infojobs_details(driver: Any, job_url: str, company_url: str) -> tuple[dict[str, Any], Any]:
     """
     Visita físicamente las URLs de la oferta y de la empresa para raspar sus descripciones.
     Devuelve un diccionario con los datos y la instancia del navegador por si hubo que reiniciarlo.

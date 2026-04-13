@@ -247,3 +247,9 @@ async def extract_infojobs() -> list[dict]:
                 pass
 
     return all_offers_extracted
+
+# if __name__ == "__main__":
+#     resultados = asyncio.run(extract_infojobs())
+#     print(f"Se han extraido {len(resultados)} ofertas de Adzuna.")
+#     for resultado in resultados:
+#         print(resultado)

@@ -1,3 +1,4 @@
+import asyncio
 import time
 import re
 import sys
@@ -277,6 +278,8 @@ async def extract_linked() -> list[dict]:
     finally:
         driver.quit()
 
-# Si quieres probar el script aislado temporalmente, puedes descomentar esto:
 # if __name__ == "__main__":
-#     asyncio.run(run_linkedin_scraper())
+#     resultados = asyncio.run(extract_linked())
+#     print(f"Se han extraido {len(resultados)} ofertas de LinkedIn.")
+#     for resultado in resultados:
+#         print(resultado)
