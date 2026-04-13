@@ -91,8 +91,6 @@ async def process_single_offer(
         return None, driver
 
     title = offer.get("title", "Sin titulo")
-    if kw.lower() not in title.lower():
-        return None, driver
 
     processed_ids.add(job_id)
 
