@@ -322,7 +322,7 @@ async def extract_profile_data(page: Page, url: str, keyword: str, search_locati
             "location": scraped_location,
             "source": "LinkedIn",
             "experience": full_experience,
-            "linkedin_url": url,
+            "candidate_url": url,
             "cv_url": None,
             "skills": final_skills,
             "status": "active",

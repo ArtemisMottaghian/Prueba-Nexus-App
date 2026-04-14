@@ -17,7 +17,7 @@ async def upsert_scraped_candidate(db: AsyncSession, data: dict):
             location=data.get("location"),
             source=data.get("source"),
             experience=data.get("experience"),
-            linkedin_url=data.get("linkedin_url"),
+            candidate_url=data.get("linkedin_url"),
             cv_url=data.get("cv_url"),
             skills=data.get("skills"),
             status=data.get("status", "active"),
@@ -35,7 +35,7 @@ async def upsert_scraped_candidate(db: AsyncSession, data: dict):
                 "location": stmt.excluded.location,
                 "source": stmt.excluded.source,
                 "experience": stmt.excluded.experience,
-                "linkedin_url": stmt.excluded.linkedin_url,
+                "candidate_url": stmt.excluded.candidate_url,
                 "skills": stmt.excluded.skills,
                 "notes": stmt.excluded.notes,
                 "updated_at": func.now()
