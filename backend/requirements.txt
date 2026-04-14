@@ -89,3 +89,6 @@ websocket-client==1.9.0
 websockets==16.0
 wheel==0.46.3
 wsproto==1.3.2
+aiohttp==3.11.18
+pymupdf==1.26.1
+google-genai==1.14.0
