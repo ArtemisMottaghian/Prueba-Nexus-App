@@ -6,7 +6,6 @@ from sqlalchemy.dialects.postgresql import insert
 from app.db.session import AsyncSessionLocal
 from app.db.connection import Base
 
-
 from app.models.job_model import JobOffer
 from app.models.clients_model import Client
 from app.models.contacts_model import Contact
@@ -21,7 +20,7 @@ from app.services.enrichment_service import (
 )
 from app.services.scraper_logs_service import log_scraper_error
 
-SKIP_ENRICHMENT = True
+SKIP_ENRICHMENT = False
 
 
 async def gather_raw_offers() -> list[dict]:
@@ -33,30 +32,30 @@ async def gather_raw_offers() -> list[dict]:
         list[dict]: Lista de diccionarios crudos con las ofertas extraídas de todos los portales.
     """
 
-    results = await asyncio.gather(
-        # extract_adzuna(),
-        # Descomentar cuando estén listos para producción:
-        extract_linked(),
-        # extract_infojobs(),
-        return_exceptions=True,
-    )
-
     raw_offers = []
-    scraper_names = ["adzuna", "linkedin", "infojobs"]
 
-    for index, result in enumerate(results):
-        if isinstance(result, Exception):
-            name = (
-                scraper_names[index]
-                if index < len(scraper_names)
-                else f"scraper_{index}"
-            )
+    # Lista de scrapers a ejecutar (Comenta los que no quieras usar)
+    scrapers = [
+        ("adzuna", extract_adzuna),
+        ("linkedin", extract_linked),
+        ("infojobs", extract_infojobs),
+    ]
+
+    for name, scraper_func in scrapers:
+        print(f"\nIniciando scraper: {name.upper()}...")
+        try:
+            result = await scraper_func()
+
+            if isinstance(result, list):
+                raw_offers.extend(result)
+                print(f"{name.upper()} terminado. {len(result)} ofertas extraídas.")
+
+        except Exception as e:
+            print(f"Error crítico en {name.upper()}: {e}")
             await log_scraper_error(
                 error_code=f"SCRAPER_{name.upper()}_CRITICAL",
-                message=f"scraper={name} | stage=gather | exc={result}",
+                message=f"scraper={name} | stage=gather | exc={e}",
             )
-        elif isinstance(result, list):
-            raw_offers.extend(result)
 
     return raw_offers
 
@@ -256,7 +255,7 @@ async def run_scrapers() -> None:
         )
         for i, item in enumerate(
             enriched_data_list[:3]
-        ):  # Imprime solo las 3 primeras para no saturar la consola
+        ):
             print(
                 f"  Oferta {i+1}: {item.get('offer_data', {}).get('title')} | Reclutador: {item.get('recruiter_name')}"
             )
