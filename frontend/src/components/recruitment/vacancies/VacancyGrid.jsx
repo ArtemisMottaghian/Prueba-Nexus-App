@@ -2,6 +2,7 @@ import { useState } from 'react';
 import VacancyCard from './VacancyCard';
 import VacancyModal from './VacancyModal';
 import './VacancyGrid.css';
+import { vacanciesService } from '../../../services/vacanciesService';
 
 export default function VacancyGrid({
   jobs,
@@ -12,6 +13,18 @@ export default function VacancyGrid({
 }) {
   const [viewMode, setViewMode] = useState('grid');
   const [selectedJob, setSelectedJob] = useState(null);
+
+  const handleOpenModal = async (jobId) => {
+    try {
+      // Pedimos el detalle completo (¡con descripción!)
+      const fullJobData = await vacanciesService.getVacancyById(jobId);
+      // Se lo pasamos al modal
+      setSelectedJob(fullJobData);
+    } catch (error) {
+      console.error('Error al cargar la descripción de la vacante:', error);
+      alert('No se pudo cargar el detalle de la vacante.');
+    } // <--- Llave del catch cerrada correctamente
+  };
 
   return (
     <>
@@ -51,7 +64,7 @@ export default function VacancyGrid({
           jobs.map((job) => (
             <div
               key={job.id}
-              onClick={() => setSelectedJob(job)}
+              onClick={() => handleOpenModal(job.id)}
               style={{ cursor: 'pointer' }}
             >
               <VacancyCard
