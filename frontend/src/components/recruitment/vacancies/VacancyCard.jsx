@@ -49,6 +49,7 @@ export default function VacancyCard({
               type="checkbox"
               checked={isSelected || false}
               onChange={handleCheckboxClick}
+              onClick={handleChildClick}
             />
             {/* CAMBIO: Eliminado text-white, añadido text-body */}
             <h5 className="mb-0 text-body vacante-title-list-sm">
@@ -92,6 +93,7 @@ export default function VacancyCard({
             type="checkbox"
             checked={isSelected || false}
             onChange={handleCheckboxClick}
+            onClick={handleChildClick}
           />
           <select
             className={`form-select form-select-sm select-status-inline ${badgeClass}`}
