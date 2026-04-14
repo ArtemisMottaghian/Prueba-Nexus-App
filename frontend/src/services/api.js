@@ -60,4 +60,9 @@ export const ENDPOINTS = {
     leadStats: (fromIso, toIso) =>
       `${BASE_URL}/api/metrics?from=${encodeURIComponent(fromIso)}&to=${encodeURIComponent(toIso)}`,
   },
+  users: {
+    list: `${BASE_URL}/api/users/`,
+    create: `${BASE_URL}/api/users/`,
+    delete: (id) => `${BASE_URL}/api/users/${id}`,
+  },
 };

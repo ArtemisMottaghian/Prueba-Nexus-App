@@ -4,15 +4,14 @@
 // Solo accesible con rol 'admin'
 // ============================================
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { usersService } from '../services/userManagementService'; // <-- Importamos tu nuevo servicio
 import './usermanagement.css';
 
-// ── Datos mock mientras el backend no está listo ──────────────────────────────
-// TODO (BACKEND): Reemplazar almacenamiento local (MOCK_USERS) con llamada a fetch GET /api/users.
-// Este endpoint debe estar blindado: solo puede consultarlo un token cuyo rol == 'admin'.
-const MOCK_USERS = [
+// ── Datos de respaldo (Fallback) por si el backend está offline ──
+const FALLBACK_USERS = [
   {
     id: 1,
     name: 'Pablo Gargallo',
@@ -44,17 +43,37 @@ const ROLE_OPTIONS = [
   { value: 'negocio', label: 'Negocio' },
 ];
 
-// ── Formulario vacío ──────────────────────────────────────────────────────────
 const EMPTY_FORM = { name: '', email: '', role: 'reclutador' };
 
 export default function UserManagement() {
   const { hasRole } = useAuth();
   const navigate = useNavigate();
 
-  const [users, setUsers] = useState(MOCK_USERS);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [formErrors, setFormErrors] = useState({});
+
+  // ── Petición a la DB al cargar el componente ─────────────────────────────────
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const data = await usersService.getAllUsers();
+        setUsers(data);
+      } catch (error) {
+        console.log(
+          'Backend users endpoint offline. Using fallback data...',
+          error
+        );
+        setUsers(FALLBACK_USERS);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   // ── Guardia de rol ──────────────────────────────────────────────────────────
   if (!hasRole('admin')) {
@@ -97,24 +116,39 @@ export default function UserManagement() {
     setFormErrors({});
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const errors = validate();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       return;
     }
-    // Añadimos el usuario localmente (en el futuro: POST /api/users)
-    // TODO (BACKEND): Enviar `form` a POST /api/users
-    // El backend se hará cargo ahí de mandar el correo de invitación / generar su contraseña temporal.
-    const newUser = {
-      id: Date.now(),
-      name: form.name.trim(),
-      email: form.email.trim(),
-      role: form.role,
-      createdAt: new Date().toISOString().split('T')[0],
-    };
-    setUsers((prev) => [...prev, newUser]);
-    handleCloseModal();
+
+    try {
+      // LLAMADA AL BACKEND REAL
+      const newUser = await usersService.createUser({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        role: form.role,
+      });
+
+      // Actualizamos la tabla localmente si tiene éxito
+      setUsers((prev) => [...prev, newUser]);
+      handleCloseModal();
+    } catch (error) {
+      alert('Hubo un error al crear el usuario en el servidor.');
+      console.error(error);
+    }
+  };
+
+  const handleDeleteUser = async (id) => {
+    try {
+      // LLAMADA AL BACKEND REAL
+      await usersService.deleteUser(id);
+      setUsers((prev) => prev.filter((u) => u.id !== id));
+    } catch (error) {
+      alert('Hubo un error al eliminar el usuario en el servidor.');
+      console.error(error);
+    }
   };
 
   const handleFieldChange = (field, value) => {
@@ -150,64 +184,68 @@ export default function UserManagement() {
         </button>
       </div>
 
-      {/* Contador */}
-      <div className="um-meta">
-        <span className="um-meta__count">
-          {users.length} {users.length === 1 ? 'usuario' : 'usuarios'}
-        </span>
-      </div>
+      {loading ? (
+        <div className="text-center p-5 text-muted">Cargando usuarios...</div>
+      ) : (
+        <>
+          {/* Contador */}
+          <div className="um-meta">
+            <span className="um-meta__count">
+              {users.length} {users.length === 1 ? 'usuario' : 'usuarios'}
+            </span>
+          </div>
 
-      {/* Tabla */}
-      <div className="um-table-wrapper">
-        <table className="um-table">
-          <thead>
-            <tr>
-              <th>Empleado</th>
-              <th>Email</th>
-              <th>Rol</th>
-              <th>Alta</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id} className="um-table__row">
-                <td>
-                  <div className="um-user-cell">
-                    <div className="um-avatar">
-                      {user.name.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="um-user-cell__name">{user.name}</span>
-                  </div>
-                </td>
-                <td className="um-table__email">{user.email}</td>
-                <td>{getRoleBadge(user.role)}</td>
-                <td className="um-table__date">{user.createdAt}</td>
-                <td className="um-table__actions">
-                  <button
-                    className="um-btn-delete"
-                    title="Eliminar usuario"
-                    onClick={() =>
-                      setUsers((prev) => prev.filter((u) => u.id !== user.id))
-                    }
-                  >
-                    <i className="bi bi-trash3"></i>
-                  </button>
-                </td>
-              </tr>
-            ))}
+          {/* Tabla */}
+          <div className="um-table-wrapper">
+            <table className="um-table">
+              <thead>
+                <tr>
+                  <th>Empleado</th>
+                  <th>Email</th>
+                  <th>Rol</th>
+                  <th>Alta</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user.id} className="um-table__row">
+                    <td>
+                      <div className="um-user-cell">
+                        <div className="um-avatar">
+                          {user.name ? user.name.charAt(0).toUpperCase() : '?'}
+                        </div>
+                        <span className="um-user-cell__name">{user.name}</span>
+                      </div>
+                    </td>
+                    <td className="um-table__email">{user.email}</td>
+                    <td>{getRoleBadge(user.role)}</td>
+                    <td className="um-table__date">{user.createdAt}</td>
+                    <td className="um-table__actions">
+                      <button
+                        className="um-btn-delete"
+                        title="Eliminar usuario"
+                        onClick={() => handleDeleteUser(user.id)}
+                      >
+                        <i className="bi bi-trash3"></i>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
 
-            {users.length === 0 && (
-              <tr>
-                <td colSpan={5} className="um-table__empty">
-                  <i className="bi bi-people um-table__empty-icon"></i>
-                  <p>No hay usuarios todavía.</p>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                {users.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="um-table__empty">
+                      <i className="bi bi-people um-table__empty-icon"></i>
+                      <p>No hay usuarios todavía.</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
 
       {/* ── Modal: Añadir empleado ───────────────────────────────────────────── */}
       {showModal && (
@@ -317,8 +355,6 @@ export default function UserManagement() {
           </div>
         </div>
       )}
-
-      {/* Borrado Modal Eliminado para interacción rápida */}
     </div>
   );
 }

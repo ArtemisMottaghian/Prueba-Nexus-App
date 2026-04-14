@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
+from typing import List
 
 from app.schemas.users_schemas import NewUser, UserResponse,UserUpdate, MessageResponse
 from app.services import users_service
@@ -24,6 +25,17 @@ async def create_user(
     except IntegrityError:
         await db.rollback()
         raise HTTPException(status_code=400, detail="El email ya está registrado")
+
+
+# -----------------
+# Obtener usuarios
+# GET /api/users
+# -----------------
+
+@router.get("", response_model=List[UserResponse]) 
+async def get_all_users(db: AsyncSession = Depends(get_db)):
+    usuarios = await users_service.get_all_users(db)
+    return usuarios
 
 
 # -----------------
