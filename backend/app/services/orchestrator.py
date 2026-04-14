@@ -1,4 +1,6 @@
 import asyncio
+from dotenv import load_dotenv
+load_dotenv()
 from datetime import datetime, timedelta, timezone
 from typing import Any
 from sqlalchemy.dialects.postgresql import insert
@@ -21,6 +23,7 @@ from app.services.enrichment_service import (
 from app.services.scraper_logs_service import log_scraper_error
 
 SKIP_ENRICHMENT = False
+
 
 
 async def gather_raw_offers() -> list[dict]:

@@ -1,52 +1,55 @@
 .cliente-card {
-  background: var(--bg-primary);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-color);
   border-radius: 14px;
   padding: 16px;
   margin-bottom: 10px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .cliente-card:hover {
-  background: var(--bg-secondary);
+  background: rgba(255, 255, 255, 0.07);
   border-color: var(--color-purple-secondary);
-  transform: translateX(4px); /* Efecto de desplazamiento lateral */
+  transform: translateX(2px);
 }
 
-/* Estado Seleccionado (Active) */
 .cliente-card.active {
-  background: rgba(124, 63, 255, 0.1);
+  background: rgba(124, 63, 255, 0.15);
   border-color: var(--color-purple-secondary);
   box-shadow: 0 0 0 1px var(--color-purple-secondary);
 }
 
-/* Estado Prioritario (VIP) */
 .cliente-card.prioritario {
-  border-left: 4px solid #f59e0b; /* Barra lateral ámbar */
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.cliente-card.prioritario:hover {
+  border-color: #f59e0b;
 }
 
 .cliente-card.prioritario.active {
-  background: rgba(245, 158, 11, 0.05);
+  background: rgba(245, 158, 11, 0.1);
   border-color: #f59e0b;
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.5);
 }
 
 .cliente-nombre {
   color: var(--text-primary);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 14px;
 }
 
 .cliente-vip-icon {
   color: #f59e0b;
-  font-size: 12px;
+  font-size: 11px;
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6));
 }
 
 .cliente-sector {
   font-size: 11px;
   color: var(--color-cyan-primary);
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -54,7 +57,7 @@
 .cliente-vacantes-badge {
   background: rgba(0, 212, 255, 0.1);
   color: var(--color-cyan-primary);
-  border: 1px solid rgba(0, 212, 255, 0.2);
+  border: 1px solid rgba(0, 212, 255, 0.3);
   border-radius: 9999px;
   font-size: 11px;
   font-weight: 700;
@@ -62,8 +65,28 @@
   white-space: nowrap;
 }
 
+.cliente-vacantes-badge.grande {
+  font-size: 13px;
+  padding: 5px 14px;
+}
+
 .cliente-contacto {
   font-size: 12px;
   color: var(--text-muted);
 }
 
+/* Modo claro */
+[data-bs-theme='light'] .cliente-card {
+  background: #ffffff;
+  border-color: #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+[data-bs-theme='light'] .cliente-card:hover {
+  background: #f9fafb;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+[data-bs-theme='light'] .cliente-card.active {
+  background: rgba(124, 63, 255, 0.06);
+}

@@ -123,41 +123,87 @@ export default function Vacancies() {
       matchStatus = safeStatus === filterStat;
     }
 
-    // SECTOR INTELIGENTE
+    // SECTOR
     const filterInd = String(filters.industry || '').toLowerCase();
     let matchIndustry = false;
 
     if (['all', 'todas', 'todos'].includes(filterInd)) {
       matchIndustry = true;
     } else {
-      // Unimos el sector y el TÍTULO para buscar palabras clave
-      const textToAnalyze =
+      const title = String(job.title || '').toLowerCase();
+      const fullText =
         `${job.industry || ''} ${job.sector || ''} ${job.title || ''}`.toLowerCase();
 
-      let assignedIndustry = 'otros';
+      let assignedIndustries = [];
+
+      // evaluacion de titulo
       if (
-        textToAnalyze.match(
-          /tech|software|it|informática|informatica|datos|data|sistemas|machine learning|backend|frontend|developer|engineer|sap|ai|artificial/
+        title.match(
+          /tech|software|\bit\b|informática|informatica|datos|data|sistemas|machine learning|backend|frontend|developer|engineer|ingenier|\bai\b|artificial/
         )
       ) {
-        assignedIndustry = 'technology';
+        assignedIndustries.push('technology');
       } else if (
-        textToAnalyze.match(/finan|banc|bank|contabil|seguros|insurance/)
+        title.match(
+          /legal|abogad|derecho|jurídic|juridic|ley|law|lawyer|compliance|asociado/
+        )
       ) {
-        assignedIndustry = 'finance';
+        assignedIndustries.push('legal');
       } else if (
-        textToAnalyze.match(/salud|health|médic|medic|clinic|farmacia/)
+        title.match(
+          /finan|banc|bank|contabil|seguros|insurance|mercantil|tax|fiscal|audit|econom/
+        )
       ) {
-        assignedIndustry = 'healthcare';
-      } else if (textToAnalyze.match(/hostel|hospit|turism|restaur|hotel/)) {
-        assignedIndustry = 'hospitality';
+        assignedIndustries.push('finance');
       } else if (
-        textToAnalyze.match(/legal|abogad|derecho|jurídic|juridic|ley|law/)
+        title.match(/salud|health|médic|medic|clinic|farmacia|enferm|hospital/)
       ) {
-        assignedIndustry = 'legal';
+        assignedIndustries.push('healthcare');
+      } else if (
+        title.match(/hostel|hospit|turism|restaur|hotel|cocin|camarer/)
+      ) {
+        assignedIndustries.push('hospitality');
       }
 
-      // Normalizamos lo que eligió el usuario
+      // --- RESPALDO si el titulo no da buenos resultados
+      if (assignedIndustries.length === 0) {
+        if (
+          fullText.match(
+            /tech|software|\bit\b|informática|informatica|datos|cloud|data|sistemas|machine learning|backend|frontend|develop|engineer|ingenier|\bsap\b|\bai\b|artificial/
+          )
+        ) {
+          assignedIndustries.push('technology');
+        } else if (
+          fullText.match(
+            /legal|abogad|derecho|jurídic|juridic|ley|law|lawyer|compliance|asociado/
+          )
+        ) {
+          assignedIndustries.push('legal');
+        } else if (
+          fullText.match(
+            /finan|sales|venta|comerci|banc|bank|accou|contabil|seguros|insurance|mercantil|tax|fiscal|audit|econom/
+          )
+        ) {
+          assignedIndustries.push('finance');
+        } else if (
+          fullText.match(
+            /salud|health|médic|medic|clinic|farmacia|enferm|hospital/
+          )
+        ) {
+          assignedIndustries.push('healthcare');
+        } else if (
+          fullText.match(/hostel|hospit|turism|restaur|hotel|cocin|camarer/)
+        ) {
+          assignedIndustries.push('hospitality');
+        }
+      }
+
+      // Si al final no pillamos nada, le ponemos "Otros"
+      if (assignedIndustries.length === 0) {
+        assignedIndustries.push('otros');
+      }
+
+      // Normalizamos el filtro seleccionado en el desplegable
       let targetIndustry = filterInd;
       if (filterInd.includes('tecnolog') || filterInd.includes('tech'))
         targetIndustry = 'technology';
@@ -171,7 +217,7 @@ export default function Vacancies() {
         targetIndustry = 'legal';
       else if (filterInd.includes('otro')) targetIndustry = 'otros';
 
-      matchIndustry = assignedIndustry === targetIndustry;
+      matchIndustry = assignedIndustries.includes(targetIndustry);
     }
 
     // LOCALIZACION

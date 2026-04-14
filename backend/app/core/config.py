@@ -10,22 +10,22 @@ class Settings(BaseSettings):
     ADZUNA_PAIS: str
     ADZUNA_CATEGORIA: str
     
-    APIFY_API_TOKEN: str
-    ACTOR_ID: str
+    APIFY_API_TOKEN: str = ""
+    ACTOR_ID: str = ""
 
-    APOLLO_API_KEY: str
+    APOLLO_API_KEY: str = ""
 
-    BROWSE_AI_ROBOT_ID: str
-    BROWSE_AI_API_KEY: str
+    BROWSE_AI_ROBOT_ID: str = ""
+    BROWSE_AI_API_KEY: str = ""
 
     DROPCONTACT_API_KEY:str
     
-    HUNTER_API_KEY: str
+    HUNTER_API_KEY: str = ""
 
     PHANTOMBUSTER_API_KEY:str
     PB_LINKEDIN_SEARCH_ID:str
 
-    ZENROWS_API_KEY: str
+    ZENROWS_API_KEY: str = ""
     
     DB_USER: str
     DB_PASSWORD: str
