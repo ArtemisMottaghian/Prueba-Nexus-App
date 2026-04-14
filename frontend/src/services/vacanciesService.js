@@ -17,6 +17,7 @@ const mapVacancyData = (v) => ({
   location: v.location || 'No especificada',
   status: v.status,
   source: getPortalName(v.portal_id),
+  isFavorite: v.is_favorite || false,
   // Convertimos la fecha de Python a algo legible
   time: v.published_at
     ? new Date(v.published_at).toLocaleDateString()
