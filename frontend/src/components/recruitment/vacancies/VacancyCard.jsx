@@ -7,6 +7,7 @@ export default function VacancyCard({
   isSelected,
   onSelect,
   onUpdateStatus,
+  onToggleFavorite,
 }) {
   let badgeClass = 'badge-nueva';
   if (job.status === 'Contactada') badgeClass = 'badge-contactada';
@@ -25,6 +26,13 @@ export default function VacancyCard({
   const handleStatusChange = (e) => {
     e.stopPropagation();
     onUpdateStatus(job.id, e.target.value);
+  };
+
+  const handleFavoriteClick = (e) => {
+    e.stopPropagation();
+    if (onToggleFavorite) {
+      onToggleFavorite(job.id, job.isFavorite);
+    }
   };
 
   if (isListView) {
@@ -55,8 +63,15 @@ export default function VacancyCard({
               {job.location}
             </span>
             <span className={`badge ${badgeClass}`}>{job.status}</span>
-            <button className="btn-icon btn-icon-sm" onClick={handleChildClick}>
-              <i className="bi bi-star"></i>
+            <button
+              className="btn-icon btn-icon-sm"
+              onClick={handleFavoriteClick}
+            >
+              <i
+                className={
+                  job.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'
+                }
+              ></i>
             </button>
           </div>
         </div>
@@ -90,8 +105,12 @@ export default function VacancyCard({
             <option value="Descartada">Descartada</option>
           </select>
         </div>
-        <button className="btn-icon btn-icon-sm" onClick={handleChildClick}>
-          <i className="bi bi-star"></i>
+        <button className="btn-icon btn-icon-sm" onClick={handleFavoriteClick}>
+          <i
+            className={
+              job.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'
+            }
+          ></i>
         </button>
       </div>
 

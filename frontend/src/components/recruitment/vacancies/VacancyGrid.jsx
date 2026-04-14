@@ -8,6 +8,7 @@ export default function VacancyGrid({
   selectedVacancies,
   onSelectVacancy,
   onUpdateJobStatus,
+  onToggleFavorite,
 }) {
   const [viewMode, setViewMode] = useState('grid');
   const [selectedJob, setSelectedJob] = useState(null);
@@ -62,6 +63,7 @@ export default function VacancyGrid({
                   onSelectVacancy(job.id);
                 }}
                 onUpdateStatus={onUpdateJobStatus}
+                onToggleFavorite={onToggleFavorite}
               />
             </div>
           ))

@@ -63,6 +63,27 @@ export default function Vacancies() {
     );
   };
 
+  const handleToggleFavorite = async (jobId, currentFavoriteStatus) => {
+    const newStatus = !currentFavoriteStatus;
+
+    setJobs((prevJobs) =>
+      prevJobs.map((job) =>
+        job.id === jobId ? { ...job, isFavorite: newStatus } : job
+      )
+    );
+
+    try {
+      await vacanciesService.toggleFavorite(jobId, newStatus);
+    } catch (error) {
+      console.error('Error al cambiar favorito:', error);
+      setJobs((prevJobs) =>
+        prevJobs.map((job) =>
+          job.id === jobId ? { ...job, isFavorite: currentFavoriteStatus } : job
+        )
+      );
+    }
+  };
+
   const handleBulkDiscard = async () => {
     try {
       await vacanciesService.applyBulkActions(selectedVacancies, 'discard');
@@ -287,6 +308,7 @@ export default function Vacancies() {
           selectedVacancies={selectedVacancies}
           onSelectVacancy={handleSelectVacancy}
           onUpdateJobStatus={handleUpdateJobStatus}
+          onToggleFavorite={handleToggleFavorite}
         />
       )}
     </>
