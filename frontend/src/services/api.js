@@ -14,6 +14,16 @@ function resolveApiOrigin() {
 
 const BASE_URL = resolveApiOrigin();
 
+export function authFetch(url, options = {}) {
+  const token = localStorage.getItem('token');
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+}
 export const ENDPOINTS = {
   auth: {
     login: `${BASE_URL}/api/auth/login`,

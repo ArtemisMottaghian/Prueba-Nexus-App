@@ -1,4 +1,4 @@
-import { ENDPOINTS } from './api';
+import { ENDPOINTS, authFetch } from './api';
 
 const mapCandidateData = (c) => ({
   id: c.id,
@@ -17,7 +17,7 @@ const mapCandidateData = (c) => ({
 export const candidatesService = {
   getAllCandidates: async () => {
     try {
-      const response = await fetch(ENDPOINTS.recruitment.candidatos.list);
+      const response = await authFetch(ENDPOINTS.recruitment.candidatos.list);
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       const data = await response.json();
       return data.map(mapCandidateData);
@@ -29,7 +29,7 @@ export const candidatesService = {
 
   getFilteredCandidates: async (params) => {
     try {
-      const response = await fetch(
+      const response = await authFetch(
         ENDPOINTS.recruitment.candidatos.filter(params)
       );
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
@@ -43,7 +43,9 @@ export const candidatesService = {
 
   getCandidateById: async (id) => {
     try {
-      const response = await fetch(ENDPOINTS.recruitment.candidatos.detail(id));
+      const response = await authFetch(
+        ENDPOINTS.recruitment.candidatos.detail(id)
+      );
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       const data = await response.json();
       return mapCandidateData(data);
@@ -55,7 +57,7 @@ export const candidatesService = {
 
   toggleFavorite: async (id, isFavorite) => {
     try {
-      const response = await fetch(
+      const response = await authFetch(
         ENDPOINTS.recruitment.candidatos.favorite(id),
         {
           method: 'PATCH',
@@ -73,7 +75,7 @@ export const candidatesService = {
 
   applyBulkActions: async (candidateIds, actionName) => {
     try {
-      const response = await fetch(
+      const response = await authFetch(
         ENDPOINTS.recruitment.candidatos.bulkActions,
         {
           method: 'POST',
