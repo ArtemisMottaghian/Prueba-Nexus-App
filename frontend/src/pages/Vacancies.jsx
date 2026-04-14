@@ -63,6 +63,27 @@ export default function Vacancies() {
     );
   };
 
+  const handleToggleFavorite = async (jobId, currentFavoriteStatus) => {
+    const newStatus = !currentFavoriteStatus;
+
+    setJobs((prevJobs) =>
+      prevJobs.map((job) =>
+        job.id === jobId ? { ...job, isFavorite: newStatus } : job
+      )
+    );
+
+    try {
+      await vacanciesService.toggleFavorite(jobId, newStatus);
+    } catch (error) {
+      console.error('Error al cambiar favorito:', error);
+      setJobs((prevJobs) =>
+        prevJobs.map((job) =>
+          job.id === jobId ? { ...job, isFavorite: currentFavoriteStatus } : job
+        )
+      );
+    }
+  };
+
   const handleBulkDiscard = async () => {
     try {
       await vacanciesService.applyBulkActions(selectedVacancies, 'discard');
@@ -77,16 +98,162 @@ export default function Vacancies() {
     }
   };
 
-  // 4. Lógica de Filtrado (Local)
+  // Lógica de Filtrado (Local)
   const filteredJobs = jobs.filter((job) => {
-    const matchStatus =
-      filters.status === 'All' || job.status === filters.status;
-    const matchIndustry =
-      filters.industry === 'All' || job.industry === filters.industry;
+    // ESTADO
+    const safeStatus = String(job.status || '').toLowerCase();
+    const filterStat = String(filters.status || '').toLowerCase();
+    let matchStatus = false;
+
+    if (['all', 'todas', 'todos'].includes(filterStat)) {
+      matchStatus = true;
+    } else if (filterStat.includes('nueva') || filterStat.includes('new')) {
+      matchStatus = ['detected', 'new', 'nueva'].includes(safeStatus);
+
+      /* VARIANTE NUEVAS = ULTIMAS 24 HORAS
+
+    if (['all', 'todas', 'todos'].includes(filterStat)) {
+      matchStatus = true;
+    } else if (filterStat.includes('nueva') || filterStat.includes('new')) {
+      
+      // Verificamos que sea una oferta sin contactar
+      const isDetected = ['detected', 'new', 'nueva'].includes(safeStatus);
+      
+      // Calculamos si han pasado menos de 24 horas
+      let isLast24h = false;
+      if (job.rawDate) {
+        const hoursDiff = (new Date() - new Date(job.rawDate)) / (1000 * 60 * 60);
+        isLast24h = hoursDiff <= 24;
+      }
+
+      // Tiene que cumplir ambas condiciones para mostrarse
+      matchStatus = isDetected && isLast24h;
+    */
+    } else if (filterStat.includes('contact')) {
+      matchStatus = ['contacted', 'contactada'].includes(safeStatus);
+    } else if (
+      filterStat.includes('proceso') ||
+      filterStat.includes('negotiat')
+    ) {
+      matchStatus = ['negotiating', 'en proceso', 'interviewing'].includes(
+        safeStatus
+      );
+    } else if (filterStat.includes('descart')) {
+      matchStatus = ['discarded', 'descartada'].includes(safeStatus);
+    } else {
+      matchStatus = safeStatus === filterStat;
+    }
+
+    // SECTOR
+    const filterInd = String(filters.industry || '').toLowerCase();
+    let matchIndustry = false;
+
+    if (['all', 'todas', 'todos'].includes(filterInd)) {
+      matchIndustry = true;
+    } else {
+      const title = String(job.title || '').toLowerCase();
+      const fullText =
+        `${job.industry || ''} ${job.sector || ''} ${job.title || ''}`.toLowerCase();
+
+      let assignedIndustries = [];
+
+      // evaluacion de titulo
+      if (
+        title.match(
+          /tech|software|\bit\b|informática|informatica|datos|data|sistemas|machine learning|backend|frontend|developer|engineer|ingenier|\bai\b|artificial/
+        )
+      ) {
+        assignedIndustries.push('technology');
+      } else if (
+        title.match(
+          /legal|abogad|derecho|jurídic|juridic|ley|law|lawyer|compliance|asociado/
+        )
+      ) {
+        assignedIndustries.push('legal');
+      } else if (
+        title.match(
+          /finan|banc|bank|contabil|seguros|insurance|mercantil|tax|fiscal|audit|econom/
+        )
+      ) {
+        assignedIndustries.push('finance');
+      } else if (
+        title.match(/salud|health|médic|medic|clinic|farmacia|enferm|hospital/)
+      ) {
+        assignedIndustries.push('healthcare');
+      } else if (
+        title.match(/hostel|hospit|turism|restaur|hotel|cocin|camarer/)
+      ) {
+        assignedIndustries.push('hospitality');
+      }
+
+      // --- RESPALDO si el titulo no da buenos resultados
+      if (assignedIndustries.length === 0) {
+        if (
+          fullText.match(
+            /tech|software|\bit\b|informática|informatica|datos|cloud|data|sistemas|machine learning|backend|frontend|develop|engineer|ingenier|\bsap\b|\bai\b|artificial/
+          )
+        ) {
+          assignedIndustries.push('technology');
+        } else if (
+          fullText.match(
+            /legal|abogad|derecho|jurídic|juridic|ley|law|lawyer|compliance|asociado/
+          )
+        ) {
+          assignedIndustries.push('legal');
+        } else if (
+          fullText.match(
+            /finan|sales|venta|comerci|banc|bank|accou|contabil|seguros|insurance|mercantil|tax|fiscal|audit|econom/
+          )
+        ) {
+          assignedIndustries.push('finance');
+        } else if (
+          fullText.match(
+            /salud|health|médic|medic|clinic|farmacia|enferm|hospital/
+          )
+        ) {
+          assignedIndustries.push('healthcare');
+        } else if (
+          fullText.match(/hostel|hospit|turism|restaur|hotel|cocin|camarer/)
+        ) {
+          assignedIndustries.push('hospitality');
+        }
+      }
+
+      // Si al final no pillamos nada, le ponemos "Otros"
+      if (assignedIndustries.length === 0) {
+        assignedIndustries.push('otros');
+      }
+
+      // Normalizamos el filtro seleccionado en el desplegable
+      let targetIndustry = filterInd;
+      if (filterInd.includes('tecnolog') || filterInd.includes('tech'))
+        targetIndustry = 'technology';
+      else if (filterInd.includes('finanz') || filterInd.includes('finance'))
+        targetIndustry = 'finance';
+      else if (filterInd.includes('salud') || filterInd.includes('health'))
+        targetIndustry = 'healthcare';
+      else if (filterInd.includes('hostel') || filterInd.includes('hospit'))
+        targetIndustry = 'hospitality';
+      else if (filterInd.includes('legal') || filterInd.includes('derecho'))
+        targetIndustry = 'legal';
+      else if (filterInd.includes('otro')) targetIndustry = 'otros';
+
+      matchIndustry = assignedIndustries.includes(targetIndustry);
+    }
+
+    // LOCALIZACION
+    const filterLoc = String(filters.location || '').toLowerCase();
     const matchLocation =
-      filters.location === 'All' || job.location === filters.location;
+      ['all', 'todas', 'todos'].includes(filterLoc) ||
+      job.location === filters.location;
+
+    // PLATAFORMA
+    const filterSrc = String(filters.source || '').toLowerCase();
+    const jobSrcStr = String(job.source || '').toLowerCase();
+
+    // Si elige "Todas" o si lo que elige coincide con el nombre traducido
     const matchSource =
-      filters.source === 'All' || job.source === filters.source;
+      ['all', 'todas', 'todos'].includes(filterSrc) || jobSrcStr === filterSrc;
 
     return matchStatus && matchIndustry && matchLocation && matchSource;
   });
@@ -105,7 +272,16 @@ export default function Vacancies() {
         onFilterChange={handleFilterChange}
         onClearFilters={handleClearFilters}
         statusOptions={['Nueva', 'Contactada', 'En proceso', 'Descartada']}
-        industryOptions={['Technology', 'Finance', 'Healthcare', 'Hospitality']}
+        // Añadidas opciones Legal y Otros
+        industryOptions={[
+          'Technology',
+          'Finance',
+          'Healthcare',
+          'Hospitality',
+          'Legal',
+          'Otros',
+        ]}
+        sourceOptions={['LinkedIn', 'InfoJobs', 'Adzuna', 'Otro']}
       />
 
       {!loading && (
@@ -132,6 +308,7 @@ export default function Vacancies() {
           selectedVacancies={selectedVacancies}
           onSelectVacancy={handleSelectVacancy}
           onUpdateJobStatus={handleUpdateJobStatus}
+          onToggleFavorite={handleToggleFavorite}
         />
       )}
     </>

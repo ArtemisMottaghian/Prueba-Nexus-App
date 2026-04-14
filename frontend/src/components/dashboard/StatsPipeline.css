@@ -1,30 +1,26 @@
 .stats-panel {
-  background: linear-gradient(
-    135deg,
-    rgba(26, 26, 46, 0.4) 0%,
-    rgba(91, 63, 255, 0.05) 100%
-  );
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-primary); /* Se adapta automáticamente */
+  border: 1px solid var(--border-color);
   border-radius: 24px;
   overflow: hidden;
   backdrop-filter: blur(20px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); /* Sombra suavizada para ambos modos */
   position: relative;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, border-color 0.3s ease, background 0.3s ease;
 }
 
 .stats-panel:hover {
   transform: translateY(-4px);
-  border-color: rgba(91, 63, 255, 0.3);
+  border-color: var(--color-purple-secondary);
 }
 
-/* Línea de luz superior */
+/* Línea de luz superior (usa las variables genéricas de marca) */
 .stats-accent {
   height: 3px;
   background: linear-gradient(
-    90deg, 
-    var(--color-purple-primary), 
-    var(--color-cyan-primary), 
+    90deg,
+    var(--color-purple-primary),
+    var(--color-cyan-primary),
     var(--color-violet)
   );
   opacity: 0.8;
@@ -36,15 +32,20 @@
   position: relative;
 }
 
-/* Separadores sutiles entre columnas */
+/* Separadores sutiles entre columnas (ahora usan el color de borde global) */
 .stats-col:not(:last-child)::after {
-  content: "";
+  content: '';
   position: absolute;
   right: 0;
   top: 20%;
   height: 60%;
   width: 1px;
-  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--border-color),
+    transparent
+  );
 }
 
 .stat-label {
@@ -63,20 +64,18 @@
   margin-bottom: 8px;
 }
 
-/* Efectos de brillo para los números */
+/* Colores de los números 
+   (Le he quitado el brillo extremo porque en modo claro hace que sea difícil de leer) */
 .stat-number-purple {
-  color: #a855f7;
-  text-shadow: 0 0 25px rgba(168, 85, 247, 0.4);
+  color: var(--color-violet);
 }
 
 .stat-number-cyan {
-  color: #00d4ff;
-  text-shadow: 0 0 25px rgba(0, 212, 255, 0.4);
+  color: var(--color-cyan-primary);
 }
 
 .stat-number-violet {
-  color: #ff00e5; /* Un violeta más vibrante */
-  text-shadow: 0 0 25px rgba(255, 0, 229, 0.4);
+  color: #ff00e5; /* Mantenemos este violeta vibrante tuyo */
 }
 
 .stat-change {
@@ -95,24 +94,21 @@
 
 .stats-bar-track {
   height: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-tertiary); /* Carril gris clarito en light, oscuro en dark */
   border-radius: 9999px;
   display: flex;
   overflow: hidden;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .stats-bar-purple {
-  background: #a855f7;
-  box-shadow: 0 0 12px rgba(168, 85, 247, 0.6);
+  background: var(--color-violet);
 }
 
 .stats-bar-cyan {
-  background: #00d4ff;
-  box-shadow: 0 0 12px rgba(0, 212, 255, 0.6);
+  background: var(--color-cyan-primary);
 }
 
 .stats-bar-violet {
   background: #ff00e5;
-  box-shadow: 0 0 12px rgba(255, 0, 229, 0.6);
 }

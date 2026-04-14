@@ -1,25 +1,8 @@
-import enum
-from datetime import datetime
-from typing import Optional, List
-
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Boolean,
-    ForeignKey,
-    DateTime,
-    Text,
-    BigInteger,
-    Enum as PgEnum,
-    CheckConstraint,
-    UniqueConstraint,
-)
+from sqlalchemy import Column, String, BigInteger, ForeignKey, DateTime, Text, Enum as PgEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.connection import Base
 from app.models.leadStatus_model import LeadStatus
-
 
 
 class TrackingHistory(Base):

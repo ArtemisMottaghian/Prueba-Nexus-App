@@ -1,5 +1,4 @@
 import './FilterBar.css';
-
 export default function FilterBar({ filters, onFilterChange, onClearFilters }) {
   const hasActiveFilters =
     filters.status !== 'All' ||
@@ -35,7 +34,10 @@ export default function FilterBar({ filters, onFilterChange, onClearFilters }) {
             <option value="All">Todas</option>
             <option value="Technology">Tecnología</option>
             <option value="Finance">Finanzas</option>
-            <option value="Healthcare">Legal</option>
+            <option value="Healthcare">Salud</option>
+            <option value="Hospitality">Hostelería</option>
+            <option value="Legal">Legal</option>
+            <option value="Otro">Otros</option>
           </select>
         </div>
 
@@ -50,6 +52,8 @@ export default function FilterBar({ filters, onFilterChange, onClearFilters }) {
             <option value="All">Todas</option>
             <option value="Madrid">Madrid</option>
             <option value="Barcelona">Barcelona</option>
+            <option value="Valencia">Valencia</option>
+            <option value="Zaragoza">Zaragoza</option>
             <option value="Remote">Remoto</option>
           </select>
         </div>

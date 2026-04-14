@@ -1,8 +1,9 @@
 .ara-topbar {
-  background: rgba(26, 26, 46, 0.8);
+  background: var(--bg-primary); 
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-color);
   padding: 16px 24px;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .topbar-content {
@@ -25,17 +26,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent; 
-  border: none;           
+  background: transparent;
+  border: none;
   border-radius: 12px;
   color: var(--text-muted);
   transition: all 0.2s ease;
   cursor: pointer;
-  position: relative;      
+  position: relative;
 }
 
 .btn-icon:hover {
-  background: rgba(255, 255, 255, 0.08); 
+  background: var(--bg-secondary); 
   color: var(--text-primary);
 }
 
@@ -51,18 +52,23 @@
   height: 8px;
   background: var(--color-cyan-primary);
   border-radius: 50%;
-  border: 2px solid var(--bg-dark-secondary);
+  border: 2px solid var(--bg-primary); 
 }
 
 .topbar-search {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-secondary); 
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 8px 16px;
   min-width: 280px;
+  transition: border-color 0.2s ease;
+}
+
+.topbar-search:focus-within {
+  border-color: var(--color-purple-secondary);
 }
 
 .topbar-search input {
@@ -74,6 +80,10 @@
   width: 100%;
 }
 
+.topbar-search input::placeholder {
+  color: var(--text-muted);
+}
+
 .topbar-avatar {
   width: 36px;
   height: 36px;
@@ -82,7 +92,11 @@
 .avatar-fallback {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, var(--color-purple-primary), var(--color-purple-secondary));
+  background: linear-gradient(
+    135deg,
+    var(--color-purple-primary),
+    var(--color-purple-secondary)
+  );
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -90,10 +104,4 @@
   color: #ffffff;
   font-weight: 700;
   border: 2px solid rgba(255, 255, 255, 0.2);
-}
-
-/* Modo Claro Topbar */
-[data-bs-theme='light'] .ara-topbar {
-  background: rgba(255, 255, 255, 0.95);
-  border-bottom: 1px solid #e5e7eb;
 }

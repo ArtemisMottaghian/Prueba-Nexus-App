@@ -1,6 +1,39 @@
+/* ===================================================
+   LoginForm.css — NexusAI Login (Variables)
+   =================================================== */
+
+/* ---------- Variables ---------- */
+:root {
+  --clr-bg: #0d0d14;
+  --clr-surface: #13131f;
+  --clr-surface-2: #1a1a2e;
+  --clr-border: rgba(124, 58, 237, 0.25);
+  --clr-purple: #7c3aed;
+  --clr-purple-light: #9b5de5;
+  --clr-cyan: #00d4ff;
+  --clr-text: #e8e8f0;
+  --clr-text-muted: #7a7a9a;
+  --clr-error: #f87171;
+  --clr-error-bg: rgba(248, 113, 113, 0.08);
+  --clr-error-border: rgba(248, 113, 113, 0.45);
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+
+  --transition: 0.22s ease;
+
+}
+
+
+ /* --- CONTENEDOR PRINCIPAL DEL SIDEBAR --- */
 .ara-sidebar {
-  width: 80px; /* Vuelve a su tamaño pequeño por defecto */
-  background: linear-gradient(180deg, var(--color-purple-primary), var(--color-purple-secondary));
+  width: 80px;
+  background: linear-gradient(
+    135deg,
+    var(--color-purple-primary),
+    var(--color-purple-secondary)
+  );
   display: flex;
   flex-direction: column;
   padding: 24px 0;
@@ -10,15 +43,15 @@
   overflow: hidden;
 }
 
-/* Solo expande en escritorio al pasar el ratón */
 @media (min-width: 992px) {
   .ara-sidebar:hover {
     width: 256px;
   }
 
-  /* Ocultamos textos y logo grande si no hay hover */
-  .sidebar-text, 
-  .sidebar-group-header, 
+
+  .sidebar-text,
+  .sidebar-group-text, 
+  .chevron-icon,      
   .logo-large {
     opacity: 0;
     visibility: hidden;
@@ -29,10 +62,14 @@
     opacity: 1;
     transition: opacity 0.2s ease;
   }
+  
+  .ara-sidebar:not(:hover) .sidebar-group-items {
+    display: none !important;
+  }
 
-  /* Mostramos todo al hacer hover */
   .ara-sidebar:hover .sidebar-text,
-  .ara-sidebar:hover .sidebar-group-header,
+  .ara-sidebar:hover .sidebar-group-text,
+  .ara-sidebar:hover .chevron-icon,
   .ara-sidebar:hover .logo-large {
     opacity: 1;
     visibility: visible;
@@ -44,22 +81,145 @@
   }
 }
 
-/* --- ESTILOS COMUNES --- */
-.sidebar-content { display: flex; flex-direction: column; height: 100%; }
-.sidebar-logo { position: relative; height: 48px; margin-bottom: 32px; }
-.logo-small, .logo-large { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); }
+/* --- ESTILOS INTERNOS --- */
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none; 
+}
+.sidebar-content::-webkit-scrollbar { display: none; }
+
+.sidebar-logo {
+  position: relative;
+  height: 48px;
+  margin-bottom: 32px;
+  flex-shrink: 0;
+}
+.logo-small, .logo-large {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+}
 .logo-small { width: 33px; }
 .logo-large { height: 32px; }
 
-.sidebar-nav { padding: 0 12px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
-.sidebar-item {
-  display: flex; align-items: center; gap: 12px; padding: 12px 16px;
-  color: rgba(255, 255, 255, 0.7); text-decoration: none; border-radius: 12px;
-  transition: all 0.2s ease; white-space: nowrap;
+.sidebar-nav {
+  padding: 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
-.sidebar-item:hover, .sidebar-item.active { background: rgba(255, 255, 255, 0.15); color: #ffffff; }
-.sidebar-item i { font-size: 20px; min-width: 20px; }
-.sidebar-group-header { font-size: 11px; font-weight: 700; color: rgba(255, 255, 255, 0.5); margin: 16px 0 8px; padding: 0 16px; }
+
+/* Cabecera del grupo acordeón */
+.sidebar-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px 0 0px;
+  padding: 10px 16px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 12px; 
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-group-header:hover {
+  background-color: rgba(255, 255, 255, 0.08); 
+}
+
+.group-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.group-icon {
+  font-size: 20px; 
+  color: white; 
+  min-width: 20px;
+  text-align: center;
+}
+
+.sidebar-group-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.sidebar-group-header:hover .sidebar-group-text {
+  color: white;
+}
+
+/* Flechita */
+.chevron-icon {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  transition: transform 0.3s ease;
+}
+.chevron-icon.rotate {
+  transform: rotate(180deg);
+  color: white;
+}
+
+/* Contenedor de items del grupo */
+.sidebar-group-items {
+  display: none; 
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 4px; 
+}
+.sidebar-group-items.show {
+  display: flex;
+}
+
+/* Los items individuales */
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  cursor: pointer;
+  font-size: 13px;
+}
+.sidebar-item:hover, .sidebar-item.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+.sidebar-item i {
+  font-size: 18px; 
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Footer y Logout */
+.sidebar-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 16px;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.logout-btn-link {
+  outline: none;
+  background: transparent;
+  border: none;
+  text-align: left;
+}
+.logout-btn-link:hover { color: #ff4d4d; }
 
 /* --- DISEÑO MÓVIL (DRAWER) --- */
 @media (max-width: 991px) {
@@ -72,20 +232,24 @@
     z-index: 2000;
     transition: left 0.3s ease;
   }
+  .ara-sidebar.sidebar-open { left: 0; }
 
-  .ara-sidebar.sidebar-open {
-    left: 0;
-  }
-
-  /* En móvil, los textos siempre se ven (porque el menú ya está "abierto") */
-  .sidebar-text, .sidebar-group-header, .logo-large {
+  /* En móvil todo siempre visible */
+  .sidebar-text, .sidebar-group-text, .chevron-icon, .logo-large {
     opacity: 1 !important;
     visibility: visible !important;
   }
   .logo-small { display: none !important; }
+  
+  .btn-close-sidebar {
+    background: transparent; border: none;
+    color: white; font-size: 1.5rem;
+  }
 }
 
 .sidebar-overlay {
-  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px); z-index: 1999;
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1999;
 }

@@ -4,6 +4,13 @@
   gap: 20px;
 }
 
+/* Añadimos esto para que la vista de lista funcione bien */
+.vacancies-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .results-header {
   display: flex;
   align-items: center;
@@ -11,19 +18,18 @@
   margin-bottom: 20px;
 }
 
-.view-toggle {
-  display: flex;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  padding: 4px;
+.results-title {
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
 }
-/* --- Estilos para el selector de vista (Cuadrícula/Lista) --- */
+
+/* --- Selector de vista Adaptativo --- */
 .view-toggle {
   display: flex;
   align-items: center;
   gap: 4px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-secondary); /* Gris suave de día, oscuro de noche */
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 4px;
@@ -31,8 +37,8 @@
 
 .view-btn {
   padding: 8px 12px;
-  background: transparent; /* Quita el fondo gris feo */
-  border: none;            /* Quita el borde de botón antiguo */
+  background: transparent;
+  border: none;
   border-radius: 8px;
   color: var(--text-muted);
   transition: all 0.2s ease;
@@ -42,7 +48,6 @@
   justify-content: center;
 }
 
-/* El botón que está seleccionado brilla con tus colores */
 .view-btn.active {
   background: linear-gradient(
     135deg,
@@ -54,6 +59,13 @@
 }
 
 .view-btn:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-tertiary); /* Hover dinámico */
   color: var(--text-primary);
+}
+
+/* Clase para el contenedor de estado vacío */
+.empty-state-container {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
 }

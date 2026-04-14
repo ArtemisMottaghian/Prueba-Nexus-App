@@ -1,18 +1,27 @@
 .vacante-card {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-primary);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 20px;
   transition: all 0.3s ease;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.vacante-card:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--color-purple-primary);
+/* Estilo para la vista de lista */
+.vacante-card-list {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.vacante-card:hover, .vacante-card-list:hover {
+  background: var(--bg-secondary);
+  border-color: var(--color-purple-secondary);
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(91, 63, 255, 0.2);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
 }
 
 .vacante-title {
@@ -38,11 +47,37 @@
   justify-content: center;
 }
 
-.icon-purple { background: #4325a7ad; color: #bba6ff; }
-.icon-cyan { background: rgba(0, 212, 255, 0.15); color: var(--color-cyan-primary); }
+.icon-purple {
+  background: rgba(124, 63, 255, 0.15); /* Morado suave adaptable */
+  color: var(--color-purple-secondary);
+}
+
+.icon-cyan {
+  background: rgba(0, 212, 255, 0.15);
+  color: var(--color-cyan-primary);
+}
+
+.detail-text {
+  color: var(--text-primary);
+  font-size: 14px;
+}
 
 .checkbox-lg {
   width: 1.2rem;
   height: 1.2rem;
   cursor: pointer;
+}
+
+.vacante-footer {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.vacante-date {
+  font-size: 12px;
+  color: var(--text-muted);
 }

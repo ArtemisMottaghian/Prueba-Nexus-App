@@ -2,15 +2,16 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import './CalendarGrid.css';
 
 const REDIRECT_URL =
-  'https://accounts.google.com/o/oauth2/auth?client_id=TU_CLIENT_ID&redirect_uri=https://[…]=code&scope=https://www.googleapis.com/auth/calendar.events';
+  'https://accounts.google.com/o/oauth2/auth?client_id=TU_CLIENT_ID&redirect_uri=https://nexus-app.com/calendar&response_type=code&scope=https://www.googleapis.com/auth/calendar.events';
 
+// Colores unificados con la paleta de la aplicación
 const EVENT_TYPES = {
-  'Reunión :handshake:': '#28A745',
-  'Enviar correo :email:': '#007BFF',
-  'Conferencia :microphone:': '#FFC107',
-  'Llamada urgente :telephone_receiver:': '#DC3545',
-  'Seguimiento :clipboard:': '#FD7E14',
-  'Otro...': '#6C757D',
+  Reunión: 'var(--color-purple-secondary)',
+  'Enviar correo': 'var(--color-cyan-primary)',
+  Conferencia: 'var(--color-violet)',
+  'Llamada urgente': '#ef4444',
+  Seguimiento: '#f59e0b',
+  'Otro...': 'var(--text-muted)',
 };
 
 const PREDEFINED_OPTIONS = Object.keys(EVENT_TYPES);
@@ -43,6 +44,7 @@ export default function Calendario() {
     setTime('');
   }, []);
 
+  // Cerrar modal con Escape
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && selectedDate) closeModal();
@@ -51,6 +53,7 @@ export default function Calendario() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedDate, closeModal]);
 
+  // Sistema de Notificaciones
   useEffect(() => {
     if ('Notification' in window && Notification.permission !== 'granted') {
       Notification.requestPermission();
@@ -64,11 +67,14 @@ export default function Calendario() {
         const eventDate = new Date(e.date + 'T00:00:00');
         eventDate.setHours(parseInt(hours), parseInt(minutes), 0);
         const diff = eventDate - now;
+
         if (diff > 0 && diff < 60000) {
-          if (Notification.permission === 'granted')
-            new Notification(':alarm_clock: ' + e.text, {
-              body: e.description,
+          if (Notification.permission === 'granted') {
+            new Notification('📅 Recordatorio: ' + e.text, {
+              body: `${e.time} - ${e.description || 'Sin descripción'}`,
+              icon: '/logo192.png',
             });
+          }
           hasChanged = true;
           return { ...e, notified: true };
         }
@@ -113,7 +119,11 @@ export default function Calendario() {
   const deleteEvent = (id) => setEvents(events.filter((e) => e.id !== id));
 
   const clearAllEvents = () => {
-    if (window.confirm('¿Borrar todos?')) setEvents([]);
+    if (
+      window.confirm('¿Estás seguro de que quieres borrar todos los eventos?')
+    ) {
+      setEvents([]);
+    }
   };
 
   const goToToday = () => setCurrentDate(new Date());
@@ -138,45 +148,61 @@ export default function Calendario() {
   return (
     <div className="calendar-container">
       <div className="calendar-box">
+        {/* BARRA SUPERIOR */}
         <div className="calendar-top-bar">
           <h1 className="calendar-title">Calendario</h1>
           <div className="top-actions">
-            <button className="clear-btn" onClick={clearAllEvents}>
-              Limpiar :wastebasket:
+            <button
+              className="btn btn-sm btn-outline-danger me-2"
+              onClick={clearAllEvents}
+            >
+              <i className="bi bi-trash3 me-1"></i> Limpiar
             </button>
             <button
-              className="action-btn"
+              className="btn-primary-custom"
               onClick={() => window.open(REDIRECT_URL, '_blank')}
             >
-              Web :globe_with_meridians:
+              <i className="bi bi-globe me-1"></i> Sincronizar
             </button>
           </div>
         </div>
 
+        {/* NAVEGACIÓN */}
         <div className="calendar-header">
-          <div className="nav-controls">
+          <div className="nav-controls d-flex align-items-center gap-2">
             <button
               onClick={() =>
                 setCurrentDate(
-                  (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1)
+                  new Date(
+                    currentDate.getFullYear(),
+                    currentDate.getMonth() - 1,
+                    1
+                  )
                 )
               }
-              className="nav-btn"
+              className="btn-icon"
             >
-              :arrow_backward:
+              <i className="bi bi-chevron-left"></i>
             </button>
-            <button onClick={goToToday} className="nav-btn today-btn">
+            <button
+              onClick={goToToday}
+              className="btn btn-sm btn-secondary-custom"
+            >
               Hoy
             </button>
             <button
               onClick={() =>
                 setCurrentDate(
-                  (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1)
+                  new Date(
+                    currentDate.getFullYear(),
+                    currentDate.getMonth() + 1,
+                    1
+                  )
                 )
               }
-              className="nav-btn"
+              className="btn-icon"
             >
-              :arrow_forward:
+              <i className="bi bi-chevron-right"></i>
             </button>
           </div>
           <span className="calendar-month-text">
@@ -187,12 +213,14 @@ export default function Calendario() {
           </span>
         </div>
 
+        {/* CABECERA DÍAS */}
         <div className="days-header">
           {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((d) => (
             <div key={d}>{d}</div>
           ))}
         </div>
 
+        {/* GRID DE DÍAS */}
         <div className="calendar-grid">
           {generateMonth().map((day, i) => {
             const date = day ? formatDate(day) : null;
@@ -200,6 +228,7 @@ export default function Calendario() {
             const dayEvents = events
               .filter((e) => e.date === date)
               .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+
             return (
               <div
                 key={i}
@@ -218,81 +247,92 @@ export default function Calendario() {
                         ></div>
                       ))}
                     </div>
+                    {dayEvents.map((e) => (
+                      <div
+                        key={e.id}
+                        className="event-item"
+                        onClick={(ev) => openEditModal(ev, e)}
+                        style={{ backgroundColor: EVENT_TYPES[e.text] }}
+                      >
+                        <div className="event-content">
+                          <span className="event-time-type">
+                            {e.time} {e.text}
+                          </span>
+                        </div>
+                        <button
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            deleteEvent(e.id);
+                          }}
+                          className="event-delete-btn"
+                        >
+                          <i className="bi bi-x"></i>
+                        </button>
+                      </div>
+                    ))}
                   </>
                 )}
-                {dayEvents.map((e) => (
-                  <div
-                    key={e.id}
-                    className="event-item"
-                    onClick={(ev) => openEditModal(ev, e)}
-                    style={{ backgroundColor: EVENT_TYPES[e.text] }}
-                  >
-                    <div className="event-content">
-                      <span className="event-time-type">
-                        {e.time} {e.text}
-                      </span>
-                      {e.description && (
-                        <span className="event-desc-small">
-                          {e.description}
-                        </span>
-                      )}
-                    </div>
-                    <button
-                      onClick={(ev) => {
-                        ev.stopPropagation();
-                        deleteEvent(e.id);
-                      }}
-                      className="event-delete-btn"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
               </div>
             );
           })}
         </div>
 
+        {/* MODAL DE EVENTO */}
         {selectedDate && (
           <div className="modal-overlay" onClick={closeModal}>
             <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-              <h3>{editingEventId ? 'Editar evento' : 'Nuevo evento'}</h3>
+              <h3 className="mb-4">
+                {editingEventId ? 'Editar evento' : 'Nuevo evento'}
+              </h3>
 
-              <label className="input-label">Tipo de evento:</label>
-              <select
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                className="input-field"
-              >
-                {PREDEFINED_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
+              <div className="mb-3">
+                <label className="input-label">Tipo de evento</label>
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  className="form-select select-status-inline w-100"
+                  style={{ maxWidth: '100%' }}
+                >
+                  {PREDEFINED_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              <label className="input-label">Descripción:</label>
-              <input
-                placeholder="Detalles..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="input-field"
-                onKeyDown={(e) => e.key === 'Enter' && saveEvent()}
-              />
+              <div className="mb-3">
+                <label className="input-label">Descripción</label>
+                <input
+                  placeholder="Añadir detalles..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="input-field"
+                  onKeyDown={(e) => e.key === 'Enter' && saveEvent()}
+                />
+              </div>
 
-              <label className="input-label">Hora:</label>
-              <input
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="input-field"
-              />
+              <div className="mb-4">
+                <label className="input-label">Hora</label>
+                <input
+                  type="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  className="input-field"
+                />
+              </div>
 
-              <div className="modal-actions">
-                <button onClick={closeModal} className="nav-btn">
+              <div className="d-flex gap-2">
+                <button
+                  onClick={closeModal}
+                  className="btn btn-secondary-custom flex-grow-1"
+                >
                   Cancelar
                 </button>
-                <button onClick={saveEvent} className="primary-btn">
+                <button
+                  onClick={saveEvent}
+                  className="btn-primary-custom flex-grow-1"
+                >
                   {editingEventId ? 'Actualizar' : 'Guardar'}
                 </button>
               </div>

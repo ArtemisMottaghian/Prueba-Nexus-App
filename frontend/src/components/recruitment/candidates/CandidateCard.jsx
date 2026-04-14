@@ -1,4 +1,5 @@
 import './CandidateCard.css';
+
 export default function CandidateCard({
   candidate,
   isListView,
@@ -40,8 +41,10 @@ export default function CandidateCard({
               type="checkbox"
               checked={isSelected || false}
               onChange={handleCheckboxClick}
+              onClick={handleChildClick}
             />
-            <h5 className="mb-0 text-white vacante-title-list-sm">
+            {/* CAMBIO AQUÍ: text-white -> text-body */}
+            <h5 className="mb-0 text-body vacante-title-list-sm">
               {candidate.name}
             </h5>
             <span className="text-muted small">|</span>
@@ -75,6 +78,7 @@ export default function CandidateCard({
             type="checkbox"
             checked={isSelected || false}
             onChange={handleCheckboxClick}
+            onClick={handleChildClick}
           />
           <select
             className={`form-select form-select-sm select-status-inline ${badgeClass}`}

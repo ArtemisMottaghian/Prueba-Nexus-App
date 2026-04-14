@@ -10,7 +10,8 @@ export default function SourceStatus() {
             <i className="bi bi-check-circle-fill"></i>
           </div>
           <div className="source-info">
-            <h6 className="text-white">Adzuna (API)</h6>
+            {/* CAMBIO AQUI: text-white -> text-body */}
+            <h6 className="text-body">Adzuna (API)</h6>
             <span className="source-status-text text-success">
               Sistema Online
             </span>
@@ -28,7 +29,8 @@ export default function SourceStatus() {
             <i className="bi bi-exclamation-triangle-fill"></i>
           </div>
           <div className="source-info">
-            <h6 className="text-white">LinkedIn (Bot)</h6>
+            {/* CAMBIO AQUI: text-white -> text-body */}
+            <h6 className="text-body">LinkedIn (Bot)</h6>
             <span className="source-status-text text-warning">
               Lentitud detectada
             </span>
@@ -47,7 +49,8 @@ export default function SourceStatus() {
               <i className="bi bi-x-circle-fill"></i>
             </div>
             <div className="source-info">
-              <h6 className="text-white">InfoJobs</h6>
+              {/* CAMBIO AQUI: text-white -> text-body */}
+              <h6 className="text-body">InfoJobs</h6>
               <span className="source-status-text text-danger">
                 API Bloqueada
               </span>

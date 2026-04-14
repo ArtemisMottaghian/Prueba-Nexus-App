@@ -1,67 +1,266 @@
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import logoNexus from '../../assets/logo-nexus.svg';
+import isotipoNexus from '../../assets/isotipo-nexus.svg';
 import './Sidebar.css';
 
-const Sidebar = ({ isOpen, onClose }) => {
+export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
+  const { logout, hasRole, user } = useAuth();
+  const [openGroups, setOpenGroups] = useState({
+    vision: true,
+    reclutamiento: false,
+    comunicacion: false,
+    engine: false,
+  });
 
-  // 1. Función de Logout
+  const toggleGroup = (group) => {
+    setOpenGroups((prev) => ({
+      ...prev,
+      [group]: !prev[group],
+    }));
+  };
+
   const handleLogout = () => {
-    // Eliminamos el token del almacenamiento local
-    localStorage.removeItem("token");
-    // Cerramos el sidebar si esta el movil
+    logout();
     if (onClose) onClose();
-    // Redirigimos al login
-    navigate("/login");
+    navigate('/login');
+  };
+
+  const handleMouseLeave = () => {
+    if (isOpen) return;
+    setOpenGroups({
+      vision: false,
+      reclutamiento: false,
+      comunicacion: false,
+      engine: false,
+    });
   };
 
   return (
-    <aside className={`ara-sidebar ${isOpen ? 'is-open' : ''}`}>
-      <div className="sidebar-header">
-        <div className="sidebar-logo">
-          <div className="logo-icon">N</div>
-          <span>NexusAI</span>
-        </div>
-      </div>
+    <>
+      {isOpen && (
+        <div className="sidebar-overlay d-lg-none" onClick={onClose}></div>
+      )}
 
-      <nav className="sidebar-nav">
-        <div className="nav-section">
-          <p className="section-title">Reclutamiento</p>
-          <NavLink to="/" className="nav-item" onClick={onClose}>
-            <span className="nav-icon">📊</span>
-            Dashboard
-          </NavLink>
-          <NavLink to="/vacantes" className="nav-item" onClick={onClose}>
-            <span className="nav-icon">💼</span>
-            Vacantes
-          </NavLink>
-          <NavLink to="/candidatos" className="nav-item" onClick={onClose}>
-            <span className="nav-icon">👥</span>
-            Candidatos
-          </NavLink>
-        </div>
+      <aside
+        className={`ara-sidebar ${isOpen ? 'sidebar-open' : ''}`}
+        id="sidebar"
+        onMouseLeave={handleMouseLeave}
+      >
+        <div className="sidebar-content">
+          <div className="sidebar-logo d-flex justify-content-between align-items-center px-3">
+            <div className="logo-wrapper">
+              <img
+                src={isotipoNexus}
+                alt="NexusAI Icon"
+                className="logo-small"
+              />
+              <img src={logoNexus} alt="NexusAI Full" className="logo-large" />
+            </div>
+            <button className="btn-close-sidebar d-lg-none" onClick={onClose}>
+              <i className="bi bi-x-lg"></i>
+            </button>
+          </div>
 
-        <div className="nav-section">
-          <p className="section-title">Gestión</p>
-          <NavLink to="/clientes" className="nav-item" onClick={onClose}>
-            <span className="nav-icon">🏢</span>
-            Clientes (CRM)
-          </NavLink>
-          <NavLink to="/Calendar" className="nav-item" onClick={onClose}>
-            <span className="nav-icon">📅</span>
-            Calendario
-          </NavLink>
-        </div>
-      </nav>
+          <nav className="sidebar-nav">
+            {/* GRUPO: VISIÓN GENERAL (Todos lo ven) */}
+            <div className="sidebar-group">
+              <div
+                className="sidebar-group-header"
+                onClick={() => toggleGroup('vision')}
+              >
+                <div className="group-header-left">
+                  <i className="bi bi-speedometer2 group-icon"></i>
+                  <span className="sidebar-group-text">VISIÓN GENERAL</span>
+                </div>
+                <i
+                  className={`bi bi-chevron-down chevron-icon ${openGroups.vision ? 'rotate' : ''}`}
+                ></i>
+              </div>
+              <div
+                className={`sidebar-group-items ${openGroups.vision ? 'show' : ''}`}
+              >
+                <NavLink to="/" end className="sidebar-item" onClick={onClose}>
+                  <i className="bi bi-house"></i>
+                  <span className="sidebar-text">Inicio</span>
+                </NavLink>
+                <NavLink
+                  to="/analitica"
+                  className="sidebar-item"
+                  onClick={onClose}
+                >
+                  <i className="bi bi-bar-chart"></i>
+                  <span className="sidebar-text">Analítica</span>
+                </NavLink>
+              </div>
+            </div>
 
-      {/* 2. Botón de Logout al final del Sidebar */}
-      <div className="sidebar-footer">
-        <button className="nav-item logout-btn" onClick={handleLogout}>
-          <span className="nav-icon">🚪</span>
-          Cerrar Sesión
-        </button>
-      </div>
-    </aside>
+            {/* GRUPO: RECLUTAMIENTO (Solo Admin y Reclutador) */}
+            {(hasRole('admin') || hasRole('reclutador')) && (
+              <div className="sidebar-group">
+                <div
+                  className="sidebar-group-header"
+                  onClick={() => toggleGroup('reclutamiento')}
+                >
+                  <div className="group-header-left">
+                    <i className="bi bi-briefcase group-icon"></i>
+                    <span className="sidebar-group-text">RECLUTAMIENTO</span>
+                  </div>
+                  <i
+                    className={`bi bi-chevron-down chevron-icon ${openGroups.reclutamiento ? 'rotate' : ''}`}
+                  ></i>
+                </div>
+                <div
+                  className={`sidebar-group-items ${openGroups.reclutamiento ? 'show' : ''}`}
+                >
+                  <NavLink
+                    to="/vacantes"
+                    className="sidebar-item"
+                    onClick={onClose}
+                  >
+                    <i className="bi bi-briefcase"></i>
+                    <span className="sidebar-text">Vacantes</span>
+                  </NavLink>
+                  <NavLink
+                    to="/candidatos"
+                    className="sidebar-item"
+                    onClick={onClose}
+                  >
+                    <i className="bi bi-people"></i>
+                    <span className="sidebar-text">Candidatos</span>
+                  </NavLink>
+                  <NavLink
+                    to="/clientes"
+                    className="sidebar-item"
+                    onClick={onClose}
+                  >
+                    <i className="bi bi-building"></i>
+                    <span className="sidebar-text">Clientes</span>
+                  </NavLink>
+                </div>
+              </div>
+            )}
+
+            {/* GRUPO: COMUNICACIÓN (Solo Admin) */}
+            {hasRole('admin') && (
+              <div className="sidebar-group">
+                <div
+                  className="sidebar-group-header"
+                  onClick={() => toggleGroup('comunicacion')}
+                >
+                  <div className="group-header-left">
+                    <i className="bi bi-chat-dots group-icon"></i>
+                    <span className="sidebar-group-text">COMUNICACIÓN</span>
+                  </div>
+                  <i
+                    className={`bi bi-chevron-down chevron-icon ${openGroups.comunicacion ? 'rotate' : ''}`}
+                  ></i>
+                </div>
+                <div
+                  className={`sidebar-group-items ${openGroups.comunicacion ? 'show' : ''}`}
+                >
+                  <NavLink
+                    to="/inbox"
+                    className="sidebar-item"
+                    onClick={onClose}
+                  >
+                    <i className="bi bi-envelope"></i>
+                    <span className="sidebar-text">Inbox</span>
+                  </NavLink>
+                  <NavLink
+                    to="/calendar"
+                    className="sidebar-item"
+                    onClick={onClose}
+                  >
+                    <i className="bi bi-calendar-check"></i>
+                    <span className="sidebar-text">Calendario</span>
+                  </NavLink>
+                </div>
+              </div>
+            )}
+
+            {/* GRUPO: NEXUS ENGINE (Admin y Negocio) */}
+            {(hasRole('admin') || hasRole('negocio')) && (
+              <div className="sidebar-group">
+                <div
+                  className="sidebar-group-header"
+                  onClick={() => toggleGroup('engine')}
+                >
+                  <div className="group-header-left">
+                    <i className="bi bi-cpu group-icon"></i>
+                    <span className="sidebar-group-text">NEXUS ENGINE</span>
+                  </div>
+                  <i
+                    className={`bi bi-chevron-down chevron-icon ${openGroups.engine ? 'rotate' : ''}`}
+                  ></i>
+                </div>
+                <div
+                  className={`sidebar-group-items ${openGroups.engine ? 'show' : ''}`}
+                >
+                  <NavLink
+                    to="/smart-match"
+                    className="sidebar-item"
+                    onClick={onClose}
+                  >
+                    <i className="bi bi-stars"></i>
+                    <span className="sidebar-text">Smart Match</span>
+                  </NavLink>
+                  <NavLink
+                    to="/scraping"
+                    className="sidebar-item"
+                    onClick={onClose}
+                  >
+                    <i className="bi bi-robot"></i>
+                    <span className="sidebar-text">Scraping & Fuentes</span>
+                  </NavLink>
+                </div>
+              </div>
+            )}
+          </nav>
+
+          <div className="flex-grow-1" style={{ minHeight: '20px' }}></div>
+
+          <div className="sidebar-footer px-2 pb-3">
+            {/* Info del usuario logueado (Cortesía de Jose) */}
+            {user && (
+              <div
+                className="sidebar-user-email px-3 pb-3 mb-2"
+                style={{
+                  fontSize: '0.7rem',
+                  color: 'rgba(255,255,255,0.4)',
+                  borderBottom: '1px solid rgba(255,255,255,0.05)',
+                }}
+              >
+                Usuario:{' '}
+                <strong style={{ color: 'rgba(255,255,255,0.6)' }}>
+                  {user.email}
+                </strong>
+              </div>
+            )}
+
+            {hasRole('admin') && (
+              <NavLink
+                to="/settings"
+                className="sidebar-item"
+                onClick={onClose}
+              >
+                <i className="bi bi-gear"></i>
+                <span className="sidebar-text">Configuración</span>
+              </NavLink>
+            )}
+
+            <button
+              className="sidebar-item logout-btn-link w-100 border-0 bg-transparent text-start"
+              onClick={handleLogout}
+            >
+              <i className="bi bi-box-arrow-right"></i>
+              <span className="sidebar-text">Cerrar Sesión</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+    </>
   );
-};
-
-export default Sidebar;
+}

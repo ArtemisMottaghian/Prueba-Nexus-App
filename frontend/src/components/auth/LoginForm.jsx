@@ -1,83 +1,119 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Para redirigir tras login exitoso
-import "./LoginForm.css";
+// ============================================
+// LoginForm.jsx
+// Formulario de login con validación y Google OAuth
+// ============================================
 
-// Funciones de validación
-function validarEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-}
-
-function validarCampos({ email, password }) {
-  const errores = {};
-  if (!email.trim()) errores.email = "El correo electrónico es obligatorio.";
-  else if (!validarEmail(email)) errores.email = "Introduce un correo válido.";
-  if (!password) errores.password = "La contraseña es obligatoria.";
-  else if (password.length < 6) errores.password = "Mínimo 6 caracteres.";
-  return errores;
-}
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import './LoginForm.css';
 
 export default function LoginForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errores, setErrores] = useState({});
-  const [tocado, setTocado] = useState({});
-  const [cargando, setCargando] = useState(false); // Estado para mostrar carga durante autenticación
-  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [generalError, setGeneralError] = useState('');
 
-  const handleBlur = (campo) => {
-    setTocado((prev) => ({ ...prev, [campo]: true }));
-    setErrores(validarCampos({ email, password }));
+  const navigate = useNavigate();
+  const { login, user } = useAuth();
+  const [searchParams] = useSearchParams();
+
+  // Si el usuario ya está autenticado, redirigir
+  useEffect(() => {
+    if (user) {
+      navigate(getDefaultRouteForRole(user.role));
+    }
+  }, [user, navigate]);
+
+  // Manejar callback de Google OAuth
+  useEffect(() => {
+    const token = searchParams.get('token');
+    if (token) {
+      localStorage.setItem('token', token);
+      window.location.href = '/'; // Recargar para actualizar el contexto
+    }
+  }, [searchParams]);
+
+  /**
+   * Validar campos del formulario
+   */
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Validar email
+    if (!email.trim()) {
+      newErrors.email = 'El email es obligatorio';
+    } else {
+      const atIndex = email.indexOf('@');
+      if (atIndex === -1 || email.indexOf('.', atIndex) === -1) {
+        newErrors.email = 'El email no es válido (ej. tu@email.com)';
+      }
+    }
+
+    // Validar contraseña
+    if (!password) {
+      newErrors.password = 'La contraseña es obligatoria';
+    } else if (password.length < 6) {
+      newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
+    } else if (!/[A-Z]/.test(password)) {
+      newErrors.password = 'La contraseña debe contener al menos una mayúscula';
+    } else if (!/[0-9]/.test(password)) {
+      newErrors.password = 'La contraseña debe contener al menos un número';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (campo, valor) => {
-    if (campo === "email") setEmail(valor);
-    if (campo === "password") setPassword(valor);
-    if (tocado[campo]) {
-      setErrores(validarCampos({ 
-        email: campo === "email" ? valor : email, 
-        password: campo === "password" ? valor : password 
-      }));
+  /**
+   * Manejar envío del formulario
+   */
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setGeneralError('');
+
+    // Validar formulario
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const result = await login(email, password);
+
+      if (result.success) {
+        // Login exitoso, redirigir
+        navigate(getDefaultRouteForRole(user?.role || 'admin'));
+      } else {
+        // Error de autenticación
+        setGeneralError(result.error || 'Credenciales incorrectas');
+      }
+    } catch (error) {
+      console.error('Error durante el login:', error);
+      setGeneralError('Error al conectar con el servidor');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setTocado({ email: true, password: true });
-    const nuevosErrores = validarCampos({ email, password });
-    setErrores(nuevosErrores);
+  /**
+   * Manejar login con Google (eliminado)
+   */
 
-    if (Object.keys(nuevosErrores).length > 0) return;
-
-    setCargando(true);
-
-    try {
-      // Autenticación con backend
-      const response = await fetch("http://localhost:4000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Almacenar token en localStorage
-        localStorage.setItem("token", data.token);
-        // Redirigir al dashboard
-        navigate("/"); 
-      } else {
-        // Mostrar error del backend (si lo hay) o un mensaje genérico
-        setErrores({ backend: data.message || "Credenciales incorrectas" });
-      }
-    } catch (error) {
-      setErrores({ backend: "Error de conexión con el servidor" });
-    } finally {
-      setCargando(false);
+  /**
+   * Limpiar error de un campo específico
+   */
+  const clearError = (field) => {
+    if (errors[field]) {
+      setErrors({ ...errors, [field]: '' });
     }
   };
 
   return (
     <div className="login-wrapper">
+      {/* Fondo con orbes y cuadrícula */}
       <div className="login-bg">
         <div className="login-bg__orb login-bg__orb--1" />
         <div className="login-bg__orb login-bg__orb--2" />
@@ -85,55 +121,200 @@ export default function LoginForm() {
       </div>
 
       <div className="login-card">
+        {/* Logo */}
         <div className="login-card__logo">
-           {/* ... Tu SVG de logo ... */}
-           <span className="login-card__logo-text">Nexus<span className="login-card__logo-accent">AI</span></span>
+          <svg
+            className="login-card__logo-icon"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 10V3L4 14h7v7l9-11h-7z"
+            />
+          </svg>
+          <span className="login-card__logo-text">
+            Nexus<span className="login-card__logo-accent">AI</span>
+          </span>
         </div>
 
+        {/* Encabezado */}
         <div className="login-card__header">
           <h1 className="login-card__title">Bienvenido</h1>
-          <p className="login-card__subtitle">Accede a tu panel</p>
+          <p className="login-card__subtitle">Accede a tu panel de control</p>
         </div>
 
-        <form className="login-form" onSubmit={handleSubmit} noValidate>
-          {/* Email */}
+        {/* Error general */}
+        {generalError && (
+          <div className="login-form__general-error">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+              <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z" />
+            </svg>
+            {generalError}
+          </div>
+        )}
+
+        <form className="login-form" onSubmit={handleSubmit}>
+          {/* Campo Email */}
           <div className="login-form__group">
-            <div className={`login-form__input-wrapper ${errores.email && tocado.email ? "login-form__input-wrapper--error" : ""}`}>
+            <label className="login-form__label">Email</label>
+            <div
+              className={`login-form__input-wrapper ${errors.email ? 'login-form__input-wrapper--error' : ''}`}
+            >
+              <svg
+                className="login-form__input-icon"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
               <input
-                className="login-form__input"
+                className={`login-form__input ${errors.email ? 'login-form__input--error' : ''}`}
                 type="email"
-                placeholder="tu@empresa.com"
+                placeholder="tu@email.com"
                 value={email}
-                onChange={(e) => handleChange("email", e.target.value)}
-                onBlur={() => handleBlur("email")}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  clearError('email');
+                  setGeneralError('');
+                }}
+                disabled={loading}
               />
             </div>
-            {errores.email && tocado.email && <p className="login-form__error">{errores.email}</p>}
+            {errors.email && (
+              <p className="login-form__error">
+                <svg
+                  width="14"
+                  height="14"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                  <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z" />
+                </svg>
+                {errors.email}
+              </p>
+            )}
           </div>
 
-          {/* Password */}
+          {/* Campo Password */}
           <div className="login-form__group">
-            <div className={`login-form__input-wrapper ${errores.password && tocado.password ? "login-form__input-wrapper--error" : ""}`}>
+            <label className="login-form__label">Contraseña</label>
+            <div
+              className={`login-form__input-wrapper ${errors.password ? 'login-form__input-wrapper--error' : ''}`}
+            >
+              <svg
+                className="login-form__input-icon"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
+              </svg>
               <input
-                className="login-form__input"
+                className={`login-form__input ${errors.password ? 'login-form__input--error' : ''}`}
                 type="password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => handleChange("password", e.target.value)}
-                onBlur={() => handleBlur("password")}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  clearError('password');
+                  setGeneralError('');
+                }}
+                disabled={loading}
               />
             </div>
-            {errores.password && tocado.password && <p className="login-form__error">{errores.password}</p>}
+            {errors.password && (
+              <p className="login-form__error">
+                <svg
+                  width="14"
+                  height="14"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                  <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z" />
+                </svg>
+                {errors.password}
+              </p>
+            )}
           </div>
 
-          {/* Error de backend */}
-          {errores.backend && <p className="login-form__error" style={{textAlign: 'center', marginBottom: '10px'}}>{errores.backend}</p>}
+          {/* Recordar contraseña + Olvidé mi contraseña */}
+          <div className="login-form__meta">
+            <label className="login-form__remember">
+              <input
+                type="checkbox"
+                className="login-form__checkbox"
+                disabled={loading}
+              />
+              Recordarme
+            </label>
+            <a
+              href="#"
+              className="login-form__forgot"
+              onClick={(e) => e.preventDefault()}
+            >
+              ¿Olvidaste tu contraseña?
+            </a>
+          </div>
 
-          <button className="login-form__submit" type="submit" disabled={cargando}>
-            <span>{cargando ? "Entrando..." : "Iniciar sesión"}</span>
+          {/* Botón de Iniciar Sesión */}
+          <button
+            className="login-form__submit"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <span
+                  className="spinner-border spinner-border-sm"
+                  role="status"
+                />
+                <span>Entrando...</span>
+              </>
+            ) : (
+              <span>Entrar</span>
+            )}
           </button>
         </form>
+
+        {/* Footer */}
+        <div className="login-card__footer">
+          © 2026 NexusAI. Todos los derechos reservados.
+        </div>
       </div>
     </div>
   );
 }
+
+/**
+ * Obtiene la ruta por defecto según el rol del usuario
+ */
+const getDefaultRouteForRole = (role) => {
+  switch (role) {
+    case 'admin':
+      return '/dashboard';
+    case 'hr_manager':
+      return '/candidates';
+    case 'company':
+      return '/clientes';
+    default:
+      return '/';
+  }
+};

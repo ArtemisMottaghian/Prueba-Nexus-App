@@ -1,0 +1,121 @@
+/* ==========================================
+   DASHBOARD QUICK CARDS — Estilos dinámicos
+   ========================================== */
+
+.dashboard-quick-card {
+  background: var(--bg-primary); /* Blanco de día, oscuro de noche */
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-quick-card:hover {
+  background: var(--bg-secondary);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.dashboard-quick-card--link {
+  cursor: pointer;
+  border-left: 3px solid var(--color-purple-secondary);
+}
+
+.dashboard-quick-card--link:hover {
+  transform: translateY(-3px);
+  border-left-color: var(--color-purple-primary);
+}
+
+/* --- Iconos con colores de marca adaptativos --- */
+.dashboard-quick-card__icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.dashboard-quick-card__icon--purple {
+  background: rgba(124, 63, 255, 0.12);
+  color: var(--color-purple-secondary);
+}
+
+.dashboard-quick-card__icon--cyan {
+  background: rgba(0, 212, 255, 0.12);
+  color: var(--color-cyan-primary);
+}
+
+.dashboard-quick-card__icon--violet {
+  background: rgba(168, 85, 247, 0.12);
+  color: var(--color-violet);
+}
+
+.dashboard-quick-card__icon--amber {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+}
+
+/* Títulos y valores dinámicos */
+.dashboard-quick-card .text-muted {
+  color: var(--text-muted) !important;
+}
+
+.dashboard-quick-card h3, 
+.dashboard-quick-card .fs-3 {
+  color: var(--text-primary) !important;
+  font-weight: 700;
+}
+
+/* ==========================================
+   SELECTOR DE PERIODO (Día / Semana / Mes)
+   ========================================== */
+.period-segment {
+  display: inline-flex;
+  align-items: stretch;
+  padding: 4px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  gap: 3px;
+  margin-bottom: 20px;
+}
+
+.period-segment__btn {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.55rem 1.35rem;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.period-segment__btn:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.period-segment__btn--active {
+  color: #ffffff !important;
+  background: linear-gradient(
+    145deg,
+    var(--color-purple-primary) 0%,
+    var(--color-purple-secondary) 50%,
+    var(--color-cyan-primary) 100%
+  );
+  box-shadow: 0 4px 12px rgba(124, 63, 255, 0.25);
+}
+
+.period-segment__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

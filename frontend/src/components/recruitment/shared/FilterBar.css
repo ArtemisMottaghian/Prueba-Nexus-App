@@ -1,9 +1,14 @@
 .filter-bar {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 20px;
+  background: linear-gradient(
+    135deg, 
+    var(--color-purple-primary, #4425a7), 
+    var(--color-purple-secondary, #7c3fff)
+  );
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(91, 63, 255, 0.3);
 }
 
 .filter-label {
@@ -17,7 +22,7 @@
 }
 
 .filter-select {
-  background-color: var(--bg-dark-elevated); /* Color sólido para evitar transparencias raras */
+  background-color: var(--bg-primary);
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
@@ -26,15 +31,14 @@
   border-radius: 12px;
   color: var(--text-primary);
   font-size: 14px;
-  padding: 10px 36px 10px 12px; /* Espacio extra a la derecha para la flecha */
-  appearance: none; /* Quita la flecha fea por defecto del navegador */
+  padding: 10px 36px 10px 12px;
+  appearance: none;
   transition: all 0.2s ease;
   cursor: pointer;
 }
 
-/* ✨ ESTO ARREGLA EL MENÚ QUE SE VE BLANCO ✨ */
 .filter-select option {
-  background-color: var(--bg-dark-tertiary);
+  background-color: var(--bg-primary); /* El interior del menú desplegable */
   color: var(--text-primary);
   padding: 10px;
 }
@@ -45,32 +49,26 @@
   box-shadow: 0 0 0 3px rgba(124, 63, 255, 0.2);
 }
 
-/* Estilo para el botón de limpiar */
 .btn-clear {
   height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  transition: all 0.3s ease;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
 }
 
 .btn-clear:not(:disabled):hover {
+  background: var(--bg-primary);
+  color: #ef4444; /* Rojo al pasar el ratón para indicar 'borrar' */
+  border-color: rgba(239, 68, 68, 0.2);
   transform: scale(1.05);
-  filter: brightness(1.1);
 }
-[data-bs-theme='light'] .filter-bar {
-  background: #ffffff;
-  border-color: #e5e7eb;
-}
- 
-[data-bs-theme='light'] .filter-select {
-  background-color: #f3f4f6;
-  border-color: #e5e7eb;
-  color: #111827;
-}
- 
-[data-bs-theme='light'] .filter-select option {
-  background-color: #ffffff;
-  color: #111827;
+
+.btn-clear:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }

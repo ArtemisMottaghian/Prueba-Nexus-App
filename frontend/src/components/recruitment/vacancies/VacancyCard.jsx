@@ -1,4 +1,5 @@
 import './VacancyCard.css';
+
 export default function VacancyCard({
   job,
   isListView,
@@ -6,6 +7,7 @@ export default function VacancyCard({
   isSelected,
   onSelect,
   onUpdateStatus,
+  onToggleFavorite,
 }) {
   let badgeClass = 'badge-nueva';
   if (job.status === 'Contactada') badgeClass = 'badge-contactada';
@@ -26,6 +28,13 @@ export default function VacancyCard({
     onUpdateStatus(job.id, e.target.value);
   };
 
+  const handleFavoriteClick = (e) => {
+    e.stopPropagation();
+    if (onToggleFavorite) {
+      onToggleFavorite(job.id, job.isFavorite);
+    }
+  };
+
   if (isListView) {
     return (
       <div
@@ -40,8 +49,10 @@ export default function VacancyCard({
               type="checkbox"
               checked={isSelected || false}
               onChange={handleCheckboxClick}
+              onClick={handleChildClick}
             />
-            <h5 className="mb-0 text-white vacante-title-list-sm">
+            {/* CAMBIO: Eliminado text-white, añadido text-body */}
+            <h5 className="mb-0 text-body vacante-title-list-sm">
               {job.title}
             </h5>
             <span className="text-muted small">|</span>
@@ -53,8 +64,15 @@ export default function VacancyCard({
               {job.location}
             </span>
             <span className={`badge ${badgeClass}`}>{job.status}</span>
-            <button className="btn-icon btn-icon-sm" onClick={handleChildClick}>
-              <i className="bi bi-star"></i>
+            <button
+              className="btn-icon btn-icon-sm"
+              onClick={handleFavoriteClick}
+            >
+              <i
+                className={
+                  job.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'
+                }
+              ></i>
             </button>
           </div>
         </div>
@@ -75,6 +93,7 @@ export default function VacancyCard({
             type="checkbox"
             checked={isSelected || false}
             onChange={handleCheckboxClick}
+            onClick={handleChildClick}
           />
           <select
             className={`form-select form-select-sm select-status-inline ${badgeClass}`}
@@ -88,8 +107,12 @@ export default function VacancyCard({
             <option value="Descartada">Descartada</option>
           </select>
         </div>
-        <button className="btn-icon btn-icon-sm" onClick={handleChildClick}>
-          <i className="bi bi-star"></i>
+        <button className="btn-icon btn-icon-sm" onClick={handleFavoriteClick}>
+          <i
+            className={
+              job.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'
+            }
+          ></i>
         </button>
       </div>
 

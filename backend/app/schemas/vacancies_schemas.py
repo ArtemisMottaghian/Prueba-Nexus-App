@@ -13,7 +13,9 @@ class VacancySummary(BaseModel):
     salary_min: Optional[int] = Field(None, ge=0)  # No puede ser negativo
     salary_max: Optional[int] = Field(None, ge=0)  # No puede ser negativo
     published_at: Optional[datetime] = None
+    portal_id: Optional[int] = None
     status: OfferStatus
+    is_favorite: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -38,6 +40,7 @@ class VacancyDetail(VacancySummary):
     contract_type: Optional[str] = Field(None, max_length=50)
     work_modality: Optional[str] = Field(None, max_length=50)
     sector: Optional[str] = Field(None, max_length=255)
+    portal_id: Optional[int] = None
 
 # Schema para vacantes filtradas
 class VacancyFiltered(VacancySummary):

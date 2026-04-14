@@ -1,10 +1,8 @@
-from sqlalchemy import Column, Integer, String, BigInteger, DateTime, ForeignKey, func
+from sqlalchemy import Column, Integer, String, BigInteger, DateTime, ForeignKey, func, Enum as PgEnum
 from sqlalchemy.orm import relationship
 from app.db.connection import Base
 from app.schemas.clients_schemas import EntityType, LeadStatus
-from sqlalchemy import Enum as PgEnum
-from sqlalchemy.orm import relationship
-from app.models.user_model import User
+
 
 class Client(Base):
     __tablename__ = "clients"
@@ -14,6 +12,9 @@ class Client(Base):
     source_id = Column(Integer, ForeignKey("job_portals.id"))
     original_offer_id = Column(BigInteger, ForeignKey("job_offers.id"))
     company_name = Column(String(255), nullable=False, index=True)
+    sector = Column(String(255))
+    cif = Column(String(255))
+    address = Column("direccion", String(500))
     entity_type = Column(PgEnum(EntityType, name="entity_type", create_type=False))
     lead_status = Column(
         PgEnum(LeadStatus, name="lead_status", create_type=False), index=True
@@ -33,6 +34,3 @@ class Client(Base):
     history = relationship(
         "TrackingHistory", back_populates="client", cascade="all, delete-orphan"
     )
-    sector = Column(String(255))
-    cif = Column(String(255))
-    address = Column("direccion", String(500))

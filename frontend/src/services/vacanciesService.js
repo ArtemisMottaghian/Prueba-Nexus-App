@@ -1,4 +1,14 @@
-import { ENDPOINTS } from './api';
+import { ENDPOINTS, authFetch } from './api';
+
+const getPortalName = (id) => {
+  const numId = Number(id);
+
+  if (numId === 1) return 'LinkedIn';
+  if (numId === 2) return 'InfoJobs';
+  if (numId === 3) return 'Adzuna';
+  return 'Otro';
+};
+
 const mapVacancyData = (v) => ({
   id: v.id,
   title: v.title,
@@ -6,10 +16,13 @@ const mapVacancyData = (v) => ({
   industry: v.sector || 'N/A',
   location: v.location || 'No especificada',
   status: v.status,
+  source: getPortalName(v.portal_id),
+  isFavorite: v.is_favorite || false,
   // Convertimos la fecha de Python a algo legible
   time: v.published_at
     ? new Date(v.published_at).toLocaleDateString()
-    : 'Reciente',
+    : 'Sin fecha',
+  rawDate: v.published_at || v.scraped_at || null,
   description: v.job_description,
   salaryMin: v.salary_min,
   salaryMax: v.salary_max,
@@ -19,7 +32,7 @@ export const vacanciesService = {
   // 1. Obtener todas las vacantes
   getAllVacancies: async () => {
     try {
-      const response = await fetch(ENDPOINTS.recruitment.vacantes.list);
+      const response = await authFetch(ENDPOINTS.recruitment.vacantes.list);
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       const data = await response.json();
       // Mapeamos cada vacante para que los nombres coincidan
@@ -33,7 +46,7 @@ export const vacanciesService = {
   // 2. Filtrar vacantes
   getFilteredVacancies: async (params) => {
     try {
-      const response = await fetch(
+      const response = await authFetch(
         ENDPOINTS.recruitment.vacantes.filter(params)
       );
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
@@ -48,7 +61,9 @@ export const vacanciesService = {
   // 3. Ver detalle de una vacante
   getVacancyById: async (id) => {
     try {
-      const response = await fetch(ENDPOINTS.recruitment.vacantes.detail(id));
+      const response = await authFetch(
+        ENDPOINTS.recruitment.vacantes.detail(id)
+      );
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       const data = await response.json();
 
@@ -62,7 +77,7 @@ export const vacanciesService = {
   // 4. Marcar/Desmarcar favorito
   toggleFavorite: async (id, isFavorite) => {
     try {
-      const response = await fetch(
+      const response = await authFetch(
         ENDPOINTS.recruitment.vacantes.favorite(id),
         {
           method: 'PATCH',
@@ -82,14 +97,17 @@ export const vacanciesService = {
   // 5. Acciones masivas
   applyBulkActions: async (vacancyIds, actionName) => {
     try {
-      const response = await fetch(ENDPOINTS.recruitment.vacantes.bulkActions, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          vacancy_ids: vacancyIds,
-          action: actionName,
-        }),
-      });
+      const response = await authFetch(
+        ENDPOINTS.recruitment.vacantes.bulkActions,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            vacancy_ids: vacancyIds,
+            action: actionName,
+          }),
+        }
+      );
 
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       return await response.json();

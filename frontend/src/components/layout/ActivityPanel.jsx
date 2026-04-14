@@ -1,10 +1,10 @@
 import './ActivityPanel.css';
+
 export default function ActivityPanel({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
     <>
-      {/* Fondo oscuro en móvil para cerrar al hacer clic fuera */}
       <div
         className="d-lg-none"
         style={{
@@ -17,7 +17,7 @@ export default function ActivityPanel({ isOpen, onClose }) {
       />
 
       <aside
-        className="activity-panel theme-dark"
+        className="activity-panel"
         id="activityPanel"
         style={{ zIndex: 1045 }}
       >
@@ -26,13 +26,13 @@ export default function ActivityPanel({ isOpen, onClose }) {
             <i className="bi bi-lightning-charge me-2 text-warning"></i>
             Recent Activity
           </h3>
-          <button className="btn-icon" onClick={onClose}>
+          <button type="button" className="btn-icon" onClick={onClose}>
             <i className="bi bi-x-lg"></i>
           </button>
         </div>
 
         <div className="activity-scroll">
-          <div className="activity-card-dark">
+          <div className="activity-card">
             <div className="activity-icon-solid bg-purple">
               <i className="bi bi-plus-circle"></i>
             </div>
@@ -45,7 +45,7 @@ export default function ActivityPanel({ isOpen, onClose }) {
             </div>
           </div>
 
-          <div className="activity-card-dark">
+          <div className="activity-card">
             <div className="activity-icon-solid bg-cyan">
               <i className="bi bi-envelope"></i>
             </div>
@@ -58,7 +58,7 @@ export default function ActivityPanel({ isOpen, onClose }) {
             </div>
           </div>
 
-          <div className="activity-card-dark">
+          <div className="activity-card">
             <div className="activity-icon-solid bg-purple">
               <i className="bi bi-person-check"></i>
             </div>
@@ -71,7 +71,7 @@ export default function ActivityPanel({ isOpen, onClose }) {
             </div>
           </div>
 
-          <div className="activity-card-dark">
+          <div className="activity-card">
             <div className="activity-icon-solid bg-cyan">
               <i className="bi bi-telephone"></i>
             </div>
@@ -87,12 +87,17 @@ export default function ActivityPanel({ isOpen, onClose }) {
 
         <div className="activity-footer d-flex justify-content-between align-items-center">
           <button
-            className="btn btn-link btn-clear-hover text-decoration-none"
+            type="button"
+            className="btn btn-link btn-clear-hover text-decoration-none text-muted"
             onClick={onClose}
           >
             Clear
           </button>
-          <button className="btn btn-view-all" onClick={onClose}>
+          <button
+            type="button"
+            className="btn btn-view-all border-0"
+            onClick={onClose}
+          >
             View All
           </button>
         </div>

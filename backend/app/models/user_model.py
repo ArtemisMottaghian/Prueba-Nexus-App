@@ -1,24 +1,8 @@
-from sqlalchemy import Column, Integer, String
-from sqlalchemy.dialects.postgresql import ENUM
-from app.db.connection import Base
-from app.schemas.users_schemas import UserType
 import enum
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Boolean,
-    ForeignKey,
-    DateTime,
-    Text,
-    BigInteger,
-    Enum as PgEnum,
-    CheckConstraint,
-    UniqueConstraint,
-)
-
+from sqlalchemy import Column, String, Boolean, DateTime, BigInteger, Enum as PgEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from app.db.connection import Base
 
 class UserRole(str, enum.Enum):
     admin = "admin"

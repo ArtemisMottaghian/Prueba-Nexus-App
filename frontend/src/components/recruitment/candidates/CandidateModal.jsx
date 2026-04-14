@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './CandidateModal.css';
+
 export default function CandidateModal({ candidate, onClose, onUpdateStatus }) {
   const [activeTab, setActiveTab] = useState('detalles');
   const [localStatus, setLocalStatus] = useState(candidate?.status || '');
@@ -27,9 +28,10 @@ export default function CandidateModal({ candidate, onClose, onUpdateStatus }) {
                   )}
                 </div>
               </div>
+              {/* CAMBIO AQUÍ: Quitamos btn-close-white */}
               <button
                 type="button"
-                className="btn-close btn-close-white"
+                className="btn-close"
                 onClick={onClose}
               ></button>
             </div>

@@ -1,20 +1,24 @@
 .activity-panel {
-  background: #12121c;
-  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--bg-secondary); /* Se adapta automáticamente */
+  border-left: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   width: 320px;
 }
 
 .activity-header {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-color);
   padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .activity-title {
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 18px;
   font-weight: 600;
+  margin: 0;
 }
 
 .activity-scroll {
@@ -23,14 +27,16 @@
   padding: 20px;
 }
 
-.activity-card-dark {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+/* Le hemos quitado el "-dark" al nombre porque ahora vale para los dos modos */
+.activity-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 16px;
   margin-bottom: 16px;
   display: flex;
   gap: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Sombra sutil unificada */
 }
 
 .activity-icon-solid {
@@ -44,10 +50,52 @@
   flex-shrink: 0;
 }
 
-/* Clases de colores para los iconos */
-.bg-purple { background-color: #6b2fee !important; box-shadow: 0 0 20px rgba(107, 47, 238, 0.6); }
-.bg-cyan { background-color: #00d4ff !important; box-shadow: 0 0 20px rgba(0, 212, 255, 0.6); }
+/* Clases de colores para los iconos (Usan variables y suavizamos un poco la sombra) */
+.bg-purple {
+  background-color: var(--color-purple-secondary) !important;
+  box-shadow: 0 0 15px rgba(124, 63, 255, 0.4);
+}
+.bg-cyan {
+  background-color: var(--color-cyan-primary) !important;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+}
 
-/* Modo Claro Activity Panel */
-.theme-light .activity-panel { background: #ffffff !important; border-left: 1px solid #f3f4f6 !important; }
-.theme-light .activity-card-dark { background: #ffffff !important; border: 1px solid #e5e7eb !important; }
+/* --- CLASES DE TEXTO (Añadidas para asegurar que se vean bien) --- */
+.activity-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.text-purple { color: var(--color-purple-secondary) !important; }
+.text-cyan { color: var(--color-cyan-secondary) !important; }
+
+.activity-detail {
+  color: var(--text-primary);
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.activity-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-view-all {
+  background: var(--color-purple-secondary);
+  color: white;
+  border-radius: 8px;
+  font-size: 13px;
+  padding: 6px 16px;
+  transition: all 0.2s ease;
+}
+
+.btn-view-all:hover {
+  background: var(--color-purple-primary);
+  color: white;
+}

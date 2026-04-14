@@ -1,4 +1,4 @@
-import { ENDPOINTS } from './api';
+import { ENDPOINTS, authFetch } from './api';
 
 const mapToFrontend = (client) => ({
   id: client.id,
@@ -32,21 +32,21 @@ const mapToBackend = (client) => ({
 });
 
 export const getClientes = async () => {
-  const response = await fetch(ENDPOINTS.crm.clientes);
+  const response = await authFetch(ENDPOINTS.crm.clientes);
   if (!response.ok) throw new Error('Error al obtener clientes');
   const data = await response.json();
   return data.map(mapToFrontend);
 };
 
 export const getClienteById = async (id) => {
-  const response = await fetch(ENDPOINTS.crm.clienteDetalle(id));
+  const response = await authFetch(ENDPOINTS.crm.clienteDetalle(id));
   if (!response.ok) throw new Error('Error al obtener detalle del cliente');
   const data = await response.json();
   return mapToFrontend(data);
 };
 
 export const createCliente = async (cliente) => {
-  const response = await fetch(ENDPOINTS.crm.clientes, {
+  const response = await authFetch(ENDPOINTS.crm.clientes, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(mapToBackend(cliente)),
@@ -57,7 +57,7 @@ export const createCliente = async (cliente) => {
 };
 
 export const updateCliente = async (id, cliente) => {
-  const response = await fetch(ENDPOINTS.crm.clienteDetalle(id), {
+  const response = await authFetch(ENDPOINTS.crm.clienteDetalle(id), {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(mapToBackend(cliente)),
@@ -68,7 +68,7 @@ export const updateCliente = async (id, cliente) => {
 };
 
 export const deleteCliente = async (id) => {
-  const response = await fetch(ENDPOINTS.crm.clienteDetalle(id), {
+  const response = await authFetch(ENDPOINTS.crm.clienteDetalle(id), {
     method: 'DELETE',
   });
   if (!response.ok) throw new Error('Error al eliminar cliente');
@@ -76,7 +76,7 @@ export const deleteCliente = async (id) => {
 };
 
 export const getClienteVacantes = async (id) => {
-  const response = await fetch(ENDPOINTS.crm.clienteVacantes(id));
+  const response = await authFetch(ENDPOINTS.crm.clienteVacantes(id));
   if (!response.ok) throw new Error('Error al obtener vacantes del cliente');
   const data = await response.json();
   return data.map((p) => ({
