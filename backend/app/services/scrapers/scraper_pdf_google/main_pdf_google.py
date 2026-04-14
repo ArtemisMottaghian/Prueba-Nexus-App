@@ -1,68 +1,72 @@
 import asyncio
 import os
+import json
 import random
 import re
 import urllib.parse
-import aiohttp
-from dotenv import load_dotenv
+from datetime import datetime, timedelta
 
-from app.core.scraper_pdf_config import SECTORES, CIUDADES
-from .browser import search_google_pdfs 
+import aiohttp
 import fitz  
 from google import genai 
-import json
+from dotenv import load_dotenv
 
-# IMPORTACIONES PARA GUARDAR EN LA BASE DE DATOS
 from app.db.session import AsyncSessionLocal
 from app.services.scrapers.scraper_pdf_google.scraper_repository import upsert_scraped_candidate
+from app.core.scraper_pdf_config import SECTORES, CIUDADES
+from .browser import search_google_pdfs 
 
+# ==============================================================================
+# INICIALIZACIÓN Y CONFIGURACIÓN
+# ==============================================================================
 load_dotenv()
 client = genai.Client(api_key=os.getenv("GOOGLE_AI_KEY"))
 
+LIMIT_FILE = "daily_limit.json"
+MAX_DAILY_CV = 100
+
+def check_daily_limit():
+    today = datetime.now().strftime("%Y-%m-%d")
+    if not os.path.exists(LIMIT_FILE):
+        return 0, today
+    
+    try:
+        with open(LIMIT_FILE, "r") as f:
+            data = json.load(f)
+            if data.get("date") == today:
+                return data.get("count", 0), today
+            else:
+                return 0, today
+    except Exception:
+        return 0, today
+
+def update_daily_limit(count):
+    today = datetime.now().strftime("%Y-%m-%d")
+    with open(LIMIT_FILE, "w") as f:
+        json.dump({"date": today, "count": count}, f)
+
 # ==============================================================================
-# 1. EL DETECTIVE DE LINKEDIN
+# 1. EL DETECTIVE DE LINKEDIN (Francotirador)
 # ==============================================================================
 async def search_linkedin_url(first_name, last_name):
     if not first_name or len(first_name) < 2: return None
     
-    # 1. Búsqueda sin comillas estrictas para permitir segundos nombres o falta de tildes
-    # Añadimos la palabra "España" para centrar el tiro (puedes quitarlo si buscas perfiles internacionales)
     query = urllib.parse.quote_plus(f'{first_name} {last_name} España site:linkedin.com/in/')
     url = f"https://es.search.yahoo.com/search?p={query}"
-    
-    # Cabeceras más completas para parecer un humano real navegando por Yahoo
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-        "Accept-Language": "es-ES,es;q=0.8,en-US;q=0.5,en;q=0.3"
-    }
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
     
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers, timeout=8) as resp:
+            async with session.get(url, headers=headers, timeout=6) as resp:
                 if resp.status == 200:
-                    # Leemos la web de Yahoo
-                    html = await resp.text()
-                    
-                    # Descodificamos por si Yahoo ha envuelto el enlace con sus propios códigos
-                    html_decoded = urllib.parse.unquote(html)
-                    
-                    # 2. Expresión regular mejorada: 
-                    # Corta exactamente en el nombre de usuario, ignorando interrogaciones o parámetros extra
-                    match = re.search(r'(https?://(?:[a-z]{2,3}\.|www\.)?linkedin\.com/in/[A-Za-z0-9_-]+)', html_decoded, re.IGNORECASE)
-                    
-                    if match: 
-                        enlace_limpio = match.group(1)
-                        return enlace_limpio
-                        
-    except Exception as e:
-        print(f" Error interno en el detective: {e}")
-        pass
-        
+                    html = urllib.parse.unquote(await resp.text())
+                    match = re.search(r'(https?://(?:[a-z]{2,3}\.|www\.)?linkedin\.com/in/[A-Za-z0-9_-]+)', html, re.IGNORECASE)
+                    if match: return match.group(1)
+    except Exception: pass
     return None
 
 # ==============================================================================
-# 2. EXTRACTOR CON IA 
+# 2. EL LECTOR IA (Con filtro estricto de país)
 # ==============================================================================
 async def extract_pdf_data(pdf_bytes):
     try:
@@ -93,14 +97,13 @@ async def extract_pdf_data(pdf_bytes):
             except Exception as api_error:
                 error_str = str(api_error)
                 if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
-                    print(" Límite de IA alcanzado. Frenando 15 segundos...")
+                    print("Límite de IA alcanzado. Frenando 15 segundos...")
                     await asyncio.sleep(15)
                 elif "503" in error_str or "UNAVAILABLE" in error_str:
                     espera = 2 ** intento
-                    print(f" Servidor IA saturado. Reintentando en {espera}s...")
+                    print(f"Servidor IA saturado. Reintentando en {espera}s...")
                     await asyncio.sleep(espera)
                 else:
-                    print(f" Error IA: {error_str}")
                     return None
         return None
     except Exception as e:
@@ -111,21 +114,31 @@ async def extract_pdf_data(pdf_bytes):
 # 3. MOTOR PRINCIPAL
 # ==============================================================================
 async def run_pdf_scraper():
-    print("\n---  MODO RECOLECTOR ACTIVO: EXTRACCIÓN Y GUARDADO EN BBDD ---")
-    contador = 0
-    limite = 100
+    current_count, today_str = check_daily_limit()
     
-    # ABRIMOS LA CONEXIÓN A LA BASE DE DATOS
+    if current_count >= MAX_DAILY_CV:
+        print(f" Límite diario alcanzado ({MAX_DAILY_CV}/100) para hoy {today_str}. Vuelve mañana.")
+        return
+
+    # Filtro de antigüedad: restamos 365 días a la fecha actual para que busque CVs del último año
+    hace_un_ano = (datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d")
+    
+    print(f"\n RECOLECTOR PRO INICIADO: Llevamos {current_count}/{MAX_DAILY_CV} procesados hoy.")
+    print(f" Solo buscando CVs indexados después de: {hace_un_ano}")
+
     async with AsyncSessionLocal() as db:
         for sector, palabras in SECTORES.items():
-            if contador >= limite: break
+            if current_count >= MAX_DAILY_CV: break
             
             for ciudad in CIUDADES:
-                if contador >= limite: break
+                if current_count >= MAX_DAILY_CV: break
                 
                 keyword = random.choice(palabras)
-                query = f'filetype:pdf "{keyword}" "{ciudad}" "España" intitle:cv -Ecuador -Perú -Colombia -México -Argentina -Chile'
-                print(f"\n Buscando {sector} en {ciudad}...")
+                
+                # LA BÚSQUEDA DE GOOGLE CON FILTRO DE FECHA Y RECHAZO DE EXTRANJEROS
+                query = f'filetype:pdf "{keyword}" "{ciudad}" "España" after:{hace_un_ano} intitle:cv -Ecuador -Perú -Colombia -México -Argentina -Chile'
+                
+                print(f"\n Buscando {sector} en {ciudad} (Máx 1 año de antigüedad)...")
                 
                 pdfs_en_memoria = await search_google_pdfs(query) 
                 
@@ -133,40 +146,45 @@ async def run_pdf_scraper():
                     continue
 
                 for pdf_item in pdfs_en_memoria:
-                    if contador >= limite: break
+                    if current_count >= MAX_DAILY_CV: break
                     
                     data = await extract_pdf_data(pdf_item["bytes"])
                     
+                    # Si la IA devuelve diccionario vacío {}, data.get('first_name') será False y lo saltará
                     if data and isinstance(data, dict) and data.get('first_name'):
+                        
                         linkedin = await search_linkedin_url(data.get('first_name'), data.get('last_name'))
                         
-                        # PREPARAMOS EL DICCIONARIO PARA TU REPOSITORIO
+                        # PREPARAMOS LOS DATOS
                         candidate_data = {
                             "first_name": data.get('first_name'),
                             "last_name": data.get('last_name'),
-                            # Si no hay email, creamos uno falso para que no de error la BD
                             "email": data.get('email') or f"candidato_{random.randint(1000,99999)}@oculto.com",
                             "phone": data.get('phone'),
                             "location": data.get('location'),
                             "source": f"Google PDF - {sector}",
                             "experience": str(data.get('experience')) if data.get('experience') else None,
                             "candidate_url": linkedin or pdf_item['url'],
-                            "cv_url": pdf_item['url'], # ¡Guardamos el enlace real del PDF!
+                            "cv_url": pdf_item['url'], 
                             "skills": str(data.get('skills')) if data.get('skills') else None,
                             "status": "active"
                         }
                         
-                        # GUARDAMOS EN LA BBDD
+                        # GUARDADO EN BBDD
                         try:
                             await upsert_scraped_candidate(db, candidate_data)
-                            print(f" ¡GUARDADO EN BBDD! -> {data.get('first_name')} {data.get('last_name')}")
+                            current_count += 1
+                            update_daily_limit(current_count)
+                            print(f" [{current_count}/{MAX_DAILY_CV}] ¡GUARDADO EN BBDD! -> {data.get('first_name')} {data.get('last_name')}")
                         except Exception as e:
-                            print(f"⚠️ Error al guardar en BBDD: {e}")
-                        
-                        contador += 1
+                            print(f" Error al guardar en BBDD: {e}")
                     
-                    print(" Pausa táctica de 12 segundos...")
-                    await asyncio.sleep(12)
+                    # El respiro necesario para la IA y Google
+                    print(" Pausa táctica de 15 segundos...")
+                    await asyncio.sleep(15)
+                    
+        if current_count >= MAX_DAILY_CV:
+            print("\n ¡Límite de 100 currículums alcanzado por hoy! Buen trabajo.")
 
 if __name__ == "__main__":
     asyncio.run(run_pdf_scraper())
