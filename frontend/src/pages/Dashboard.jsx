@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import SourceStatus from '../components/dashboard/SourceStatus';
 import StatsPanel from '../components/dashboard/StatsPanel';
 import DashboardQuickCards from '../components/dashboard/DashboardQuickCards';
-import { ENDPOINTS } from '../services/api';
+import { ENDPOINTS, authFetch } from '../services/api';
 import '../components/dashboard/DashboardQuickCards.css';
 
 function getDateRangeForPeriod(periodType) {
@@ -38,7 +38,7 @@ export default function Dashboard() {
       try {
         setLoadingStats(true);
         const { from, to } = getDateRangeForPeriod(periodType);
-        const response = await fetch(ENDPOINTS.metrics.leadStats(from, to));
+        const response = await authFetch(ENDPOINTS.metrics.leadStats(from, to));
         if (!response.ok) {
           throw new Error(`Failed to load stats (${response.status})`);
         }
