@@ -25,6 +25,9 @@ client = genai.Client(api_key=os.getenv("GOOGLE_AI_KEY"))
 LIMIT_FILE = "daily_limit.json"
 MAX_DAILY_CV = 100
 
+class AILimitReachedError(Exception):
+    pass
+
 def check_daily_limit():
     today = datetime.now().strftime("%Y-%m-%d")
     if not os.path.exists(LIMIT_FILE):
@@ -66,7 +69,7 @@ async def search_linkedin_url(first_name, last_name):
     return None
 
 # ==============================================================================
-# 2. EL LECTOR IA (Con filtro estricto de país)
+# 2. EL LECTOR IA (Con filtro estricto de país y Apagado)
 # ==============================================================================
 async def extract_pdf_data(pdf_bytes):
     try:
@@ -97,17 +100,22 @@ async def extract_pdf_data(pdf_bytes):
             except Exception as api_error:
                 error_str = str(api_error)
                 if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
-                    print("Límite de IA alcanzado. Frenando 15 segundos...")
+                    if intento == 2:
+                        raise AILimitReachedError("Se ha agotado el límite de la IA definitivamente.")
+                    
+                    print(f"[ESPERA] Límite de IA alcanzado (Intento {intento + 1}/3). Frenando 15 segundos...")
                     await asyncio.sleep(15)
                 elif "503" in error_str or "UNAVAILABLE" in error_str:
                     espera = 2 ** intento
-                    print(f"Servidor IA saturado. Reintentando en {espera}s...")
+                    print(f"[ESPERA] Servidor IA saturado. Reintentando en {espera}s...")
                     await asyncio.sleep(espera)
                 else:
                     return None
         return None
+    except AILimitReachedError:
+        raise
     except Exception as e:
-        print(f" Error leyendo PDF: {e}")
+        print(f"[ERROR] Error leyendo PDF: {e}")
         return None
 
 # ==============================================================================
@@ -117,14 +125,13 @@ async def run_pdf_scraper():
     current_count, today_str = check_daily_limit()
     
     if current_count >= MAX_DAILY_CV:
-        print(f" Límite diario alcanzado ({MAX_DAILY_CV}/100) para hoy {today_str}. Vuelve mañana.")
+        print(f"[INFO] Límite diario alcanzado ({MAX_DAILY_CV}/100) para hoy {today_str}. Vuelve mañana.")
         return
 
-    # Filtro de antigüedad: restamos 365 días a la fecha actual para que busque CVs del último año
     hace_un_ano = (datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d")
     
-    print(f"\n RECOLECTOR PRO INICIADO: Llevamos {current_count}/{MAX_DAILY_CV} procesados hoy.")
-    print(f" Solo buscando CVs indexados después de: {hace_un_ano}")
+    print(f"\n--- RECOLECTOR PRO INICIADO: Llevamos {current_count}/{MAX_DAILY_CV} procesados hoy. ---")
+    print(f"[INFO] Solo buscando CVs indexados después de: {hace_un_ano}")
 
     async with AsyncSessionLocal() as db:
         for sector, palabras in SECTORES.items():
@@ -134,12 +141,9 @@ async def run_pdf_scraper():
                 if current_count >= MAX_DAILY_CV: break
                 
                 keyword = random.choice(palabras)
-                
-                # LA BÚSQUEDA DE GOOGLE CON FILTRO DE FECHA Y RECHAZO DE EXTRANJEROS
                 query = f'filetype:pdf "{keyword}" "{ciudad}" "España" after:{hace_un_ano} intitle:cv -Ecuador -Perú -Colombia -México -Argentina -Chile'
                 
-                print(f"\n Buscando {sector} en {ciudad} (Máx 1 año de antigüedad)...")
-                
+                print(f"\n[BUSCANDO] Sector: {sector} en {ciudad} (Máx 1 año de antigüedad)...")
                 pdfs_en_memoria = await search_google_pdfs(query) 
                 
                 if not pdfs_en_memoria:
@@ -148,14 +152,17 @@ async def run_pdf_scraper():
                 for pdf_item in pdfs_en_memoria:
                     if current_count >= MAX_DAILY_CV: break
                     
-                    data = await extract_pdf_data(pdf_item["bytes"])
+                    try:
+                        data = await extract_pdf_data(pdf_item["bytes"])
+                    except AILimitReachedError:
+                        print("\n[APAGADO DE EMERGENCIA] La IA ha bloqueado el acceso 3 veces seguidas.")
+                        print("[INFO] El script se ha cerrado de forma segura para evitar consumos innecesarios.")
+                        return 
                     
-                    # Si la IA devuelve diccionario vacío {}, data.get('first_name') será False y lo saltará
                     if data and isinstance(data, dict) and data.get('first_name'):
                         
                         linkedin = await search_linkedin_url(data.get('first_name'), data.get('last_name'))
                         
-                        # PREPARAMOS LOS DATOS
                         candidate_data = {
                             "first_name": data.get('first_name'),
                             "last_name": data.get('last_name'),
@@ -170,21 +177,19 @@ async def run_pdf_scraper():
                             "status": "active"
                         }
                         
-                        # GUARDADO EN BBDD
                         try:
                             await upsert_scraped_candidate(db, candidate_data)
                             current_count += 1
                             update_daily_limit(current_count)
-                            print(f" [{current_count}/{MAX_DAILY_CV}] ¡GUARDADO EN BBDD! -> {data.get('first_name')} {data.get('last_name')}")
+                            print(f"[OK] [{current_count}/{MAX_DAILY_CV}] GUARDADO EN BBDD -> {data.get('first_name')} {data.get('last_name')}")
                         except Exception as e:
-                            print(f" Error al guardar en BBDD: {e}")
+                            print(f"[ERROR] Error al guardar en BBDD: {e}")
                     
-                    # El respiro necesario para la IA y Google
-                    print(" Pausa táctica de 15 segundos...")
+                    print("[INFO] Pausa táctica de 15 segundos...")
                     await asyncio.sleep(15)
                     
         if current_count >= MAX_DAILY_CV:
-            print("\n ¡Límite de 100 currículums alcanzado por hoy! Buen trabajo.")
+            print("\n[FIN] Límite de 100 currículums alcanzado por hoy. Buen trabajo.")
 
 if __name__ == "__main__":
     asyncio.run(run_pdf_scraper())
