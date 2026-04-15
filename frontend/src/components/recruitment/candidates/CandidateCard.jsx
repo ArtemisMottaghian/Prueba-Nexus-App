@@ -7,6 +7,7 @@ export default function CandidateCard({
   isSelected,
   onSelect,
   onUpdateStatus,
+  onToggleFavorite,
 }) {
   let badgeClass = 'badge-nueva';
   if (candidate.status === 'Contactado') badgeClass = 'badge-contactada';
@@ -56,8 +57,18 @@ export default function CandidateCard({
               {candidate.location}
             </span>
             <span className={`badge ${badgeClass}`}>{candidate.status}</span>
-            <button className="btn-icon btn-icon-sm" onClick={handleChildClick}>
-              <i className="bi bi-star"></i>
+            <button
+              className={`btn-icon btn-icon-sm ${candidate.isFavorite ? 'text-warning' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFavorite(candidate.id, candidate.isFavorite);
+              }}
+            >
+              <i
+                className={
+                  candidate.isFavorite ? 'bi bi-star-fill' : 'bi bi-star'
+                }
+              ></i>
             </button>
           </div>
         </div>
@@ -92,8 +103,16 @@ export default function CandidateCard({
             <option value="Descartado">Descartado</option>
           </select>
         </div>
-        <button className="btn-icon btn-icon-sm" onClick={handleChildClick}>
-          <i className="bi bi-star"></i>
+        <button
+          className={`btn-icon btn-icon-sm ${candidate.isFavorite ? 'text-warning' : ''}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFavorite(candidate.id, candidate.isFavorite);
+          }}
+        >
+          <i
+            className={candidate.isFavorite ? 'bi bi-star-fill' : 'bi bi-star'}
+          ></i>
         </button>
       </div>
 

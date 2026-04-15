@@ -11,13 +11,14 @@ from app.schemas.candidates_schemas import (
     CandidateCreate,
     CandidateUpdate,
     CandidateOut,
-    MessageResponse
+    MessageResponse,
+    FavoriteRequest,
 )
 
 router = APIRouter()
 
 # --------------------
-# obtener candidatoS 
+# obtener candidatoS
 # GET /api/candidates
 # --------------------
 
@@ -26,7 +27,7 @@ async def read_candidates(db: AsyncSession = Depends(get_db)):
     return await candidates_service.get_all_candidates(db)
 
 # --------------------
-# obtener candidato 
+# obtener candidato
 # GET /api/candidates/{candidate_id}
 # --------------------
 
@@ -70,7 +71,7 @@ async def update_candidate(
 
 
 # --------------------
-# ACTUALIZAR ESTATUS candidato 
+# ACTUALIZAR ESTATUS candidato
 # PATCH /api/candidates/{candidate_id}/status
 # --------------------
 
@@ -88,7 +89,7 @@ async def update_candidate_status(
     return candidate
 
 # --------------------
-# ELIMINAR candidato 
+# ELIMINAR candidato
 # DELETE /api/candidates/{candidate_id}
 # --------------------
 
@@ -98,5 +99,24 @@ async def delete_candidate(candidate_id: int, db: AsyncSession = Depends(get_db)
     success = await candidates_service.delete_candidate(db, candidate_id)
     if not success:
         raise HTTPException(status_code=404, detail="Candidato no encontrado")
-        
+
     return {"message": "Candidato eliminado correctamente"}
+
+
+# -----------------
+# Marcar candidato como favorito
+# PATCH /api/candidates/{candidate_id}/favorite
+# -----------------
+@router.patch("/{candidate_id}/favorite", response_model=MessageResponse)
+async def mark_favorite(
+    candidate_id: int, body: FavoriteRequest, db: AsyncSession = Depends(get_db)
+):
+    candidate = await candidates_service.get_candidate_by_id(db, candidate_id)
+
+    if candidate is None:
+        raise HTTPException(status_code=404, detail="El candidato no existe")
+
+    await candidates_service.set_favorite(db, candidate_id, body.favorite)
+    return {
+        "message": f"Candidato {'marcado' if body.favorite else 'desmarcado'} como favorito"
+    }

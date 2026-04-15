@@ -49,7 +49,21 @@ async def delete_candidate(db: AsyncSession, candidate_id: int) -> bool:
     candidate = await get_candidate_by_id(db, candidate_id)
     if not candidate:
         return False
-        
+
     await db.delete(candidate)
     await db.commit()
     return True
+
+
+async def set_favorite(db: AsyncSession, candidate_id: int, favorite: bool) -> None:
+    """Marca o desmarca un candidato como favorito."""
+    try:
+        query = select(Candidate).where(Candidate.id == candidate_id)
+        result = await db.execute(query)
+        candidate = result.scalar_one_or_none()
+
+        if candidate:
+            candidate.is_favorite = favorite
+            await db.commit()
+    except Exception as e:
+        raise e
