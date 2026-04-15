@@ -19,7 +19,6 @@ class NewUser(BaseModel):
 # Schema para actualizar usuario (todos los campos opcionales)
 class UserUpdate(BaseModel):
     name: Optional[str] = None
-    full_name: Optional[str] = None
     email: Optional[EmailStr] = None
     password: Optional[str] = Field(None, min_length=8, max_length=255)
     role: Optional[UserType] = None
