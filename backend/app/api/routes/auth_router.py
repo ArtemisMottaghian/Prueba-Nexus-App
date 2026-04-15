@@ -94,6 +94,10 @@ async def google_callback(code: str, db:AsyncSession = Depends(get_db)):
             detail="No existe una cuenta con este correo de Google. Registrate primero"
         )
     
+    # Guardar los tokens de google antes de emitir el JWT
+    usuario.google_access_token = tokens["access_token"]
+    usuario.google_refresh_token = tokens.get("refresh_token")
+    await db.commit()
     # Generar el mismo JWT que usa el resto de la app
     token_data = {
         "sub": usuario.email,
@@ -102,5 +106,5 @@ async def google_callback(code: str, db:AsyncSession = Depends(get_db)):
     }
     access_token = create_access_token(data=token_data)
 
-    frontend_url = f"http://nexus.ara-tech.es/auth/google/callback?token={access_token}"
+    frontend_url = f"{settings.FRONTEND_URL}/auth/google/callback?token={access_token}"
     return RedirectResponse(url=frontend_url)

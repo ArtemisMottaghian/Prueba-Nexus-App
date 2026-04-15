@@ -62,7 +62,7 @@ export const login = async (email, password) => {
  * Redirige al usuario a Google OAuth
  */
 export const loginWithGoogle = () => {
-  window.location.href = `${API_URL}/api/auth/google/login`;
+  window.location.href = `${API_URL}/api/login/google/login`;
 };
 
 /**
