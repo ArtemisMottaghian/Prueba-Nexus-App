@@ -16,6 +16,7 @@ export default function Vacancies() {
   const [selectedVacancies, setSelectedVacancies] = useState([]);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -44,6 +45,7 @@ export default function Vacancies() {
       location: 'All',
       source: 'All',
     });
+    setShowFavoritesOnly(false);
   };
 
   const handleSelectVacancy = (id) => {
@@ -61,6 +63,27 @@ export default function Vacancies() {
         job.id === jobId ? { ...job, status: newStatus } : job
       )
     );
+  };
+
+  const handleToggleFavorite = async (jobId, currentFavoriteStatus) => {
+    const newStatus = !currentFavoriteStatus;
+
+    setJobs((prevJobs) =>
+      prevJobs.map((job) =>
+        job.id === jobId ? { ...job, isFavorite: newStatus } : job
+      )
+    );
+
+    try {
+      await vacanciesService.toggleFavorite(jobId, newStatus);
+    } catch (error) {
+      console.error('Error al cambiar favorito:', error);
+      setJobs((prevJobs) =>
+        prevJobs.map((job) =>
+          job.id === jobId ? { ...job, isFavorite: currentFavoriteStatus } : job
+        )
+      );
+    }
   };
 
   const handleBulkDiscard = async () => {
@@ -234,7 +257,15 @@ export default function Vacancies() {
     const matchSource =
       ['all', 'todas', 'todos'].includes(filterSrc) || jobSrcStr === filterSrc;
 
-    return matchStatus && matchIndustry && matchLocation && matchSource;
+    const matchFavorite = !showFavoritesOnly || job.isFavorite === true;
+
+    return (
+      matchStatus &&
+      matchIndustry &&
+      matchLocation &&
+      matchSource &&
+      matchFavorite
+    );
   });
 
   return (
@@ -264,8 +295,26 @@ export default function Vacancies() {
       />
 
       {!loading && (
-        <div className="mb-3 text-muted small">
-          Showing {filteredJobs.length} vacancies of {jobs.length}
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <div className="text-muted small">
+            Showing {filteredJobs.length} vacancies of {jobs.length}
+          </div>
+
+          <button
+            className={`btn btn-sm ${showFavoritesOnly ? 'btn-warning text-dark fw-bold' : 'btn-outline-secondary'}`}
+            onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+            style={
+              showFavoritesOnly
+                ? { backgroundColor: '#ffc107', borderColor: '#ffc107' }
+                : {}
+            }
+            title="Mostrar solo favoritos"
+          >
+            <i
+              className={`bi ${showFavoritesOnly ? 'bi-star-fill' : 'bi-star'} me-2`}
+            ></i>
+            Solo Favoritos
+          </button>
         </div>
       )}
 
@@ -287,6 +336,7 @@ export default function Vacancies() {
           selectedVacancies={selectedVacancies}
           onSelectVacancy={handleSelectVacancy}
           onUpdateJobStatus={handleUpdateJobStatus}
+          onToggleFavorite={handleToggleFavorite}
         />
       )}
     </>

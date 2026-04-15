@@ -77,6 +77,7 @@ async def update_user(db: AsyncSession, email: str, datos: UserUpdate) -> Option
         await db.rollback()
         raise HTTPException(status_code=500, detail="Error al actualizar el usuario")
 
+#eliminar usuario
 async def delete_user(db: AsyncSession, email: str) -> bool:
     try:
         usuario = await getUser(db, email)
@@ -90,3 +91,13 @@ async def delete_user(db: AsyncSession, email: str) -> bool:
     except SQLAlchemyError as e:
         await db.rollback()
         raise HTTPException(status_code=500, detail="Error al eliminar el usuario")
+    
+#obtener todos los usuarios
+async def get_all_users(db: AsyncSession):
+    """Obtiene la lista de todos los usuarios de la base de datos."""
+    try:
+        query = select(User)
+        result = await db.execute(query)
+        return result.scalars().all()
+    except Exception as e:
+        raise e

@@ -68,6 +68,7 @@ class CandidateFrontendOut(BaseModel):
     isAvailable: bool
     time: str
     is_favorite: bool = False
+    email: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -87,10 +88,11 @@ class CandidateFrontendOut(BaseModel):
                 # Si skills es None, devolvemos un texto amigable
                 "specialty": getattr(data, "skills",None) or "Sin especificar",
                 # Usamos location según lo tengamos en la base de datos
-                "location":getattr(data, "city", "No indicada"),
+                "location":getattr(data, "location", "No indicada"),
                 # Lógica de origen: Si viene del scraper tendrá un ID de origen
-                "source": "Scraper InfoJobs" if getattr(data, "source_id", None) else "Carga Manual",
+                "source":getattr(data, "source", None) or "Carga Manual",
                 "experience": getattr(data, "experience") or "Consultar CV",
+                "email": getattr(data, "email", None),
                 # Extraemos el valor del Enum (ej: "active")
                 "status": data.status.value if hasattr(data.status, 'value') else str(data.status),
                 # El Front usa un booleano para mostrar el check de disponibilidad

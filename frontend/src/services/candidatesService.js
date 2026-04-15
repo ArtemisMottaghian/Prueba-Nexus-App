@@ -8,6 +8,7 @@ const mapCandidateData = (c) => ({
   status: c.status,
   source: c.source || 'N/A',
   experience: c.experience || 'N/A',
+  email: c.email || null,
   isAvailable: c.is_available ?? c.isAvailable ?? false,
   isFavorite: c.is_favorite ?? c.isFavorite ?? false,
   time: c.created_at
