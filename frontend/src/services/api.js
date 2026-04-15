@@ -66,4 +66,10 @@ export const ENDPOINTS = {
     update: (email) => `${BASE_URL}/api/users/${email}`,
     delete: (email) => `${BASE_URL}/api/users/${email}`,
   },
+  calendar: {
+    list: `${BASE_URL}/api/calendar/`,
+    create: `${BASE_URL}/api/calendar/`,
+    update: (id) => `${BASE_URL}/api/calendar/${id}`,
+    delete: (id) => `${BASE_URL}/api/calendar/${id}`,
+  },
 };

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { authFetch, ENDPOINTS } from '../../services/api';
 import './CalendarGrid.css';
 
 const REDIRECT_URL =
@@ -17,10 +18,7 @@ const EVENT_TYPES = {
 const PREDEFINED_OPTIONS = Object.keys(EVENT_TYPES);
 
 export default function Calendario() {
-  const [events, setEvents] = useState(() => {
-    const saved = localStorage.getItem('events');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [events, setEvents] = useState([]);
 
   const [selectedDate, setSelectedDate] = useState(null);
   const [editingEventId, setEditingEventId] = useState(null);
@@ -33,8 +31,30 @@ export default function Calendario() {
 
   useEffect(() => {
     eventsRef.current = events;
-    localStorage.setItem('events', JSON.stringify(events));
   }, [events]);
+
+  // Cargar eventos desde Google Calendar al montar
+  useEffect(() => {
+    authFetch(ENDPOINTS.calendar.list)
+      .then((res) => res.json())
+      .then((data) => {
+        const mapped = (data.events || []).map((e) => {
+          const dt = e.start?.dateTime || e.start?.date || '';
+          const [date, timePart] = dt.split('T');
+          const time = timePart ? timePart.slice(0, 5) : '';
+          return {
+            id: e.id,
+            text: e.summary || 'Otro...',
+            description: e.description || '',
+            date,
+            time,
+            notified: false,
+          };
+        });
+        setEvents(mapped);
+      })
+      .catch(() => {});
+  }, []);
 
   const closeModal = useCallback(() => {
     setSelectedDate(null);
@@ -95,28 +115,69 @@ export default function Calendario() {
     setTime(event.time);
   };
 
-  const saveEvent = () => {
+  const saveEvent = async () => {
     if (!selectedDate || !type) return;
-    const eventData = {
-      text: type,
+    const startIso = time
+      ? `${selectedDate}T${time}:00`
+      : `${selectedDate}T00:00:00`;
+    const endDate = new Date(startIso);
+    endDate.setHours(endDate.getHours() + 1);
+    const endIso = endDate.toISOString().slice(0, 19);
+
+    const payload = {
+      title: type,
       description,
-      time,
-      date: selectedDate,
-      notified: false,
+      start: startIso,
+      end: endIso,
     };
+
     if (editingEventId) {
-      setEvents(
-        events.map((e) =>
-          e.id === editingEventId ? { ...e, ...eventData, id: e.id } : e
-        )
-      );
+      const res = await authFetch(ENDPOINTS.calendar.update(editingEventId), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        setEvents(
+          events.map((e) =>
+            e.id === editingEventId
+              ? { ...e, text: type, description, time, date: selectedDate }
+              : e
+          )
+        );
+      }
     } else {
-      setEvents([...events, { ...eventData, id: crypto.randomUUID() }]);
+      const res = await authFetch(ENDPOINTS.calendar.create, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        const created = await res.json();
+        setEvents([
+          ...events,
+          {
+            id: created.id,
+            text: type,
+            description,
+            time,
+            date: selectedDate,
+            notified: false,
+          },
+        ]);
+      }
     }
     closeModal();
   };
 
-  const deleteEvent = (id) => setEvents(events.filter((e) => e.id !== id));
+  const deleteEvent = async (id) => {
+    const res = await authFetch(ENDPOINTS.calendar.delete(id), {
+      method: 'DELETE',
+    });
+    if (res.ok) {
+      setEvents(events.filter((e) => e.id !== id));
+    }
+  };
 
   const clearAllEvents = () => {
     if (
