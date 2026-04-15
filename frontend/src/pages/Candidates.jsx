@@ -34,6 +34,31 @@ export default function Candidates() {
     fetchCandidates();
   }, []);
 
+  const handleToggleFavorite = async (candidateId, currentIsFavorite) => {
+    const newFavoriteStatus = !currentIsFavorite;
+    setCandidates((prevCandidates) =>
+      prevCandidates.map((candidate) =>
+        candidate.id === candidateId
+          ? { ...candidate, isFavorite: newFavoriteStatus }
+          : candidate
+      )
+    );
+
+    try {
+      await candidatesService.toggleFavorite(candidateId, newFavoriteStatus);
+    } catch (error) {
+      console.error('Error al actualizar favorito en el servidor', error);
+      // Si falla el servidor, devolvemos la estrella a su estado original
+      setCandidates((prevCandidates) =>
+        prevCandidates.map((candidate) =>
+          candidate.id === candidateId
+            ? { ...candidate, isFavorite: currentIsFavorite }
+            : candidate
+        )
+      );
+    }
+  };
+
   // Manejadores de eventos
   const handleFilterChange = (filterName, value) => {
     setFilters((prevFilters) => ({ ...prevFilters, [filterName]: value }));
@@ -118,6 +143,7 @@ export default function Candidates() {
           selectedCandidates={selectedCandidates}
           onSelectCandidate={handleSelectCandidate}
           onUpdateCandidateStatus={handleUpdateCandidateStatus}
+          onToggleFavorite={handleToggleFavorite}
         />
       )}
     </>

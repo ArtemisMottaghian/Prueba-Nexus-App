@@ -26,7 +26,7 @@ class CandidateBase(BaseModel):
 class CandidateCreate(CandidateBase):
     pass 
 
-# Actualización 
+# Actualización
 class CandidateUpdate(BaseModel):
     first_name: Optional[str] = Field(None, min_length=2, max_length=50)
     last_name: Optional[str] = Field(None, min_length=2, max_length=50)
@@ -45,7 +45,6 @@ class CandidateOut(CandidateBase):
     updated_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
-
 
 
 class CandidateStatusOut(BaseModel):
@@ -68,6 +67,7 @@ class CandidateFrontendOut(BaseModel):
     experience: Optional[str] = "Consultar CV"
     isAvailable: bool
     time: str
+    is_favorite: bool = False
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -96,7 +96,8 @@ class CandidateFrontendOut(BaseModel):
                 # El Front usa un booleano para mostrar el check de disponibilidad
                 "isAvailable": data.status in [CandidateStatus.active, CandidateStatus.passive],
                 # Formateamos la fecha a algo legible (YYYY-MM-DD)
-                "time": data.created_at.strftime("%Y-%m-%d") if getattr(data, "created_at", None) else "Reciente"
+                "time": data.created_at.strftime("%Y-%m-%d") if getattr(data, "created_at", None) else "Reciente",
+                "is_favorite": True if getattr(data, "is_favorite", False) else False
 
             }
         return data
@@ -112,7 +113,6 @@ class MessageResponse(BaseModel):
 if __name__ == "__main__":
     print("--- 🧪 TEST DE ESQUEMAS DE CANDIDATOS ---")
 
-
     # 1. Simulamos un objeto que vendría de SQLAlchemy (Base de Datos)
     class FakeCandidateModel:
         def __init__(self):
@@ -126,7 +126,6 @@ if __name__ == "__main__":
             self.source_id = 55  # Esto indica que viene del scraper
             self.experience = "3 años"
             self.created_at = datetime.now()
-
 
     objeto_db = FakeCandidateModel()
 
@@ -160,3 +159,8 @@ if __name__ == "__main__":
         print("❌ Error: El sistema ha dejado pasar datos inválidos.")
     except Exception as e:
         print("✅ Validación de seguridad: PASADA (Bloqueó email y URL incorrectos)")
+
+
+# Schema para marcar como favorita
+class FavoriteRequest(BaseModel):
+    favorite: bool

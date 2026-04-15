@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import './CandidateModal.css';
 
-export default function CandidateModal({ candidate, onClose, onUpdateStatus }) {
+export default function CandidateModal({
+  candidate,
+  onClose,
+  onUpdateStatus,
+  onToggleFavorite,
+}) {
   const [activeTab, setActiveTab] = useState('detalles');
   const [localStatus, setLocalStatus] = useState(candidate?.status || '');
 
@@ -48,8 +53,17 @@ export default function CandidateModal({ candidate, onClose, onUpdateStatus }) {
                   <option value="En proceso">En proceso</option>
                   <option value="Descartado">Descartado</option>
                 </select>
-                <button className="btn-icon">
-                  <i className="bi bi-star"></i>
+                <button
+                  className={`btn-icon ${candidate.isFavorite ? 'text-warning' : ''}`}
+                  onClick={() =>
+                    onToggleFavorite(candidate.id, candidate.isFavorite)
+                  }
+                >
+                  <i
+                    className={
+                      candidate.isFavorite ? 'bi bi-star-fill' : 'bi bi-star'
+                    }
+                  ></i>
                 </button>
               </div>
 

@@ -9,6 +9,7 @@ const mapCandidateData = (c) => ({
   source: c.source || 'N/A',
   experience: c.experience || 'N/A',
   isAvailable: c.is_available ?? c.isAvailable ?? false,
+  isFavorite: c.is_favorite ?? c.isFavorite ?? false,
   time: c.created_at
     ? new Date(c.created_at).toLocaleDateString()
     : c.time || 'Reciente',
