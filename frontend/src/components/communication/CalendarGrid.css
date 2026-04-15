@@ -1,4 +1,8 @@
-/* Contenedor principal */
+/* ===================================================
+   CalendarGrid.css — NexusAI Calendar
+   =================================================== */
+
+/* ── CONTENEDOR PRINCIPAL ──────────────────────── */
 .calendar-container {
   min-height: 100vh;
   background: var(--bg-secondary);
@@ -30,9 +34,32 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  gap: 12px;
 }
 
-/* Cabecera de días (Lun, Mar...) */
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── NAVEGACIÓN MES ────────────────────────────── */
+.calendar-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.calendar-month-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+/* ── CABECERA DÍAS (Lun, Mar...) ───────────────── */
 .days-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -52,7 +79,7 @@
   gap: 8px;
 }
 
-/* Celdas de día */
+/* ── CELDAS DE DÍA ─────────────────────────────── */
 .day-cell {
   position: relative;
   min-height: 110px;
@@ -88,7 +115,7 @@
   display: block;
 }
 
-/* Eventos dentro del día */
+/* ── EVENTOS DENTRO DEL DÍA ────────────────────── */
 .event-item {
   border-radius: 6px;
   padding: 4px 8px;
@@ -97,15 +124,30 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  color: white !important; /* Mantenemos blanco para contraste sobre colores de evento */
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  color: white !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .event-time-type {
   font-weight: 700;
 }
 
-/* Modal personalizado estilo Nexus */
+.event-delete-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: 0.85rem;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.event-delete-btn:hover {
+  color: #fff;
+}
+
+/* ── MODAL EVENTO (estilo Nexus) ───────────────── */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -115,18 +157,75 @@
   justify-content: center;
   align-items: center;
   z-index: 2000;
+  padding: 16px;
 }
 
 .modal-box {
   background: var(--bg-primary);
-  padding: 28px;
-  border-radius: 20px;
-  width: 350px;
   border: 1px solid var(--border-color);
+  border-radius: 20px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  padding: 32px;
+  width: 100%;
+  max-width: 400px;
 }
 
-/* Ajustes de botones para usar tus variables de Button.css */
+.modal-box h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 24px;
+}
+
+/* Labels del modal */
+.input-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+/* Inputs y selects del modal */
+.input-field,
+.modal-box .select-status-inline {
+  width: 100%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.input-field:focus,
+.modal-box .select-status-inline:focus {
+  border-color: var(--color-purple-secondary);
+  box-shadow: 0 0 0 3px rgba(124, 63, 255, 0.15);
+}
+
+.input-field::placeholder {
+  color: var(--text-muted);
+}
+
+/* Modo claro — modal */
+[data-bs-theme='light'] .modal-box {
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+}
+
+[data-bs-theme='light'] .input-field,
+[data-bs-theme='light'] .modal-box .select-status-inline {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+/* ── BOTONES ───────────────────────────────────── */
 .action-btn, .primary-btn {
   background: linear-gradient(135deg, var(--color-purple-primary), var(--color-purple-secondary));
   color: white;
@@ -140,4 +239,148 @@
 .action-btn:hover, .primary-btn:hover {
   filter: brightness(1.1);
   transform: translateY(-1px);
+}
+
+.btn-secondary-custom {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 10px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-secondary-custom:hover {
+  border-color: var(--color-purple-secondary);
+}
+
+/* ── RESPONSIVE MÓVIL ──────────────────────────── */
+@media (max-width: 768px) {
+  .calendar-container {
+    padding: 12px;
+  }
+
+  .calendar-box {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .calendar-title {
+    font-size: 1.3rem;
+  }
+
+  /* Barra superior: título arriba, botones abajo */
+  .calendar-top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .top-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  /* Navegación mes */
+  .calendar-header {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .calendar-month-text {
+    width: 100%;
+    font-size: 0.9rem;
+  }
+
+  /* Grid y cabecera de días */
+  .days-header {
+    gap: 4px;
+    font-size: 0.65rem;
+    letter-spacing: 0;
+    margin-bottom: 8px;
+  }
+
+  .calendar-grid {
+    gap: 4px;
+  }
+
+  /* Celdas más compactas */
+  .day-cell {
+    min-height: 60px;
+    padding: 6px;
+    border-radius: 10px;
+  }
+
+  .day-cell:not(.empty):hover {
+    transform: none;
+  }
+
+  .day-number {
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+  }
+
+  .event-item {
+    font-size: 0.55rem;
+    padding: 2px 4px;
+    margin-top: 2px;
+  }
+
+  /* Modal a ancho completo en móvil */
+  .modal-box {
+    width: calc(100% - 32px);
+    max-width: 100%;
+    padding: 24px;
+  }
+}
+
+/* Pantallas muy pequeñas (iPhone SE) */
+@media (max-width: 400px) {
+  .calendar-container {
+    padding: 8px;
+  }
+
+  .calendar-box {
+    padding: 12px;
+  }
+
+  .day-cell {
+    min-height: 48px;
+    padding: 4px;
+    border-radius: 8px;
+  }
+
+  .day-number {
+    font-size: 0.7rem;
+  }
+
+  .days-header {
+    font-size: 0.6rem;
+    gap: 3px;
+  }
+
+  .calendar-grid {
+    gap: 3px;
+  }
+
+  .event-item {
+    display: none;
+  }
+
+  .dots-container {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+  }
+
+  .event-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
 }
