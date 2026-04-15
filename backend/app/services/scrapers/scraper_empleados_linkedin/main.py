@@ -23,8 +23,8 @@ async def extract_profile_data(page: Page, url: str, keyword: str, search_locati
     print(f"\nEntrando al perfil: {url}")
     try:
         # Cogemos el perfil y que cargue el DOM principal
-        await page.goto(url, wait_until="domcontentloaded", timeout=20000)
-        await asyncio.sleep(2)
+        await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+        await asyncio.sleep(random.uniform(3, 6))
 
         page_title = await page.title()
         full_name = "Candidato LinkedIn"
@@ -75,8 +75,8 @@ async def extract_profile_data(page: Page, url: str, keyword: str, search_locati
         await page.mouse.move(centro_x, centro_y)
 
         for _ in range(8):
-            await page.mouse.wheel(0, 600)
-            await asyncio.sleep(1.2)
+            await page.mouse.wheel(0, random.randint(400, 800))
+            await asyncio.sleep(random.uniform(1.5,3.0))
 
         # Expandi textos grandes
         print("   -> Expandiendo descripciones de trabajo...")
@@ -353,16 +353,17 @@ async def run_scraper(keywords: List[str], sectors: List[str], locations: List[s
 
         # Modo HEADLESS = TRUE para que podamos usarlo sin abrir el navegador
         if headless:
-            # Falsificamos el user-agent para borrar el rastro de "HeadlessChrome"
             await page.set_extra_http_headers({
+                "Referer": "https://www.google.com/",
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-                "Accept-Language": "es-ES,es;q=0.9,en;q=0.8"
+                "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
             })
 
-            # 2. Borramos la bandera 'webdriver' 
+            # Borramos la bandera 'webdriver'
             await page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-            
-            # 3. Fingimos tener complementos instalados (típico de usuarios reales)
+
+            # Fingimos tener complementos instalados
             await page.add_init_script("Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3]})")
 
         for loc in locations:
@@ -378,7 +379,7 @@ async def run_scraper(keywords: List[str], sectors: List[str], locations: List[s
                         # Vamos a la portada limpia de la versión lite
                         await page.goto(f"https://es.search.yahoo.com/search?p={encoded_query}", wait_until="domcontentloaded", timeout=20000) 
                         # Pausa para que cargue el HTML
-                        await asyncio.sleep(3, 5)
+                        await asyncio.sleep(random.uniform(3, 5))
 
                         # Si sale el banner de las cookies de Yahoo lo eliminamos 
                         try:
@@ -422,15 +423,16 @@ async def run_scraper(keywords: List[str], sectors: List[str], locations: List[s
                                     unique_links.append(link)
                         
                     except Exception as e:
-                        print(f"-> Error en la busqueda de Bing: {e}")
+                        print(f"-> Error en la busqueda de Yahoo: {e}")
                         unique_links = []
-                    
 
+                    # Pausa entre búsquedas
+                    await asyncio.sleep(random.uniform(5, 10))
                     unique_links = list(set(unique_links))
 
                     if not unique_links:
                         print(f"0 resultados encontrados. Pasando a la siguiente búsqueda")
-                        await page.screenshot(path="debug_bing.png", full_page=True)
+                        await page.screenshot(path="/tmp/debug_yahoo.png", full_page=True)
                         continue
 
                     print(f"Encontrados {len(unique_links)} posibles perfiles.")
@@ -456,7 +458,7 @@ async def run_scraper(keywords: List[str], sectors: List[str], locations: List[s
                                     )
 
                             # Pausa entre perfiles
-                            await asyncio.sleep(random.uniform(4, 7))
+                            await asyncio.sleep(random.uniform(8, 15))
 
     except Exception as e:
         print(f"Error critico en scraper: {e}")
