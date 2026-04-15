@@ -423,6 +423,10 @@
   background: rgba(248,113,113,0.25);
 }
 
+.um-modal__title--danger {
+  color: var(--clr-error, #f87171);
+}
+
 /* ── Confirm modal text ─────────────────────────── */
 .um-confirm__text {
   color: var(--clr-text-muted, #7a7a9a);
