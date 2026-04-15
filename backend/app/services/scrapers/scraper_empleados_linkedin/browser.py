@@ -6,8 +6,25 @@ from dotenv import load_dotenv
 # Forzamos la lectura del archivo .env
 load_dotenv()
 
-async def get_browser_context(headless: bool = False):
+async def get_browser_context(headless: bool = True):
+
     # Inicializa el navegador con Playright y le aplica configuraciones para simular un enetorno humano y evitar bloqueos
+
+    proxy_server = os.getenv("PROXY_SERVER")
+    proxy_user = os.getenv("PROXY_USER")
+    proxy_pass = os.getenv("PROXY_PASS")
+
+    proxy_config = None
+    if proxy_server and proxy_user and proxy_pass:
+        proxy_config = {
+            "server": proxy_server,
+            "username": proxy_user,
+            "password": proxy_pass,
+        }
+        print(f"Proxy configurado: {proxy_server}")
+    else:
+        print("Sin proxy configurado — usando IP directa")
+
 
     try:
         # Iniciamos Playwrigth
@@ -16,13 +33,15 @@ async def get_browser_context(headless: bool = False):
         # Lanzamos Chromium
         browser = await pw.chromium.launch(
             headless = headless,
-            args = ["--disable-blink-features=AutomotionControlled"]
+            args = ["--disable-blink-features=AutomotionControlled"],
+            proxy = proxy_config
         )
 
         # Abrimos una ventana de incognito limpia
         # usamos el User-Agent de un navegador real para despistar
         context = await browser.new_context(
-            user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+            user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            proxy=proxy_config
         )
 
         li_at_cookie = os.getenv ("LINKEDIN_SESSION_COOKIE")
