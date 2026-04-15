@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { usersService } from '../services/userManagementService'; // <-- Importamos tu nuevo servicio
+import { usersService } from '../services/userManagementService';
 import './usermanagement.css';
 
 // ── Datos de respaldo (Fallback) por si el backend está offline ──
@@ -43,7 +43,7 @@ const ROLE_OPTIONS = [
   { value: 'company', label: 'Negocio' },
 ];
 
-const EMPTY_FORM = { name: '', email: '', role: 'hr_manager' };
+const EMPTY_FORM = { name: '', email: '', password: '', role: 'hr_manager' };
 
 export default function UserManagement() {
   const { hasRole } = useAuth();
@@ -101,6 +101,11 @@ export default function UserManagement() {
         errors.email = 'Email no válido (ej. tu@email.com)';
       }
     }
+    if (!form.password) {
+      errors.password = 'La contraseña es obligatoria';
+    } else if (form.password.length < 6) {
+      errors.password = 'Mínimo 6 caracteres';
+    }
     if (!form.role) errors.role = 'Selecciona un rol';
     return errors;
   };
@@ -128,6 +133,7 @@ export default function UserManagement() {
       const newUser = await usersService.createUser({
         name: form.name.trim(),
         email: form.email.trim(),
+        password: form.password,
         role: form.role,
       });
 
@@ -313,6 +319,27 @@ export default function UserManagement() {
                   <p className="um-field__error">
                     <i className="bi bi-exclamation-circle me-1"></i>
                     {formErrors.email}
+                  </p>
+                )}
+              </div>
+              <div className="um-field">
+                <label className="um-field__label" htmlFor="um-password">
+                  Contraseña
+                </label>
+                <input
+                  id="um-password"
+                  type="password"
+                  className={`um-field__input ${formErrors.password ? 'um-field__input--error' : ''}`}
+                  placeholder="Mínimo 6 caracteres"
+                  value={form.password}
+                  onChange={(e) =>
+                    handleFieldChange('password', e.target.value)
+                  }
+                />
+                {formErrors.password && (
+                  <p className="um-field__error">
+                    <i className="bi bi-exclamation-circle me-1"></i>
+                    {formErrors.password}
                   </p>
                 )}
               </div>
