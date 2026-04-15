@@ -94,6 +94,9 @@ async def google_callback(code: str, db:AsyncSession = Depends(get_db)):
             detail="No existe una cuenta con este correo de Google. Registrate primero"
         )
     
+    # Guardas los tokens de google antes de emitir el JWT
+    usuario.google_access_toke = tokens["access_token"]
+    usuario.google_refresh_token = tokens.get("refresh_token")
     # Generar el mismo JWT que usa el resto de la app
     token_data = {
         "sub": usuario.email,
