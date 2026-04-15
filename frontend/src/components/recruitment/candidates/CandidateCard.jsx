@@ -118,10 +118,12 @@ export default function CandidateCard({
           <span className="detail-text">{candidate.location}</span>
         </div>
         <div className="detail-item">
-            <div className="detail-icon icon-purple">
-                <i className="bi bi-envelope"></i>
-            </div>
-            <span className="detail-text">{candidate.email || 'No indicado'}</span>
+          <div className="detail-icon icon-purple">
+            <i className="bi bi-envelope"></i>
+          </div>
+          <span className="detail-text">
+            {candidate.email || 'No indicado'}
+          </span>
         </div>
       </div>
 

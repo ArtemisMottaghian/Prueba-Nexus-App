@@ -39,11 +39,11 @@ const FALLBACK_USERS = [
 
 const ROLE_OPTIONS = [
   { value: 'admin', label: 'Administrador' },
-  { value: 'reclutador', label: 'Reclutador' },
-  { value: 'negocio', label: 'Negocio' },
+  { value: 'hr_manager', label: 'Reclutador' },
+  { value: 'company', label: 'Negocio' },
 ];
 
-const EMPTY_FORM = { name: '', email: '', role: 'reclutador' };
+const EMPTY_FORM = { name: '', email: '', role: 'hr_manager' };
 
 export default function UserManagement() {
   const { hasRole } = useAuth();
@@ -157,12 +157,13 @@ export default function UserManagement() {
   };
 
   const getRoleBadge = (role) => {
-    switch (role) {
+    const safeRole = String(role || '').toLowerCase();
+    switch (safeRole) {
       case 'admin':
         return <span className="um-badge um-badge--admin">Administrador</span>;
-      case 'reclutador':
+      case 'hr_manager':
         return <span className="um-badge um-badge--hr">Reclutador</span>;
-      case 'negocio':
+      case 'company':
         return <span className="um-badge um-badge--company">Negocio</span>;
       default:
         return <span className="um-badge">Usuario</span>;
