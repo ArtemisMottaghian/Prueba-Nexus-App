@@ -260,6 +260,7 @@
 @media (max-width: 768px) {
   .calendar-container {
     padding: 12px;
+    min-height: auto;
   }
 
   .calendar-box {
@@ -310,7 +311,7 @@
 
   /* Celdas más compactas */
   .day-cell {
-    min-height: 60px;
+    min-height: 42px;
     padding: 6px;
     border-radius: 10px;
   }
@@ -349,7 +350,7 @@
   }
 
   .day-cell {
-    min-height: 48px;
+    min-height: 36px;
     padding: 4px;
     border-radius: 8px;
   }
