@@ -23,7 +23,8 @@ export const usersService = {
       const response = await authFetch(ENDPOINTS.users.list);
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       const data = await response.json();
-      return data.map(mapUserData);
+      const mappedUsers = data.map(mapUserData);
+      return mappedUsers.sort((a, b) => a.id - b.id);
     } catch (error) {
       console.error('Error al obtener la lista de usuarios:', error);
       throw error;
@@ -42,6 +43,22 @@ export const usersService = {
       return mapUserData(data);
     } catch (error) {
       console.error('Error al crear usuario:', error);
+      throw error;
+    }
+  },
+
+  updateUser: async (email, userData) => {
+    try {
+      const response = await authFetch(ENDPOINTS.users.update(email), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
+      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      const data = await response.json();
+      return mapUserData(data);
+    } catch (error) {
+      console.error(`Error al actualizar usuario ${email}:`, error);
       throw error;
     }
   },

@@ -12,11 +12,14 @@ class UserType(str, Enum):
 # Schema crear usuario
 class NewUser(BaseModel):
     email: EmailStr = Field(..., max_length=255, description="Correo electrónico del usuario")  # Valida formato email
+    name: Optional[str] = None
     password: str = Field(..., min_length=8, max_length=255, description="Contraseña del usuario") # Mínimo 8 caracteres
     role: UserType = Field(default=UserType.hr_manager, description="Rol del usuario")
 
 # Schema para actualizar usuario (todos los campos opcionales)
 class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    full_name: Optional[str] = None
     email: Optional[EmailStr] = None
     password: Optional[str] = Field(None, min_length=8, max_length=255)
     role: Optional[UserType] = None
@@ -25,6 +28,7 @@ class UserUpdate(BaseModel):
 # Schema respuesta usuario
 class UserResponse(BaseModel):
     id: int
+    name: Optional[str] = None
     email: EmailStr # Valida formato email
     role: UserType
     created_at:Optional[datetime]=None # Fecha de creación del usuario
