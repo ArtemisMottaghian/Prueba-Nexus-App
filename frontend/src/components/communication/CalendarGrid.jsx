@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { authFetch, ENDPOINTS } from '../../services/api';
+import { loginWithGoogle } from '../../services/authService';
 import './CalendarGrid.css';
-
-const REDIRECT_URL =
-  'https://accounts.google.com/o/oauth2/auth?client_id=TU_CLIENT_ID&redirect_uri=https://nexus-app.com/calendar&response_type=code&scope=https://www.googleapis.com/auth/calendar.events';
 
 // Colores unificados con la paleta de la aplicación
 const EVENT_TYPES = {
@@ -19,6 +17,7 @@ const PREDEFINED_OPTIONS = Object.keys(EVENT_TYPES);
 
 export default function Calendario() {
   const [events, setEvents] = useState([]);
+  const [googleNotConnected, setGoogleNotConnected] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState(null);
   const [editingEventId, setEditingEventId] = useState(null);
@@ -36,8 +35,16 @@ export default function Calendario() {
   // Cargar eventos desde Google Calendar al montar
   useEffect(() => {
     authFetch(ENDPOINTS.calendar.list)
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) {
+          setGoogleNotConnected(true);
+          return null;
+        }
+        if (!res.ok) return null;
+        return res.json();
+      })
       .then((data) => {
+        if (!data) return;
         const mapped = (data.events || []).map((e) => {
           const dt = e.start?.dateTime || e.start?.date || '';
           const [date, timePart] = dt.split('T');
@@ -120,9 +127,10 @@ export default function Calendario() {
     const startIso = time
       ? `${selectedDate}T${time}:00`
       : `${selectedDate}T00:00:00`;
-    const endDate = new Date(startIso);
-    endDate.setHours(endDate.getHours() + 1);
-    const endIso = endDate.toISOString().slice(0, 19);
+    const [datePart, timePart] = startIso.split('T');
+    const [h, m, s] = timePart.split(':').map(Number);
+    const endHour = String(h + 1).padStart(2, '0');
+    const endIso = `${datePart}T${endHour}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 
     const payload = {
       title: type,
@@ -219,14 +227,30 @@ export default function Calendario() {
             >
               <i className="bi bi-trash3 me-1"></i> Limpiar
             </button>
-            <button
-              className="btn-primary-custom"
-              onClick={() => window.open(REDIRECT_URL, '_blank')}
-            >
-              <i className="bi bi-globe me-1"></i> Sincronizar
+            <button className="btn-primary-custom" onClick={loginWithGoogle}>
+              <i className="bi bi-globe me-1"></i> Sincronizar con Google
             </button>
           </div>
         </div>
+
+        {/* BANNER: Google no conectado */}
+        {googleNotConnected && (
+          <div
+            className="alert alert-warning d-flex align-items-center gap-2 mx-0 mb-0 rounded-0"
+            role="alert"
+          >
+            <i className="bi bi-exclamation-triangle-fill"></i>
+            <span>
+              Conecta tu cuenta de Google para ver y gestionar eventos.{' '}
+              <button
+                className="btn btn-sm btn-warning"
+                onClick={loginWithGoogle}
+              >
+                Conectar ahora
+              </button>
+            </span>
+          </div>
+        )}
 
         {/* NAVEGACIÓN */}
         <div className="calendar-header">
