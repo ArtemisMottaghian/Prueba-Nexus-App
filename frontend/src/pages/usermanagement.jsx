@@ -55,6 +55,8 @@ export default function UserManagement() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [formErrors, setFormErrors] = useState({});
 
+  const [userToDelete, setUserToDelete] = useState(null);
+
   // ── Petición a la DB al cargar el componente ─────────────────────────────────
   useEffect(() => {
     const fetchUsers = async () => {
@@ -146,11 +148,26 @@ export default function UserManagement() {
     }
   };
 
-  const handleDeleteUser = async (id) => {
+  const requestDeleteUser = (user) => {
+    setUserToDelete(user);
+  };
+
+  // 2. Si el usuario cancela en el mensaje de advertencia
+  const cancelDeleteUser = () => {
+    setUserToDelete(null);
+  };
+
+  // 3. Si el usuario confirma que SÍ quiere borrarlo
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+
     try {
       // LLAMADA AL BACKEND REAL
-      await usersService.deleteUser(id);
-      setUsers((prev) => prev.filter((u) => u.id !== id));
+      await usersService.deleteUser(userToDelete.email);
+
+      // Actualizamos la tabla y cerramos el aviso
+      setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
+      setUserToDelete(null);
     } catch (error) {
       alert('Hubo un error al eliminar el usuario en el servidor.');
       console.error(error);
@@ -232,7 +249,7 @@ export default function UserManagement() {
                       <button
                         className="um-btn-delete"
                         title="Eliminar usuario"
-                        onClick={() => handleDeleteUser(user.id)}
+                        onClick={() => requestDeleteUser(user)}
                       >
                         <i className="bi bi-trash3"></i>
                       </button>
@@ -378,6 +395,69 @@ export default function UserManagement() {
               <button className="um-btn-confirm" onClick={handleSubmit}>
                 <i className="bi bi-check-lg me-1"></i>
                 Añadir empleado
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {userToDelete && (
+        <div className="um-modal-overlay" onClick={cancelDeleteUser}>
+          <div
+            className="um-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="um-modal__header">
+              <h3
+                className="um-modal__title text-danger"
+                style={{ color: '#dc3545' }}
+              >
+                <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                Confirmar eliminación
+              </h3>
+              <button
+                className="um-modal__close"
+                onClick={cancelDeleteUser}
+                aria-label="Cerrar"
+              >
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+
+            <div className="um-modal__body">
+              <p>
+                ¿Estás seguro de que deseas eliminar permanentemente al usuario{' '}
+                <strong>
+                  {userToDelete.name} ({userToDelete.email})
+                </strong>
+                ?
+              </p>
+              <p
+                className="text-muted small mt-2"
+                style={{ fontSize: '0.875em', opacity: 0.8 }}
+              >
+                Esta acción no se puede deshacer y el usuario perderá el acceso
+                a la plataforma.
+              </p>
+            </div>
+
+            <div className="um-modal__footer">
+              <button className="um-btn-cancel" onClick={cancelDeleteUser}>
+                Cancelar
+              </button>
+              {/* Usamos un estilo de botón rojo para acciones destructivas */}
+              <button
+                className="um-btn-confirm"
+                style={{
+                  backgroundColor: '#dc3545',
+                  borderColor: '#dc3545',
+                  color: 'white',
+                }}
+                onClick={confirmDeleteUser}
+              >
+                <i className="bi bi-trash3 me-1"></i>
+                Sí, eliminar
               </button>
             </div>
           </div>
