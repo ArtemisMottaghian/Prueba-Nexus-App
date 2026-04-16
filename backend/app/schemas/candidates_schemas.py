@@ -22,6 +22,10 @@ class CandidateBase(BaseModel):
     notes: Optional[str] = Field(None, max_length=1000)
     status: Optional[CandidateStatus] = CandidateStatus.active
 
+    location: Optional[str] = Field(None, max_length=255)
+    source: Optional[str] = Field(None, max_length=100)
+    experience: Optional[str] = None
+
 
 class CandidateCreate(CandidateBase):
     pass 
@@ -37,6 +41,10 @@ class CandidateUpdate(BaseModel):
     skills: Optional[str] = Field(None, max_length=500)
     notes: Optional[str] = Field(None, max_length=1000)
     status: Optional[CandidateStatus] = None
+
+    location: Optional[str] = Field(None, max_length=255)
+    source: Optional[str] = Field(None, max_length=100)
+    experience: Optional[str] = None
 
 # Salida (CandidateOut / CandidateResponse)
 class CandidateOut(CandidateBase):
