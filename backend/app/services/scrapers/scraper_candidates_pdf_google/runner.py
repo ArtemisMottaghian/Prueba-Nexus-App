@@ -208,10 +208,14 @@ async def run_pdf_scraper() -> None:
                         
                         linkedin = await search_linkedin_url(data.get('first_name'), data.get('last_name'))
                         
+                        f_name = str(data.get('first_name') or 'candidato').replace(' ', '').lower()
+                        l_name = str(data.get('last_name') or 'anonimo').replace(' ', '').lower()
+                        email_inventado = f"{f_name}.{l_name}@scraping.local"
+                         
                         candidate_data = {
                             "first_name": data.get('first_name'),
                             "last_name": data.get('last_name'),
-                            "email": data.get('email') or f"candidato_{random.randint(1000,99999)}@scraping.local",
+                            "email": data.get('email') or email_inventado,
                             "phone": data.get('phone'),
                             "location": data.get('location'),
                             "source": f"Google PDF - {sector}",
