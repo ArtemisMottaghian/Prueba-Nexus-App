@@ -46,6 +46,16 @@ async def read_vacancies_filtered(
 
 
 # -----------------
+# Obtener localizaciones únicas de vacantes
+# GET /api/vacancies/locations
+# -----------------
+@router.get("/locations", response_model=List[str])
+async def get_locations(db: AsyncSession = Depends(get_db)):
+    """Devuelve las localizaciones únicas de las vacantes disponibles."""
+    return await vacancies_service.get_distinct_locations(db)
+
+
+# -----------------
 # Obtener detalle de vacante
 # GET /api/vacancies/{vacancy_id}
 # -----------------

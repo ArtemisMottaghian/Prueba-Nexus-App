@@ -187,7 +187,7 @@ async def get_vacancies_filtered(
         if sector:
             query = query.where(JobOffer.sector == sector)
         if location:
-            query = query.where(JobOffer.location == location)
+            query = query.where(JobOffer.location.ilike(f"%{location}%"))
         query = query.order_by(JobOffer.published_at.desc())
         result = await db.execute(query)
         return result.scalars().all()
@@ -267,3 +267,15 @@ async def update_vacancy_status(db: AsyncSession, vacancy_id: int, new_status: s
         await db.rollback()
         print(f"Error al actualizar el estado de la vacante {vacancy_id}: {e}")
         raise e
+
+async def get_distinct_locations(db: AsyncSession) -> List[str]:
+    """Devuelve la lista de localizaciones únicas de las vacantes."""
+    result = await db.execute(
+        select(JobOffer.location)
+        .where(JobOffer.location.isnot(None))
+        .where(JobOffer.location != '')
+        .where(JobOffer.location != 'Sin ubicación')
+        .distinct()
+        .order_by(JobOffer.location)
+    )
+    return [row[0] for row in result.all()]

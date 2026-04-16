@@ -46,7 +46,21 @@ const mapVacancyData = (v) => {
 };
 
 export const vacanciesService = {
-  // 1. Obtener todas las vacantes
+  // 1. Obtener localizaciones únicas
+  getLocations: async () => {
+    try {
+      const response = await authFetch(
+        ENDPOINTS.recruitment.vacantes.locations
+      );
+      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error al obtener localizaciones:', error);
+      return [];
+    }
+  },
+
+  // 2. Obtener todas las vacantes
   getAllVacancies: async () => {
     try {
       const response = await authFetch(ENDPOINTS.recruitment.vacantes.list);

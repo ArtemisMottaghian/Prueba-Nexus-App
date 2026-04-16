@@ -47,6 +47,7 @@ export const ENDPOINTS = {
     },
     vacantes: {
       list: `${BASE_URL}/api/vacancies`,
+      locations: `${BASE_URL}/api/vacancies/locations`,
       filter: (params) => {
         const query = new URLSearchParams(params).toString();
         return `${BASE_URL}/api/vacancies/filter/list?${query}`;
