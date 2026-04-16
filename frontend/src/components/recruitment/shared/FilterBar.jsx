@@ -4,6 +4,17 @@ export default function FilterBar({
   onFilterChange,
   onClearFilters,
   locationOptions = [],
+  statusOptions = [
+    { value: 'New', label: 'Nuevas' },
+    { value: 'Contacted', label: 'Contactados' },
+    { value: 'In progress', label: 'En progreso' },
+    { value: 'Rejected', label: 'Descartados' },
+  ],
+  sourceOptions = [
+    { value: 'InfoJobs', label: 'InfoJobs' },
+    { value: 'LinkedIn', label: 'LinkedIn' },
+    { value: 'Adzuna', label: 'Adzuna' },
+  ],
 }) {
   const hasActiveFilters =
     filters.status !== 'All' ||
@@ -19,13 +30,12 @@ export default function FilterBar({
           <select
             className="form-select filter-select"
             value={filters.status}
-            onChange={(e) => onFilterChange('status', e.target.value)}
-          >
+            onChange={(e) => onFilterChange('status', e.target.value)}>
+
             <option value="All">Todas</option>
-            <option value="New">Nuevas</option>
-            <option value="Contacted">Contactados</option>
-            <option value="In progress">En progreso</option>
-            <option value="Rejected">Descartados</option>
+            {statusOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
           </select>
         </div>
 
@@ -72,9 +82,9 @@ export default function FilterBar({
             onChange={(e) => onFilterChange('source', e.target.value)}
           >
             <option value="All">Todas</option>
-            <option value="InfoJobs">InfoJobs</option>
-            <option value="LinkedIn">LinkedIn</option>
-            <option value="Adzuna">Adzuna</option>
+            {sourceOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
           </select>
         </div>
 

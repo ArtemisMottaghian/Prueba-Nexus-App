@@ -9,10 +9,10 @@ const ITEMS_POR_PAGINA = 10;
 
 export default function Candidates() {
   const [filters, setFilters] = useState({
-    estado: 'Todos',
-    especialidad: 'Todas',
-    ubicacion: 'Todas',
-    origen: 'Todos',
+    status: 'All',
+    industry: 'All',
+    location: 'All',
+    source: 'All',
   });
 
   const [selectedCandidates, setSelectedCandidates] = useState([]);
@@ -70,10 +70,10 @@ export default function Candidates() {
 
   const handleClearFilters = () => {
     setFilters({
-      estado: 'Todos',
-      especialidad: 'Todas',
-      ubicacion: 'Todas',
-      origen: 'Todos',
+       status: 'All',
+        industry: 'All',
+        location: 'All',
+        source: 'All',
     });
   };
 
@@ -98,14 +98,13 @@ export default function Candidates() {
   // Lógica de filtrado
   const filteredCandidates = candidates.filter((candidate) => {
     const matchEstado =
-      filters.estado === 'Todos' || candidate.status === filters.estado;
+        filters.status === 'All' || candidate.status === filters.status;
     const matchEspecialidad =
-      filters.especialidad === 'Todas' ||
-      candidate.specialty === filters.especialidad;
+        filters.industry === 'All' || candidate.specialty === filters.industry;
     const matchUbicacion =
-      filters.ubicacion === 'Todas' || candidate.location === filters.ubicacion;
+        filters.location === 'All' || candidate.location === filters.location;
     const matchOrigen =
-      filters.origen === 'Todos' || candidate.source === filters.origen;
+        filters.source === 'All' || candidate.source === filters.source;
 
     return matchEstado && matchEspecialidad && matchUbicacion && matchOrigen;
   });
@@ -162,6 +161,13 @@ export default function Candidates() {
         filters={filters}
         onFilterChange={handleFilterChange}
         onClearFilters={handleClearFilters}
+        statusOptions={[
+            { value: 'active', label: 'Activo' },
+        ]}
+        sourceOptions={[
+            { value: 'Carga Manual', label: 'Carga Manual' },
+            { value: 'GitHub API', label: 'GitHub API' },
+        ]}
       />
 
       {!loading && (
