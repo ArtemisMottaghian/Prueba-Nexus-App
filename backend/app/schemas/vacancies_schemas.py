@@ -59,3 +59,7 @@ class BulkActionRequest(BaseModel):
 # Schema para respuestas de mensaje
 class MessageResponse(BaseModel):
     message: str
+
+#Schema para cambiar estado de ofertas
+class StatusRequest(BaseModel):
+    status: str
