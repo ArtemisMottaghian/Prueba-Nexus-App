@@ -13,9 +13,9 @@ root_directory = os.path.abspath(os.path.join(backend_directory, ".."))
 sys.path.append(backend_directory)
 sys.path.append(root_directory)
 
-from app.core import scraper_linkedin_config as config
-from backend.app.services.scrapers.linkedin.utils import build_linkedin_url
-from backend.app.services.scrapers.linkedin.browser import (
+from backend.app.core import scraper_vacancies_linkedin_config as config
+from backend.app.services.scrapers.scraper_vacancies_linkedin.utils import build_linkedin_url
+from backend.app.services.scrapers.scraper_vacancies_linkedin.browser import (
     get_webdriver,
     scroll_page,
     fetch_job_details,
