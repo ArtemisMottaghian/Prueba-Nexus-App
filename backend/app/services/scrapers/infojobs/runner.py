@@ -19,8 +19,8 @@ sys.path.append(backend_dir)
 sys.path.append(root_dir)
 
 from app.core import scraper_infojobs_config as config
-from app.services.scrapers.infojobs.infojobs_utils import extract_salary
-from app.services.scrapers.infojobs.infojobs_browser import (
+from backend.app.services.scrapers.infojobs.utils import extract_salary
+from backend.app.services.scrapers.infojobs.browser import (
     restart_nav,
     fetch_infojobs_details,
 )
