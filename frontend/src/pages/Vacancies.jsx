@@ -289,7 +289,9 @@ export default function Vacancies() {
     const jobSrcStr = String(job.source || '').toLowerCase();
 
     // Si elige "Todas" o si lo que elige coincide con el nombre traducido
-    const matchSource =['all', 'todas', 'todos'].includes(filterSrc) || jobSrcStr === filterSrc;
+    const matchSource =
+      ['all', 'todas', 'todos'].includes(filterSrc) ||
+      jobSrcStr === filterSrc;
 
     // FAVORITOS
     const matchFavorite = !showFavoritesOnly || job.isFavorite === true;
