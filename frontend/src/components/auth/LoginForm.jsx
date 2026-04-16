@@ -11,6 +11,8 @@ import './LoginForm.css';
 export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [generalError, setGeneralError] = useState('');
@@ -81,7 +83,7 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
-      const result = await login(email, password);
+      const result = await login(email, password, rememberMe);
 
       if (result.success) {
         // Login exitoso, redirigir
@@ -227,8 +229,8 @@ export default function LoginForm() {
                 />
               </svg>
               <input
-                className={`login-form__input ${errors.password ? 'login-form__input--error' : ''}`}
-                type="password"
+                className={`login-form__input login-form__input--password ${errors.password ? 'login-form__input--error' : ''}`}
+                type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => {
@@ -238,6 +240,42 @@ export default function LoginForm() {
                 }}
                 disabled={loading}
               />
+              <button
+                type="button"
+                className="login-form__eye-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={loading}
+                tabIndex={-1}
+                aria-label={
+                  showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'
+                }
+              >
+                {showPassword ? (
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.59 6.59m7.532 7.532l3.29 3.29M3 3l18 18"
+                    />
+                  </svg>
+                ) : (
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                    />
+                  </svg>
+                )}
+              </button>
             </div>
             {errors.password && (
               <p className="login-form__error">
@@ -255,23 +293,18 @@ export default function LoginForm() {
             )}
           </div>
 
-          {/* Recordar contraseña + Olvidé mi contraseña */}
+          {/* Recordarme */}
           <div className="login-form__meta">
             <label className="login-form__remember">
               <input
                 type="checkbox"
                 className="login-form__checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
                 disabled={loading}
               />
               Recordarme
             </label>
-            <a
-              href="#"
-              className="login-form__forgot"
-              onClick={(e) => e.preventDefault()}
-            >
-              ¿Olvidaste tu contraseña?
-            </a>
           </div>
 
           {/* Botón de Iniciar Sesión */}

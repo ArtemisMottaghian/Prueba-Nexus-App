@@ -88,7 +88,7 @@ class CandidateFrontendOut(BaseModel):
                 # Si skills es None, devolvemos un texto amigable
                 "specialty": getattr(data, "skills",None) or "Sin especificar",
                 # Usamos location según lo tengamos en la base de datos
-                "location":getattr(data, "location", "No indicada"),
+                "location":getattr(data, "location",None) or "No indicada",
                 # Lógica de origen: Si viene del scraper tendrá un ID de origen
                 "source":getattr(data, "source", None) or "Carga Manual",
                 "experience": getattr(data, "experience") or "Consultar CV",
