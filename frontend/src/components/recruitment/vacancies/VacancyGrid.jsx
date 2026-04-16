@@ -30,21 +30,21 @@ export default function VacancyGrid({
     <>
       <div className="results-header mb-4 mt-4">
         <h2 className="results-title">
-          <span className="count-highlight">{jobs.length}</span> Vacancies
+          <span className="count-highlight">{jobs.length}</span> Vacantes
         </h2>
 
         <div className="view-toggle">
           <button
             className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
             onClick={() => setViewMode('grid')}
-            title="Grid View"
+            title="Vista cuadrícula"
           >
             <i className="bi bi-grid-3x3-gap"></i>
           </button>
           <button
             className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
             onClick={() => setViewMode('list')}
-            title="List View"
+            title="Vista lista"
           >
             <i className="bi bi-list-ul"></i>
           </button>
@@ -58,7 +58,7 @@ export default function VacancyGrid({
           /* CAMBIO: Quitamos bg-dark-subtle y usamos nuestra clase adaptativa */
           <div className="w-100 text-center py-5 rounded-3 empty-state-container">
             <i className="bi bi-search display-4 d-block mb-3"></i>
-            <p>No vacancies found with these filters.</p>
+            <p>No se encontraron vacantes con estos filtros.</p>
           </div>
         ) : (
           jobs.map((job) => (

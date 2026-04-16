@@ -21,16 +21,38 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  /**
+   * Obtiene el token de donde esté almacenado (localStorage o sessionStorage)
+   */
+  const getStoredToken = () => {
+    return localStorage.getItem('token') || sessionStorage.getItem('token');
+  };
+
+  /**
+   * Elimina el token de ambos storages
+   */
+  const clearStoredToken = () => {
+    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
+  };
+
   // Al montar el componente, verificar si hay un usuario logueado
   useEffect(() => {
     const initAuth = () => {
-      const currentUser = authService.getCurrentUser();
+      const token = getStoredToken();
+      if (!token) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
 
-      if (currentUser && authService.isTokenValid()) {
+      const currentUser = authService.getCurrentUserFromToken(token);
+
+      if (currentUser && authService.isTokenValidFromToken(token)) {
         setUser(currentUser);
       } else {
         // Token inválido o expirado
-        localStorage.removeItem('token');
+        clearStoredToken();
         setUser(null);
       }
 
@@ -42,16 +64,24 @@ export const AuthProvider = ({ children }) => {
 
   /**
    * Login con email y contraseña
+   * @param {boolean} rememberMe — si true, persiste en localStorage; si false, solo en sessionStorage
    */
-  const login = async (email, password) => {
+  const login = async (email, password, rememberMe = false) => {
     try {
       const data = await authService.login(email, password);
 
-      // Guardar token
-      localStorage.setItem('token', data.access_token);
+      // Guardar token en el storage adecuado
+      clearStoredToken();
+      if (rememberMe) {
+        localStorage.setItem('token', data.access_token);
+      } else {
+        sessionStorage.setItem('token', data.access_token);
+      }
 
       // Decodificar y establecer usuario
-      const currentUser = authService.getCurrentUser();
+      const currentUser = authService.getCurrentUserFromToken(
+        data.access_token
+      );
       setUser(currentUser);
 
       return { success: true };

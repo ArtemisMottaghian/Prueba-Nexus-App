@@ -79,7 +79,7 @@ export default function FilterBar({ filters, onFilterChange, onClearFilters }) {
             className="btn btn-clear w-100"
             onClick={onClearFilters}
             disabled={!hasActiveFilters}
-            title="Clear filters"
+            title="Limpiar filtros"
           >
             <i className="bi bi-x-lg"></i>
           </button>
