@@ -289,7 +289,9 @@ export default function Vacancies() {
     const filterLoc = String(filters.location || '').toLowerCase();
     const matchLocation =
       ['all', 'todas', 'todos'].includes(filterLoc) ||
-      String(job.location || '').toLowerCase().includes(filterLoc);
+      String(job.location || '')
+        .toLowerCase()
+        .includes(filterLoc);
 
     // PLATAFORMA
     const filterSrc = String(filters.source || '').toLowerCase();
