@@ -1,5 +1,10 @@
 import './FilterBar.css';
-export default function FilterBar({ filters, onFilterChange, onClearFilters }) {
+export default function FilterBar({
+  filters,
+  onFilterChange,
+  onClearFilters,
+  locationOptions = [],
+}) {
   const hasActiveFilters =
     filters.status !== 'All' ||
     filters.industry !== 'All' ||
@@ -50,11 +55,11 @@ export default function FilterBar({ filters, onFilterChange, onClearFilters }) {
             onChange={(e) => onFilterChange('location', e.target.value)}
           >
             <option value="All">Todas</option>
-            <option value="Madrid">Madrid</option>
-            <option value="Barcelona">Barcelona</option>
-            <option value="Valencia">Valencia</option>
-            <option value="Zaragoza">Zaragoza</option>
-            <option value="Remote">Remoto</option>
+            {locationOptions.map((loc) => (
+              <option key={loc} value={loc}>
+                {loc}
+              </option>
+            ))}
           </select>
         </div>
 

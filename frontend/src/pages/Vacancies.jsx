@@ -21,6 +21,7 @@ export default function Vacancies() {
   const [selectedVacancies, setSelectedVacancies] = useState([]);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [locationOptions, setLocationOptions] = useState([]);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   // Paginación
@@ -39,7 +40,13 @@ export default function Vacancies() {
       }
     };
 
+    const fetchLocations = async () => {
+      const locs = await vacanciesService.getLocations();
+      setLocationOptions(locs);
+    };
+
     fetchJobs();
+    fetchLocations();
   }, []);
 
   const handleFilterChange = (filterName, value) => {
@@ -359,6 +366,7 @@ export default function Vacancies() {
         filters={filters}
         onFilterChange={handleFilterChange}
         onClearFilters={handleClearFilters}
+        locationOptions={locationOptions}
         statusOptions={['Nueva', 'Contactada', 'En proceso', 'Descartada']}
         industryOptions={[
           'Technology',
