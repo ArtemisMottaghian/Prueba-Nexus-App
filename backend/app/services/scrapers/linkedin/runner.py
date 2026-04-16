@@ -14,8 +14,8 @@ sys.path.append(backend_directory)
 sys.path.append(root_directory)
 
 from app.core import scraper_linkedin_config as config
-from app.services.scrapers.linkedin.linkedin_utils import build_linkedin_url
-from app.services.scrapers.linkedin.linkedin_browser import (
+from backend.app.services.scrapers.linkedin.utils import build_linkedin_url
+from backend.app.services.scrapers.linkedin.browser import (
     get_webdriver,
     scroll_page,
     fetch_job_details,

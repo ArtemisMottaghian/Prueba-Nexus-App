@@ -1,6 +1,6 @@
 import pytest
 
-from app.services.scrapers.infojobs.infojobs_utils import extract_salary
+from backend.app.services.scrapers.infojobs.utils import extract_salary
 
 
 @pytest.mark.parametrize(

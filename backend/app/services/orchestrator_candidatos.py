@@ -1,13 +1,13 @@
 import asyncio
-from app.core.scraper_linkedin_candidatos_config import (
+from backend.app.core.scraper_candidates_linkedin_config import (
     KEYWORDS,
     SECTORS,
     LOCATIONS,
     HEADLESS_MODE,
 )
-from app.services.scrapers.scraper_empleados_linkedin.main import run_scraper
-from app.services.scrapers.scraper_github.main_github import run_github_scraper
-from app.services.scrapers.scraper_pdf_google.main_pdf_google import run_pdf_scraper
+from backend.app.services.scrapers.scraper_empleados_linkedin.runner import run_scraper
+from backend.app.services.scrapers.scraper_github.runner import run_github_scraper
+from backend.app.services.scrapers.scraper_pdf_google.runner import run_pdf_scraper
 
 
 async def run_candidate_scrapers():

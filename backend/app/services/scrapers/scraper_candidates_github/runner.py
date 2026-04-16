@@ -7,9 +7,9 @@ from dotenv import load_dotenv
 
 # IMPORTACIONES DE TU PROYECTO
 from app.db.session import AsyncSessionLocal
-from .scraper_repository import upsert_scraped_candidate
-from app.core.scraper_github_config import LENGUAJES_IT, LOCATIONS_GITHUB
-from .browser_github import search_linkedin_with_browser
+from .utils import upsert_scraped_candidate
+from backend.app.core.scraper_candidates_github_config import LENGUAJES_IT, LOCATIONS_GITHUB
+from .browser import search_linkedin_with_browser
 
 
 # CONFIGURACIÓN INICIAL
@@ -162,7 +162,7 @@ async def extract_github_profile(session: aiohttp.ClientSession, username: str) 
             return {
                 "first_name": first_name,
                 "last_name": last_name,
-                "email": user_data.get("email") or f"{username.lower()}@github.local",
+                "email": user_data.get("email") or f"{username.lower()}@scraping.local",
                 "phone": None,
                 "location": location,
                 "source": "GitHub API",

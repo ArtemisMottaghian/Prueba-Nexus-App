@@ -1,6 +1,6 @@
 import pytest
 
-from app.services.scrapers.linkedin.linkedin_utils import parse_salary, is_valid_sector
+from backend.app.services.scrapers.linkedin.utils import parse_salary, is_valid_sector
 
 @pytest.mark.parametrize(
     "input_text, expected_output",

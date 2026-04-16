@@ -13,9 +13,9 @@ from app.models.clients_model import Client
 from app.models.contacts_model import Contact
 
 from app.schemas.job_offer import ScrapedJobOffer
-from app.services.scrapers.linkedin.linkedin_runner import extract_linked
+from backend.app.services.scrapers.linkedin.runner import extract_linked
 from app.services.scrapers.adzuna import extract_adzuna
-from app.services.scrapers.infojobs.infojobs_runner import extract_infojobs
+from backend.app.services.scrapers.infojobs.runner import extract_infojobs
 from app.services.enrichment_service import (
     search_in_dropcontact,
     search_with_phantombuster,
