@@ -4,10 +4,13 @@ import BulkActions from '../components/recruitment/shared/BulkActions';
 import VacancyGrid from '../components/recruitment/vacancies/VacancyGrid';
 import initialJobsData from '../data/dummyData.json';
 import { vacanciesService } from '../services/vacanciesService';
+import { useSearchParams } from 'react-router-dom';
 
 const ITEMS_POR_PAGINA = 10;
 
 export default function Vacancies() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryURL = searchParams.get('q') || '';
   const [filters, setFilters] = useState({
     status: 'All',
     industry: 'All',
@@ -51,6 +54,11 @@ export default function Vacancies() {
       source: 'All',
     });
     setShowFavoritesOnly(false);
+
+    if (searchParams.has('q')) {
+      searchParams.delete('q');
+      setSearchParams(searchParams);
+    }
   };
 
   const handleSelectVacancy = (id) => {
@@ -62,7 +70,6 @@ export default function Vacancies() {
   };
 
   const handleUpdateJobStatus = (jobId, newStatus) => {
-    // endpoint para actualizar el estado individual de una vacante.:
     setJobs((prevJobs) =>
       prevJobs.map((job) =>
         job.id === jobId ? { ...job, status: newStatus } : job
@@ -116,26 +123,6 @@ export default function Vacancies() {
       matchStatus = true;
     } else if (filterStat.includes('nueva') || filterStat.includes('new')) {
       matchStatus = ['detected', 'new', 'nueva'].includes(safeStatus);
-
-      /* VARIANTE NUEVAS = ULTIMAS 24 HORAS
-
-    if (['all', 'todas', 'todos'].includes(filterStat)) {
-      matchStatus = true;
-    } else if (filterStat.includes('nueva') || filterStat.includes('new')) {
-      
-      // Verificamos que sea una oferta sin contactar
-      const isDetected = ['detected', 'new', 'nueva'].includes(safeStatus);
-      
-      // Calculamos si han pasado menos de 24 horas
-      let isLast24h = false;
-      if (job.rawDate) {
-        const hoursDiff = (new Date() - new Date(job.rawDate)) / (1000 * 60 * 60);
-        isLast24h = hoursDiff <= 24;
-      }
-
-      // Tiene que cumplir ambas condiciones para mostrarse
-      matchStatus = isDetected && isLast24h;
-    */
     } else if (filterStat.includes('contact')) {
       matchStatus = ['contacted', 'contactada'].includes(safeStatus);
     } else if (
@@ -262,14 +249,25 @@ export default function Vacancies() {
     const matchSource =
       ['all', 'todas', 'todos'].includes(filterSrc) || jobSrcStr === filterSrc;
 
+    // FAVORITOS
     const matchFavorite = !showFavoritesOnly || job.isFavorite === true;
+
+    // 👇 BÚSQUEDA POR TEXTO (TOPBAR) 👇
+    let matchText = true;
+    if (queryURL) {
+      const lowerQuery = queryURL.toLowerCase();
+      matchText =
+        (job.title && job.title.toLowerCase().includes(lowerQuery)) ||
+        (job.company && job.company.toLowerCase().includes(lowerQuery));
+    }
 
     return (
       matchStatus &&
       matchIndustry &&
       matchLocation &&
       matchSource &&
-      matchFavorite
+      matchFavorite &&
+      matchText // <--- Añadimos matchText a la comprobación final
     );
   });
 
@@ -321,7 +319,6 @@ export default function Vacancies() {
         onFilterChange={handleFilterChange}
         onClearFilters={handleClearFilters}
         statusOptions={['Nueva', 'Contactada', 'En proceso', 'Descartada']}
-        // Añadidas opciones Legal y Otros
         industryOptions={[
           'Technology',
           'Finance',
@@ -337,6 +334,22 @@ export default function Vacancies() {
         <div className="d-flex justify-content-between align-items-center mb-3">
           <div className="text-muted small">
             Mostrando {filteredJobs.length} vacantes de {jobs.length}
+            {queryURL && (
+              <span
+                className="ms-2 badge bg-primary"
+                style={{ cursor: 'pointer', transition: 'opacity 0.2s' }}
+                onClick={() => {
+                  searchParams.delete('q');
+                  setSearchParams(searchParams);
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.8')}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+                title="Borrar búsqueda de texto"
+              >
+                Búsqueda: &quot;{queryURL}&quot;{' '}
+                <i className="bi bi-x-circle ms-1"></i>
+              </span>
+            )}
           </div>
 
           <button
