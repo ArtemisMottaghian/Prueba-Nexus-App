@@ -5,6 +5,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 import re 
 from datetime import datetime
+from sqlalchemy import update
 
 from app.db.session import AsyncSessionLocal
 from app.models.job_model import JobOffer, JobPortal
@@ -221,4 +222,48 @@ async def apply_bulk_action(db: AsyncSession, vacancy_ids: List[int], action: st
         await db.commit()
     except Exception as e:
         await db.rollback()
+        raise e
+
+#actualizar estado de vacante
+async def update_vacancy_status(db: AsyncSession, vacancy_id: int, new_status: str):
+    clean_status = new_status.strip().lower()
+    
+    # traductar del ingles a español
+    status_map = {
+        "nueva": "detected",
+        "nuevo": "detected",
+        "nuevas": "detected",
+        "nuevos": "detected",
+        
+        "contactada": "contacted",
+        "contactado": "contacted",
+        "contactadas": "contacted",
+        "contactados": "contacted",
+        
+        "en proceso": "negotiating",
+        "en progreso": "negotiating",
+        
+        "descartada": "discarded",
+        "descartado": "discarded",
+        "descartadas": "discarded",
+        "descartados": "discarded",
+        
+        "ganada": "won",
+        "ganado": "won"
+    }
+    
+    db_status = status_map.get(clean_status, new_status)
+
+    try:
+        resultado = await db.execute(select(JobOffer).where(JobOffer.id == vacancy_id))
+        vacancy = resultado.scalars().first()
+        
+        if vacancy:
+            vacancy.status = db_status
+            await db.commit()
+            return True
+        return False
+    except Exception as e:
+        await db.rollback()
+        print(f"Error al actualizar el estado de la vacante {vacancy_id}: {e}")
         raise e

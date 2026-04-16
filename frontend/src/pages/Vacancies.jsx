@@ -69,12 +69,19 @@ export default function Vacancies() {
     });
   };
 
-  const handleUpdateJobStatus = (jobId, newStatus) => {
+  const handleUpdateJobStatus = async (jobId, newStatus) => {
     setJobs((prevJobs) =>
       prevJobs.map((job) =>
         job.id === jobId ? { ...job, status: newStatus } : job
       )
     );
+
+    try {
+      await vacanciesService.updateVacancyStatus(jobId, newStatus);
+    } catch (error) {
+      console.error('Error al guardar el estado:', error);
+      alert('Hubo un problema guardando el estado en el servidor.');
+    }
   };
 
   const handleToggleFavorite = async (jobId, currentFavoriteStatus) => {
@@ -115,25 +122,61 @@ export default function Vacancies() {
   // Lógica de Filtrado (Local)
   const filteredJobs = jobs.filter((job) => {
     // ESTADO
-    const safeStatus = String(job.status || '').toLowerCase();
-    const filterStat = String(filters.status || '').toLowerCase();
+    const safeStatus = String(job.status || '')
+      .toLowerCase()
+      .trim();
+    const filterStat = String(filters.status || '')
+      .toLowerCase()
+      .trim();
     let matchStatus = false;
 
     if (['all', 'todas', 'todos'].includes(filterStat)) {
       matchStatus = true;
-    } else if (filterStat.includes('nueva') || filterStat.includes('new')) {
-      matchStatus = ['detected', 'new', 'nueva'].includes(safeStatus);
+    } else if (
+      filterStat.includes('nuev') ||
+      filterStat.includes('new') ||
+      filterStat.includes('detect')
+    ) {
+      matchStatus = [
+        'nueva',
+        'nuevo',
+        'nuevas',
+        'nuevos',
+        'detected',
+        'new',
+      ].includes(safeStatus);
     } else if (filterStat.includes('contact')) {
-      matchStatus = ['contacted', 'contactada'].includes(safeStatus);
+      matchStatus = [
+        'contactada',
+        'contactado',
+        'contactadas',
+        'contactados',
+        'contacted',
+      ].includes(safeStatus);
     } else if (
       filterStat.includes('proceso') ||
-      filterStat.includes('negotiat')
+      filterStat.includes('progres') ||
+      filterStat.includes('negotiat') ||
+      filterStat.includes('interview')
     ) {
-      matchStatus = ['negotiating', 'en proceso', 'interviewing'].includes(
-        safeStatus
-      );
-    } else if (filterStat.includes('descart')) {
-      matchStatus = ['discarded', 'descartada'].includes(safeStatus);
+      matchStatus = [
+        'en proceso',
+        'en progreso',
+        'negotiating',
+        'interviewing',
+      ].includes(safeStatus);
+    } else if (
+      filterStat.includes('descart') ||
+      filterStat.includes('discard') ||
+      filterStat.includes('reject')
+    ) {
+      matchStatus = [
+        'descartada',
+        'descartado',
+        'descartadas',
+        'descartados',
+        'discarded',
+      ].includes(safeStatus);
     } else {
       matchStatus = safeStatus === filterStat;
     }
@@ -252,7 +295,6 @@ export default function Vacancies() {
     // FAVORITOS
     const matchFavorite = !showFavoritesOnly || job.isFavorite === true;
 
-    // 👇 BÚSQUEDA POR TEXTO (TOPBAR) 👇
     let matchText = true;
     if (queryURL) {
       const lowerQuery = queryURL.toLowerCase();
