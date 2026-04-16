@@ -70,10 +70,10 @@ export default function Candidates() {
 
   const handleClearFilters = () => {
     setFilters({
-       status: 'All',
-        industry: 'All',
-        location: 'All',
-        source: 'All',
+      status: 'All',
+      industry: 'All',
+      location: 'All',
+      source: 'All',
     });
   };
 
@@ -98,13 +98,13 @@ export default function Candidates() {
   // Lógica de filtrado
   const filteredCandidates = candidates.filter((candidate) => {
     const matchEstado =
-        filters.status === 'All' || candidate.status === filters.status;
+      filters.status === 'All' || candidate.status === filters.status;
     const matchEspecialidad =
-        filters.industry === 'All' || candidate.specialty === filters.industry;
+      filters.industry === 'All' || candidate.specialty === filters.industry;
     const matchUbicacion =
-        filters.location === 'All' || candidate.location === filters.location;
+      filters.location === 'All' || candidate.location === filters.location;
     const matchOrigen =
-        filters.source === 'All' || candidate.source === filters.source;
+      filters.source === 'All' || candidate.source === filters.source;
 
     return matchEstado && matchEspecialidad && matchUbicacion && matchOrigen;
   });
@@ -161,12 +161,10 @@ export default function Candidates() {
         filters={filters}
         onFilterChange={handleFilterChange}
         onClearFilters={handleClearFilters}
-        statusOptions={[
-            { value: 'active', label: 'Activo' },
-        ]}
+        statusOptions={[{ value: 'active', label: 'Activo' }]}
         sourceOptions={[
-            { value: 'Carga Manual', label: 'Carga Manual' },
-            { value: 'GitHub API', label: 'GitHub API' },
+          { value: 'Carga Manual', label: 'Carga Manual' },
+          { value: 'GitHub API', label: 'GitHub API' },
         ]}
       />
 

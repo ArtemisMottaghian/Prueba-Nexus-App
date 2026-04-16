@@ -30,11 +30,13 @@ export default function FilterBar({
           <select
             className="form-select filter-select"
             value={filters.status}
-            onChange={(e) => onFilterChange('status', e.target.value)}>
-
+            onChange={(e) => onFilterChange('status', e.target.value)}
+          >
             <option value="All">Todas</option>
             {statusOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
             ))}
           </select>
         </div>
@@ -83,7 +85,9 @@ export default function FilterBar({
           >
             <option value="All">Todas</option>
             {sourceOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
             ))}
           </select>
         </div>
