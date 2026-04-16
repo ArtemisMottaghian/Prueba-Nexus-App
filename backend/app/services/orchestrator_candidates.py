@@ -1,18 +1,19 @@
 import asyncio
 from typing import Any
+from sqlalchemy.dialects.postgresql import insert
 from app.core.scraper_linkedin_candidatos_config import (
     KEYWORDS,
     SECTORS,
     LOCATIONS,
     HEADLESS_MODE,
 )
-from app.services.scrapers.scraper_empleados_linkedin.main import run_scraper
-from app.services.scrapers.scraper_github.main_github import run_github_scraper
+from app.models.candidates_model import Candidate
+from app.services.scrapers.scraper_github.runner import extract_github
 from app.services.scrapers.scraper_pdf_google.main_pdf_google import run_pdf_scraper
-from app.schemas.candidate import CandidateCreate
+from app.schemas.candidates_schemas import CandidateCreate
 
-from backend.app.db.connection import AsyncSessionLocal
-from backend.app.services.scrapers.scraper_github.scraper_repository import upsert_scraped_candidate
+from app.db.connection import AsyncSessionLocal
+from app.services.scrapers.scraper_github.utils import upsert_scraped_candidate
 
 
 async def gather_raw_candidates() -> list[dict[str, Any]]:
@@ -27,17 +28,8 @@ async def gather_raw_candidates() -> list[dict[str, Any]]:
     raw_candidates = []
 
     scrapers = [
-        (
-            "linkedin",
-            lambda: extract_linkedin(
-                keywords=KEYWORDS,
-                sectors=SECTORS,
-                locations=LOCATIONS,
-                headless=HEADLESS_MODE,
-            ),
-        ),
-        ("github", run_github_scraper),
-        ("google_pdfs", run_pdf_scraper),
+        
+        ("github", extract_github),
     ]
 
     for name, scraper_func in scrapers:
@@ -75,25 +67,52 @@ def validate_candidates(raw_candidates: list[dict[str, Any]]) -> list[CandidateC
 
 async def save_candidates_to_db(valid_candidates: list[CandidateCreate] ) -> None:
     """
-        Guarda o actualiza los candidatos validados en la base de datos.
+    Guarda los candidatos validados en la base de datos.
+    Si el candidato ya existe (mismo email), simplemente lo ignora.
 
-        Args:
-            valid_candidates (list[CandidateCreate]): Lista de candidatos validados.
+    Args:
+        valid_candidates (list[CandidateCreate]): Lista de candidatos validados.
 
-        Returns:
-            None
-        """
+    Returns:
+        None
+    """
 
     if not valid_candidates:
+        print("\nNo hay candidatos válidos para guardar en la base de datos.")
         return
 
+    new_count = 0
+
     async with AsyncSessionLocal() as session:
-        for candidate in valid_candidates:
-            try:
-                await upsert_scraped_candidate(session, candidate.model_dump())
-            except Exception:
-                await session.rollback()
-                continue
+        try:
+            for candidate in valid_candidates:
+                data = candidate.model_dump()
+
+                if data.get("candidate_url"):
+                    data["candidate_url"] = str(data["candidate_url"])
+
+                if data.get("cv_url"):
+                    data["cv_url"] = str(data["cv_url"])
+
+                stmt = insert(Candidate).values(**data)
+                stmt = stmt.on_conflict_do_nothing(
+                    index_elements=[
+                        "email"
+                    ]
+                ).returning(Candidate.id)
+
+                result = await session.execute(stmt)
+                new_id = result.scalar_one_or_none()
+
+                if new_id:
+                    new_count += 1
+
+            await session.commit()
+
+        except Exception as e:
+            await session.rollback()
+
+    print(f"\n✅ Operación finalizada: {new_count} candidatos nuevos guardados en DB.")
 
 async def run_candidate_scrapers():
     """
