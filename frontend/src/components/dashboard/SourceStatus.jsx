@@ -1,66 +1,96 @@
+import { useState, useEffect } from 'react';
 import './SourceStatus.css';
 
+const SCRAPER_LABELS = {
+  adzuna: 'Adzuna (API)',
+  infojobs: 'InfoJobs',
+  linkedin: 'LinkedIn (Bot)',
+};
+
+const STATUS_CONFIG = {
+  online: {
+    cls: 'status-success',
+    iconCls: 'bg-success-soft',
+    icon: 'bi-check-circle-fill',
+    textCls: 'text-success',
+    label: 'Sistema Online',
+  },
+  warning: {
+    cls: 'status-warning',
+    iconCls: 'bg-warning-soft',
+    icon: 'bi-exclamation-triangle-fill',
+    textCls: 'text-warning',
+    label: 'Advertencia',
+  },
+  error: {
+    cls: 'status-danger',
+    iconCls: 'bg-danger-soft',
+    icon: 'bi-x-circle-fill',
+    textCls: 'text-danger',
+    label: 'Error',
+  },
+  unknown: {
+    cls: 'status-secondary',
+    iconCls: 'bg-secondary-soft',
+    icon: 'bi-question-circle-fill',
+    textCls: 'text-muted',
+    label: 'Desconocido',
+  },
+};
+
+function formatDate(isoString) {
+  if (!isoString) return null;
+  const d = new Date(isoString);
+  return d.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
+}
+
 export default function SourceStatus() {
+  const [scrapers, setScrapers] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/metrics/scrapers/status')
+      .then((r) => r.json())
+      .then(setScrapers)
+      .catch(() => setScrapers(null));
+  }, []);
+
+  if (!scrapers) return null;
+
   return (
     <div className="row g-3 mb-4">
-      {/* Adzuna - Todo OK */}
-      <div className="col-12 col-md-4">
-        <div className="source-card status-success">
-          <div className="source-icon-wrapper bg-success-soft">
-            <i className="bi bi-check-circle-fill"></i>
-          </div>
-          <div className="source-info">
-            {/* CAMBIO AQUI: text-white -> text-body */}
-            <h6 className="text-body">Adzuna (API)</h6>
-            <span className="source-status-text text-success">
-              Sistema Online
-            </span>
-            <div className="text-muted" style={{ fontSize: '0.7rem' }}>
-              Extracción: Hoy 07:00 AM
-            </div>
-          </div>
-        </div>
-      </div>
+      {Object.entries(scrapers).map(([key, data]) => {
+        const cfg = STATUS_CONFIG[data.status] || STATUS_CONFIG.unknown;
+        const label = SCRAPER_LABELS[key] || key;
+        const fecha = formatDate(data.last_extraction);
 
-      {/* LinkedIn - Advertencia */}
-      <div className="col-12 col-md-4">
-        <div className="source-card status-warning">
-          <div className="source-icon-wrapper bg-warning-soft">
-            <i className="bi bi-exclamation-triangle-fill"></i>
-          </div>
-          <div className="source-info">
-            {/* CAMBIO AQUI: text-white -> text-body */}
-            <h6 className="text-body">LinkedIn (Bot)</h6>
-            <span className="source-status-text text-warning">
-              Lentitud detectada
-            </span>
-            <div className="text-muted" style={{ fontSize: '0.7rem' }}>
-              Reintentando en 5min...
+        return (
+          <div className="col-12 col-md-4" key={key}>
+            <div className={`source-card ${cfg.cls} justify-content-between`}>
+              <div className="d-flex align-items-center">
+                <div className={`source-icon-wrapper ${cfg.iconCls}`}>
+                  <i className={`bi ${cfg.icon}`}></i>
+                </div>
+                <div className="source-info">
+                  <h6 className="text-body">{label}</h6>
+                  <span className={`source-status-text ${cfg.textCls}`}>
+                    {data.error || cfg.label}
+                  </span>
+                  {fecha && (
+                    <div className="text-muted" style={{ fontSize: '0.7rem' }}>
+                      Extracción: {fecha}
+                    </div>
+                  )}
+                </div>
+              </div>
+              {data.status === 'error' && (
+                <button className="btn-icon btn-icon-sm" title="Reiniciar Bot">
+                  <i className="bi bi-arrow-clockwise text-danger"></i>
+                </button>
+              )}
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* InfoJobs - Error */}
-      <div className="col-12 col-md-4">
-        <div className="source-card status-danger justify-content-between">
-          <div className="d-flex align-items-center">
-            <div className="source-icon-wrapper bg-danger-soft">
-              <i className="bi bi-x-circle-fill"></i>
-            </div>
-            <div className="source-info">
-              {/* CAMBIO AQUI: text-white -> text-body */}
-              <h6 className="text-body">InfoJobs</h6>
-              <span className="source-status-text text-danger">
-                API Bloqueada
-              </span>
-            </div>
-          </div>
-          <button className="btn-icon btn-icon-sm" title="Reiniciar Bot">
-            <i className="bi bi-arrow-clockwise text-danger"></i>
-          </button>
-        </div>
-      </div>
+        );
+      })}
     </div>
   );
 }
