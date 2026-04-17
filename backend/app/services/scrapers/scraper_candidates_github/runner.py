@@ -6,13 +6,7 @@ import os
 from dotenv import load_dotenv
 
 # IMPORTACIONES DE TU PROYECTO
-<<<<<<< HEAD:backend/app/services/scrapers/scraper_github/runner.py
-from app.core.scraper_github_config import LENGUAJES_IT, LOCATIONS_GITHUB
-=======
-from app.db.session import AsyncSessionLocal
-from .utils import upsert_scraped_candidate
-from backend.app.core.scraper_candidates_github_config import LENGUAJES_IT, LOCATIONS_GITHUB
->>>>>>> ebe409064404adf3527f66f00771452b9590a533:backend/app/services/scrapers/scraper_candidates_github/runner.py
+from app.core.scraper_candidates_github_config import LENGUAJES_IT, LOCATIONS_GITHUB
 from .browser import search_linkedin_with_browser
 
 
@@ -27,7 +21,7 @@ HEADERS = {
     "X-GitHub-Api-Version": "2022-11-28"
 }
 
-MAX_CANDIDATES = 20
+MAX_CANDIDATES = 100
 
 
 # FUNCIONES DE VALIDACIÓN Y LIMPIEZA
@@ -140,7 +134,6 @@ async def extract_github_profile(session: aiohttp.ClientSession, username: str) 
                 last_name = " ".join(parts[1:]).title()
             else:
                 if not linkedin_url and raw_name:
-                    print(f"      -> Nombre sospechoso, intentando buscar LinkedIn para: {raw_name}...")
                     linkedin_url = await search_linkedin_with_browser(raw_name, "")
 
                 if linkedin_url:
@@ -153,7 +146,6 @@ async def extract_github_profile(session: aiohttp.ClientSession, username: str) 
             if any(word in full_name_check for word in blacklist): return None
 
             if not linkedin_url:
-                print(f"      -> Buscando LinkedIn en la web para: {first_name} {last_name}...")
                 linkedin_url = await search_linkedin_with_browser(first_name, last_name)
 
             contact_urls = []
@@ -171,8 +163,8 @@ async def extract_github_profile(session: aiohttp.ClientSession, username: str) 
                 "location": location,
                 "source": "GitHub API",
                 "experience": user_data.get("bio") or f"Desarrollador en GitHub",
-                "candidate_url": final_urls_string,
-                "cv_url": github_url,
+                "candidate_url": github_url,
+                "cv_url": None,
                 "skills": skills,
                 "status": "active"
             }
@@ -189,7 +181,6 @@ async def extract_github() -> list[dict]:
     Busca perfiles en GitHub, los extrae y devuelve una lista con los datos crudos.
     Se detiene automáticamente al alcanzar MAX_CANDIDATES para no saturar la API.
     """
-    print(f"\n--- SCRAPER DE GITHUB: BUSCANDO CANDIDATOS (Máx {MAX_CANDIDATES}) ---")
 
     all_extracted_candidates = []
 
@@ -206,17 +197,12 @@ async def extract_github() -> list[dict]:
                     return all_extracted_candidates
 
                 query = f"language:{lang} location:{loc}"
-                print(f"\nBuscando {lang} en {loc}...")
-
                 search_url = f"https://api.github.com/search/users?q={urllib.parse.quote_plus(query)}&per_page=30"
 
                 try:
                     async with session.get(search_url, headers=HEADERS) as resp:
                         if resp.status == 403:
-                            print(
-                                " Límite de API de GitHub alcanzado. Devolviendo lo extraído."
-                            )
-                            return all_extracted_candidates
+                                                        return all_extracted_candidates
 
                         elif resp.status == 200:
                             data = await resp.json()
@@ -236,10 +222,7 @@ async def extract_github() -> list[dict]:
 
                                 if candidate:
                                     all_extracted_candidates.append(candidate)
-                                    print(
-                                        f"  -> Extraído: {candidate.get('first_name')} {candidate.get('last_name')} ({len(all_extracted_candidates)}/{MAX_CANDIDATES})"
-                                    )
-
+                                    
                                 await asyncio.sleep(1)
 
                 except Exception as e:
@@ -308,4 +291,4 @@ async def extract_github() -> list[dict]:
 #                         print(f" Error en la búsqueda principal: {e}")
 
 if __name__ == "__main__":
-    asyncio.run(run_github_scraper())
+    asyncio.run(extract_github())

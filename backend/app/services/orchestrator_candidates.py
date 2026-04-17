@@ -1,19 +1,12 @@
 import asyncio
 from typing import Any
+from app.services.scrapers.scraper_candidates_github.runner import extract_github
 from sqlalchemy.dialects.postgresql import insert
-from app.core.scraper_linkedin_candidatos_config import (
-    KEYWORDS,
-    SECTORS,
-    LOCATIONS,
-    HEADLESS_MODE,
-)
+
 from app.models.candidates_model import Candidate
-from app.services.scrapers.scraper_github.runner import extract_github
-from app.services.scrapers.scraper_pdf_google.main_pdf_google import run_pdf_scraper
 from app.schemas.candidates_schemas import CandidateCreate
 
 from app.db.connection import AsyncSessionLocal
-from app.services.scrapers.scraper_github.utils import upsert_scraped_candidate
 
 
 async def gather_raw_candidates() -> list[dict[str, Any]]:
@@ -38,9 +31,14 @@ async def gather_raw_candidates() -> list[dict[str, Any]]:
 
             if isinstance(result, list):
                 raw_candidates.extend(result)
+    
         
         except Exception as e:
             print(f"Error crítico en {name.upper(): {e}}")
+
+    print(f"Total de {len(raw_candidates)} ofertas conseguidas.")
+
+    return raw_candidates
 
 def validate_candidates(raw_candidates: list[dict[str, Any]]) -> list[CandidateCreate]:
     """
@@ -62,7 +60,9 @@ def validate_candidates(raw_candidates: list[dict[str, Any]]) -> list[CandidateC
 
         except Exception as e:
             continue
-    
+
+    print(f"Total de {len(valid_candidates)} ofertas validadas.")
+
     return valid_candidates
 
 async def save_candidates_to_db(valid_candidates: list[CandidateCreate] ) -> None:
