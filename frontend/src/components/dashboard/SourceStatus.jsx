@@ -20,14 +20,14 @@ const STATUS_CONFIG = {
     iconCls: 'bg-warning-soft',
     icon: 'bi-exclamation-triangle-fill',
     textCls: 'text-warning',
-    label: 'Advertencia',
+    label: 'Lentitud detectada',
   },
   error: {
     cls: 'status-danger',
     iconCls: 'bg-danger-soft',
     icon: 'bi-x-circle-fill',
     textCls: 'text-danger',
-    label: 'Error',
+    label: 'API Bloqueada',
   },
   unknown: {
     cls: 'status-secondary',
@@ -73,13 +73,11 @@ export default function SourceStatus() {
                 <div className="source-info">
                   <h6 className="text-body">{label}</h6>
                   <span className={`source-status-text ${cfg.textCls}`}>
-                    {data.error || cfg.label}
+                    {cfg.label}
                   </span>
-                  {fecha && (
-                    <div className="text-muted" style={{ fontSize: '0.7rem' }}>
-                      Extracción: {fecha}
-                    </div>
-                  )}
+                  <div className="text-muted" style={{ fontSize: '0.7rem' }}>
+                    {fecha ? `Extracción: ${fecha}` : 'Sin extracciones'}
+                  </div>
                 </div>
               </div>
               {data.status === 'error' && (
