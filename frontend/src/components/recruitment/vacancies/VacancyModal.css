@@ -249,3 +249,32 @@
   background: var(--border-color);
   border-radius: 10px;
 }
+
+/* ── Aviso tab CRM Empresa (Issue #329) ──────────────────── */
+.crm-tab-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: rgba(124, 63, 255, 0.06);
+  border: 1px solid rgba(124, 63, 255, 0.15);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+}
+
+.crm-tab-hint strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.tab-empty {
+  text-align: center;
+  padding: 28px 16px;
+  color: var(--text-muted);
+}
+
+.tab-empty i {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 8px;
+  color: var(--color-purple-secondary);
+}
