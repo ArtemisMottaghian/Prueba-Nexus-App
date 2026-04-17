@@ -3,8 +3,8 @@ import random
 import urllib.parse
 from app.db.session import AsyncSessionLocal
 from .browser import get_browser_context
-from .scraper_repository import upsert_scraped_candidate
-from app.core.scraper_linkedin_candidatos_config import (
+from .utils import upsert_scraped_candidate
+from backend.app.core.scraper_candidates_linkedin_config import (
     KEYWORDS,
     SECTORS,
     LOCATIONS,
