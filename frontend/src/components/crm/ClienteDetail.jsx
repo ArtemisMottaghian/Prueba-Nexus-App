@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import VacancyModal from '../recruitment/vacancies/VacancyModal';
+import CrmEmpresaPanel from './CrmEmpresaPanel';
+import { updateEstadoCuenta } from '../../services/clientesService';
 import './ClienteDetail.css';
 
 const getBadgeEstado = (estado) => {
@@ -28,6 +30,25 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
   const [notaTexto, setNotaTexto] = useState('');
   const [notas, setNotas] = useState([]);
   const [activeTab, setActiveTab] = useState('info');
+  // Estado local del seguimiento comercial para reflejo inmediato al cambiar el estado de cuenta
+  const [empresaCrm, setEmpresaCrm] = useState(cliente);
+
+  useEffect(() => {
+    setEmpresaCrm(cliente);
+  }, [cliente]);
+
+  const handleUpdateEstadoCuenta = async (nuevoEstado) => {
+    if (!cliente) return;
+    setEmpresaCrm((prev) => ({
+      ...(prev || cliente),
+      estadoCuenta: nuevoEstado,
+    }));
+    try {
+      await updateEstadoCuenta(cliente.id, nuevoEstado);
+    } catch (err) {
+      console.error('Error actualizando estado de cuenta:', err);
+    }
+  };
 
   const agregarNota = () => {
     if (!notaTexto.trim()) return;
@@ -83,8 +104,32 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
                     <i className="bi bi-star-fill me-1"></i>VIP
                   </span>
                 )}
+                {empresaCrm?.estadoCuenta && (
+                  <span
+                    className={`estado-cuenta-chip estado-${
+                      empresaCrm.estadoCuenta === 'en_negociacion'
+                        ? 'negociacion'
+                        : empresaCrm.estadoCuenta
+                    }`}
+                    title="Estado comercial de la cuenta"
+                  >
+                    {empresaCrm.estadoCuenta === 'en_negociacion'
+                      ? 'En negociación'
+                      : empresaCrm.estadoCuenta.charAt(0).toUpperCase() +
+                        empresaCrm.estadoCuenta.slice(1)}
+                  </span>
+                )}
               </div>
-              <span className="cliente-sector">{cliente.sector}</span>
+              <span className="cliente-sector">
+                {cliente.sector}
+                {empresaCrm?.responsable && (
+                  <>
+                    {' · '}
+                    <i className="bi bi-person-circle me-1"></i>
+                    Responsable: <strong>{empresaCrm.responsable}</strong>
+                  </>
+                )}
+              </span>
             </div>
           </div>
           <div className="d-flex align-items-center gap-2 flex-wrap">
@@ -146,6 +191,19 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
           <i className="bi bi-info-circle me-2"></i>Información
         </button>
         <button
+          className={`cliente-tab ${activeTab === 'crm' ? 'active' : ''}`}
+          onClick={() => setActiveTab('crm')}
+          title="Seguimiento comercial centralizado (empresa)"
+        >
+          <i className="bi bi-building-check me-2"></i>
+          Seguimiento comercial
+          {empresaCrm?.historialComercial?.length > 0 && (
+            <span className="tab-badge">
+              {empresaCrm.historialComercial.length}
+            </span>
+          )}
+        </button>
+        <button
           className={`cliente-tab ${activeTab === 'vacantes' ? 'active' : ''}`}
           onClick={() => setActiveTab('vacantes')}
         >
@@ -166,6 +224,14 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
           )}
         </button>
       </div>
+
+      {/* TAB: Seguimiento comercial (Issue #329) */}
+      {activeTab === 'crm' && (
+        <CrmEmpresaPanel
+          empresa={empresaCrm}
+          onUpdateEstadoCuenta={handleUpdateEstadoCuenta}
+        />
+      )}
 
       {/* TAB: Información */}
       {activeTab === 'info' && (
