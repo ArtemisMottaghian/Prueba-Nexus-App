@@ -8,10 +8,34 @@ const SCRAPER_LABELS = {
 };
 
 const STATUS_CONFIG = {
-  online:  { cls: 'status-success', iconCls: 'bg-success-soft', icon: 'bi-check-circle-fill',         textCls: 'text-success', label: 'Sistema Online' },
-  warning: { cls: 'status-warning', iconCls: 'bg-warning-soft', icon: 'bi-exclamation-triangle-fill', textCls: 'text-warning', label: 'Advertencia' },
-  error:   { cls: 'status-danger',  iconCls: 'bg-danger-soft',  icon: 'bi-x-circle-fill',             textCls: 'text-danger',  label: 'Error' },
-  unknown: { cls: 'status-secondary',iconCls: 'bg-secondary-soft',icon: 'bi-question-circle-fill',    textCls: 'text-muted',   label: 'Desconocido' },
+  online: {
+    cls: 'status-success',
+    iconCls: 'bg-success-soft',
+    icon: 'bi-check-circle-fill',
+    textCls: 'text-success',
+    label: 'Sistema Online',
+  },
+  warning: {
+    cls: 'status-warning',
+    iconCls: 'bg-warning-soft',
+    icon: 'bi-exclamation-triangle-fill',
+    textCls: 'text-warning',
+    label: 'Advertencia',
+  },
+  error: {
+    cls: 'status-danger',
+    iconCls: 'bg-danger-soft',
+    icon: 'bi-x-circle-fill',
+    textCls: 'text-danger',
+    label: 'Error',
+  },
+  unknown: {
+    cls: 'status-secondary',
+    iconCls: 'bg-secondary-soft',
+    icon: 'bi-question-circle-fill',
+    textCls: 'text-muted',
+    label: 'Desconocido',
+  },
 };
 
 function formatDate(isoString) {
