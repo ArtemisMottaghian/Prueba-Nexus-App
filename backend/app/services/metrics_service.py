@@ -25,11 +25,14 @@ async def get_lead_stats(db: AsyncSession, start_date: datetime, end_date: datet
             result = await db.execute(query)
             return result.scalar() or 0
 
-        # porcentaje de cambio
+        # porcentaje de cambio 
         def calc_pct(curr: int, prev: int) -> float:
             if prev == 0:
-                return 100.0 if curr > 0 else 0.0
-            return round(((curr - prev) / prev) * 100, 2)
+                raw = 100.0 if curr > 0 else 0.0
+            else:
+                raw = ((curr - prev) / prev) * 100
+            clamped = max(-100.0, min(100.0, raw))
+            return round(clamped, 2)
 
         # periodo actual
         c_new = await count_by_status(OfferStatus.detected, start_date, end_date)

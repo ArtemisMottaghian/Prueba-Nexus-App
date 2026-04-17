@@ -62,7 +62,7 @@ export const login = async (email, password) => {
  * Redirige al usuario a Google OAuth
  */
 export const loginWithGoogle = () => {
-  window.location.href = `${API_URL}/api/auth/google/login`;
+  window.location.href = `${API_URL}/api/login/google/login`;
 };
 
 /**
@@ -110,7 +110,8 @@ export const getCurrentUser = () => {
  * @returns {boolean}
  */
 export const isTokenValid = () => {
-  const token = localStorage.getItem('token');
+  const token =
+    localStorage.getItem('token') || sessionStorage.getItem('token');
   if (!token) return false;
 
   const decoded = decodeToken(token);
@@ -126,9 +127,42 @@ export const isTokenValid = () => {
 };
 
 /**
- * Cierra sesión eliminando el token
+ * Obtiene el usuario a partir de un token proporcionado directamente
+ * @param {string} token
+ * @returns {{email: string, role: string, id: number} | null}
+ */
+export const getCurrentUserFromToken = (token) => {
+  if (!token) return null;
+  const decoded = decodeToken(token);
+  if (!decoded) return null;
+  return {
+    email: decoded.sub,
+    role: decoded.role,
+    id: decoded.id,
+  };
+};
+
+/**
+ * Verifica si un token proporcionado es válido y no ha expirado
+ * @param {string} token
+ * @returns {boolean}
+ */
+export const isTokenValidFromToken = (token) => {
+  if (!token) return false;
+  const decoded = decodeToken(token);
+  if (!decoded) return false;
+  if (decoded.exp) {
+    const now = Date.now() / 1000;
+    return decoded.exp > now;
+  }
+  return true;
+};
+
+/**
+ * Cierra sesión eliminando el token de ambos storages
  */
 export const logout = () => {
   localStorage.removeItem('token');
+  sessionStorage.removeItem('token');
   window.location.href = '/login';
 };

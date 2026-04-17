@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
     GOOGLE_REDIRECT_URI: str = ""
+    FRONTEND_URL: str 
 
     # URLs de Google OAuth
     GOOGLE_AUTH_URL: str = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -52,6 +53,7 @@ class Settings(BaseSettings):
         "openid",
         "https://www.googleapis.com/auth/userinfo.email",
         "https://www.googleapis.com/auth/userinfo.profile",
+        "https://www.googleapis.com/auth/calendar",
     ]
 
 

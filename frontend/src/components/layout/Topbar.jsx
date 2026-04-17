@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import './Topbar.css';
 
 const TITLES = {
@@ -10,9 +10,19 @@ const TITLES = {
 
 export default function Topbar({ onMenuToggle, onActivityToggle }) {
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [busqueda, setBusqueda] = useState('');
+
   const location = useLocation();
+  const navigate = useNavigate();
 
   const pageTitle = TITLES[location.pathname] || 'Dashboard';
+
+  // Ejecuta la búsqueda al pulsar Enter
+  const manejarBusqueda = (e) => {
+    if (e.key === 'Enter') {
+      navigate(`/vacantes?q=${encodeURIComponent(busqueda.trim())}`);
+    }
+  };
 
   useEffect(() => {
     const htmlElement = document.documentElement;
@@ -36,7 +46,13 @@ export default function Topbar({ onMenuToggle, onActivityToggle }) {
         <div className="d-flex align-items-center gap-2 gap-md-3">
           <div className="topbar-search d-none d-md-flex">
             <i className="bi bi-search"></i>
-            <input type="text" placeholder="Buscar vacantes..." />
+            <input
+              type="text"
+              placeholder="Buscar vacantes..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              onKeyDown={manejarBusqueda}
+            />
           </div>
 
           <button

@@ -1,8 +1,4 @@
-/* Backdrop */
-.modal-backdrop {
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-}
+/* Backdrop — definido globalmente en index.css (líneas 160-162) */
 
 /* Contenedor modal */
 .modal-content {
@@ -108,6 +104,14 @@
 }
 
 /* Secciones y Grid */
+.detail-section {
+  margin-bottom: 24px;
+}
+
+.detail-section:last-child {
+  margin-bottom: 0;
+}
+
 .section-title {
   color: var(--text-primary);
   font-size: 13px;
@@ -237,19 +241,40 @@
   padding: 8px 18px;
 }
 
-.btn-primary-custom {
-  background: linear-gradient(135deg, var(--color-purple-primary), var(--color-purple-secondary));
-  border: none;
-  color: white;
-  border-radius: 10px;
-  padding: 8px 20px;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(124, 63, 255, 0.2);
-}
+/* .btn-primary-custom — definido globalmente en index.css (líneas 97-111) */
 
 /* Scrollbars */
 .modal-body-scroll::-webkit-scrollbar { width: 6px; }
 .modal-body-scroll::-webkit-scrollbar-thumb {
   background: var(--border-color);
   border-radius: 10px;
+}
+
+/* ── Aviso tab CRM Empresa (Issue #329) ──────────────────── */
+.crm-tab-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: rgba(124, 63, 255, 0.06);
+  border: 1px solid rgba(124, 63, 255, 0.15);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+}
+
+.crm-tab-hint strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.tab-empty {
+  text-align: center;
+  padding: 28px 16px;
+  color: var(--text-muted);
+}
+
+.tab-empty i {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 8px;
+  color: var(--color-purple-secondary);
 }

@@ -158,5 +158,5 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; }
 
 /* Modals */
-.modal-backdrop { z-index: 1050; backdrop-filter: blur(4px); }
+.modal-backdrop { z-index: 1050; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); }
 .modal { z-index: 1060; }

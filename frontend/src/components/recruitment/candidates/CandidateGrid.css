@@ -1,23 +1,47 @@
+/* ── Grid de tarjetas ───────────────────────────── */
 .vacancies-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
+  /* Móvil: 1 columna */
+  grid-template-columns: 1fr;
 }
 
-.results-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
+@media (min-width: 576px) {
+  .vacancies-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-.view-toggle {
-  display: flex;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  padding: 4px;
+@media (min-width: 992px) {
+  .vacancies-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
+
+@media (min-width: 1400px) {
+  .vacancies-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1700px) {
+  .vacancies-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* Cada celda del grid estira la tarjeta al alto completo */
+.vacancies-grid > div {
+  display: flex;
+}
+
+/* Vista de lista */
+.vacancies-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 /* --- Estilos para el selector de vista (Cuadrícula/Lista) --- */
 .view-toggle {
   display: flex;
@@ -31,8 +55,8 @@
 
 .view-btn {
   padding: 8px 12px;
-  background: transparent; /* Quita el fondo gris feo */
-  border: none; /* Quita el borde de botón antiguo */
+  background: transparent;
+  border: none;
   border-radius: 8px;
   color: var(--text-muted);
   transition: all 0.2s ease;
