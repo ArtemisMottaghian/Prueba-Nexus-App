@@ -201,6 +201,18 @@ CREATE TABLE error_logs (
 );
 COMMENT ON TABLE error_logs IS 'Registro de errores del sistema';
 
+-- Entidad para empresa
+CREATE TABLE companies (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    cif VARCHAR(50),
+    sector VARCHAR(255),
+    website VARCHAR(255),
+    linkedin_url VARCHAR(255),
+    address VARCHAR(500),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
 -- FUNCIONES Y TRIGGERS
 
 -- Funcion para actualizar la fecha de modificacion automaticamente
@@ -267,6 +279,10 @@ AFTER UPDATE OF lead_status ON clients
 FOR EACH ROW
 EXECUTE FUNCTION log_client_lead_status_change();
 
+CREATE TRIGGER update_companies_modtime
+    BEFORE UPDATE ON companies
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- Indices
 -- Indices de claves foraneas (para acelerar joins)
 CREATE INDEX idx_searches_user_id ON searches(user_id);
@@ -280,6 +296,8 @@ CREATE INDEX idx_tracking_history_client_id ON tracking_history(client_id);
 CREATE INDEX idx_tracking_history_offer_id ON tracking_history(offer_id);
 CREATE INDEX idx_job_applications_candidate ON job_applications(candidate_id);
 CREATE INDEX idx_job_applications_offer ON job_applications(offer_id);
+CREATE INDEX idx_companies_name ON companies(name);
+CREATE INDEX idx_companies_cif ON companies(cif);
 
 -- Indices de Filtros frecuentes
 CREATE INDEX idx_users_email ON users(email);
@@ -296,6 +314,7 @@ CREATE INDEX idx_tracking_history_recorded_at ON tracking_history(recorded_at DE
 -- Indices de texto simple (para acelerar LIKE %texto%)
 CREATE INDEX idx_job_offers_title ON job_offers(title);
 CREATE INDEX idx_job_offers_company ON job_offers(company_name); 
+CREATE INDEX idx_job_offers_company_id ON job_offers(company_id)
 CREATE INDEX idx_clients_company ON clients(company_name);
 CREATE INDEX idx_candidates_skills ON candidates(skills);
 CREATE INDEX idx_candidates_email ON candidates(email);
@@ -329,3 +348,17 @@ SELECT
 FROM error_logs
 WHERE is_resolved = FALSE
 ORDER BY occurred_at DESC;
+
+-- Vista para sacar el numero de ofertas que tiene cada empresa
+CREATE OR REPLACE VIEW v_companies_summary AS
+SELECT
+    c.id,
+    c.name,
+    c.cif,
+    c.sector,
+    COUNT(jo.id) AS total_offers,
+    COUNT(jo.id) FILTER (WHERE jo.status = 'won') AS won_offers,
+    COUNT(jo.id) FILTER (WHERE jo.status NOT IN ('discarded', 'won')) AS active_offers
+FROM companies c
+LEFT JOIN job_offers jo ON jo.company_id = c.id
+GROUP BY c.id;
