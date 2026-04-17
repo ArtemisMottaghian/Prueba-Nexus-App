@@ -9,7 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 
 
-from backend.app.services.scrapers.linkedin.utils import parse_salary
+from app.services.scrapers.scraper_vacancies_linkedin.utils import parse_salary
 
 def get_webdriver() -> webdriver.Chrome:
     """
