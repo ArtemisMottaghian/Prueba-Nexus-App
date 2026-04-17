@@ -3,12 +3,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.candidates_model import Candidate
 from sqlalchemy import func
 
-
-async def upsert_scraped_candidate(db: AsyncSession, data: dict):
-    #Inserta un nuevo candidato en la BBDD si el email existe se actualiza con los datos en vez de duplicarlos
+async def upsert_scraped_candidate(db: AsyncSession, data: dict) -> bool:
+    """
+    Inserta un nuevo candidato en la BBDD. Si el email existe, se actualiza.
+    Devuelve True si el proceso tiene éxito, False si hay un error.
+    """
     try:
         print(f"Intentando guardar a {data.get('first_name')} en la BD")
-        # 1. Guardar los datos en PosstgreSQL
+        
+        # 1. Guardar los datos en PostgreSQL
         stmt = insert(Candidate).values(
             first_name=data.get("first_name"),
             last_name=data.get("last_name"),
@@ -23,11 +26,11 @@ async def upsert_scraped_candidate(db: AsyncSession, data: dict):
             status=data.get("status", "active"),
             notes=data.get("notes"),
             updated_at=func.now()
-            )
+        )
         
-        # 2. El UPDATE del conflicto tambien debe ser limpiado
+        # 2. El UPDATE del conflicto
         on_conflict_stmt = stmt.on_conflict_do_update(
-            index_elements = ['email'],
+            index_elements=['email'],
             set_={
                 "first_name": stmt.excluded.first_name,
                 "last_name": stmt.excluded.last_name,
@@ -42,13 +45,13 @@ async def upsert_scraped_candidate(db: AsyncSession, data: dict):
             }
         )
 
-        # 4. ejecutamos la consulta y hacemos commit
+        # 3. Ejecutamos la consulta y hacemos commit
         await db.execute(on_conflict_stmt)
         await db.commit()
         return True
 
     except Exception as e:
-        # Si algo falla hacemos un roolback apra no dejar la BD conlada
+        # Si algo falla hacemos un rollback para no dejar la BD colgada
         await db.rollback()
         print(f"Error al guardar en la BD: {str(e)}\n")
         return False

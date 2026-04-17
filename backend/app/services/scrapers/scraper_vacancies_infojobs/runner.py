@@ -18,9 +18,9 @@ root_dir = os.path.abspath(os.path.join(backend_dir, ".."))
 sys.path.append(backend_dir)
 sys.path.append(root_dir)
 
-from app.core import scraper_infojobs_config as config
-from app.services.scrapers.infojobs.infojobs_utils import extract_salary
-from app.services.scrapers.infojobs.infojobs_browser import (
+from backend.app.core import scraper_vacancies_infojobs_config as config
+from backend.app.services.scrapers.scraper_vacancies_infojobs.utils import extract_salary
+from backend.app.services.scrapers.scraper_vacancies_infojobs.browser import (
     restart_nav,
     fetch_infojobs_details,
 )
@@ -246,8 +246,8 @@ async def extract_infojobs() -> list[dict]:
 
     return all_offers_extracted
 
-# if __name__ == "__main__":
-#     resultados = asyncio.run(extract_infojobs())
-#     print(f"Se han extraido {len(resultados)} ofertas de Adzuna.")
-#     for resultado in resultados:
-#         print(resultado)
+#if __name__ == "__main__":
+#    resultados = asyncio.run(extract_infojobs())
+#    print(f"Se han extraido {len(resultados)} ofertas de Adzuna.")
+#    for resultado in resultados:
+#        print(resultado)
