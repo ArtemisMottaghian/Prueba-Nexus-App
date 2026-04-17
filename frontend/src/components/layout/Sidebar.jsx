@@ -8,7 +8,7 @@ import './Sidebar.css';
 export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
   const { logout, hasRole, user } = useAuth();
-  
+
   // Mantenemos el estado de los grupos colapsables
   const [openGroups, setOpenGroups] = useState({
     vision: true,
@@ -79,14 +79,22 @@ export default function Sidebar({ isOpen, onClose }) {
                   <i className="bi bi-speedometer2 group-icon"></i>
                   <span className="sidebar-group-text">VISIÓN GENERAL</span>
                 </div>
-                <i className={`bi bi-chevron-down chevron-icon ${openGroups.vision ? 'rotate' : ''}`}></i>
+                <i
+                  className={`bi bi-chevron-down chevron-icon ${openGroups.vision ? 'rotate' : ''}`}
+                ></i>
               </div>
-              <div className={`sidebar-group-items ${openGroups.vision ? 'show' : ''}`}>
+              <div
+                className={`sidebar-group-items ${openGroups.vision ? 'show' : ''}`}
+              >
                 <NavLink to="/" end className="sidebar-item" onClick={onClose}>
                   <i className="bi bi-house"></i>
                   <span className="sidebar-text">Inicio</span>
                 </NavLink>
-                <NavLink to="/analitica" className="sidebar-item" onClick={onClose}>
+                <NavLink
+                  to="/analitica"
+                  className="sidebar-item"
+                  onClick={onClose}
+                >
                   <i className="bi bi-bar-chart"></i>
                   <span className="sidebar-text">Analítica</span>
                 </NavLink>
@@ -104,18 +112,34 @@ export default function Sidebar({ isOpen, onClose }) {
                     <i className="bi bi-briefcase group-icon"></i>
                     <span className="sidebar-group-text">RECLUTAMIENTO</span>
                   </div>
-                  <i className={`bi bi-chevron-down chevron-icon ${openGroups.reclutamiento ? 'rotate' : ''}`}></i>
+                  <i
+                    className={`bi bi-chevron-down chevron-icon ${openGroups.reclutamiento ? 'rotate' : ''}`}
+                  ></i>
                 </div>
-                <div className={`sidebar-group-items ${openGroups.reclutamiento ? 'show' : ''}`}>
-                  <NavLink to="/vacantes" className="sidebar-item" onClick={onClose}>
+                <div
+                  className={`sidebar-group-items ${openGroups.reclutamiento ? 'show' : ''}`}
+                >
+                  <NavLink
+                    to="/vacantes"
+                    className="sidebar-item"
+                    onClick={onClose}
+                  >
                     <i className="bi bi-briefcase"></i>
                     <span className="sidebar-text">Vacantes</span>
                   </NavLink>
-                  <NavLink to="/candidatos" className="sidebar-item" onClick={onClose}>
+                  <NavLink
+                    to="/candidatos"
+                    className="sidebar-item"
+                    onClick={onClose}
+                  >
                     <i className="bi bi-people"></i>
                     <span className="sidebar-text">Candidatos</span>
                   </NavLink>
-                  <NavLink to="/clientes" className="sidebar-item" onClick={onClose}>
+                  <NavLink
+                    to="/clientes"
+                    className="sidebar-item"
+                    onClick={onClose}
+                  >
                     <i className="bi bi-building"></i>
                     <span className="sidebar-text">Clientes</span>
                   </NavLink>
@@ -134,14 +158,26 @@ export default function Sidebar({ isOpen, onClose }) {
                     <i className="bi bi-chat-dots group-icon"></i>
                     <span className="sidebar-group-text">COMUNICACIÓN</span>
                   </div>
-                  <i className={`bi bi-chevron-down chevron-icon ${openGroups.comunicacion ? 'rotate' : ''}`}></i>
+                  <i
+                    className={`bi bi-chevron-down chevron-icon ${openGroups.comunicacion ? 'rotate' : ''}`}
+                  ></i>
                 </div>
-                <div className={`sidebar-group-items ${openGroups.comunicacion ? 'show' : ''}`}>
-                  <NavLink to="/inbox" className="sidebar-item" onClick={onClose}>
+                <div
+                  className={`sidebar-group-items ${openGroups.comunicacion ? 'show' : ''}`}
+                >
+                  <NavLink
+                    to="/inbox"
+                    className="sidebar-item"
+                    onClick={onClose}
+                  >
                     <i className="bi bi-envelope"></i>
                     <span className="sidebar-text">Inbox</span>
                   </NavLink>
-                  <NavLink to="/calendar" className="sidebar-item" onClick={onClose}>
+                  <NavLink
+                    to="/calendar"
+                    className="sidebar-item"
+                    onClick={onClose}
+                  >
                     <i className="bi bi-calendar-check"></i>
                     <span className="sidebar-text">Calendario</span>
                   </NavLink>
@@ -160,14 +196,26 @@ export default function Sidebar({ isOpen, onClose }) {
                     <i className="bi bi-cpu group-icon"></i>
                     <span className="sidebar-group-text">NEXUS ENGINE</span>
                   </div>
-                  <i className={`bi bi-chevron-down chevron-icon ${openGroups.engine ? 'rotate' : ''}`}></i>
+                  <i
+                    className={`bi bi-chevron-down chevron-icon ${openGroups.engine ? 'rotate' : ''}`}
+                  ></i>
                 </div>
-                <div className={`sidebar-group-items ${openGroups.engine ? 'show' : ''}`}>
-                  <NavLink to="/smart-match" className="sidebar-item" onClick={onClose}>
+                <div
+                  className={`sidebar-group-items ${openGroups.engine ? 'show' : ''}`}
+                >
+                  <NavLink
+                    to="/smart-match"
+                    className="sidebar-item"
+                    onClick={onClose}
+                  >
                     <i className="bi bi-stars"></i>
                     <span className="sidebar-text">Smart Match</span>
                   </NavLink>
-                  <NavLink to="/scraping" className="sidebar-item" onClick={onClose}>
+                  <NavLink
+                    to="/scraping"
+                    className="sidebar-item"
+                    onClick={onClose}
+                  >
                     <i className="bi bi-robot"></i>
                     <span className="sidebar-text">Scraping & Fuentes</span>
                   </NavLink>
@@ -197,7 +245,11 @@ export default function Sidebar({ isOpen, onClose }) {
             )}
 
             {hasRole('admin') && (
-              <NavLink to="/settings" className="sidebar-item" onClick={onClose}>
+              <NavLink
+                to="/settings"
+                className="sidebar-item"
+                onClick={onClose}
+              >
                 <i className="bi bi-gear"></i>
                 <span className="sidebar-text">Configuración</span>
               </NavLink>

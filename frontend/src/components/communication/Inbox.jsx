@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import './Inbox.css';
 
 const InboxComponent = ({ conversations, onSelectConversation }) => {
@@ -13,8 +13,8 @@ const InboxComponent = ({ conversations, onSelectConversation }) => {
         </div>
         <div className="inbox-list">
           {conversations.map((conv) => (
-            <div 
-              key={conv.id} 
+            <div
+              key={conv.id}
               className={`conversation-item ${selectedId === conv.id ? 'active' : ''}`}
               onClick={() => {
                 setSelectedId(conv.id);
@@ -38,7 +38,7 @@ const InboxComponent = ({ conversations, onSelectConversation }) => {
         {selectedId ? (
           <>
             <header className="chat-header">
-              <h3>{conversations.find(c => c.id === selectedId)?.name}</h3>
+              <h3>{conversations.find((c) => c.id === selectedId)?.name}</h3>
             </header>
             <div className="chat-messages">
               <div className="empty-state">
@@ -46,14 +46,25 @@ const InboxComponent = ({ conversations, onSelectConversation }) => {
               </div>
             </div>
             <footer className="chat-input">
-              <input type="text" placeholder="Escribe un mensaje de seguimiento..." />
+              <input
+                type="text"
+                placeholder="Escribe un mensaje de seguimiento..."
+              />
               <button className="send-btn">Enviar</button>
             </footer>
           </>
         ) : (
           <div className="no-selection">
             <div>
-              <i className="bi bi-chat-dots" style={{ fontSize: '3rem', color: 'var(--clr-purple)', display: 'block', marginBottom: '1rem' }}></i>
+              <i
+                className="bi bi-chat-dots"
+                style={{
+                  fontSize: '3rem',
+                  color: 'var(--clr-purple)',
+                  display: 'block',
+                  marginBottom: '1rem',
+                }}
+              ></i>
               <p>Selecciona una conversación para ver los detalles</p>
             </div>
           </div>

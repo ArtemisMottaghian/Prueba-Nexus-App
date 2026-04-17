@@ -1,31 +1,59 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import InboxComponent from '../components/communication/Inbox';
 
+const MOCK_CONVERSATIONS = [
+  {
+    id: 1,
+    name: 'Juan Pérez',
+    lastMessage: '¿Cuándo es la entrevista de selección?',
+    time: '10:30 AM',
+  },
+  {
+    id: 2,
+    name: 'María García',
+    lastMessage: 'Gracias por la oportunidad, envié mi CV actualizado.',
+    time: 'Ayer',
+  },
+  {
+    id: 3,
+    name: 'Tech Solutions',
+    lastMessage: 'Hemos revisado tu propuesta para la vacante de Senior.',
+    time: 'Lunes',
+  },
+  {
+    id: 4,
+    name: 'Carlos Ruiz',
+    lastMessage: 'Confirmado para el miércoles a las 16:00.',
+    time: '15 abr',
+  },
+];
+
 const InboxPage = () => {
-  const [conversations, setConversations] = useState([]);
+  // Inicializamos el estado directamente con los mocks.
+  // Esto evita el useEffect y el error de "cascading renders".
+  const [conversations] = useState(MOCK_CONVERSATIONS);
 
-  useEffect(() => {
-    // Aquí harás el fetch a tu backend http://127.0.0.1:8000/api/inbox
-    // Por ahora usamos datos ficticios:
-    const mockData = [
-      { id: 1, name: 'Juan Pérez', lastMessage: '¿Cuándo es la entrevista?', time: '10:30 AM' },
-      { id: 2, name: 'María García', lastMessage: 'Gracias por la oportunidad.', time: 'Ayer' },
-      { id: 3, name: 'Tech Solutions', lastMessage: 'Hemos revisado tu CV.', time: 'Lunes' },
-    ];
-    setConversations(mockData);
-  }, []);
-
-  const handleSelect = (conversation) => {
-    console.log("Cargando chat de:", conversation.name);
-    // Aquí podrías disparar otro fetch para obtener los mensajes reales
+  const handleSelectConversation = (conversation) => {
+    console.log('Conversación seleccionada:', conversation.name);
   };
 
   return (
-    <div className="p-6 h-full">
-      <h1 className="text-2xl font-bold mb-4">Bandeja de Entrada</h1>
-      <InboxComponent 
-        conversations={conversations} 
-        onSelectConversation={handleSelect} 
+    <div
+      className="inbox-page-wrapper"
+      style={{ padding: '20px', height: '100%' }}
+    >
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold text-white mb-1">
+          Centro de Comunicación
+        </h1>
+        <p style={{ color: 'var(--clr-text-muted)', fontSize: '0.9rem' }}>
+          Gestiona tus mensajes y chats con candidatos y clientes.
+        </p>
+      </div>
+
+      <InboxComponent
+        conversations={conversations}
+        onSelectConversation={handleSelectConversation}
       />
     </div>
   );
