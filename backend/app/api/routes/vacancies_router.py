@@ -3,7 +3,7 @@ import asyncio
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
-from app.services.orchestrator_vacancies import run_scrapers
+from app.services.orchestrator import run_scrapers
 from app.db.connection import get_db
 from app.services import vacancies_service
 from app.schemas.vacancies_schemas import (
