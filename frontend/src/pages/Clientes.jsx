@@ -226,7 +226,7 @@ export default function Clientes() {
       {/* Cabecera */}
       <div className="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-2">
         <div>
-          <h2 className="page-title mb-1">Directorio de Clientes</h2>
+          
           <p className="text-muted mb-0">
             {clientes.length} clientes registrados
             {clientes.filter((c) => c.prioritario).length > 0 && (

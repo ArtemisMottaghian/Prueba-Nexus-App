@@ -44,16 +44,6 @@ export default function Topbar({ onMenuToggle, onActivityToggle }) {
         </div>
 
         <div className="d-flex align-items-center gap-2 gap-md-3">
-          <div className="topbar-search d-none d-md-flex">
-            <i className="bi bi-search"></i>
-            <input
-              type="text"
-              placeholder="Buscar vacantes..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              onKeyDown={manejarBusqueda}
-            />
-          </div>
 
           <button
             className="btn-icon"
@@ -67,17 +57,10 @@ export default function Topbar({ onMenuToggle, onActivityToggle }) {
             )}
           </button>
 
-          <button
-            className="btn-icon position-relative"
-            onClick={onActivityToggle}
-          >
-            <i className="bi bi-bell"></i>
-            <span className="notification-dot"></span>
-          </button>
-
+  
           <div className="topbar-avatar">
             <div className="avatar-fallback">
-              <span>CM</span>
+              <span>A</span>
             </div>
           </div>
         </div>
