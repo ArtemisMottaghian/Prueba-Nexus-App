@@ -101,8 +101,8 @@ export default function Sidebar({ isOpen, onClose }) {
               </div>
             </div>
 
-            {/* GRUPO: RECLUTAMIENTO (Admin y Reclutador) */}
-            {(hasRole('admin') || hasRole('reclutador')) && (
+            {/* GRUPO: RECLUTAMIENTO (Admin, Reclutador y HR Manager) */}
+            {(hasRole('admin') || hasRole('reclutador') || hasRole('hr_manager')) && (
               <div className="sidebar-group">
                 <div
                   className="sidebar-group-header"
@@ -147,8 +147,8 @@ export default function Sidebar({ isOpen, onClose }) {
               </div>
             )}
 
-            {/* GRUPO: COMUNICACIÓN (Admin y Reclutador ahora tienen acceso al Inbox) */}
-            {(hasRole('admin') || hasRole('reclutador')) && (
+            {/* GRUPO: COMUNICACIÓN (Admin, Reclutador y HR Manager) */}
+            {(hasRole('admin') || hasRole('reclutador') || hasRole('hr_manager')) && (
               <div className="sidebar-group">
                 <div
                   className="sidebar-group-header"
