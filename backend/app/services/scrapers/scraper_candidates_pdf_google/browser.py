@@ -28,7 +28,7 @@ async def search_google_pdfs(query: str, headless: bool = True) -> list[dict]:
         page = await context.new_page()
 
         try:
-            await page.goto("https://www.google.es", wait_until="domcontentloaded", timeout=30000)
+            await page.goto("https://www.google.es", wait_until="domcontentloaded", timeout=8000)
 
             # Aceptar cookies de Google (si aparecen)
             try:
@@ -66,7 +66,7 @@ async def search_google_pdfs(query: str, headless: bool = True) -> list[dict]:
             async with aiohttp.ClientSession(headers=headers) as session:
                 for url in urls_to_download:
                     try:
-                        async with session.get(url, timeout=12, ssl=False) as response:
+                        async with session.get(url, timeout=aiohttp.ClientTimeout(total=12), ssl=False) as response:
                             if response.status == 200:
                                 pdf_bytes = await response.read() 
                                 if len(pdf_bytes) > 1000: # Evitamos PDFs corruptos o vacíos
