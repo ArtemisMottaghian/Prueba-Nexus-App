@@ -80,6 +80,9 @@ class CandidateFrontendOut(BaseModel):
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
+
+
+
     @model_validator(mode="before")
     @classmethod
     def map_db_to_frontend(cls, data):
@@ -118,6 +121,23 @@ class CandidateStatusUpdate(BaseModel):
 
 class MessageResponse(BaseModel):
     message: str
+
+# Schema para el status de los scrapers de candidatos
+class ScraperStatusItem(BaseModel):
+    name: str
+    status: str  # "online", "slow", "offline"
+    last_extraction: Optional[datetime] = None
+    total_candidates: int = 0
+
+class CandidateScraperStatusOut(BaseModel):
+    scrapers: list[ScraperStatusItem]
+
+# Schema para marcar como favorita
+class FavoriteRequest(BaseModel):
+    favorite: bool
+
+
+
 
 
 if __name__ == "__main__":
@@ -169,8 +189,3 @@ if __name__ == "__main__":
         print("❌ Error: El sistema ha dejado pasar datos inválidos.")
     except Exception as e:
         print("✅ Validación de seguridad: PASADA (Bloqueó email y URL incorrectos)")
-
-
-# Schema para marcar como favorita
-class FavoriteRequest(BaseModel):
-    favorite: bool

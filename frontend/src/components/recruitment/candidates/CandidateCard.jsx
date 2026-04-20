@@ -126,7 +126,7 @@ export default function CandidateCard({
           <div className="d-flex flex-column">
             <span className="detail-text">{candidate.specialty}</span>
             {candidate.isAvailable && (
-              <span className="badge mt-1 badge-client">Disponible</span>
+              <span className="badge mt-1 badge-disponible">Disponible</span>
             )}
           </div>
         </div>

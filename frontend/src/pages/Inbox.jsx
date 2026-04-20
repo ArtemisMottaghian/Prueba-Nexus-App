@@ -42,15 +42,6 @@ const InboxPage = () => {
       className="inbox-page-wrapper"
       style={{ padding: '20px', height: '100%' }}
     >
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold text-white mb-1">
-          Centro de Comunicación
-        </h1>
-        <p style={{ color: 'var(--clr-text-muted)', fontSize: '0.9rem' }}>
-          Gestiona tus mensajes y chats con candidatos y clientes.
-        </p>
-      </div>
-
       <InboxComponent
         conversations={conversations}
         onSelectConversation={handleSelectConversation}
