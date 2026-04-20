@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { usersService } from '../services/userManagementService'; // <-- Importamos tu nuevo servicio
+import { usersService } from '../services/userManagementService';
 import './usermanagement.css';
 
 // ── Datos de respaldo (Fallback) por si el backend está offline ──
@@ -23,7 +23,7 @@ const FALLBACK_USERS = [
     id: 2,
     name: 'Ana López',
     email: 'ana@nexus.com',
-    role: 'reclutador',
+    role: 'hr_manager',
     status: 'inactive',
     avatar: 'https://i.pravatar.cc/150?u=2',
   },
@@ -31,7 +31,7 @@ const FALLBACK_USERS = [
     id: 3,
     name: 'Tech Corp',
     email: 'contacto@techcorp.com',
-    role: 'negocio',
+    role: 'company',
     status: 'active',
     avatar: 'https://i.pravatar.cc/150?u=3',
   },
@@ -39,11 +39,11 @@ const FALLBACK_USERS = [
 
 const ROLE_OPTIONS = [
   { value: 'admin', label: 'Administrador' },
-  { value: 'reclutador', label: 'Reclutador' },
-  { value: 'negocio', label: 'Negocio' },
+  { value: 'hr_manager', label: 'Reclutador' },
+  { value: 'company', label: 'Negocio' },
 ];
 
-const EMPTY_FORM = { name: '', email: '', role: 'reclutador' };
+const EMPTY_FORM = { name: '', email: '', password: '', role: 'hr_manager' };
 
 export default function UserManagement() {
   const { hasRole } = useAuth();
@@ -54,6 +54,9 @@ export default function UserManagement() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [formErrors, setFormErrors] = useState({});
+
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
 
   // ── Petición a la DB al cargar el componente ─────────────────────────────────
   useEffect(() => {
@@ -101,18 +104,41 @@ export default function UserManagement() {
         errors.email = 'Email no válido (ej. tu@email.com)';
       }
     }
+
+    // Si creamos, pass obligatoria. Si editamos, opcional.
+    if (!editingUser && !form.password) {
+      errors.password = 'La contraseña es obligatoria';
+    } else if (form.password && form.password.length < 6) {
+      errors.password = 'Mínimo 6 caracteres';
+    }
+
     if (!form.role) errors.role = 'Selecciona un rol';
     return errors;
   };
 
+  // ── Funciones de Modal de Creación/Edición ──────────────────────────────────
   const handleOpenModal = () => {
+    setEditingUser(null);
     setForm(EMPTY_FORM);
+    setFormErrors({});
+    setShowModal(true);
+  };
+
+  const handleEditUser = (user) => {
+    setEditingUser(user);
+    setForm({
+      name: user.name,
+      email: user.email,
+      password: '',
+      role: user.role,
+    });
     setFormErrors({});
     setShowModal(true);
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
+    setEditingUser(null);
     setFormErrors({});
   };
 
@@ -123,28 +149,51 @@ export default function UserManagement() {
       return;
     }
 
-    try {
-      // LLAMADA AL BACKEND REAL
-      const newUser = await usersService.createUser({
-        name: form.name.trim(),
-        email: form.email.trim(),
-        role: form.role,
-      });
+    const payload = {
+      name: form.name.trim(),
+      email: form.email.trim(),
+      role: form.role,
+    };
+    if (form.password) payload.password = form.password;
 
-      // Actualizamos la tabla localmente si tiene éxito
-      setUsers((prev) => [...prev, newUser]);
+    try {
+      if (editingUser) {
+        // MODO EDICIÓN
+        const updatedUser = await usersService.updateUser(
+          editingUser.email,
+          payload
+        );
+        setUsers((prev) =>
+          prev.map((u) => (u.id === editingUser.id ? updatedUser : u))
+        );
+      } else {
+        // MODO CREACIÓN
+        const newUser = await usersService.createUser(payload);
+        setUsers((prev) => [...prev, newUser]);
+      }
       handleCloseModal();
     } catch (error) {
-      alert('Hubo un error al crear el usuario en el servidor.');
+      alert(`Hubo un error al ${editingUser ? 'editar' : 'crear'} el usuario.`);
       console.error(error);
     }
   };
 
-  const handleDeleteUser = async (id) => {
+  // ── Funciones de Borrado ────────────────────────────────────────────────────
+  const requestDeleteUser = (user) => {
+    setUserToDelete(user);
+  };
+
+  const cancelDeleteUser = () => {
+    setUserToDelete(null);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+
     try {
-      // LLAMADA AL BACKEND REAL
-      await usersService.deleteUser(id);
-      setUsers((prev) => prev.filter((u) => u.id !== id));
+      await usersService.deleteUser(userToDelete.email);
+      setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
+      setUserToDelete(null);
     } catch (error) {
       alert('Hubo un error al eliminar el usuario en el servidor.');
       console.error(error);
@@ -157,15 +206,20 @@ export default function UserManagement() {
   };
 
   const getRoleBadge = (role) => {
-    switch (role) {
+    const safeRole = String(role || '').toLowerCase();
+    switch (safeRole) {
       case 'admin':
         return <span className="um-badge um-badge--admin">Administrador</span>;
-      case 'reclutador':
+      case 'hr_manager':
         return <span className="um-badge um-badge--hr">Reclutador</span>;
-      case 'negocio':
+      case 'company':
         return <span className="um-badge um-badge--company">Negocio</span>;
       default:
-        return <span className="um-badge">Usuario</span>;
+        return (
+          <span className="um-badge text-uppercase">
+            {safeRole || 'USUARIO'}
+          </span>
+        );
     }
   };
 
@@ -223,9 +277,21 @@ export default function UserManagement() {
                     <td className="um-table__date">{user.createdAt}</td>
                     <td className="um-table__actions">
                       <button
+                        className="um-btn-edit me-2"
+                        title="Editar usuario"
+                        style={{
+                          color: '#0d6efd',
+                          background: 'none',
+                          border: 'none',
+                        }}
+                        onClick={() => handleEditUser(user)}
+                      >
+                        <i className="bi bi-pencil-square"></i>
+                      </button>
+                      <button
                         className="um-btn-delete"
                         title="Eliminar usuario"
-                        onClick={() => handleDeleteUser(user.id)}
+                        onClick={() => requestDeleteUser(user)}
                       >
                         <i className="bi bi-trash3"></i>
                       </button>
@@ -247,7 +313,7 @@ export default function UserManagement() {
         </>
       )}
 
-      {/* ── Modal: Añadir empleado ───────────────────────────────────────────── */}
+      {/* ── Modal: Añadir/Editar empleado ──────────────────────────────────────── */}
       {showModal && (
         <div className="um-modal-overlay" onClick={handleCloseModal}>
           <div
@@ -255,13 +321,13 @@ export default function UserManagement() {
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
-            aria-labelledby="um-modal-title"
           >
-            {/* Header modal */}
             <div className="um-modal__header">
-              <h3 id="um-modal-title" className="um-modal__title">
-                <i className="bi bi-person-plus-fill me-2"></i>
-                Añadir empleado
+              <h3 className="um-modal__title">
+                <i
+                  className={`bi ${editingUser ? 'bi-pencil-square' : 'bi-person-plus-fill'} me-2`}
+                ></i>
+                {editingUser ? 'Editar empleado' : 'Añadir empleado'}
               </h3>
               <button
                 className="um-modal__close"
@@ -272,9 +338,7 @@ export default function UserManagement() {
               </button>
             </div>
 
-            {/* Body modal */}
             <div className="um-modal__body">
-              {/* Nombre */}
               <div className="um-field">
                 <label className="um-field__label" htmlFor="um-name">
                   Nombre completo
@@ -295,7 +359,6 @@ export default function UserManagement() {
                 )}
               </div>
 
-              {/* Email */}
               <div className="um-field">
                 <label className="um-field__label" htmlFor="um-email">
                   Email
@@ -306,6 +369,10 @@ export default function UserManagement() {
                   className={`um-field__input ${formErrors.email ? 'um-field__input--error' : ''}`}
                   placeholder="maria@nexusai.com"
                   value={form.email}
+                  disabled={!!editingUser} // 🔒 Evitamos cambiar el email en edición (suele dar problemas en BD)
+                  style={
+                    editingUser ? { opacity: 0.6, cursor: 'not-allowed' } : {}
+                  }
                   onChange={(e) => handleFieldChange('email', e.target.value)}
                 />
                 {formErrors.email && (
@@ -316,7 +383,32 @@ export default function UserManagement() {
                 )}
               </div>
 
-              {/* Rol */}
+              <div className="um-field">
+                <label className="um-field__label" htmlFor="um-password">
+                  {editingUser ? 'Nueva Contraseña (Opcional)' : 'Contraseña'}
+                </label>
+                <input
+                  id="um-password"
+                  type="password"
+                  className={`um-field__input ${formErrors.password ? 'um-field__input--error' : ''}`}
+                  placeholder={
+                    editingUser
+                      ? 'Déjalo vacío para no cambiarla'
+                      : 'Mínimo 6 caracteres'
+                  }
+                  value={form.password}
+                  onChange={(e) =>
+                    handleFieldChange('password', e.target.value)
+                  }
+                />
+                {formErrors.password && (
+                  <p className="um-field__error">
+                    <i className="bi bi-exclamation-circle me-1"></i>
+                    {formErrors.password}
+                  </p>
+                )}
+              </div>
+
               <div className="um-field">
                 <label className="um-field__label" htmlFor="um-role">
                   Rol
@@ -342,14 +434,66 @@ export default function UserManagement() {
               </div>
             </div>
 
-            {/* Footer modal */}
             <div className="um-modal__footer">
               <button className="um-btn-cancel" onClick={handleCloseModal}>
                 Cancelar
               </button>
               <button className="um-btn-confirm" onClick={handleSubmit}>
                 <i className="bi bi-check-lg me-1"></i>
-                Añadir empleado
+                {editingUser ? 'Guardar cambios' : 'Añadir empleado'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: Confirmar Eliminación ──────────────────────────────────────── */}
+      {userToDelete && (
+        <div className="um-modal-overlay" onClick={cancelDeleteUser}>
+          <div
+            className="um-modal um-modal--confirm"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="um-modal__header">
+              <h3 className="um-modal__title um-modal__title--danger">
+                <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                Confirmar eliminación
+              </h3>
+              <button
+                className="um-modal__close"
+                onClick={cancelDeleteUser}
+                aria-label="Cerrar"
+              >
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+
+            <div className="um-modal__body">
+              <p className="um-confirm__text">
+                ¿Estás seguro de que deseas eliminar permanentemente al usuario{' '}
+                <strong>
+                  {userToDelete.name} ({userToDelete.email})
+                </strong>
+                ?
+              </p>
+              <p className="um-confirm__text" style={{ fontSize: '0.85em' }}>
+                Esta acción no se puede deshacer y el usuario perderá el acceso
+                a la plataforma.
+              </p>
+            </div>
+
+            <div className="um-modal__footer">
+              <button className="um-btn-cancel" onClick={cancelDeleteUser}>
+                Cancelar
+              </button>
+              <button
+                className="um-btn-delete-confirm"
+                onClick={confirmDeleteUser}
+              >
+                <i className="bi bi-trash3 me-1"></i>
+                Sí, eliminar
               </button>
             </div>
           </div>

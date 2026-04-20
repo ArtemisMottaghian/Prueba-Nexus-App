@@ -7,6 +7,11 @@
   transition: all 0.3s ease;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 /* Estilo para la vista de lista */
@@ -29,6 +34,11 @@
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.5em;
 }
 
 .detail-item {
@@ -69,7 +79,7 @@
 }
 
 .vacante-footer {
-  margin-top: 16px;
+  margin-top: auto;
   padding-top: 16px;
   border-top: 1px solid var(--border-color);
   display: flex;

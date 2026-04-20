@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import ClienteCard from '../components/crm/ClienteCard';
 import ClienteDetail from '../components/crm/ClienteDetail';
 import {
@@ -8,6 +8,8 @@ import {
   updateCliente,
   deleteCliente,
 } from '../services/clientesService';
+
+const ITEMS_POR_PAGINA = 10;
 
 const formVacio = {
   nombre: '',
@@ -36,6 +38,9 @@ export default function Clientes() {
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Paginación
+  const [paginaActual, setPaginaActual] = useState(1);
+
   useEffect(() => {
     cargarClientes();
   }, []);
@@ -61,6 +66,7 @@ export default function Clientes() {
       setClienteSeleccionado(cliente);
     }
   };
+
   const [busqueda, setBusqueda] = useState('');
   const [filtroSector, setFiltroSector] = useState('Todos');
   const [filtroPrioritario, setFiltroPrioritario] = useState(false);
@@ -84,6 +90,45 @@ export default function Clientes() {
     const coincidePrioritario = !filtroPrioritario || c.prioritario === true;
     return coincideNombre && coincideSector && coincidePrioritario;
   });
+
+  // Reset página al cambiar filtros
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda, filtroSector, filtroPrioritario]);
+
+  // Cálculo de paginación
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(clientesFiltrados.length / ITEMS_POR_PAGINA)
+  );
+  const paginaSafe = Math.min(paginaActual, totalPaginas);
+
+  const clientesPaginados = useMemo(() => {
+    const inicio = (paginaSafe - 1) * ITEMS_POR_PAGINA;
+    return clientesFiltrados.slice(inicio, inicio + ITEMS_POR_PAGINA);
+  }, [clientesFiltrados, paginaSafe]);
+
+  const irAPagina = (p) =>
+    setPaginaActual(Math.max(1, Math.min(p, totalPaginas)));
+
+  // Páginas visibles (máx 3 centradas en la actual — no se desborda nunca)
+  const paginasVisibles = useMemo(() => {
+    let inicio = Math.max(1, paginaSafe - 1);
+    let fin = Math.min(totalPaginas, inicio + 2);
+    if (fin - inicio < 2) inicio = Math.max(1, fin - 2);
+    const pages = [];
+    for (let i = inicio; i <= fin; i++) pages.push(i);
+    return pages;
+  }, [paginaSafe, totalPaginas]);
+
+  const desde =
+    clientesFiltrados.length === 0
+      ? 0
+      : (paginaSafe - 1) * ITEMS_POR_PAGINA + 1;
+  const hasta = Math.min(
+    paginaSafe * ITEMS_POR_PAGINA,
+    clientesFiltrados.length
+  );
 
   const abrirModalNuevo = () => {
     setForm(formVacio);
@@ -205,66 +250,142 @@ export default function Clientes() {
       >
         {/* Panel izquierdo */}
         <div className="clientes-list-panel">
-          <div className="clientes-search-bar mb-2">
-            <i className="bi bi-search"></i>
-            <input
-              type="text"
-              placeholder="Buscar por nombre, contacto o email..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-            />
-            {busqueda && (
-              <button className="search-clear" onClick={() => setBusqueda('')}>
-                <i className="bi bi-x"></i>
+          {/* Cabecera fija: buscador + filtros */}
+          <div className="clientes-list-header">
+            <div className="clientes-search-bar mb-2">
+              <i className="bi bi-search"></i>
+              <input
+                type="text"
+                placeholder="Buscar por nombre, contacto o email..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+              />
+              {busqueda && (
+                <button
+                  className="search-clear"
+                  onClick={() => setBusqueda('')}
+                >
+                  <i className="bi bi-x"></i>
+                </button>
+              )}
+            </div>
+
+            <div className="d-flex gap-2">
+              <select
+                className="form-select form-select-sm clientes-select"
+                value={filtroSector}
+                onChange={(e) => setFiltroSector(e.target.value)}
+              >
+                {sectores.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+              <button
+                className={`btn btn-sm btn-filter-vip ${filtroPrioritario ? 'active' : ''}`}
+                onClick={() => setFiltroPrioritario(!filtroPrioritario)}
+                title="Mostrar solo VIP"
+              >
+                <i className="bi bi-star-fill"></i>
               </button>
+            </div>
+          </div>
+
+          {/* Zona scrolleable de tarjetas */}
+          <div className="clientes-list-scroll">
+            {isLoading ? (
+              <div className="text-center text-muted py-4">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Cargando...</span>
+                </div>
+                <p className="mt-2 mb-0 small">Cargando clientes...</p>
+              </div>
+            ) : clientesFiltrados.length === 0 ? (
+              <div className="text-center text-muted py-4">
+                <i className="bi bi-search fs-3 d-block mb-2"></i>
+                <p className="mb-0 small">No se encontraron clientes</p>
+              </div>
+            ) : (
+              clientesPaginados.map((c) => (
+                <ClienteCard
+                  key={c.id}
+                  cliente={c}
+                  isSelected={clienteSeleccionado?.id === c.id}
+                  onClick={seleccionarCliente}
+                  onEdit={abrirModalEditar}
+                  onDelete={abrirModalEliminar}
+                  onTogglePrioritario={togglePrioritario}
+                />
+              ))
             )}
           </div>
 
-          <div className="d-flex gap-2 mb-3">
-            <select
-              className="form-select form-select-sm clientes-select"
-              value={filtroSector}
-              onChange={(e) => setFiltroSector(e.target.value)}
-            >
-              {sectores.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-            <button
-              className={`btn btn-sm btn-filter-vip ${filtroPrioritario ? 'active' : ''}`}
-              onClick={() => setFiltroPrioritario(!filtroPrioritario)}
-              title="Mostrar solo VIP"
-            >
-              <i className="bi bi-star-fill"></i>
-            </button>
-          </div>
+          {/* Paginación */}
+          {!isLoading && totalPaginas > 1 && (
+            <div className="clientes-pagination">
+              <span className="clientes-pagination__info">
+                {desde}–{hasta} de {clientesFiltrados.length}
+              </span>
+              <div className="clientes-pagination__controls">
+                <button
+                  className="clientes-pagination__btn"
+                  onClick={() => irAPagina(paginaSafe - 1)}
+                  disabled={paginaSafe === 1}
+                  aria-label="Página anterior"
+                >
+                  <i className="bi bi-chevron-left"></i>
+                </button>
 
-          {isLoading ? (
-            <div className="text-center text-muted py-4">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Cargando...</span>
+                {paginasVisibles[0] > 1 && (
+                  <>
+                    <button
+                      className="clientes-pagination__btn"
+                      onClick={() => irAPagina(1)}
+                    >
+                      1
+                    </button>
+                    {paginasVisibles[0] > 2 && (
+                      <span className="clientes-pagination__dots">…</span>
+                    )}
+                  </>
+                )}
+
+                {paginasVisibles.map((p) => (
+                  <button
+                    key={p}
+                    className={`clientes-pagination__btn ${p === paginaSafe ? 'active' : ''}`}
+                    onClick={() => irAPagina(p)}
+                  >
+                    {p}
+                  </button>
+                ))}
+
+                {paginasVisibles[paginasVisibles.length - 1] < totalPaginas && (
+                  <>
+                    {paginasVisibles[paginasVisibles.length - 1] <
+                      totalPaginas - 1 && (
+                      <span className="clientes-pagination__dots">…</span>
+                    )}
+                    <button
+                      className="clientes-pagination__btn"
+                      onClick={() => irAPagina(totalPaginas)}
+                    >
+                      {totalPaginas}
+                    </button>
+                  </>
+                )}
+
+                <button
+                  className="clientes-pagination__btn"
+                  onClick={() => irAPagina(paginaSafe + 1)}
+                  disabled={paginaSafe === totalPaginas}
+                  aria-label="Página siguiente"
+                >
+                  <i className="bi bi-chevron-right"></i>
+                </button>
               </div>
-              <p className="mt-2 mb-0 small">Cargando clientes...</p>
             </div>
-          ) : clientesFiltrados.length === 0 ? (
-            <div className="text-center text-muted py-4">
-              <i className="bi bi-search fs-3 d-block mb-2"></i>
-              <p className="mb-0 small">No se encontraron clientes</p>
-            </div>
-          ) : (
-            clientesFiltrados.map((c) => (
-              <ClienteCard
-                key={c.id}
-                cliente={c}
-                isSelected={clienteSeleccionado?.id === c.id}
-                onClick={seleccionarCliente}
-                onEdit={abrirModalEditar}
-                onDelete={abrirModalEliminar}
-                onTogglePrioritario={togglePrioritario}
-              />
-            ))
           )}
         </div>
 

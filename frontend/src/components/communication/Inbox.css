@@ -1,0 +1,198 @@
+/* ===================================================
+   Inbox.css — NexusAI Theme (Dark Mode)
+   =================================================== */
+
+.inbox-container {
+  display: flex;
+  height: calc(100vh - 120px); /* Ajustado para el Topbar */
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  color: var(--clr-text);
+  margin-top: 10px;
+}
+
+/* --- Sidebar del Inbox --- */
+.inbox-sidebar {
+  width: 350px;
+  background: var(--clr-bg);
+  border-right: 1px solid var(--clr-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.inbox-header {
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to bottom, var(--clr-surface), transparent);
+}
+
+.inbox-header h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--clr-text);
+  margin: 0;
+}
+
+.badge {
+  background: var(--clr-purple);
+  color: white;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  box-shadow: 0 0 15px rgba(124, 58, 237, 0.4);
+}
+
+.inbox-list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.conversation-item {
+  display: flex;
+  padding: 1.25rem;
+  gap: 1rem;
+  cursor: pointer;
+  transition: all var(--transition);
+  border-bottom: 1px solid rgba(124, 58, 237, 0.05);
+}
+
+.conversation-item:hover {
+  background: rgba(124, 58, 237, 0.08);
+}
+
+.conversation-item.active {
+  background: rgba(124, 58, 237, 0.15);
+  border-left: 4px solid var(--clr-cyan);
+}
+
+/* Avatar con estilo Nexus */
+.avatar {
+  width: 48px;
+  height: 48px;
+  background: var(--clr-surface-2);
+  border: 1px solid var(--clr-border);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: var(--clr-purple-light);
+  flex-shrink: 0;
+}
+
+.conv-info { flex: 1; overflow: hidden; }
+.conv-top { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.name { font-weight: 600; font-size: 0.95rem; color: var(--clr-text); }
+.time { font-size: 0.75rem; color: var(--clr-text-muted); }
+.last-msg { 
+    font-size: 0.85rem; 
+    color: var(--clr-text-muted); 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+}
+
+/* --- Ventana de Chat --- */
+.chat-window { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    background: var(--clr-surface); 
+    position: relative;
+}
+
+/* Cuadrícula de fondo similar al Login */
+.chat-window::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(124, 58, 237, 0.03) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(124, 58, 237, 0.03) 1px, transparent 1px);
+    background-size: 30px 30px;
+    pointer-events: none;
+}
+
+.chat-header { 
+    padding: 1.25rem 2rem; 
+    background: var(--clr-surface-2); 
+    border-bottom: 1px solid var(--clr-border);
+    z-index: 2;
+}
+
+.chat-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--clr-cyan);
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+.chat-messages { 
+    flex: 1; 
+    padding: 2rem; 
+    overflow-y: auto; 
+    z-index: 2;
+}
+
+.empty-state, .no-selection {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--clr-text-muted);
+    font-style: italic;
+    text-align: center;
+}
+
+.chat-input { 
+    padding: 1.5rem; 
+    background: var(--clr-bg); 
+    display: flex; 
+    gap: 1rem; 
+    border-top: 1px solid var(--clr-border);
+    z-index: 2;
+}
+
+.chat-input input { 
+    flex: 1; 
+    padding: 0.8rem 1.2rem; 
+    background: var(--clr-surface-2);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-md);
+    color: var(--clr-text);
+    outline: none;
+    transition: all var(--transition);
+}
+
+.chat-input input:focus {
+    border-color: var(--clr-cyan);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.15);
+}
+
+.send-btn { 
+    background: linear-gradient(135deg, var(--clr-purple) 0%, var(--clr-purple-light) 100%);
+    color: white; 
+    padding: 0.8rem 1.8rem; 
+    border-radius: var(--radius-md); 
+    border: none; 
+    cursor: pointer; 
+    font-weight: 600;
+    transition: all var(--transition);
+    box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+}
+
+.send-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5);
+}
+
+/* Scrollbar personalizado para que no rompa la estética */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--clr-bg); }
+::-webkit-scrollbar-thumb { background: var(--clr-surface-2); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--clr-purple); }

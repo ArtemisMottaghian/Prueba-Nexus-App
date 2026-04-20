@@ -5,6 +5,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 import re 
 from datetime import datetime
+from sqlalchemy import update
 
 from app.db.session import AsyncSessionLocal
 from app.models.job_model import JobOffer, JobPortal
@@ -186,7 +187,7 @@ async def get_vacancies_filtered(
         if sector:
             query = query.where(JobOffer.sector == sector)
         if location:
-            query = query.where(JobOffer.location == location)
+            query = query.where(JobOffer.location.ilike(f"%{location}%"))
         query = query.order_by(JobOffer.published_at.desc())
         result = await db.execute(query)
         return result.scalars().all()
@@ -222,3 +223,106 @@ async def apply_bulk_action(db: AsyncSession, vacancy_ids: List[int], action: st
     except Exception as e:
         await db.rollback()
         raise e
+
+#actualizar estado de vacante
+async def update_vacancy_status(db: AsyncSession, vacancy_id: int, new_status: str):
+    clean_status = new_status.strip().lower()
+    
+    # traductar del ingles a español
+    status_map = {
+        "nueva": "detected",
+        "nuevo": "detected",
+        "nuevas": "detected",
+        "nuevos": "detected",
+        
+        "contactada": "contacted",
+        "contactado": "contacted",
+        "contactadas": "contacted",
+        "contactados": "contacted",
+        
+        "en proceso": "negotiating",
+        "en progreso": "negotiating",
+        
+        "descartada": "discarded",
+        "descartado": "discarded",
+        "descartadas": "discarded",
+        "descartados": "discarded",
+        
+        "ganada": "won",
+        "ganado": "won"
+    }
+    
+    db_status = status_map.get(clean_status, new_status)
+
+    try:
+        resultado = await db.execute(select(JobOffer).where(JobOffer.id == vacancy_id))
+        vacancy = resultado.scalars().first()
+        
+        if vacancy:
+            vacancy.status = db_status
+            await db.commit()
+            return True
+        return False
+    except Exception as e:
+        await db.rollback()
+        print(f"Error al actualizar el estado de la vacante {vacancy_id}: {e}")
+        raise e
+
+_COUNTRY_SUFFIXES = [", Spain", ", España", ", ES"]
+
+_TRANSLATIONS = {
+    "Balearic Islands": "Islas Baleares",
+    "Illes Balears": "Islas Baleares",
+    "Canary Islands": "Islas Canarias",
+    "Community of Madrid": "Madrid",
+    "Catalonia": "Cataluña",
+    "Valencian Community": "Comunidad Valenciana",
+    "Basque Country": "País Vasco",
+    "Andalusia": "Andalucía",
+    "Aragon": "Aragón",
+    "Castile and León": "Castilla y León",
+    "Castile-La Mancha": "Castilla-La Mancha",
+    "Navarre": "Navarra",
+}
+
+_EXCLUDED = {"españa", "spain", "", "sin ubicación"}
+
+
+def _normalize_location(location: str) -> str | None:
+    loc = location.strip()
+    if loc.lower() in _EXCLUDED:
+        return None
+
+    # Eliminar sufijo de país
+    for suffix in _COUNTRY_SUFFIXES:
+        if loc.endswith(suffix):
+            loc = loc[: -len(suffix)].strip()
+            break
+
+    if not loc or loc.lower() in _EXCLUDED:
+        return None
+
+    # Tomar el último componente separado por coma (nivel provincia/comunidad)
+    parts = [p.strip() for p in loc.split(",")]
+    name = parts[-1] if len(parts) > 1 else parts[0]
+
+    return _TRANSLATIONS.get(name, name)
+
+
+async def get_distinct_locations(db: AsyncSession) -> List[str]:
+    """Devuelve la lista de localizaciones únicas normalizadas de las vacantes."""
+    result = await db.execute(
+        select(JobOffer.location)
+        .where(JobOffer.location.isnot(None))
+        .where(JobOffer.location != "")
+        .distinct()
+    )
+    raw_locations = [row[0] for row in result.all()]
+
+    normalized: set[str] = set()
+    for loc in raw_locations:
+        name = _normalize_location(loc)
+        if name:
+            normalized.add(name)
+
+    return sorted(normalized)
