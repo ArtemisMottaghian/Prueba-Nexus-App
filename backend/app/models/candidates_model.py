@@ -20,21 +20,21 @@ class Candidate(Base):
     candidate_url = Column(Text, nullable=True)
     cv_url = Column(Text, nullable=True)
     skills = Column(Text, nullable=True, index=True) 
-    
+
     status = Column(
         ENUM(CandidateStatus, name="candidate_status", create_type=True),
         server_default="active",
         nullable=True,
         index=True 
     )
-    
+
     notes = Column(Text, nullable=True)
-    
+
     created_at = Column(
         DateTime(timezone=True), 
         server_default=func.now()
     )
-    
+
     updated_at = Column(
         DateTime(timezone=True), 
         server_default=func.now(), 
