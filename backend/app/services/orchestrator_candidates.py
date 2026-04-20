@@ -1,7 +1,15 @@
 import asyncio
 from typing import Any
+
+from app.core.scraper_candidates_linkedin_config import (
+    KEYWORDS,
+    SECTORS,
+    LOCATIONS,
+    HEADLESS_MODE,
+)
 from app.services.scrapers.scraper_candidates_github.runner import extract_github
 from app.services.scrapers.scraper_candidates_pdf_google.runner import extract_pdfs_google
+from app.services.scrapers.scraper_candidates_linkedin.runner import extract_linked
 from sqlalchemy.dialects.postgresql import insert
 
 from app.models.candidates_model import Candidate
@@ -10,37 +18,43 @@ from app.schemas.candidates_schemas import CandidateCreate
 from app.db.connection import AsyncSessionLocal
 
 
-async def gather_raw_candidates() -> list[dict[str, Any]]:
+async def gather_raw_candidates() -> list[dict]:
     """
-    Ejecuta todos los scrapers de forma concurrente/secuencial, gestiona los errores 
-    individuales y unifica todos los resultados en una sola lista plana.
-
-    Returns:
-        list[dict[str, Any]]: Lista de diccionarios crudos con los candidatos extraídos.
+    Ejecuta todos los scrapers de forma secuencial, gestiona los errores
+    y unifica todos los resultados en una sola lista plana.
     """
-
     raw_candidates = []
 
+    # Lista de scrapers a ejecutar
+    # NOTA: Usamos lambda para pre-cargar los argumentos de LinkedIn
     scrapers = [
-        
-        ("github", extract_github),
-        ("pdfs", extract_pdfs_google)
+        (
+            "linkedin",
+            lambda: extract_linked(
+                keywords=KEYWORDS,
+                sectors=SECTORS,
+                locations=LOCATIONS,
+                headless=HEADLESS_MODE,
+            ),
+        ),
+        # ("github", extract_github),
+        # ("google_pdfs", extract_pdfs_google),
     ]
 
     for name, scraper_func in scrapers:
+        print(f"\nIniciando scraper: {name.upper()}...")
         try:
             result = await scraper_func()
 
             if isinstance(result, list):
                 raw_candidates.extend(result)
-    
-        
-        except Exception as e:
-            print(f"Error crítico en {name.upper(): {e}}")
+                print(f"{name.upper()} terminado. {len(result)} perfiles extraídos.")
 
-    print(f"Total de {len(raw_candidates)} ofertas conseguidas.")
+        except Exception as e:
+            print(f"Error crítico en {name.upper()}: {e}")
 
     return raw_candidates
+
 
 def validate_candidates(raw_candidates: list[dict[str, Any]]) -> list[CandidateCreate]:
     """
