@@ -1,3 +1,5 @@
+from typing import Text
+
 from sqlalchemy import Column, Integer, String, BigInteger, DateTime, ForeignKey, func, Enum as PgEnum
 from sqlalchemy.orm import relationship
 from app.db.connection import Base
@@ -33,4 +35,18 @@ class Client(Base):
     )
     history = relationship(
         "TrackingHistory", back_populates="client", cascade="all, delete-orphan"
+    )
+
+
+class ClientComment(Base):
+    __tablename__ = "client_comments"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    client_id = Column(BigInteger, ForeignKey("clients.id", ondelete="CASCADE"))
+    user_id = Column(BigInteger, ForeignKey("users.id"))
+    comment = Column(Text, nullable=False)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
