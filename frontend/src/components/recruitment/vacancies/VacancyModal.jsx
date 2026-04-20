@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import SourceOriginBadge from '../shared/SourceOriginBadge';
 import {
   getClienteByNombre,
   updateEstadoCuenta,
@@ -227,7 +228,9 @@ export default function VacancyModal({ job, onClose, onUpdateStatus, onToggleFav
                           <div>
                             <div className="field-label">Fuente</div>
                             <div className="field-value">
-                              {job.source || 'Nexus'}
+                              <SourceOriginBadge
+                                source={job.source || 'Nexus'}
+                              />
                             </div>
                           </div>
                         </div>
