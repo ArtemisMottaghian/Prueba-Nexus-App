@@ -8,21 +8,16 @@ const TITLES = {
   '/clientes': 'Clientes',
 };
 
-export default function Topbar({ onMenuToggle, onActivityToggle }) {
+export default function Topbar({ onMenuToggle,  }) {
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [busqueda, setBusqueda] = useState('');
+  
 
   const location = useLocation();
   const navigate = useNavigate();
 
   const pageTitle = TITLES[location.pathname] || 'Dashboard';
 
-  // Ejecuta la búsqueda al pulsar Enter
-  const manejarBusqueda = (e) => {
-    if (e.key === 'Enter') {
-      navigate(`/vacantes?q=${encodeURIComponent(busqueda.trim())}`);
-    }
-  };
+ 
 
   useEffect(() => {
     const htmlElement = document.documentElement;
@@ -44,7 +39,6 @@ export default function Topbar({ onMenuToggle, onActivityToggle }) {
         </div>
 
         <div className="d-flex align-items-center gap-2 gap-md-3">
-
           <button
             className="btn-icon"
             onClick={() => setIsDarkMode(!isDarkMode)}
@@ -57,7 +51,6 @@ export default function Topbar({ onMenuToggle, onActivityToggle }) {
             )}
           </button>
 
-  
           <div className="topbar-avatar">
             <div className="avatar-fallback">
               <span>A</span>

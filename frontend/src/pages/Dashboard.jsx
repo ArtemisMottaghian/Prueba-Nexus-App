@@ -86,7 +86,6 @@ export default function Dashboard() {
   return (
     <>
       <div className="mb-4">
-        
         <div
           className="period-segment mt-3"
           role="group"

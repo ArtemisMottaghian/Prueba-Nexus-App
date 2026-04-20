@@ -18,7 +18,7 @@ import InboxPage from './pages/Inbox';
 import './index.css';
 function App() {
   const [sidebarAbierto, setSidebarAbierto] = useState(false);
-  
+
   return (
     <BrowserRouter>
       <Routes>
@@ -55,7 +55,6 @@ function App() {
                     </div>
                   </div>
                 </main>
-              
               </div>
             }
           />

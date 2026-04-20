@@ -355,8 +355,6 @@ export default function Vacancies() {
 
   return (
     <>
-      
-
       <FilterBar
         filters={filters}
         onFilterChange={handleFilterChange}

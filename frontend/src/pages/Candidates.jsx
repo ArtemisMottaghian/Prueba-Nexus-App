@@ -150,8 +150,6 @@ export default function Candidates() {
 
   return (
     <>
-
-
       <FilterBar
         filters={filters}
         onFilterChange={handleFilterChange}
