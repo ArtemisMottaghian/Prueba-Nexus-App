@@ -132,3 +132,12 @@ async def modify_client_note(
     if not updated_comment:
         raise HTTPException(status_code=404, detail="Nota no encontrada")
     return updated_comment
+
+#obtener notas de cliente
+@router.get("/{client_id}/comments", response_model=List[CommentResponse])
+async def read_client_notes(
+    client_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    comentarios = await comments_service.get_client_comments(db, client_id)
+    return comentarios

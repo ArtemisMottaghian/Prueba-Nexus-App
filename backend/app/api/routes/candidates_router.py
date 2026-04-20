@@ -147,3 +147,12 @@ async def modify_candidate_note(
     if not updated_comment:
         raise HTTPException(status_code=404, detail="Nota no encontrada")
     return updated_comment
+
+#obtener notas de candidato
+@router.get("/{candidate_id}/comments", response_model=List[CommentResponse])
+async def read_candidate_notes(
+    candidate_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    comentarios = await comments_service.get_candidate_comments(db, candidate_id)
+    return comentarios
