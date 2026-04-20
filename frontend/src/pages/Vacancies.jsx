@@ -355,13 +355,6 @@ export default function Vacancies() {
 
   return (
     <>
-      <div className="mb-4">
-        <h2 className="page-title mb-1">Directorio de Vacantes</h2>
-        <p className="text-muted">
-          Gestiona las oportunidades laborales captadas por el sistema.
-        </p>
-      </div>
-
       <FilterBar
         filters={filters}
         onFilterChange={handleFilterChange}

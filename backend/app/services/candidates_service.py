@@ -1,8 +1,9 @@
-from sqlalchemy import select
+from sqlalchemy import select,func,case
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from app.models.candidates_model import Candidate 
-from app.schemas.candidates_schemas import CandidateStatus, CandidateCreate,CandidateUpdate
+from app.schemas.candidates_schemas import CandidateStatus, CandidateCreate,CandidateUpdate,ScraperStatusItem, CandidateScraperStatusOut
+from datetime import datetime, timezone, timedelta
 
 async def get_all_candidates(db: AsyncSession) -> List[Candidate]:
     query = select(Candidate).order_by(Candidate.created_at.desc())
@@ -67,3 +68,63 @@ async def set_favorite(db: AsyncSession, candidate_id: int, favorite: bool) -> N
             await db.commit()
     except Exception as e:
         raise e
+
+
+async def get_scraper_status(db: AsyncSession) -> CandidateScraperStatusOut:
+    """
+    Devuelve el estado de cada scraper de candidatos basándose en
+    el último registro insertado por fuente en la tabla candidates.
+    """
+
+    SCRAPERS = [
+        {"name": "GitHub", "source": "GitHub API"},
+        {"name": "LinkedIn (Bot)", "source": "LinkedIn"},
+        {"name": "Google PDF", "source_prefix": "Google PDF"},
+    ]
+
+    now = datetime.now(timezone.utc)
+    result_list = []
+
+    for scraper in SCRAPERS:
+        source = scraper.get("source")
+        source_prefix = scraper.get("source_prefix")
+
+        if source:
+            query = select(
+                func.max(Candidate.created_at).label("last_extraction"),
+                func.count(Candidate.id).label("total")
+            ).where(Candidate.source == source)
+        else:
+            query = select(
+                func.max(Candidate.created_at).label("last_extraction"),
+                func.count(Candidate.id).label("total")
+            ).where(Candidate.source.like(f"{source_prefix}%"))
+
+        result = await db.execute(query)
+        row = result.one()
+
+        last_extraction = row.last_extraction
+        total = row.total
+
+        # Lógica de estado
+        if not last_extraction:
+            status = "offline"
+        else:
+            if last_extraction.tzinfo is None:
+                last_extraction = last_extraction.replace(tzinfo=timezone.utc)
+            diff = now - last_extraction
+            if diff <= timedelta(hours=24):
+                status = "online"
+            elif diff <= timedelta(days=3):
+                status = "slow"
+            else:
+                status = "offline"
+
+        result_list.append(ScraperStatusItem(
+            name=scraper["name"],
+            status=status,
+            last_extraction=last_extraction,
+            total_candidates=total
+        ))
+
+    return CandidateScraperStatusOut(scrapers=result_list)

@@ -13,6 +13,7 @@ from app.schemas.candidates_schemas import (
     CandidateOut,
     MessageResponse,
     FavoriteRequest,
+    CandidateScraperStatusOut,
 )
 from app.schemas.comments_schemas import CommentCreate, CommentUpdate, CommentResponse
 from app.services import comments_service
@@ -27,6 +28,15 @@ router = APIRouter()
 @router.get("", response_model=List[CandidateFrontendOut])
 async def read_candidates(db: AsyncSession = Depends(get_db)):
     return await candidates_service.get_all_candidates(db)
+
+# -----------------
+# Estado de los scrapers de candidatos
+# GET /api/candidates/scraper-status
+# -----------------
+@router.get("/scraper-status", response_model=CandidateScraperStatusOut)
+async def get_scraper_status(db: AsyncSession = Depends(get_db)):
+    """Devuelve el estado de cada scraper de candidatos."""
+    return await candidates_service.get_scraper_status(db)
 
 # --------------------
 # obtener candidato
@@ -123,7 +133,6 @@ async def mark_favorite(
         "message": f"Candidato {'marcado' if body.favorite else 'desmarcado'} como favorito"
     }
 
-
 # Añadir nota a candidato
 @router.post("/{candidate_id}/comments", response_model=CommentResponse)
 async def create_candidate_note(
@@ -156,3 +165,4 @@ async def read_candidate_notes(
 ):
     comentarios = await comments_service.get_candidate_comments(db, candidate_id)
     return comentarios
+
