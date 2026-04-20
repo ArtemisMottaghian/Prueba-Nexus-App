@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, BigInteger, Text, DateTime, func
+from sqlalchemy import Column, String, BigInteger, Text, DateTime, func, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import ENUM
 from app.db.connection import Base
@@ -11,6 +11,7 @@ class Candidate(Base):
     id = Column(BigInteger, primary_key=True, index=True)
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
+    is_favorite = Column(Boolean, default=False)
     email = Column(String(255), unique=True, nullable=False, index=True) 
     location = Column(String(255), nullable=True)
     source = Column(String(100), nullable=True)

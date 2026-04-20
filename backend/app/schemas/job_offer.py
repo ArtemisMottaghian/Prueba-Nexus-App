@@ -4,11 +4,11 @@ from datetime import datetime
 import enum
 
 class OfferStatus(str, enum.Enum):
-    detected = "detected"
-    contacted = "contacted"
-    negotiating = "negotiating"
-    discarded = "discarded"
-    won = "won"
+    detected = 'detected'
+    contacted = 'contacted'
+    negotiating = 'negotiating'
+    discarded = 'discarded'
+    won = 'won'
 
 
 class JobOfferBase(BaseModel):

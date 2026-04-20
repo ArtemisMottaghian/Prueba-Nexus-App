@@ -17,6 +17,8 @@ import Calendario from './pages/Calendar';
 import Clientes from './pages/Clientes';
 import Candidates from './pages/Candidates';
 import UserManagement from './pages/usermanagement';
+// --- NUEVA IMPORTACIÓN ---
+import InboxPage from './pages/Inbox';
 
 import './index.css';
 
@@ -36,7 +38,6 @@ function App() {
             path="/*"
             element={
               <div className="ara-container">
-                {/* El Sidebar ya incluye su propio Overlay y lógica onClose */}
                 <Sidebar
                   isOpen={sidebarAbierto}
                   onClose={() => setSidebarAbierto(false)}
@@ -56,9 +57,12 @@ function App() {
                         <Route path="/calendar" element={<Calendario />} />
                         <Route path="/clientes" element={<Clientes />} />
                         <Route path="/candidatos" element={<Candidates />} />
+
+                        {/* --- NUEVA RUTA DEL INBOX --- */}
+                        <Route path="/inbox" element={<InboxPage />} />
+
                         <Route path="/settings" element={<UserManagement />} />
 
-                        {/* Redirección por si el usuario escribe una ruta inexistente */}
                         <Route path="*" element={<Navigate to="/" replace />} />
                       </Routes>
                     </div>

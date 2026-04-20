@@ -1,5 +1,21 @@
 import './FilterBar.css';
-export default function FilterBar({ filters, onFilterChange, onClearFilters }) {
+export default function FilterBar({
+  filters,
+  onFilterChange,
+  onClearFilters,
+  locationOptions = [],
+  statusOptions = [
+    { value: 'New', label: 'Nuevas' },
+    { value: 'Contacted', label: 'Contactados' },
+    { value: 'In progress', label: 'En progreso' },
+    { value: 'Rejected', label: 'Descartados' },
+  ],
+  sourceOptions = [
+    { value: 'InfoJobs', label: 'InfoJobs' },
+    { value: 'LinkedIn', label: 'LinkedIn' },
+    { value: 'Adzuna', label: 'Adzuna' },
+  ],
+}) {
   const hasActiveFilters =
     filters.status !== 'All' ||
     filters.industry !== 'All' ||
@@ -17,10 +33,11 @@ export default function FilterBar({ filters, onFilterChange, onClearFilters }) {
             onChange={(e) => onFilterChange('status', e.target.value)}
           >
             <option value="All">Todas</option>
-            <option value="New">Nuevas</option>
-            <option value="Contacted">Contactados</option>
-            <option value="In progress">En progreso</option>
-            <option value="Rejected">Descartados</option>
+            {statusOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -50,11 +67,11 @@ export default function FilterBar({ filters, onFilterChange, onClearFilters }) {
             onChange={(e) => onFilterChange('location', e.target.value)}
           >
             <option value="All">Todas</option>
-            <option value="Madrid">Madrid</option>
-            <option value="Barcelona">Barcelona</option>
-            <option value="Valencia">Valencia</option>
-            <option value="Zaragoza">Zaragoza</option>
-            <option value="Remote">Remoto</option>
+            {locationOptions.map((loc) => (
+              <option key={loc} value={loc}>
+                {loc}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -67,9 +84,11 @@ export default function FilterBar({ filters, onFilterChange, onClearFilters }) {
             onChange={(e) => onFilterChange('source', e.target.value)}
           >
             <option value="All">Todas</option>
-            <option value="InfoJobs">InfoJobs</option>
-            <option value="LinkedIn">LinkedIn</option>
-            <option value="Adzuna">Adzuna</option>
+            {sourceOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -79,7 +98,7 @@ export default function FilterBar({ filters, onFilterChange, onClearFilters }) {
             className="btn btn-clear w-100"
             onClick={onClearFilters}
             disabled={!hasActiveFilters}
-            title="Clear filters"
+            title="Limpiar filtros"
           >
             <i className="bi bi-x-lg"></i>
           </button>

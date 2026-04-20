@@ -9,27 +9,58 @@ const getPortalName = (id) => {
   return 'Otro';
 };
 
-const mapVacancyData = (v) => ({
-  id: v.id,
-  title: v.title,
-  companyName: v.company_name,
-  industry: v.sector || 'N/A',
-  location: v.location || 'No especificada',
-  status: v.status,
-  source: getPortalName(v.portal_id),
-  isFavorite: v.is_favorite || false,
-  // Convertimos la fecha de Python a algo legible
-  time: v.published_at
-    ? new Date(v.published_at).toLocaleDateString()
-    : 'Sin fecha',
-  rawDate: v.published_at || v.scraped_at || null,
-  description: v.job_description,
-  salaryMin: v.salary_min,
-  salaryMax: v.salary_max,
-});
+const translateStatusToUI = (dbStatus) => {
+  if (!dbStatus) return 'Nueva';
+
+  const statusMap = {
+    detected: 'Nueva',
+    contacted: 'Contactada',
+    negotiating: 'En proceso',
+    won: 'Ganada',
+    discarded: 'Descartada',
+  };
+
+  return statusMap[dbStatus.toLowerCase()] || dbStatus;
+};
+
+const mapVacancyData = (v) => {
+  const translatedStatus = translateStatusToUI(v.status);
+
+  return {
+    id: v.id,
+    title: v.title,
+    companyName: v.company_name,
+    industry: v.sector || 'N/A',
+    location: v.location || 'No especificada',
+    status: translatedStatus,
+    source: getPortalName(v.portal_id),
+    isFavorite: v.is_favorite || false,
+    time: v.published_at
+      ? new Date(v.published_at).toLocaleDateString()
+      : 'Sin fecha',
+    rawDate: v.published_at || v.scraped_at || null,
+    description: v.job_description,
+    salaryMin: v.salary_min,
+    salaryMax: v.salary_max,
+  };
+};
 
 export const vacanciesService = {
-  // 1. Obtener todas las vacantes
+  // 1. Obtener localizaciones únicas
+  getLocations: async () => {
+    try {
+      const response = await authFetch(
+        ENDPOINTS.recruitment.vacantes.locations
+      );
+      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error al obtener localizaciones:', error);
+      return [];
+    }
+  },
+
+  // 2. Obtener todas las vacantes
   getAllVacancies: async () => {
     try {
       const response = await authFetch(ENDPOINTS.recruitment.vacantes.list);
@@ -115,5 +146,20 @@ export const vacanciesService = {
       console.error(`Error al aplicar acción masiva ${actionName}:`, error);
       throw error;
     }
+  },
+
+  // Actualizar el estado de una vacante
+  updateVacancyStatus: async (id, newStatus) => {
+    const response = await authFetch(
+      ENDPOINTS.recruitment.vacantes.detail(id) + '/status',
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      }
+    );
+    if (!response.ok)
+      throw new Error('Error al actualizar el estado de la vacante');
+    return response.json();
   },
 };

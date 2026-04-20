@@ -12,7 +12,8 @@ from app.schemas.vacancies_schemas import (
     VacancyFiltered,
     FavoriteRequest,
     BulkActionRequest,
-    MessageResponse
+    MessageResponse,
+    StatusRequest
 )
 
 router = APIRouter()
@@ -42,6 +43,16 @@ async def read_vacancies_filtered(
 ):
     vacancies = await vacancies_service.get_vacancies_filtered(db, status, sector, location)
     return vacancies
+
+
+# -----------------
+# Obtener localizaciones únicas de vacantes
+# GET /api/vacancies/locations
+# -----------------
+@router.get("/locations", response_model=List[str])
+async def get_locations(db: AsyncSession = Depends(get_db)):
+    """Devuelve las localizaciones únicas de las vacantes disponibles."""
+    return await vacancies_service.get_distinct_locations(db)
 
 
 # -----------------
@@ -104,3 +115,21 @@ async def trigger_scraper():
     """Lanza el orquestador manualmente para buscar nuevas vacantes."""
     asyncio.create_task(run_scrapers())
     return {"message": "Scraper lanzado correctamente, las vacantes se actualizarán en breve"}
+
+# -----------------
+# Cambiar estado de una vacante
+# PATCH /api/vacancies/{vacancy_id}/status
+# -----------------
+@router.patch("/{vacancy_id}/status", response_model=MessageResponse)
+async def update_status(
+    vacancy_id: int,
+    body: StatusRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    vacancy = await vacancies_service.get_vacancy_by_id(db, vacancy_id)
+
+    if vacancy is None:
+        raise HTTPException(status_code=404, detail="La vacante no existe")
+
+    await vacancies_service.update_vacancy_status(db, vacancy_id, body.status)
+    return {"message": f"Estado actualizado a '{body.status}'"}

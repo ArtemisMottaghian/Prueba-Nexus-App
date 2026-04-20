@@ -35,3 +35,7 @@ __pycache__/
 downloaded_files/
 *.lock
 .venv/
+
+# Debug y logs del servidor
+backend/debug_bing.png
+backend/nohup.out

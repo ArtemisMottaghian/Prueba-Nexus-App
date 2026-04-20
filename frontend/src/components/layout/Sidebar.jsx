@@ -8,10 +8,12 @@ import './Sidebar.css';
 export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
   const { logout, hasRole, user } = useAuth();
+
+  // Mantenemos el estado de los grupos colapsables
   const [openGroups, setOpenGroups] = useState({
     vision: true,
     reclutamiento: false,
-    comunicacion: false,
+    comunicacion: true, // Lo ponemos en true para que el Inbox sea visible al inicio
     engine: false,
   });
 
@@ -40,6 +42,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
   return (
     <>
+      {/* Overlay para móviles */}
       {isOpen && (
         <div className="sidebar-overlay d-lg-none" onClick={onClose}></div>
       )}
@@ -50,6 +53,7 @@ export default function Sidebar({ isOpen, onClose }) {
         onMouseLeave={handleMouseLeave}
       >
         <div className="sidebar-content">
+          {/* Logo y Botón cerrar (Móvil) */}
           <div className="sidebar-logo d-flex justify-content-between align-items-center px-3">
             <div className="logo-wrapper">
               <img
@@ -65,7 +69,7 @@ export default function Sidebar({ isOpen, onClose }) {
           </div>
 
           <nav className="sidebar-nav">
-            {/* GRUPO: VISIÓN GENERAL (Todos lo ven) */}
+            {/* GRUPO: VISIÓN GENERAL */}
             <div className="sidebar-group">
               <div
                 className="sidebar-group-header"
@@ -97,7 +101,7 @@ export default function Sidebar({ isOpen, onClose }) {
               </div>
             </div>
 
-            {/* GRUPO: RECLUTAMIENTO (Solo Admin y Reclutador) */}
+            {/* GRUPO: RECLUTAMIENTO (Admin y Reclutador) */}
             {(hasRole('admin') || hasRole('reclutador')) && (
               <div className="sidebar-group">
                 <div
@@ -143,8 +147,8 @@ export default function Sidebar({ isOpen, onClose }) {
               </div>
             )}
 
-            {/* GRUPO: COMUNICACIÓN (Solo Admin) */}
-            {hasRole('admin') && (
+            {/* GRUPO: COMUNICACIÓN (Admin y Reclutador ahora tienen acceso al Inbox) */}
+            {(hasRole('admin') || hasRole('reclutador')) && (
               <div className="sidebar-group">
                 <div
                   className="sidebar-group-header"
@@ -181,7 +185,7 @@ export default function Sidebar({ isOpen, onClose }) {
               </div>
             )}
 
-            {/* GRUPO: NEXUS ENGINE (Admin y Negocio) */}
+            {/* GRUPO: NEXUS ENGINE */}
             {(hasRole('admin') || hasRole('negocio')) && (
               <div className="sidebar-group">
                 <div
@@ -222,8 +226,8 @@ export default function Sidebar({ isOpen, onClose }) {
 
           <div className="flex-grow-1" style={{ minHeight: '20px' }}></div>
 
+          {/* Footer del Sidebar */}
           <div className="sidebar-footer px-2 pb-3">
-            {/* Info del usuario logueado (Cortesía de Jose) */}
             {user && (
               <div
                 className="sidebar-user-email px-3 pb-3 mb-2"

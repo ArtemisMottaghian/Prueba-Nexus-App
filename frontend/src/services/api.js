@@ -47,6 +47,7 @@ export const ENDPOINTS = {
     },
     vacantes: {
       list: `${BASE_URL}/api/vacancies`,
+      locations: `${BASE_URL}/api/vacancies/locations`,
       filter: (params) => {
         const query = new URLSearchParams(params).toString();
         return `${BASE_URL}/api/vacancies/filter/list?${query}`;
@@ -65,5 +66,11 @@ export const ENDPOINTS = {
     create: `${BASE_URL}/api/users/`,
     update: (email) => `${BASE_URL}/api/users/${email}`,
     delete: (email) => `${BASE_URL}/api/users/${email}`,
+  },
+  calendar: {
+    list: `${BASE_URL}/api/calendar/`,
+    create: `${BASE_URL}/api/calendar/`,
+    update: (id) => `${BASE_URL}/api/calendar/${id}`,
+    delete: (id) => `${BASE_URL}/api/calendar/${id}`,
   },
 };

@@ -8,6 +8,7 @@ export default function CandidateGrid({
   selectedCandidates,
   onSelectCandidate,
   onUpdateCandidateStatus,
+  onToggleFavorite,
 }) {
   const [viewMode, setViewMode] = useState('grid');
   const [selectedCandidate, setSelectedCandidate] = useState(null);
@@ -76,6 +77,7 @@ export default function CandidateGrid({
                 isSelected={selectedCandidates?.includes(candidate.id)}
                 onSelect={onSelectCandidate}
                 onUpdateStatus={onUpdateCandidateStatus}
+                onToggleFavorite={onToggleFavorite}
               />
             </div>
           ))
@@ -84,9 +86,13 @@ export default function CandidateGrid({
 
       {selectedCandidate && (
         <CandidateModal
-          candidate={selectedCandidate}
+          candidate={
+            filteredCandidates.find((c) => c.id === selectedCandidate.id) ||
+            selectedCandidate
+          }
           onClose={() => setSelectedCandidate(null)}
           onUpdateStatus={onUpdateCandidateStatus}
+          onToggleFavorite={onToggleFavorite}
         />
       )}
     </>

@@ -10,6 +10,7 @@ const mapCandidateData = (c) => ({
   experience: c.experience || 'N/A',
   email: c.email || null,
   isAvailable: c.is_available ?? c.isAvailable ?? false,
+  isFavorite: c.is_favorite ?? c.isFavorite ?? false,
   time: c.created_at
     ? new Date(c.created_at).toLocaleDateString()
     : c.time || 'Reciente',

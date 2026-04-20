@@ -1,16 +1,58 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SourceOriginBadge from '../shared/SourceOriginBadge';
+import {
+  getClienteByNombre,
+  updateEstadoCuenta,
+} from '../../../services/clientesService';
+import CrmEmpresaPanel from '../../crm/CrmEmpresaPanel';
 import './VacancyModal.css';
 
 export default function VacancyModal({ job, onClose, onUpdateStatus }) {
   const [activeTab, setActiveTab] = useState('detalles');
   const [localStatus, setLocalStatus] = useState(job?.status || '');
 
+  // CRM de la EMPRESA asociada a la vacante (Issue #329)
+  const [empresaCrm, setEmpresaCrm] = useState(null);
+  const [loadingEmpresa, setLoadingEmpresa] = useState(false);
+
+  useEffect(() => {
+    // Cargamos el CRM solo cuando se abre la pestaña CRM y hay empresa identificada
+    let cancelado = false;
+    if (activeTab !== 'crm' || !job?.companyName || empresaCrm) return;
+
+    (async () => {
+      try {
+        setLoadingEmpresa(true);
+        const empresa = await getClienteByNombre(job.companyName);
+        if (!cancelado) setEmpresaCrm(empresa);
+      } catch (err) {
+        console.error('Error cargando CRM de la empresa:', err);
+      } finally {
+        if (!cancelado) setLoadingEmpresa(false);
+      }
+    })();
+
+    return () => {
+      cancelado = true;
+    };
+  }, [activeTab, job?.companyName, empresaCrm]);
+
   if (!job) return null;
 
   const handleSave = () => {
     if (onUpdateStatus) onUpdateStatus(job.id, localStatus);
     onClose();
+  };
+
+  const handleUpdateEstadoCuenta = async (nuevoEstado) => {
+    if (!empresaCrm) return;
+    // Optimistic update: el cambio se refleja inmediatamente
+    setEmpresaCrm((prev) => ({ ...prev, estadoCuenta: nuevoEstado }));
+    try {
+      await updateEstadoCuenta(empresaCrm.id, nuevoEstado);
+    } catch (err) {
+      console.error('Error actualizando estado de cuenta:', err);
+    }
   };
 
   const getBadgeClass = (status) => {
@@ -85,10 +127,20 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
                 </li>
                 <li className="nav-item">
                   <button
+                    className={`nav-link ${activeTab === 'crm' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('crm')}
+                    title="Seguimiento comercial vinculado a la empresa"
+                  >
+                    <i className="bi bi-building-check me-2"></i>
+                    CRM Empresa
+                  </button>
+                </li>
+                <li className="nav-item">
+                  <button
                     className={`nav-link ${activeTab === 'seguimiento' ? 'active' : ''}`}
                     onClick={() => setActiveTab('seguimiento')}
                   >
-                    <i className="bi bi-list-check me-2"></i>Seguimiento
+                    <i className="bi bi-list-check me-2"></i>Actividad vacante
                   </button>
                 </li>
                 <li className="nav-item">
@@ -165,10 +217,44 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
                   </div>
                 )}
 
+                {/* TAB CRM EMPRESA — Issue #329 */}
+                {activeTab === 'crm' && (
+                  <div className="tab-pane fade show active">
+                    <div className="detail-section">
+                      <h4 className="section-title">
+                        Seguimiento comercial de la empresa
+                      </h4>
+                      <p className="crm-tab-hint">
+                        <i className="bi bi-info-circle me-2"></i>
+                        Esta información está vinculada a la{' '}
+                        <strong>empresa</strong> ({job.companyName}) y es la
+                        misma para todas sus vacantes.
+                      </p>
+                      {loadingEmpresa ? (
+                        <div className="text-center py-4 text-muted small">
+                          <div
+                            className="spinner-border spinner-border-sm me-2"
+                            role="status"
+                          ></div>
+                          Cargando seguimiento comercial...
+                        </div>
+                      ) : (
+                        <CrmEmpresaPanel
+                          empresa={empresaCrm}
+                          compact
+                          onUpdateEstadoCuenta={handleUpdateEstadoCuenta}
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {activeTab === 'seguimiento' && (
                   <div className="tab-pane fade show active">
                     <div className="detail-section">
-                      <h4 className="section-title">Historial de actividad</h4>
+                      <h4 className="section-title">
+                        Actividad de esta vacante
+                      </h4>
                       {job.seguimiento?.length > 0 ? (
                         <div className="seguimiento-timeline">
                           {job.seguimiento.map((item, i) => (
@@ -188,6 +274,10 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
                         <div className="tab-empty">
                           <i className="bi bi-list-check"></i>
                           <p>No hay actividad registrada aún.</p>
+                          <small className="text-muted">
+                            ¿Buscas el seguimiento comercial? Ahora vive en la
+                            pestaña <strong>CRM Empresa</strong>.
+                          </small>
                         </div>
                       )}
                     </div>
