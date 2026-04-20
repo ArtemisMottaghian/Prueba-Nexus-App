@@ -14,6 +14,8 @@ from app.schemas.candidates_schemas import (
     MessageResponse,
     FavoriteRequest,
 )
+from app.schemas.comments_schemas import CommentCreate, CommentUpdate, CommentResponse
+from app.services import comments_service
 
 router = APIRouter()
 
@@ -120,3 +122,28 @@ async def mark_favorite(
     return {
         "message": f"Candidato {'marcado' if body.favorite else 'desmarcado'} como favorito"
     }
+
+
+# Añadir nota a candidato
+@router.post("/{candidate_id}/comments", response_model=CommentResponse)
+async def create_candidate_note(
+    candidate_id: int,
+    body: CommentCreate,
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        return await comments_service.add_candidate_comment(db, candidate_id, body)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Modificar nota de candidato
+@router.patch("/comments/{comment_id}", response_model=CommentResponse)
+async def modify_candidate_note(
+    comment_id: int,
+    body: CommentUpdate,
+    db: AsyncSession = Depends(get_db)
+):
+    updated_comment = await comments_service.update_candidate_comment(db, comment_id, body.comment)
+    if not updated_comment:
+        raise HTTPException(status_code=404, detail="Nota no encontrada")
+    return updated_comment
