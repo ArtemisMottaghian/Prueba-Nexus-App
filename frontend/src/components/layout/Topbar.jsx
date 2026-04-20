@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import './Topbar.css';
 
 const TITLES = {
@@ -8,16 +8,12 @@ const TITLES = {
   '/clientes': 'Clientes',
 };
 
-export default function Topbar({ onMenuToggle,  }) {
+export default function Topbar({ onMenuToggle }) {
   const [isDarkMode, setIsDarkMode] = useState(false);
-  
 
   const location = useLocation();
-  const navigate = useNavigate();
 
   const pageTitle = TITLES[location.pathname] || 'Dashboard';
-
- 
 
   useEffect(() => {
     const htmlElement = document.documentElement;
