@@ -36,7 +36,7 @@ async def gather_raw_candidates() -> list[dict[str, Any]]:
     
         
         except Exception as e:
-            print(f"Error crítico en {name.upper(): {e}}")
+            print(f"Error crítico en {name.upper()}: {e}")
 
     print(f"Total de {len(raw_candidates)} ofertas conseguidas.")
 
