@@ -1,7 +1,7 @@
 import asyncio
 from typing import Any
 from app.services.scrapers.scraper_candidates_github.runner import extract_github
-from app.services.scrapers.scraper_candidates_pdf_google.runner import extract_pdfs_google
+#from app.services.scrapers.scraper_candidates_pdf_google.runner import extract_pdfs_google
 from sqlalchemy.dialects.postgresql import insert
 
 from app.models.candidates_model import Candidate

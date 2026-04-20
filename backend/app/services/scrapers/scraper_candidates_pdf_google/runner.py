@@ -20,9 +20,9 @@ from .browser import search_google_pdfs
 
 # INICIALIZACIÓN Y CONFIGURACIÓN
 
-load_dotenv()
-client = genai.Client(api_key=os.getenv("GOOGLE_AI_KEY"))
-claude_client = anthropic.AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+#load_dotenv()
+#client = genai.Client(api_key=os.getenv("GOOGLE_AI_KEY"))
+#claude_client = anthropic.AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 LIMIT_FILE = "daily_limit.json"
 MAX_DAILY_CV = 6
