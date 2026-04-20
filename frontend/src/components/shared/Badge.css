@@ -45,3 +45,16 @@
   background-color: var(--color-purple-secondary);
   color: #ffffff !important;
 }
+
+.badge-disponible {
+  background: var(--color-purple-secondary, #7c3aed);
+  color: #ffffff !important;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  border-radius: 6px;
+  padding: 4px 10px;
+  display: block;
+  text-align: center;
+  width: 100%;
+}
