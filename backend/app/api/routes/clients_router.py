@@ -6,6 +6,10 @@ from typing import List
 from app.schemas.clients_schemas import ClientUpdate, ClientOut, ClientDetailOut, ClientCreate, VacancyOut,MessageResponse
 from app.services import clients_service
 from app.db.connection import get_db
+from backend.app.services import comments_service
+
+from app.schemas.comments_schemas import CommentCreate, CommentUpdate, CommentResponse
+from app.services import comments_service
 
 router = APIRouter()
 # --------------------
@@ -104,3 +108,36 @@ async def delete_client(client_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Error de integridad en la base de datos")
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error interno del servidor")
+    
+# Añadir nota a cliente
+@router.post("/{client_id}/comments", response_model=CommentResponse)
+async def create_client_note(
+    client_id: int,
+    body: CommentCreate,
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        return await comments_service.add_client_comment(db, client_id, body)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Modificar nota de cliente
+@router.patch("/comments/{comment_id}", response_model=CommentResponse)
+async def modify_client_note(
+    comment_id: int,
+    body: CommentUpdate,
+    db: AsyncSession = Depends(get_db)
+):
+    updated_comment = await comments_service.update_client_comment(db, comment_id, body.comment)
+    if not updated_comment:
+        raise HTTPException(status_code=404, detail="Nota no encontrada")
+    return updated_comment
+
+#obtener notas de cliente
+@router.get("/{client_id}/comments", response_model=List[CommentResponse])
+async def read_client_notes(
+    client_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    comentarios = await comments_service.get_client_comments(db, client_id)
+    return comentarios

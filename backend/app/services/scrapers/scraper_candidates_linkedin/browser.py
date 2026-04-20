@@ -6,8 +6,19 @@ from dotenv import load_dotenv
 # Forzamos la lectura del archivo .env
 load_dotenv()
 
-async def get_browser_context(headless: bool = True):
+async def get_browser_context(headless: bool = False):
+    """
+    Inicializa y configura una instancia del navegador utilizando Playwright.
+    Aplica configuraciones para simular un entorno humano (User-Agent real,
+    evitar detección de automatización) e inyecta la cookie de sesión de LinkedIn.
 
+    Args:
+        headless (bool): Indica si el navegador debe ejecutarse en modo oculto (True) o visible (False).
+
+    Returns:
+        tuple: Una tupla que contiene las instancias de (playwright, browser, context)
+               si se inicializa correctamente. Si falla, devuelve (None, None, None).
+    """
     # Inicializa el navegador con Playright y le aplica configuraciones para simular un enetorno humano y evitar bloqueos
 
     proxy_server = os.getenv("PROXY_SERVER")
