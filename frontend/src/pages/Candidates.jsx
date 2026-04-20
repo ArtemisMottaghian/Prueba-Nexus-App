@@ -150,13 +150,6 @@ export default function Candidates() {
 
   return (
     <>
-      <div className="mb-4">
-        <h2 className="page-title mb-1">Directorio de Candidatos</h2>
-        <p className="text-muted">
-          Gestiona los perfiles captados por el sistema.
-        </p>
-      </div>
-
       <FilterBar
         filters={filters}
         onFilterChange={handleFilterChange}
