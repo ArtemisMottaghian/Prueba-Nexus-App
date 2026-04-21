@@ -92,18 +92,32 @@ async def fetch_category_jobs(client: httpx.AsyncClient, category: str) -> list[
         "category": category,
     }
 
-    try:
-        response = await client.get(url, params=params)
-        response.raise_for_status()
-        data = response.json()
-        return data.get("results", [])
-    except Exception as e:
-        await log_scraper_error(
-            error_code="SCRAPER_ADZUNA_HTTP",
-            message=f"scraper=adzuna | stage=request | category={category} | exc={e}"
-        )
-        print(f"Error al conectar con Adzuna en categoría '{category}': {str(e)}")
-        return []
+    max_retries = 3
+    delays = [10, 60, 200]
+
+    for attempt in range(max_retries):
+        try:
+            response = await client.get(
+                url, params=params, timeout=30.0
+            )
+
+            if response.status_code in [503, 429]:
+                wait_time = delays[attempt]
+                print(
+                    f"Adzuna (Error {response.status_code}). Reintento {attempt + 1} en {wait_time}s..."
+                )
+                await asyncio.sleep(wait_time)
+                continue
+
+            response.raise_for_status()
+            return response.json().get("results", [])
+
+        except Exception as e:
+            if attempt == max_retries - 1:
+                return []
+            await asyncio.sleep(delays[attempt])
+
+    return []
 
 
 async def extract_adzuna(categories: list[str] = None) -> list[dict]:
@@ -155,4 +169,3 @@ async def extract_adzuna(categories: list[str] = None) -> list[dict]:
 #     print(f"Se han extraido {len(resultados)} ofertas de Adzuna.")
 #     for resultado in resultados:
 #         print(resultado)
-

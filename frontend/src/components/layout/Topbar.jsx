@@ -1,35 +1,47 @@
-import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useState, useLayoutEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import './Topbar.css';
 
 const TITLES = {
   '/': 'Dashboard',
   '/vacantes': 'Vacantes',
+  '/candidatos': 'Candidatos',
   '/clientes': 'Clientes',
+  '/inbox': 'Inbox',
+  '/calendar': 'Calendario',
+  '/analitica': 'Analítica',
+  '/smart-match': 'Smart Match',
+  '/scraping': 'Scraping & Fuentes',
+  '/settings': 'Configuración',
+  '/users': 'Gestión de Usuarios',
 };
 
-export default function Topbar({ onMenuToggle, onActivityToggle }) {
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [busqueda, setBusqueda] = useState('');
+const THEME_KEY = 'nexus-theme';
+
+export default function Topbar({ onMenuToggle }) {
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    try {
+      return localStorage.getItem(THEME_KEY) === 'dark';
+    } catch {
+      return false;
+    }
+  });
 
   const location = useLocation();
-  const navigate = useNavigate();
 
   const pageTitle = TITLES[location.pathname] || 'Dashboard';
 
-  // Ejecuta la búsqueda al pulsar Enter
-  const manejarBusqueda = (e) => {
-    if (e.key === 'Enter') {
-      navigate(`/vacantes?q=${encodeURIComponent(busqueda.trim())}`);
-    }
-  };
-
-  useEffect(() => {
-    const htmlElement = document.documentElement;
+  useLayoutEffect(() => {
+    const html = document.documentElement;
     if (isDarkMode) {
-      htmlElement.setAttribute('data-bs-theme', 'dark');
+      html.setAttribute('data-bs-theme', 'dark');
     } else {
-      htmlElement.removeAttribute('data-bs-theme');
+      html.removeAttribute('data-bs-theme');
+    }
+    try {
+      localStorage.setItem(THEME_KEY, isDarkMode ? 'dark' : 'light');
+    } catch {
+      /* ignore */
     }
   }, [isDarkMode]);
 
@@ -44,17 +56,6 @@ export default function Topbar({ onMenuToggle, onActivityToggle }) {
         </div>
 
         <div className="d-flex align-items-center gap-2 gap-md-3">
-          <div className="topbar-search d-none d-md-flex">
-            <i className="bi bi-search"></i>
-            <input
-              type="text"
-              placeholder="Buscar vacantes..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              onKeyDown={manejarBusqueda}
-            />
-          </div>
-
           <button
             className="btn-icon"
             onClick={() => setIsDarkMode(!isDarkMode)}
@@ -67,17 +68,9 @@ export default function Topbar({ onMenuToggle, onActivityToggle }) {
             )}
           </button>
 
-          <button
-            className="btn-icon position-relative"
-            onClick={onActivityToggle}
-          >
-            <i className="bi bi-bell"></i>
-            <span className="notification-dot"></span>
-          </button>
-
           <div className="topbar-avatar">
             <div className="avatar-fallback">
-              <span>CM</span>
+              <span>A</span>
             </div>
           </div>
         </div>

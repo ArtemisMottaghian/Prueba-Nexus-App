@@ -9,9 +9,13 @@
   border: 1px solid var(--clr-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
   color: var(--clr-text);
   margin-top: 10px;
+}
+
+[data-bs-theme='dark'] .inbox-container {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
 /* --- Sidebar del Inbox --- */

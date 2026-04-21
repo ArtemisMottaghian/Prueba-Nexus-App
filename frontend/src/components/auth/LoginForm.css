@@ -4,30 +4,27 @@
    cyan acento (#00d4ff), texto blanco/gris
    =================================================== */
 
-/* ---------- Variables ---------- */
-:root {
-  --clr-bg:          #0d0d14;
-  --clr-surface:     #13131f;
-  --clr-surface-2:   #1a1a2e;
-  --clr-border:      rgba(124, 58, 237, 0.25);
-  --clr-purple:      #7c3aed;
-  --clr-purple-light:#9b5de5;
-  --clr-cyan:        #00d4ff;
-  --clr-text:        #e8e8f0;
-  --clr-text-muted:  #7a7a9a;
-  --clr-error:       #f87171;
-  --clr-error-bg:    rgba(248, 113, 113, 0.08);
-  --clr-error-border:rgba(248, 113, 113, 0.45);
+/* Variables + layout: el login sigue en tema oscuro Nexus sin pisar --clr-* globales. */
+.login-wrapper {
+  --clr-bg: #0d0d14;
+  --clr-surface: #13131f;
+  --clr-surface-2: #1a1a2e;
+  --clr-border: rgba(124, 58, 237, 0.25);
+  --clr-purple: #7c3aed;
+  --clr-purple-light: #9b5de5;
+  --clr-cyan: #00d4ff;
+  --clr-text: #e8e8f0;
+  --clr-text-muted: #7a7a9a;
+  --clr-error: #f87171;
+  --clr-error-bg: rgba(248, 113, 113, 0.08);
+  --clr-error-border: rgba(248, 113, 113, 0.45);
 
-  --radius-sm:  8px;
-  --radius-md:  14px;
-  --radius-lg:  20px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
 
   --transition: 0.22s ease;
-}
 
-/* ---------- Wrapper y fondo ---------- */
-.login-wrapper {
   position: relative;
   display: flex;
   align-items: center;

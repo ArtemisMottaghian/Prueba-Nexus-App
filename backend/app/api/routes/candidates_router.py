@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List,Optional
 
@@ -6,6 +6,7 @@ from app.db.connection import get_db
 from app.services import candidates_service
 from app.schemas.candidates_schemas import (
     CandidateFrontendOut,
+    CandidateStatus,
     CandidateStatusUpdate,
     CandidateStatusOut,
     CandidateCreate,
@@ -16,6 +17,8 @@ from app.schemas.candidates_schemas import (
     CandidateScraperStatusOut,
     VerifyRequest,
 )
+from app.schemas.comments_schemas import CommentCreate, CommentUpdate, CommentResponse
+from app.services import comments_service
 
 router = APIRouter()
 
@@ -28,12 +31,26 @@ router = APIRouter()
 async def read_candidates(
     location: Optional[str] = None,
     skills: Optional[str] = None,
-    status: Optional[str] = None,
+    status: Optional[CandidateStatus] = None,
     source: Optional[str] = None,
     verified: Optional[bool] = None,
     db: AsyncSession = Depends(get_db)
 ):
     return await candidates_service.get_all_candidates(db, location, skills, status, source,verified)
+
+#busqueda por nombre o apellido
+@router.get("/search", response_model=List[CandidateFrontendOut])
+async def search_candidates(
+    name: str = Query(..., min_length=3, description="Nombre o apellido a buscar"),
+    db: AsyncSession = Depends(get_db)
+):
+    candidates = await candidates_service.search_candidates_by_name(db, name)
+
+    #  devuelve un 404 cuando no hay resultados
+    if not candidates:
+        raise HTTPException(status_code=404, detail="No se encontraron candidatos con ese nombre")
+
+    return candidates
 
 # -----------------
 # Estado de los scrapers de candidatos
@@ -43,6 +60,7 @@ async def read_candidates(
 async def get_scraper_status(db: AsyncSession = Depends(get_db)):
     """Devuelve el estado de cada scraper de candidatos."""
     return await candidates_service.get_scraper_status(db)
+
 
 # --------------------
 # obtener candidato
@@ -95,15 +113,15 @@ async def update_candidate(
 
 @router.patch("/{candidate_id}/status", response_model=CandidateStatusOut)
 async def update_candidate_status(
-    candidate_id: int, 
-    payload: CandidateStatusUpdate, 
+    candidate_id: int,
+    payload: CandidateStatusUpdate,
     db: AsyncSession = Depends(get_db)
 ):
     """Actualiza únicamente el estado de un candidato."""
     candidate = await candidates_service.update_status(db, candidate_id, payload.status)
     if not candidate:
         raise HTTPException(status_code=404, detail="Candidato no encontrado")
-    
+
     return candidate
 
 # --------------------

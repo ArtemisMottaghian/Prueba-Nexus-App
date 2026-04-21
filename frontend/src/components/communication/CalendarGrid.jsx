@@ -15,8 +15,21 @@ const EVENT_TYPES = {
 
 const PREDEFINED_OPTIONS = Object.keys(EVENT_TYPES);
 
+const LS_CALENDAR_KEY = 'nexus_calendar_events';
+
+const saveEventsToStorage = (evts) =>
+  localStorage.setItem(LS_CALENDAR_KEY, JSON.stringify(evts));
+
+const loadEventsFromStorage = () => {
+  try {
+    return JSON.parse(localStorage.getItem(LS_CALENDAR_KEY) || '[]');
+  } catch {
+    return [];
+  }
+};
+
 export default function Calendario() {
-  const [events, setEvents] = useState([]);
+  const [events, setEvents] = useState(() => loadEventsFromStorage());
   const [googleNotConnected, setGoogleNotConnected] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState(null);
@@ -32,7 +45,7 @@ export default function Calendario() {
     eventsRef.current = events;
   }, [events]);
 
-  // Cargar eventos desde Google Calendar al montar
+  // Cargar eventos desde Google Calendar al montar; fallback a localStorage
   useEffect(() => {
     authFetch(ENDPOINTS.calendar.list)
       .then((res) => {
@@ -58,9 +71,17 @@ export default function Calendario() {
             notified: false,
           };
         });
-        setEvents(mapped);
+        // Fusionar eventos de API con locales (priorizamos API, añadimos solo los locales no encontrados)
+        const localEvts = loadEventsFromStorage();
+        const apiIds = new Set(mapped.map((e) => e.id));
+        const onlyLocal = localEvts.filter((e) => !apiIds.has(e.id));
+        const merged = [...mapped, ...onlyLocal];
+        setEvents(merged);
+        saveEventsToStorage(merged);
       })
-      .catch(() => {});
+      .catch(() => {
+        // Backend offline: ya usamos los eventos de localStorage (estado inicial)
+      });
   }, []);
 
   const closeModal = useCallback(() => {
@@ -132,58 +153,79 @@ export default function Calendario() {
     const endHour = String(h + 1).padStart(2, '0');
     const endIso = `${datePart}T${endHour}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 
-    const payload = {
-      title: type,
-      description,
-      start: startIso,
-      end: endIso,
-    };
+    const payload = { title: type, description, start: startIso, end: endIso };
+
+    let updatedEvents;
 
     if (editingEventId) {
-      const res = await authFetch(ENDPOINTS.calendar.update(editingEventId), {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (res.ok) {
-        setEvents(
-          events.map((e) =>
-            e.id === editingEventId
-              ? { ...e, text: type, description, time, date: selectedDate }
-              : e
-          )
-        );
+      // Actualizar estado local siempre (con o sin API)
+      updatedEvents = events.map((e) =>
+        e.id === editingEventId
+          ? { ...e, text: type, description, time, date: selectedDate }
+          : e
+      );
+      setEvents(updatedEvents);
+      saveEventsToStorage(updatedEvents);
+
+      try {
+        const res = await authFetch(ENDPOINTS.calendar.update(editingEventId), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error('API error');
+      } catch {
+        // Persistido localmente
       }
     } else {
-      const res = await authFetch(ENDPOINTS.calendar.create, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (res.ok) {
-        const created = await res.json();
-        setEvents([
-          ...events,
-          {
-            id: created.id,
-            text: type,
-            description,
-            time,
-            date: selectedDate,
-            notified: false,
-          },
-        ]);
+      // Generar ID local provisional mientras esperamos la API
+      const localId = `local_${Date.now()}`;
+      const newEvent = {
+        id: localId,
+        text: type,
+        description,
+        time,
+        date: selectedDate,
+        notified: false,
+      };
+      updatedEvents = [...events, newEvent];
+      setEvents(updatedEvents);
+      saveEventsToStorage(updatedEvents);
+
+      try {
+        const res = await authFetch(ENDPOINTS.calendar.create, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          const created = await res.json();
+          // Reemplazar ID local por el real del servidor
+          setEvents((prev) =>
+            prev.map((e) => (e.id === localId ? { ...e, id: created.id } : e))
+          );
+          saveEventsToStorage(
+            updatedEvents.map((e) =>
+              e.id === localId ? { ...e, id: created.id } : e
+            )
+          );
+        }
+      } catch {
+        // Persistido localmente con ID provisional
       }
     }
     closeModal();
   };
 
   const deleteEvent = async (id) => {
-    const res = await authFetch(ENDPOINTS.calendar.delete(id), {
-      method: 'DELETE',
-    });
-    if (res.ok) {
-      setEvents(events.filter((e) => e.id !== id));
+    const updatedEvents = events.filter((e) => e.id !== id);
+    setEvents(updatedEvents);
+    saveEventsToStorage(updatedEvents);
+
+    try {
+      await authFetch(ENDPOINTS.calendar.delete(id), { method: 'DELETE' });
+    } catch {
+      // Eliminado localmente
     }
   };
 
@@ -192,6 +234,7 @@ export default function Calendario() {
       window.confirm('¿Estás seguro de que quieres borrar todos los eventos?')
     ) {
       setEvents([]);
+      saveEventsToStorage([]);
     }
   };
 

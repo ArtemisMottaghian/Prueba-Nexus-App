@@ -133,9 +133,6 @@ class ScraperStatusItem(BaseModel):
 class CandidateScraperStatusOut(BaseModel):
     scrapers: list[ScraperStatusItem]
 
-class VerifyRequest(BaseModel):
-    verified: bool
-
 # Schema para marcar como favorita
 class FavoriteRequest(BaseModel):
     favorite: bool

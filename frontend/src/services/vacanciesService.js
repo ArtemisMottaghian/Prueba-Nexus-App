@@ -162,4 +162,42 @@ export const vacanciesService = {
       throw new Error('Error al actualizar el estado de la vacante');
     return response.json();
   },
+
+  // Actualizar datos completos de una vacante
+  updateVacancy: async (id, data) => {
+    try {
+      const response = await authFetch(
+        ENDPOINTS.recruitment.vacantes.detail(id),
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        }
+      );
+      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error(`Error al actualizar vacante ${id}:`, error);
+      throw error;
+    }
+  },
+
+  // Añadir nota al historial de una vacante
+  addNote: async (id, texto) => {
+    try {
+      const response = await authFetch(
+        ENDPOINTS.recruitment.vacantes.detail(id) + '/notes',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ texto }),
+        }
+      );
+      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error(`Error al añadir nota a vacante ${id}:`, error);
+      throw error;
+    }
+  },
 };

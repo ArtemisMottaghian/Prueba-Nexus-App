@@ -7,10 +7,6 @@ from app.schemas.metrics_schemas import LeadMetrics,  ScrapersStatusResponse
 
 router = APIRouter()
 
-# -----------------
-# Obtener metricas
-# GET /api/metrics
-# -----------------
 
 @router.get("", response_model=LeadMetrics)
 async def read_metrics(
@@ -18,7 +14,6 @@ async def read_metrics(
     end: datetime = Query(None, alias="to"),
     db: AsyncSession = Depends(get_db)
 ):
-    # ultimos 30 dias por defecto
     if not end:
         end = datetime.now(timezone.utc)
     if not start:

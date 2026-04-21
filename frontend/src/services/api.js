@@ -1,8 +1,4 @@
-/**
- * Origen del backend (host + puerto), sin /api final.
- * Las rutas abajo ya incluyen /api/...
- * Si VITE_API_URL lleva .../api al final, se normaliza para evitar /api/api/...
- */
+// Base del backend (VITE_API_URL); quita /api final para no duplicar rutas.
 function resolveApiOrigin() {
   const raw = import.meta.env.VITE_API_URL || 'http://localhost:8000';
   let base = raw.trim().replace(/\/+$/, '');
@@ -37,6 +33,7 @@ export const ENDPOINTS = {
   recruitment: {
     candidatos: {
       list: `${BASE_URL}/api/candidates`,
+      scraperStatus: `${BASE_URL}/api/candidates/scraper-status`,
       filter: (params) => {
         const query = new URLSearchParams(params).toString();
         return `${BASE_URL}/api/candidates/filter/list?${query}`;
@@ -60,6 +57,7 @@ export const ENDPOINTS = {
   metrics: {
     leadStats: (fromIso, toIso) =>
       `${BASE_URL}/api/metrics?from=${encodeURIComponent(fromIso)}&to=${encodeURIComponent(toIso)}`,
+    scrapersStatus: `${BASE_URL}/api/metrics/scrapers/status`,
   },
   users: {
     list: `${BASE_URL}/api/users/`,

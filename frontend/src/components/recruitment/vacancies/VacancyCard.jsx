@@ -1,3 +1,4 @@
+import SourceOriginBadge from '../shared/SourceOriginBadge';
 import './VacancyCard.css';
 
 export default function VacancyCard({
@@ -139,10 +140,7 @@ export default function VacancyCard({
       </div>
 
       <div className="vacante-footer">
-        <div className="origin-badge">
-          <i className="bi bi-linkedin"></i>
-          <span>{job.source}</span>
-        </div>
+        <SourceOriginBadge source={job.source} />
         <span className="vacante-date">{job.time}</span>
       </div>
     </div>
