@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
@@ -148,3 +148,20 @@ async def get_scraper_status(db: AsyncSession) -> CandidateScraperStatusOut:
         ))
 
     return CandidateScraperStatusOut(scrapers=result_list)
+
+async def search_candidates_by_name(db: AsyncSession, search_term: str) -> List[Candidate]:
+    """Busca candidatos cuyo nombre o apellido contenga el término de búsqueda."""
+    
+    # buscador de nombre y/o apellidos
+    search_pattern = f"%{search_term}%"
+    
+    query = select(Candidate).where(
+        or_(
+            Candidate.first_name.ilike(search_pattern),
+            Candidate.last_name.ilike(search_pattern),
+            func.concat(Candidate.first_name, ' ', Candidate.last_name).ilike(search_pattern)
+        )
+    ).order_by(Candidate.first_name)
+    
+    result = await db.execute(query)
+    return result.scalars().all()
