@@ -38,10 +38,7 @@ const InboxPage = () => {
   };
 
   return (
-    <div
-      className="inbox-page-wrapper"
-      style={{ padding: '20px', height: '100%' }}
-    >
+    <div className="inbox-page-wrapper">
       <InboxComponent
         conversations={conversations}
         onSelectConversation={handleSelectConversation}
