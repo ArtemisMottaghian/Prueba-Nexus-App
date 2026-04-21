@@ -45,6 +45,38 @@ function formatDate(isoString) {
   return d.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
 }
 
+function VacancyScraperCard({ scraperKey, data }) {
+  const cfg = STATUS_CONFIG[data.status] || STATUS_CONFIG.unknown;
+  const label = SCRAPER_LABELS[scraperKey] || scraperKey;
+  const fecha = formatDate(data.last_extraction);
+
+  return (
+    <div className="col-12 col-md-4">
+      <div className={`source-card ${cfg.cls} justify-content-between`}>
+        <div className="d-flex align-items-center">
+          <div className={`source-icon-wrapper ${cfg.iconCls}`}>
+            <i className={`bi ${cfg.icon}`}></i>
+          </div>
+          <div className="source-info">
+            <h6 className="text-body">{label}</h6>
+            <span className={`source-status-text ${cfg.textCls}`}>
+              {cfg.label}
+            </span>
+            <div className="text-muted" style={{ fontSize: '0.7rem' }}>
+              {fecha ? `Extracción: ${fecha}` : 'Sin extracciones'}
+            </div>
+          </div>
+        </div>
+        {data.status === 'error' && (
+          <button className="btn-icon btn-icon-sm" title="Reiniciar Bot">
+            <i className="bi bi-arrow-clockwise text-danger"></i>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function SourceStatus() {
   const [scrapers, setScrapers] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -85,7 +117,7 @@ export default function SourceStatus() {
         <h3 className="source-status-section__title h6 fw-semibold mb-3">
           Scrapers de vacantes
         </h3>
-        <p className="text-muted small mb-0">Cargando estado de scrapers…</p>
+        <p className="text-muted small mb-0">Cargando estado de scrapers...</p>
       </section>
     );
   }
@@ -109,40 +141,9 @@ export default function SourceStatus() {
         Scrapers de vacantes
       </h3>
       <div className="row g-3">
-        {Object.entries(scrapers).map(([key, data]) => {
-          const cfg = STATUS_CONFIG[data.status] || STATUS_CONFIG.unknown;
-          const label = SCRAPER_LABELS[key] || key;
-          const fecha = formatDate(data.last_extraction);
-
-          return (
-            <div className="col-12 col-md-4" key={key}>
-              <div className={`source-card ${cfg.cls} justify-content-between`}>
-                <div className="d-flex align-items-center">
-                  <div className={`source-icon-wrapper ${cfg.iconCls}`}>
-                    <i className={`bi ${cfg.icon}`}></i>
-                  </div>
-                  <div className="source-info">
-                    <h6 className="text-body">{label}</h6>
-                    <span className={`source-status-text ${cfg.textCls}`}>
-                      {cfg.label}
-                    </span>
-                    <div className="text-muted" style={{ fontSize: '0.7rem' }}>
-                      {fecha ? `Extracción: ${fecha}` : 'Sin extracciones'}
-                    </div>
-                  </div>
-                </div>
-                {data.status === 'error' && (
-                  <button
-                    className="btn-icon btn-icon-sm"
-                    title="Reiniciar Bot"
-                  >
-                    <i className="bi bi-arrow-clockwise text-danger"></i>
-                  </button>
-                )}
-              </div>
-            </div>
-          );
-        })}
+        {Object.entries(scrapers).map(([key, data]) => (
+          <VacancyScraperCard key={key} scraperKey={key} data={data} />
+        ))}
       </div>
     </section>
   );
