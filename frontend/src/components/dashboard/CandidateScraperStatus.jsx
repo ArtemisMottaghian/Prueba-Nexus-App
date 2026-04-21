@@ -57,7 +57,9 @@ export default function CandidateScraperStatus() {
       try {
         setLoading(true);
         setError(null);
-        const res = await authFetch(ENDPOINTS.recruitment.candidatos.scraperStatus);
+        const res = await authFetch(
+          ENDPOINTS.recruitment.candidatos.scraperStatus
+        );
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
         }
@@ -137,12 +139,12 @@ export default function CandidateScraperStatus() {
                   </div>
                   <div className="source-info flex-grow-1 min-w-0">
                     <h6 className="text-body mb-0">{item.name}</h6>
-                    <span className={`source-status-text ${cfg.textCls} d-block`}>
+                    <span
+                      className={`source-status-text ${cfg.textCls} d-block`}
+                    >
                       {cfg.label}
                     </span>
-                    <div
-                      className="text-muted candidate-scraper-status__meta"
-                    >
+                    <div className="text-muted candidate-scraper-status__meta">
                       {fecha
                         ? `Extracción: ${fecha}`
                         : 'Sin extracciones registradas'}
