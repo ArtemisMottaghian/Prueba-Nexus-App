@@ -13,6 +13,10 @@ export default function Candidates() {
     industry: 'All',
     location: 'All',
     source: 'All',
+    habilidades: 'All',
+    disponibilidad: 'All',
+    experiencia: 'All',
+    provincia: 'All',
   });
 
   const [selectedCandidates, setSelectedCandidates] = useState([]);
@@ -74,6 +78,10 @@ export default function Candidates() {
       industry: 'All',
       location: 'All',
       source: 'All',
+      habilidades: 'All',
+      disponibilidad: 'All',
+      experiencia: 'All',
+      provincia: 'All',
     });
   };
 
@@ -95,6 +103,27 @@ export default function Candidates() {
     );
   };
 
+  // Opciones derivadas de los datos cargados para los filtros de candidatos
+  const skillsOptions = [...new Set(candidates.map((c) => c.specialty).filter(Boolean))].sort();
+  const provinciaOptions = [...new Set(candidates.map((c) => c.location).filter(Boolean))].sort();
+
+  const DISPONIBILIDAD_OPTIONS = [
+    { value: 'disponible', label: 'Disponible' },
+    { value: 'no_disponible', label: 'No disponible' },
+  ];
+
+  const EXPERIENCIA_OPTIONS = [
+    { value: '0-2', label: '0 – 2 años' },
+    { value: '3-5', label: '3 – 5 años' },
+    { value: '6+', label: '6 o más años' },
+  ];
+
+  const parseExperienciaAnios = (exp) => {
+    if (!exp) return 0;
+    const match = String(exp).match(/\d+/);
+    return match ? parseInt(match[0], 10) : 0;
+  };
+
   // Lógica de filtrado
   const filteredCandidates = candidates.filter((candidate) => {
     const matchEstado =
@@ -106,7 +135,41 @@ export default function Candidates() {
     const matchOrigen =
       filters.source === 'All' || candidate.source === filters.source;
 
-    return matchEstado && matchEspecialidad && matchUbicacion && matchOrigen;
+    // Habilidades (#108)
+    const matchHabilidades =
+      filters.habilidades === 'All' || candidate.specialty === filters.habilidades;
+
+    // Disponibilidad (#108)
+    const matchDisponibilidad = (() => {
+      if (filters.disponibilidad === 'All') return true;
+      const isAvail = candidate.isAvailable ?? candidate.is_available ?? false;
+      return filters.disponibilidad === 'disponible' ? isAvail : !isAvail;
+    })();
+
+    // Experiencia (#108)
+    const matchExperiencia = (() => {
+      if (filters.experiencia === 'All') return true;
+      const anios = parseExperienciaAnios(candidate.experience);
+      if (filters.experiencia === '0-2') return anios >= 0 && anios <= 2;
+      if (filters.experiencia === '3-5') return anios >= 3 && anios <= 5;
+      if (filters.experiencia === '6+') return anios >= 6;
+      return true;
+    })();
+
+    // Provincia (#108)
+    const matchProvincia =
+      filters.provincia === 'All' || candidate.location === filters.provincia;
+
+    return (
+      matchEstado &&
+      matchEspecialidad &&
+      matchUbicacion &&
+      matchOrigen &&
+      matchHabilidades &&
+      matchDisponibilidad &&
+      matchExperiencia &&
+      matchProvincia
+    );
   });
 
   // Reset página al cambiar filtros
@@ -150,22 +213,26 @@ export default function Candidates() {
 
   return (
     <>
-      <div className="mb-4">
-        <h2 className="page-title mb-1">Directorio de Candidatos</h2>
-        <p className="text-muted">
-          Gestiona los perfiles captados por el sistema.
-        </p>
-      </div>
-
       <FilterBar
         filters={filters}
         onFilterChange={handleFilterChange}
         onClearFilters={handleClearFilters}
-        statusOptions={[{ value: 'active', label: 'Activo' }]}
+        statusOptions={[
+          { value: 'Nuevo', label: 'Nuevo' },
+          { value: 'Contactado', label: 'Contactado' },
+          { value: 'En proceso', label: 'En proceso' },
+          { value: 'Descartado', label: 'Descartado' },
+        ]}
         sourceOptions={[
+          { value: 'LinkedIn', label: 'LinkedIn' },
+          { value: 'InfoJobs', label: 'InfoJobs' },
           { value: 'Carga Manual', label: 'Carga Manual' },
           { value: 'GitHub API', label: 'GitHub API' },
         ]}
+        skillsOptions={skillsOptions}
+        disponibilidadOptions={DISPONIBILIDAD_OPTIONS}
+        experienciaOptions={EXPERIENCIA_OPTIONS}
+        provinciaOptions={provinciaOptions}
       />
 
       {!loading && (

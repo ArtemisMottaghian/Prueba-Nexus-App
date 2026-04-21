@@ -1,3 +1,4 @@
+import SourceOriginBadge from '../shared/SourceOriginBadge';
 import './CandidateCard.css';
 
 export default function CandidateCard({
@@ -126,7 +127,7 @@ export default function CandidateCard({
           <div className="d-flex flex-column">
             <span className="detail-text">{candidate.specialty}</span>
             {candidate.isAvailable && (
-              <span className="badge mt-1 badge-client">Disponible</span>
+              <span className="badge mt-1 badge-disponible">Disponible</span>
             )}
           </div>
         </div>
@@ -147,10 +148,7 @@ export default function CandidateCard({
       </div>
 
       <div className="vacante-footer">
-        <div className="origin-badge">
-          <i className="bi bi-linkedin"></i>
-          <span>{candidate.source}</span>
-        </div>
+        <SourceOriginBadge source={candidate.source} />
         <span className="vacante-date">{candidate.time}</span>
       </div>
     </div>

@@ -1,14 +1,21 @@
 import { useState, useEffect } from 'react';
+import SourceOriginBadge from '../shared/SourceOriginBadge';
 import {
   getClienteByNombre,
   updateEstadoCuenta,
 } from '../../../services/clientesService';
+import { vacanciesService } from '../../../services/vacanciesService';
 import CrmEmpresaPanel from '../../crm/CrmEmpresaPanel';
 import './VacancyModal.css';
 
-export default function VacancyModal({ job, onClose, onUpdateStatus }) {
+export default function VacancyModal({ job, onClose, onUpdateStatus, onToggleFavorite }) {
   const [activeTab, setActiveTab] = useState('detalles');
   const [localStatus, setLocalStatus] = useState(job?.status || '');
+  const [localIsFavorite, setLocalIsFavorite] = useState(job?.isFavorite || false);
+  const [localSeguimiento, setLocalSeguimiento] = useState(job?.seguimiento || []);
+  const [noteText, setNoteText] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   // CRM de la EMPRESA asociada a la vacante (Issue #329)
   const [empresaCrm, setEmpresaCrm] = useState(null);
@@ -38,9 +45,42 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
 
   if (!job) return null;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (onUpdateStatus) onUpdateStatus(job.id, localStatus);
-    onClose();
+    try {
+      await vacanciesService.updateVacancy(job.id, { status: localStatus });
+    } catch {
+      // Persiste localmente vía Vacancies.jsx (handleUpdateJobStatus ya lo guarda en LS)
+    }
+    setSaveSuccess(true);
+    setTimeout(() => {
+      setSaveSuccess(false);
+      onClose();
+    }, 800);
+  };
+
+  const handleToggleFavoriteModal = () => {
+    const newFav = !localIsFavorite;
+    setLocalIsFavorite(newFav);
+    if (onToggleFavorite) onToggleFavorite(job.id, localIsFavorite);
+  };
+
+  const handleAddNote = async () => {
+    if (!noteText.trim()) return;
+    setSavingNote(true);
+    const nuevaNota = {
+      texto: noteText.trim(),
+      fecha: new Date().toLocaleDateString('es-ES'),
+    };
+    setLocalSeguimiento((prev) => [nuevaNota, ...prev]);
+    setNoteText('');
+    try {
+      await vacanciesService.addNote(job.id, nuevaNota.texto);
+    } catch {
+      // Nota añadida localmente, se sincronizará cuando el backend esté disponible
+    } finally {
+      setSavingNote(false);
+    }
   };
 
   const handleUpdateEstadoCuenta = async (nuevoEstado) => {
@@ -108,9 +148,10 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
                 </select>
                 <button
                   className="btn-icon btn-star-toggle"
-                  title="Marcar favorita"
+                  title={localIsFavorite ? 'Quitar de favoritos' : 'Marcar favorita'}
+                  onClick={handleToggleFavoriteModal}
                 >
-                  <i className="bi bi-star-fill"></i>
+                  <i className={localIsFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'}></i>
                 </button>
               </div>
 
@@ -187,7 +228,9 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
                           <div>
                             <div className="field-label">Fuente</div>
                             <div className="field-value">
-                              {job.source || 'Nexus'}
+                              <SourceOriginBadge
+                                source={job.source || 'Nexus'}
+                              />
                             </div>
                           </div>
                         </div>
@@ -249,12 +292,36 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
                 {activeTab === 'seguimiento' && (
                   <div className="tab-pane fade show active">
                     <div className="detail-section">
-                      <h4 className="section-title">
-                        Actividad de esta vacante
-                      </h4>
-                      {job.seguimiento?.length > 0 ? (
+                      <h4 className="section-title">Actividad de esta vacante</h4>
+
+                      {/* Formulario para añadir nota */}
+                      <div className="add-note-form mb-4">
+                        <textarea
+                          className="form-control input-field mb-2"
+                          rows={2}
+                          placeholder="Escribe una nota o actividad..."
+                          value={noteText}
+                          onChange={(e) => setNoteText(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && e.ctrlKey) handleAddNote();
+                          }}
+                        />
+                        <button
+                          className="btn btn-primary-custom btn-sm"
+                          onClick={handleAddNote}
+                          disabled={savingNote || !noteText.trim()}
+                        >
+                          {savingNote ? (
+                            <><span className="spinner-border spinner-border-sm me-2" role="status" />Guardando...</>
+                          ) : (
+                            <><i className="bi bi-plus-circle me-2"></i>Agregar nota</>
+                          )}
+                        </button>
+                      </div>
+
+                      {localSeguimiento.length > 0 ? (
                         <div className="seguimiento-timeline">
-                          {job.seguimiento.map((item, i) => (
+                          {localSeguimiento.map((item, i) => (
                             <div key={i} className="seguimiento-item">
                               <div className="seguimiento-dot"></div>
                               <div className="seguimiento-card">
@@ -330,8 +397,13 @@ export default function VacancyModal({ job, onClose, onUpdateStatus }) {
                 type="button"
                 className="btn btn-primary-custom"
                 onClick={handleSave}
+                disabled={saveSuccess}
               >
-                <i className="bi bi-check-circle me-2"></i>Guardar cambios
+                {saveSuccess ? (
+                  <><i className="bi bi-check2-all me-2"></i>¡Guardado!</>
+                ) : (
+                  <><i className="bi bi-check-circle me-2"></i>Guardar cambios</>
+                )}
               </button>
             </div>
           </div>
