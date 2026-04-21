@@ -15,6 +15,7 @@ from app.schemas.candidates_schemas import (
     MessageResponse,
     FavoriteRequest,
     CandidateScraperStatusOut,
+    VerifyRequest,
 )
 from app.schemas.comments_schemas import CommentCreate, CommentUpdate, CommentResponse
 from app.services import comments_service
@@ -32,9 +33,10 @@ async def read_candidates(
     skills: Optional[str] = None,
     status: Optional[CandidateStatus] = None,
     source: Optional[str] = None,
+    verified: Optional[bool] = None,
     db: AsyncSession = Depends(get_db)
 ):
-    return await candidates_service.get_all_candidates(db, location, skills, status, source)
+    return await candidates_service.get_all_candidates(db, location, skills, status, source,verified)
 
 #busqueda por nombre o apellido
 @router.get("/search", response_model=List[CandidateFrontendOut])
@@ -43,11 +45,11 @@ async def search_candidates(
     db: AsyncSession = Depends(get_db)
 ):
     candidates = await candidates_service.search_candidates_by_name(db, name)
-    
+
     #  devuelve un 404 cuando no hay resultados
     if not candidates:
         raise HTTPException(status_code=404, detail="No se encontraron candidatos con ese nombre")
-        
+
     return candidates
 
 # -----------------
@@ -155,36 +157,19 @@ async def mark_favorite(
         "message": f"Candidato {'marcado' if body.favorite else 'desmarcado'} como favorito"
     }
 
-# Añadir nota a candidato
-@router.post("/{candidate_id}/comments", response_model=CommentResponse)
-async def create_candidate_note(
-    candidate_id: int,
-    body: CommentCreate,
-    db: AsyncSession = Depends(get_db)
+# -----------------
+# Verificar candidato
+# PATCH /api/candidates/{candidate_id}/verify
+# -----------------
+@router.patch("/{candidate_id}/verify", response_model=MessageResponse)
+async def verify_candidate(
+    candidate_id: int, body: VerifyRequest, db: AsyncSession = Depends(get_db)
 ):
-    try:
-        return await comments_service.add_candidate_comment(db, candidate_id, body)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    candidate = await candidates_service.get_candidate_by_id(db, candidate_id)
+    if candidate is None:
+        raise HTTPException(status_code=404, detail="El candidato no existe")
 
-# Modificar nota de candidato
-@router.patch("/comments/{comment_id}", response_model=CommentResponse)
-async def modify_candidate_note(
-    comment_id: int,
-    body: CommentUpdate,
-    db: AsyncSession = Depends(get_db)
-):
-    updated_comment = await comments_service.update_candidate_comment(db, comment_id, body.comment)
-    if not updated_comment:
-        raise HTTPException(status_code=404, detail="Nota no encontrada")
-    return updated_comment
-
-#obtener notas de candidato
-@router.get("/{candidate_id}/comments", response_model=List[CommentResponse])
-async def read_candidate_notes(
-    candidate_id: int,
-    db: AsyncSession = Depends(get_db)
-):
-    comentarios = await comments_service.get_candidate_comments(db, candidate_id)
-    return comentarios
-
+    await candidates_service.set_verified(db, candidate_id, body.verified)
+    return {
+        "message": f"Candidato {'verificado' if body.verified else 'desverificado'} correctamente"
+    }

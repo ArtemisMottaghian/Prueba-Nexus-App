@@ -1,16 +1,9 @@
-from datetime import datetime, timedelta, timezone
-from sqlalchemy import select, func, or_
+from sqlalchemy import select,func,case
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
-
-from app.models.candidates_model import Candidate
-from app.schemas.candidates_schemas import (
-    CandidateStatus,
-    CandidateCreate,
-    CandidateUpdate,
-    ScraperStatusItem,
-    CandidateScraperStatusOut,
-)
+from app.models.candidates_model import Candidate 
+from app.schemas.candidates_schemas import CandidateStatus, CandidateCreate,CandidateUpdate,ScraperStatusItem, CandidateScraperStatusOut
+from datetime import datetime, timezone, timedelta
 
 async def get_all_candidates(
     db: AsyncSession,
@@ -18,6 +11,7 @@ async def get_all_candidates(
     skills: Optional[str] = None,
     status: Optional[CandidateStatus] = None,
     source: Optional[str] = None,
+    verified: Optional[bool] = None,
 ) -> List[Candidate]:
     query = select(Candidate)
 
@@ -29,6 +23,8 @@ async def get_all_candidates(
         query = query.where(Candidate.status == status)
     if source:
         query = query.where(Candidate.source.ilike(f"%{source}%"))
+    if verified is not None:
+        query = query.where(Candidate.verified == verified)
 
     query = query.order_by(Candidate.created_at.desc())
     result = await db.execute(query)
@@ -64,7 +60,7 @@ async def update_status(db: AsyncSession, candidate_id: int, new_status: Candida
     candidate = await get_candidate_by_id(db, candidate_id)
     if not candidate:
         return None
-
+        
     candidate.status = new_status
     await db.commit()
     await db.refresh(candidate)
@@ -94,8 +90,20 @@ async def set_favorite(db: AsyncSession, candidate_id: int, favorite: bool) -> N
         raise e
 
 
+
+async def set_verified(db: AsyncSession, candidate_id: int, verified: bool) -> None:
+    """Marca o desmarca un candidato como verificado."""
+    candidate = await get_candidate_by_id(db, candidate_id)
+    if candidate:
+        candidate.verified = verified
+        await db.commit()
+
+
 async def get_scraper_status(db: AsyncSession) -> CandidateScraperStatusOut:
-    """Estado por fuente según última fila en candidates."""
+    """
+    Devuelve el estado de cada scraper de candidatos basándose en
+    el último registro insertado por fuente en la tabla candidates.
+    """
 
     SCRAPERS = [
         {"name": "GitHub", "source": "GitHub API"},
@@ -127,6 +135,7 @@ async def get_scraper_status(db: AsyncSession) -> CandidateScraperStatusOut:
         last_extraction = row.last_extraction
         total = row.total
 
+        # Lógica de estado
         if not last_extraction:
             status = "offline"
         else:
@@ -149,19 +158,3 @@ async def get_scraper_status(db: AsyncSession) -> CandidateScraperStatusOut:
 
     return CandidateScraperStatusOut(scrapers=result_list)
 
-async def search_candidates_by_name(db: AsyncSession, search_term: str) -> List[Candidate]:
-    """Busca candidatos cuyo nombre o apellido contenga el término de búsqueda."""
-    
-    # buscador de nombre y/o apellidos
-    search_pattern = f"%{search_term}%"
-    
-    query = select(Candidate).where(
-        or_(
-            Candidate.first_name.ilike(search_pattern),
-            Candidate.last_name.ilike(search_pattern),
-            func.concat(Candidate.first_name, ' ', Candidate.last_name).ilike(search_pattern)
-        )
-    ).order_by(Candidate.first_name)
-    
-    result = await db.execute(query)
-    return result.scalars().all()

@@ -28,6 +28,8 @@ class Candidate(Base):
         index=True 
     )
 
+    verified = Column(Boolean, default=False, nullable=False)
+
     notes = Column(Text, nullable=True)
 
     created_at = Column(
@@ -42,10 +44,10 @@ class Candidate(Base):
     )
 
     applications = relationship("JobApplication", back_populates="candidate")
-    
+
 class CandidateComment(Base):
     __tablename__ = 'candidate_comments'
-    
+
     id = Column(BigInteger, primary_key=True, index=True)
     candidate_id = Column(BigInteger, ForeignKey('candidates.id', ondelete='CASCADE'))
     user_id = Column(BigInteger, ForeignKey('users.id')) # El reclutador que deja la nota

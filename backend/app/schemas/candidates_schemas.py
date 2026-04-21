@@ -25,6 +25,7 @@ class CandidateBase(BaseModel):
     location: Optional[str] = Field(None, max_length=255)
     source: Optional[str] = Field(None, max_length=100)
     experience: Optional[str] = None
+    verified: Optional[bool] = False
 
 
 class CandidateCreate(CandidateBase):
@@ -122,17 +123,22 @@ class CandidateStatusUpdate(BaseModel):
 class MessageResponse(BaseModel):
     message: str
 
+# Schema para el status de los scrapers de candidatos
 class ScraperStatusItem(BaseModel):
     name: str
-    status: str  # online | slow | offline
+    status: str  # "online", "slow", "offline"
     last_extraction: Optional[datetime] = None
     total_candidates: int = 0
 
 class CandidateScraperStatusOut(BaseModel):
     scrapers: list[ScraperStatusItem]
 
+# Schema para marcar como favorita
 class FavoriteRequest(BaseModel):
     favorite: bool
+
+
+
 
 
 if __name__ == "__main__":
