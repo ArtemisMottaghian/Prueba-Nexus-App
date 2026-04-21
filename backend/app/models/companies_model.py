@@ -48,3 +48,5 @@ class Company(Base):
     )
 
     comments = relationship("ClientComment", back_populates="company")
+    managed_by_id = Column(BigInteger, ForeignKey("users.id"), nullable=True)
+    manager = relationship("User", foreign_keys=[managed_by_id])
