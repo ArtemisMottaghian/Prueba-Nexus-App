@@ -7,6 +7,18 @@ import { vacanciesService } from '../services/vacanciesService';
 import { useSearchParams } from 'react-router-dom';
 
 const ITEMS_POR_PAGINA = 10;
+const LS_FAV_KEY = 'nexus_vacantes_favorites';
+const LS_STATUS_KEY = 'nexus_vacantes_status';
+
+const applyLocalOverrides = (jobs) => {
+  const savedFavs = JSON.parse(localStorage.getItem(LS_FAV_KEY) || '{}');
+  const savedStatus = JSON.parse(localStorage.getItem(LS_STATUS_KEY) || '{}');
+  return jobs.map((job) => ({
+    ...job,
+    isFavorite: savedFavs[job.id] !== undefined ? savedFavs[job.id] : job.isFavorite,
+    status: savedStatus[job.id] || job.status,
+  }));
+};
 
 export default function Vacancies() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -31,10 +43,10 @@ export default function Vacancies() {
     const fetchJobs = async () => {
       try {
         const data = await vacanciesService.getAllVacancies();
-        setJobs(data);
+        setJobs(applyLocalOverrides(data));
       } catch (error) {
         console.log('Backend offline o error. Usando dummyData.json...', error);
-        setJobs(initialJobsData.vacantes || initialJobsData);
+        setJobs(applyLocalOverrides(initialJobsData.vacantes || initialJobsData));
       } finally {
         setLoading(false);
       }
@@ -77,38 +89,40 @@ export default function Vacancies() {
   };
 
   const handleUpdateJobStatus = async (jobId, newStatus) => {
+    // Optimistic update + persistencia local inmediata
     setJobs((prevJobs) =>
       prevJobs.map((job) =>
         job.id === jobId ? { ...job, status: newStatus } : job
       )
     );
+    const savedStatus = JSON.parse(localStorage.getItem(LS_STATUS_KEY) || '{}');
+    savedStatus[jobId] = newStatus;
+    localStorage.setItem(LS_STATUS_KEY, JSON.stringify(savedStatus));
 
     try {
       await vacanciesService.updateVacancyStatus(jobId, newStatus);
     } catch (error) {
-      console.error('Error al guardar el estado:', error);
-      alert('Hubo un problema guardando el estado en el servidor.');
+      console.error('Error al guardar el estado en servidor (persistido localmente):', error);
     }
   };
 
   const handleToggleFavorite = async (jobId, currentFavoriteStatus) => {
     const newStatus = !currentFavoriteStatus;
 
+    // Optimistic update + persistencia local inmediata
     setJobs((prevJobs) =>
       prevJobs.map((job) =>
         job.id === jobId ? { ...job, isFavorite: newStatus } : job
       )
     );
+    const savedFavs = JSON.parse(localStorage.getItem(LS_FAV_KEY) || '{}');
+    savedFavs[jobId] = newStatus;
+    localStorage.setItem(LS_FAV_KEY, JSON.stringify(savedFavs));
 
     try {
       await vacanciesService.toggleFavorite(jobId, newStatus);
     } catch (error) {
-      console.error('Error al cambiar favorito:', error);
-      setJobs((prevJobs) =>
-        prevJobs.map((job) =>
-          job.id === jobId ? { ...job, isFavorite: currentFavoriteStatus } : job
-        )
-      );
+      console.error('Error al cambiar favorito en servidor (persistido localmente):', error);
     }
   };
 

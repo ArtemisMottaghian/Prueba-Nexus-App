@@ -5,7 +5,15 @@ import './Topbar.css';
 const TITLES = {
   '/': 'Dashboard',
   '/vacantes': 'Vacantes',
+  '/candidatos': 'Candidatos',
   '/clientes': 'Clientes',
+  '/inbox': 'Inbox',
+  '/calendar': 'Calendario',
+  '/analitica': 'Analítica',
+  '/smart-match': 'Smart Match',
+  '/scraping': 'Scraping & Fuentes',
+  '/settings': 'Configuración',
+  '/users': 'Gestión de Usuarios',
 };
 
 export default function Topbar({ onMenuToggle }) {

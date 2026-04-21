@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
+from typing import List,Optional
 
 from app.db.connection import get_db
 from app.services import candidates_service
@@ -26,8 +26,14 @@ router = APIRouter()
 # --------------------
 
 @router.get("", response_model=List[CandidateFrontendOut])
-async def read_candidates(db: AsyncSession = Depends(get_db)):
-    return await candidates_service.get_all_candidates(db)
+async def read_candidates(
+    location: Optional[str] = None,
+    skills: Optional[str] = None,
+    status: Optional[str] = None,
+    source: Optional[str] = None,
+    db: AsyncSession = Depends(get_db)
+):
+    return await candidates_service.get_all_candidates(db, location, skills, status, source)
 
 # -----------------
 # Estado de los scrapers de candidatos

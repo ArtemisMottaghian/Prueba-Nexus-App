@@ -1,3 +1,4 @@
+import SourceOriginBadge from '../shared/SourceOriginBadge';
 import './CandidateCard.css';
 
 export default function CandidateCard({
@@ -147,10 +148,7 @@ export default function CandidateCard({
       </div>
 
       <div className="vacante-footer">
-        <div className="origin-badge">
-          <i className="bi bi-linkedin"></i>
-          <span>{candidate.source}</span>
-        </div>
+        <SourceOriginBadge source={candidate.source} />
         <span className="vacante-date">{candidate.time}</span>
       </div>
     </div>

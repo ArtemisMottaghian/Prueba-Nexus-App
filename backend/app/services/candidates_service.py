@@ -5,8 +5,25 @@ from app.models.candidates_model import Candidate
 from app.schemas.candidates_schemas import CandidateStatus, CandidateCreate,CandidateUpdate,ScraperStatusItem, CandidateScraperStatusOut
 from datetime import datetime, timezone, timedelta
 
-async def get_all_candidates(db: AsyncSession) -> List[Candidate]:
-    query = select(Candidate).order_by(Candidate.created_at.desc())
+async def get_all_candidates(
+    db: AsyncSession,
+    location: Optional[str] = None,
+    skills: Optional[str] = None,
+    status: Optional[CandidateStatus] = None,
+    source: Optional[str] = None,
+) -> List[Candidate]:
+    query = select(Candidate)
+
+    if location:
+        query = query.where(Candidate.location.ilike(f"%{location}%"))
+    if skills:
+        query = query.where(Candidate.skills.ilike(f"%{skills}%"))
+    if status:
+        query = query.where(Candidate.status == status)
+    if source:
+        query = query.where(Candidate.source.ilike(f"%{source}%"))
+
+    query = query.order_by(Candidate.created_at.desc())
     result = await db.execute(query)
     return result.scalars().all()
 
