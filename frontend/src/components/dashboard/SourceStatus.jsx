@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ENDPOINTS, authFetch } from '../../services/api';
 import './SourceStatus.css';
 
 const SCRAPER_LABELS = {
@@ -46,18 +47,70 @@ function formatDate(isoString) {
 
 export default function SourceStatus() {
   const [scrapers, setScrapers] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/metrics/scrapers/status')
-      .then((r) => r.json())
-      .then(setScrapers)
-      .catch(() => setScrapers(null));
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        setLoading(true);
+        const r = await authFetch(ENDPOINTS.metrics.scrapersStatus);
+        if (!r.ok) {
+          throw new Error(`HTTP ${r.status}`);
+        }
+        const ct = r.headers.get('content-type') || '';
+        if (!ct.includes('application/json')) {
+          throw new Error('Non-JSON response');
+        }
+        const data = await r.json();
+        if (!cancelled) setScrapers(data);
+      } catch (e) {
+        console.error('Scrapers de vacantes:', e);
+        if (!cancelled) setScrapers(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  if (!scrapers) return null;
+  if (loading) {
+    return (
+      <section className="source-status-section mb-4">
+        <h3 className="source-status-section__title h6 fw-semibold mb-3">
+          Scrapers de vacantes
+        </h3>
+        <p className="text-muted small mb-0">
+          Cargando estado de scrapers…
+        </p>
+      </section>
+    );
+  }
+
+  if (!scrapers || Object.keys(scrapers).length === 0) {
+    return (
+      <section className="source-status-section mb-4">
+        <h3 className="source-status-section__title h6 fw-semibold mb-3">
+          Scrapers de vacantes
+        </h3>
+        <p className="text-muted small mb-0">
+          No hay datos de scrapers de vacantes.
+        </p>
+      </section>
+    );
+  }
 
   return (
-    <div className="row g-3 mb-4">
+    <section className="source-status-section mb-4">
+      <h3 className="source-status-section__title h6 fw-semibold mb-3">
+        Scrapers de vacantes
+      </h3>
+      <div className="row g-3">
       {Object.entries(scrapers).map(([key, data]) => {
         const cfg = STATUS_CONFIG[data.status] || STATUS_CONFIG.unknown;
         const label = SCRAPER_LABELS[key] || key;
@@ -89,6 +142,7 @@ export default function SourceStatus() {
           </div>
         );
       })}
-    </div>
+      </div>
+    </section>
   );
 }

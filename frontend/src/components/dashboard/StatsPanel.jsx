@@ -37,6 +37,10 @@ export default function StatsPanel({ stats = DEFAULT_STATS }) {
       <div className="row g-0">
         <div className="col-4">
           <div className="stats-col">
+            <span
+              className="stat-col-dot stat-col-dot--purple"
+              aria-hidden
+            />
             <div className="stat-label">Nuevas</div>
             <div className="stat-number stat-number-purple">
               {newLeads.value}
@@ -53,6 +57,10 @@ export default function StatsPanel({ stats = DEFAULT_STATS }) {
 
         <div className="col-4">
           <div className="stats-col">
+            <span
+              className="stat-col-dot stat-col-dot--cyan"
+              aria-hidden
+            />
             <div className="stat-label">Contactadas</div>
             <div className="stat-number stat-number-cyan">
               {contacted.value}
@@ -69,6 +77,10 @@ export default function StatsPanel({ stats = DEFAULT_STATS }) {
 
         <div className="col-4">
           <div className="stats-col">
+            <span
+              className="stat-col-dot stat-col-dot--magenta"
+              aria-hidden
+            />
             <div className="stat-label">En proceso</div>
             <div className="stat-number stat-number-violet">
               {inProgress.value}

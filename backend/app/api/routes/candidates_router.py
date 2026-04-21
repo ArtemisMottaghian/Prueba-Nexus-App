@@ -6,6 +6,7 @@ from app.db.connection import get_db
 from app.services import candidates_service
 from app.schemas.candidates_schemas import (
     CandidateFrontendOut,
+    CandidateStatus,
     CandidateStatusUpdate,
     CandidateStatusOut,
     CandidateCreate,
@@ -29,7 +30,7 @@ router = APIRouter()
 async def read_candidates(
     location: Optional[str] = None,
     skills: Optional[str] = None,
-    status: Optional[str] = None,
+    status: Optional[CandidateStatus] = None,
     source: Optional[str] = None,
     db: AsyncSession = Depends(get_db)
 ):
@@ -43,6 +44,7 @@ async def read_candidates(
 async def get_scraper_status(db: AsyncSession = Depends(get_db)):
     """Devuelve el estado de cada scraper de candidatos."""
     return await candidates_service.get_scraper_status(db)
+
 
 # --------------------
 # obtener candidato
@@ -95,15 +97,15 @@ async def update_candidate(
 
 @router.patch("/{candidate_id}/status", response_model=CandidateStatusOut)
 async def update_candidate_status(
-    candidate_id: int, 
-    payload: CandidateStatusUpdate, 
+    candidate_id: int,
+    payload: CandidateStatusUpdate,
     db: AsyncSession = Depends(get_db)
 ):
     """Actualiza únicamente el estado de un candidato."""
     candidate = await candidates_service.update_status(db, candidate_id, payload.status)
     if not candidate:
         raise HTTPException(status_code=404, detail="Candidato no encontrado")
-    
+
     return candidate
 
 # --------------------
