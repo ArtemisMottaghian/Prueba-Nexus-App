@@ -45,7 +45,15 @@ function App() {
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/vacantes" element={<Vacancies />} />
                         <Route path="/calendar" element={<Calendario />} />
-                        <Route path="/clientes" element={<Clientes />} />
+                        <Route
+                          element={
+                            <ProtectedRoute
+                              allowedRoles={['admin', 'negocio', 'company']}
+                            />
+                          }
+                        >
+                          <Route path="/clientes" element={<Clientes />} />
+                        </Route>
                         <Route path="/candidatos" element={<Candidates />} />
                         {/* --- NUEVA RUTA DEL INBOX --- */}
                         <Route path="/inbox" element={<InboxPage />} />
