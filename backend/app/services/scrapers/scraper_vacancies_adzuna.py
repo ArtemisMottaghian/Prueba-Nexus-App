@@ -99,7 +99,7 @@ async def fetch_category_jobs(client: httpx.AsyncClient, category: str) -> list[
         try:
             response = await client.get(
                 url, params=params, timeout=30.0
-            )  # Añadimos timeout a la petición
+            )
 
             if response.status_code in [503, 429]:
                 wait_time = delays[attempt]
