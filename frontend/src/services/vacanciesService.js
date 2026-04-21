@@ -166,11 +166,14 @@ export const vacanciesService = {
   // Actualizar datos completos de una vacante
   updateVacancy: async (id, data) => {
     try {
-      const response = await authFetch(ENDPOINTS.recruitment.vacantes.detail(id), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+      const response = await authFetch(
+        ENDPOINTS.recruitment.vacantes.detail(id),
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        }
+      );
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       return await response.json();
     } catch (error) {

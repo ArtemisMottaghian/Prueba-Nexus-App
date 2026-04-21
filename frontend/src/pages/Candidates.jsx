@@ -104,8 +104,12 @@ export default function Candidates() {
   };
 
   // Opciones derivadas de los datos cargados para los filtros de candidatos
-  const skillsOptions = [...new Set(candidates.map((c) => c.specialty).filter(Boolean))].sort();
-  const provinciaOptions = [...new Set(candidates.map((c) => c.location).filter(Boolean))].sort();
+  const skillsOptions = [
+    ...new Set(candidates.map((c) => c.specialty).filter(Boolean)),
+  ].sort();
+  const provinciaOptions = [
+    ...new Set(candidates.map((c) => c.location).filter(Boolean)),
+  ].sort();
 
   const DISPONIBILIDAD_OPTIONS = [
     { value: 'disponible', label: 'Disponible' },
@@ -137,7 +141,8 @@ export default function Candidates() {
 
     // Habilidades (#108)
     const matchHabilidades =
-      filters.habilidades === 'All' || candidate.specialty === filters.habilidades;
+      filters.habilidades === 'All' ||
+      candidate.specialty === filters.habilidades;
 
     // Disponibilidad (#108)
     const matchDisponibilidad = (() => {

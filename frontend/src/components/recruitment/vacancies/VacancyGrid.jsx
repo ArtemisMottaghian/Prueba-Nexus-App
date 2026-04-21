@@ -20,7 +20,10 @@ export default function VacancyGrid({
       const fullJobData = await vacanciesService.getVacancyById(jobId);
       setSelectedJob(fullJobData);
     } catch (error) {
-      console.error('Error al cargar detalle desde API, usando datos de tarjeta:', error);
+      console.error(
+        'Error al cargar detalle desde API, usando datos de tarjeta:',
+        error
+      );
       // Fallback: usar los datos ya cargados en la grid (siempre disponibles)
       const fallbackJob = jobs.find((j) => j.id === jobId);
       if (fallbackJob) {
