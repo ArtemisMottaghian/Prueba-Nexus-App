@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import SourceStatus from '../components/dashboard/SourceStatus';
+import CandidateScraperStatus from '../components/dashboard/CandidateScraperStatus';
 import StatsPanel from '../components/dashboard/StatsPanel';
 import DashboardQuickCards from '../components/dashboard/DashboardQuickCards';
 import { ENDPOINTS, authFetch } from '../services/api';
@@ -85,9 +86,9 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="mb-4">
+      <div className="mb-4 dashboard-page-intro">
         <div
-          className="period-segment mt-3"
+          className="period-segment"
           role="group"
           aria-label="Filtro de periodo"
         >
@@ -134,6 +135,7 @@ export default function Dashboard() {
       />
 
       <SourceStatus />
+      <CandidateScraperStatus />
       <StatsPanel stats={stats} />
     </>
   );

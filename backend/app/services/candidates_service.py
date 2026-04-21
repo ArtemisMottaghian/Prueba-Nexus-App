@@ -1,9 +1,16 @@
-from sqlalchemy import select,func,case
+from datetime import datetime, timedelta, timezone
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
-from app.models.candidates_model import Candidate 
-from app.schemas.candidates_schemas import CandidateStatus, CandidateCreate,CandidateUpdate,ScraperStatusItem, CandidateScraperStatusOut
-from datetime import datetime, timezone, timedelta
+
+from app.models.candidates_model import Candidate
+from app.schemas.candidates_schemas import (
+    CandidateStatus,
+    CandidateCreate,
+    CandidateUpdate,
+    ScraperStatusItem,
+    CandidateScraperStatusOut,
+)
 
 async def get_all_candidates(
     db: AsyncSession,
@@ -57,7 +64,7 @@ async def update_status(db: AsyncSession, candidate_id: int, new_status: Candida
     candidate = await get_candidate_by_id(db, candidate_id)
     if not candidate:
         return None
-        
+
     candidate.status = new_status
     await db.commit()
     await db.refresh(candidate)
@@ -88,10 +95,7 @@ async def set_favorite(db: AsyncSession, candidate_id: int, favorite: bool) -> N
 
 
 async def get_scraper_status(db: AsyncSession) -> CandidateScraperStatusOut:
-    """
-    Devuelve el estado de cada scraper de candidatos basándose en
-    el último registro insertado por fuente en la tabla candidates.
-    """
+    """Estado por fuente según última fila en candidates."""
 
     SCRAPERS = [
         {"name": "GitHub", "source": "GitHub API"},
@@ -123,7 +127,6 @@ async def get_scraper_status(db: AsyncSession) -> CandidateScraperStatusOut:
         last_extraction = row.last_extraction
         total = row.total
 
-        # Lógica de estado
         if not last_extraction:
             status = "offline"
         else:
