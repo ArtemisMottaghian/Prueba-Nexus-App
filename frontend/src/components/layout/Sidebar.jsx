@@ -67,14 +67,16 @@ export default function Sidebar({ isOpen, onClose }) {
                   <i className="bi bi-people"></i>
                   <span className="sidebar-text">Candidatos</span>
                 </NavLink>
-                <NavLink
-                  to="/clientes"
-                  className="sidebar-item"
-                  onClick={onClose}
-                >
-                  <i className="bi bi-building"></i>
-                  <span className="sidebar-text">Clientes</span>
-                </NavLink>
+                {hasAnyRole(['admin', 'negocio', 'company']) && (
+                  <NavLink
+                    to="/clientes"
+                    className="sidebar-item"
+                    onClick={onClose}
+                  >
+                    <i className="bi bi-building"></i>
+                    <span className="sidebar-text">Clientes</span>
+                  </NavLink>
+                )}
                 <NavLink to="/inbox" className="sidebar-item" onClick={onClose}>
                   <i className="bi bi-envelope"></i>
                   <span className="sidebar-text">Inbox</span>
