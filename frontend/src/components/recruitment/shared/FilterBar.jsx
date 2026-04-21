@@ -22,7 +22,12 @@ export default function FilterBar({
   experienciaOptions = null,
   provinciaOptions = null,
 }) {
-  const extraFilterKeys = ['habilidades', 'disponibilidad', 'experiencia', 'provincia'];
+  const extraFilterKeys = [
+    'habilidades',
+    'disponibilidad',
+    'experiencia',
+    'provincia',
+  ];
   const hasExtraFilters = extraFilterKeys.some(
     (k) => filters[k] && filters[k] !== 'All'
   );
@@ -116,7 +121,10 @@ export default function FilterBar({
       </div>
 
       {/* Fila 2: filtros extra de candidatos (#108) — solo si se pasan opciones */}
-      {(skillsOptions || disponibilidadOptions || experienciaOptions || provinciaOptions) && (
+      {(skillsOptions ||
+        disponibilidadOptions ||
+        experienciaOptions ||
+        provinciaOptions) && (
         <div className="row g-2 align-items-end mt-2">
           {skillsOptions && (
             <div className="col-12 col-md-3">
@@ -142,7 +150,9 @@ export default function FilterBar({
               <select
                 className="form-select filter-select"
                 value={filters.disponibilidad || 'All'}
-                onChange={(e) => onFilterChange('disponibilidad', e.target.value)}
+                onChange={(e) =>
+                  onFilterChange('disponibilidad', e.target.value)
+                }
               >
                 <option value="All">Todas</option>
                 {disponibilidadOptions.map((opt) => (

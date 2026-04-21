@@ -8,11 +8,20 @@ import { vacanciesService } from '../../../services/vacanciesService';
 import CrmEmpresaPanel from '../../crm/CrmEmpresaPanel';
 import './VacancyModal.css';
 
-export default function VacancyModal({ job, onClose, onUpdateStatus, onToggleFavorite }) {
+export default function VacancyModal({
+  job,
+  onClose,
+  onUpdateStatus,
+  onToggleFavorite,
+}) {
   const [activeTab, setActiveTab] = useState('detalles');
   const [localStatus, setLocalStatus] = useState(job?.status || '');
-  const [localIsFavorite, setLocalIsFavorite] = useState(job?.isFavorite || false);
-  const [localSeguimiento, setLocalSeguimiento] = useState(job?.seguimiento || []);
+  const [localIsFavorite, setLocalIsFavorite] = useState(
+    job?.isFavorite || false
+  );
+  const [localSeguimiento, setLocalSeguimiento] = useState(
+    job?.seguimiento || []
+  );
   const [noteText, setNoteText] = useState('');
   const [savingNote, setSavingNote] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -148,10 +157,18 @@ export default function VacancyModal({ job, onClose, onUpdateStatus, onToggleFav
                 </select>
                 <button
                   className="btn-icon btn-star-toggle"
-                  title={localIsFavorite ? 'Quitar de favoritos' : 'Marcar favorita'}
+                  title={
+                    localIsFavorite ? 'Quitar de favoritos' : 'Marcar favorita'
+                  }
                   onClick={handleToggleFavoriteModal}
                 >
-                  <i className={localIsFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'}></i>
+                  <i
+                    className={
+                      localIsFavorite
+                        ? 'bi bi-star-fill text-warning'
+                        : 'bi bi-star'
+                    }
+                  ></i>
                 </button>
               </div>
 
@@ -292,7 +309,9 @@ export default function VacancyModal({ job, onClose, onUpdateStatus, onToggleFav
                 {activeTab === 'seguimiento' && (
                   <div className="tab-pane fade show active">
                     <div className="detail-section">
-                      <h4 className="section-title">Actividad de esta vacante</h4>
+                      <h4 className="section-title">
+                        Actividad de esta vacante
+                      </h4>
 
                       {/* Formulario para añadir nota */}
                       <div className="add-note-form mb-4">
@@ -312,9 +331,18 @@ export default function VacancyModal({ job, onClose, onUpdateStatus, onToggleFav
                           disabled={savingNote || !noteText.trim()}
                         >
                           {savingNote ? (
-                            <><span className="spinner-border spinner-border-sm me-2" role="status" />Guardando...</>
+                            <>
+                              <span
+                                className="spinner-border spinner-border-sm me-2"
+                                role="status"
+                              />
+                              Guardando...
+                            </>
                           ) : (
-                            <><i className="bi bi-plus-circle me-2"></i>Agregar nota</>
+                            <>
+                              <i className="bi bi-plus-circle me-2"></i>Agregar
+                              nota
+                            </>
                           )}
                         </button>
                       </div>
@@ -400,9 +428,13 @@ export default function VacancyModal({ job, onClose, onUpdateStatus, onToggleFav
                 disabled={saveSuccess}
               >
                 {saveSuccess ? (
-                  <><i className="bi bi-check2-all me-2"></i>¡Guardado!</>
+                  <>
+                    <i className="bi bi-check2-all me-2"></i>¡Guardado!
+                  </>
                 ) : (
-                  <><i className="bi bi-check-circle me-2"></i>Guardar cambios</>
+                  <>
+                    <i className="bi bi-check-circle me-2"></i>Guardar cambios
+                  </>
                 )}
               </button>
             </div>

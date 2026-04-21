@@ -43,12 +43,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
           <nav className="sidebar-nav">
             <div className="sidebar-nav-section">
-              <NavLink
-                to="/"
-                end
-                className="sidebar-item"
-                onClick={onClose}
-              >
+              <NavLink to="/" end className="sidebar-item" onClick={onClose}>
                 <i className="bi bi-house"></i>
                 <span className="sidebar-text">Inicio</span>
               </NavLink>
@@ -80,11 +75,7 @@ export default function Sidebar({ isOpen, onClose }) {
                   <i className="bi bi-building"></i>
                   <span className="sidebar-text">Clientes</span>
                 </NavLink>
-                <NavLink
-                  to="/inbox"
-                  className="sidebar-item"
-                  onClick={onClose}
-                >
+                <NavLink to="/inbox" className="sidebar-item" onClick={onClose}>
                   <i className="bi bi-envelope"></i>
                   <span className="sidebar-text">Inbox</span>
                 </NavLink>
