@@ -13,7 +13,7 @@ root_directory = os.path.abspath(os.path.join(backend_directory, ".."))
 
 sys.path.append(backend_directory)
 sys.path.append(root_directory)
-
+from app.services.scrapers.scraper_companies.scraper_companies import process_scraped_job
 from app.core import scraper_vacancies_linkedin_config as config
 from app.services.scrapers.scraper_vacancies_linkedin.utils import build_linkedin_url
 from app.services.scrapers.scraper_vacancies_linkedin.browser import (
@@ -252,7 +252,7 @@ async def extract_linked() -> list[dict]:
                         new_in_block += 1
 
                         if offer_count >= getattr(
-                            config, "MAX_OFFERS", 50
+                            config, "MAX_OFFERS", 10
                         ):
                             return all_offers_extracted
 
@@ -283,116 +283,21 @@ async def extract_linked() -> list[dict]:
 #        print(resultado)
 
 
-#PRuebas en local
-
-#if __name__ == "__main__":
-    # Si quieres probar el scraper puro, descomenta estas tres lineas:
-    # resultados_extraccion = asyncio.run(extract_linked())
-    # print(f"Se han extraido {len(resultados_extraccion)} ofertas de la web.")
-    # pass
-
-    # =========================================================================
-    # NOTA PARA EL EQUIPO DE DESARROLLO:
-    # Todo el bloque inferior ha sido comentado de forma intencionada.
-    # El archivo db.py ha sido eliminado de este directorio local, por lo que 
-    # la logica de persistencia y la relacion 1:N (Company -> JobOffer) 
-    # ha sido desacoplada. Este codigo queda documentado aqui como referencia 
-    # para ser implementado en el Orquestador o en el servicio de BBDD global.
-    # =========================================================================
+if __name__ == "__main__":
+    # Importamos la nueva funcion orquestadora (Ajusta la ruta segun tu proyecto)
     
-    # from app.services.scrapers.scraper_vacancies_linkedin.db import SessionLocal, JobOffer, Company
-    # from sqlalchemy.exc import IntegrityError
-    # 
-    # # -----------------------------------------------------------------
-    # # FUNCION EXTRACTORA (Simula a Gemini / IA para estructurar empresa)
-    # # -----------------------------------------------------------------
-    # def extract_company_data(raw_text: str, basic_company_name: str) -> dict:
-    #     return {
-    #         "name": basic_company_name, 
-    #         "cif": "B12345678",
-    #         "sector": "Tecnologia",
-    #         "website": f"www.{basic_company_name.lower().replace(' ', '')}.com",
-    #         "linkedin_url": None,
-    #         "address": "Calle Falsa 123, Madrid",
-    #         "contact_first_name": "Laura",
-    #         "contact_last_name": "Gomez",
-    #         "contact_email": f"rrhh@{basic_company_name.lower().replace(' ', '')}.com",
-    #         "contact_phone": "+34 600 000 000"
-    #     }
-    #
-    # # 1. Lanzamos el scraper web de LinkedIn
-    # resultados = asyncio.run(extract_linked())
-    # print(f"\n Se han extraido {len(resultados)} ofertas de la web de LinkedIn.")
-    # 
-    # # 2. Abrimos la sesion de la BBDD
-    # db = SessionLocal()
-    # ofertas_guardadas = 0
-    # 
-    # try:
-    #     for resultado in resultados:
-    #         # --- PASO A: PROCESAR EMPRESA ---
-    #         nombre_empresa_crudo = resultado.get("company_name", "Empresa Confidencial")
-    #         texto_oferta = resultado.get("job_description", "")
-    #         
-    #         # Pasamos los datos por nuestra funcion "IA"
-    #         company_data = extract_company_data(texto_oferta, nombre_empresa_crudo)
-    #         
-    #         # Buscamos si la empresa ya existe en la BBDD
-    #         empresa_existente = db.query(Company).filter(Company.name == company_data["name"]).first()
-    #         
-    #         if empresa_existente:
-    #             company_id = empresa_existente.id
-    #             print(f" Empresa existente encontrada: {company_data['name']} (ID: {company_id})")
-    #         else:
-    #             # Si no existe, la creamos
-    #             nueva_empresa = Company(
-    #                 name=company_data["name"],
-    #                 cif=company_data["cif"],
-    #                 sector=company_data["sector"],
-    #                 website=company_data["website"],
-    #                 address=company_data["address"],
-    #                 contact_first_name=company_data["contact_first_name"],
-    #                 contact_last_name=company_data["contact_last_name"],
-    #                 contact_email=company_data["contact_email"],
-    #                 contact_phone=company_data["contact_phone"]
-    #             )
-    #             db.add(nueva_empresa)
-    #             db.commit() 
-    #             db.refresh(nueva_empresa) # Recargamos para obtener el ID generado
-    #             company_id = nueva_empresa.id
-    #             print(f" Nueva empresa creada: {company_data['name']} (ID: {company_id})")
-    #
-    #         # --- PASO B: GUARDAR OFERTA VINCULADA ---
-    #         nueva_oferta = JobOffer(
-    #             portal_id=resultado.get("portal_id"),
-    #             company_id=company_id, # Aqui vinculamos la vacante con la empresa
-    #             external_id=resultado.get("external_id"),
-    #             title=resultado.get("title"),
-    #             location=resultado.get("location"),
-    #             offer_url=resultado.get("offer_url"),
-    #             job_description=resultado.get("job_description"),
-    #             published_at=resultado.get("published_at"),
-    #             sector=resultado.get("sector"),
-    #             salary_min=resultado.get("salary_min"),
-    #             salary_max=resultado.get("salary_max"),
-    #             contract_type=resultado.get("contract_type"),
-    #             contract_time=resultado.get("contract_time"),
-    #             work_modality=resultado.get("work_modality")
-    #         )
-    #         
-    #         db.add(nueva_oferta)
-    #         
-    #         try:
-    #             db.commit()
-    #             ofertas_guardadas += 1
-    #             print(f"  -> Oferta vinculada: {resultado['title']}")
-    #         except IntegrityError as e:
-    #             db.rollback()
-    #             print(f"  [AVISO] La oferta '{resultado['title']}' ya existia en la BBDD (Duplicada).")
-    #             
-    # except Exception as e:
-    #     print(f"Error critico en el proceso de guardado: {e}")
-    # finally:
-    #     db.close()
-    #     
-    # print(f"\n PROCESO FINALIZADO. Se guardaron {ofertas_guardadas} nuevas ofertas con sus respectivas empresas.")
+    # 1. Lanzamos el scraper web de LinkedIn
+    resultados = asyncio.run(extract_linked())
+    print(f"\n[OK] Se han extraido {len(resultados)} ofertas de la web de LinkedIn.")
+    
+    ofertas_guardadas = 0
+    
+    # 2. Procesamos cada oferta extraida pasandole el diccionario COMPLETO
+    for resultado in resultados:
+        # Pasamos toda la data (incluyendo salary_min, modality, location...)
+        exito = process_scraped_job(resultado)
+        
+        if exito:
+            ofertas_guardadas += 1
+            
+    print(f"\n[INFO] PROCESO FINALIZADO. Se guardaron {ofertas_guardadas} nuevas ofertas enriquecidas con IA.")

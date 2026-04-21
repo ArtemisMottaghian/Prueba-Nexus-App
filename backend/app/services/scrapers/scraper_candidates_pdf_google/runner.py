@@ -25,7 +25,7 @@ from .browser import search_google_pdfs
 # claude_client = anthropic.AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 LIMIT_FILE = "daily_limit.json"
-MAX_DAILY_CV = 6
+MAX_DAILY_CV = 2
 
 class AILimitReachedError(Exception):
     pass

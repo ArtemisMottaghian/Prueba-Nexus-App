@@ -5,6 +5,7 @@ from typing import Optional, Dict, List, Any, Tuple
 from playwright.async_api import Page
 
 from .browser import get_browser_context
+from .utils import upsert_scraped_candidate
 from app.core.scraper_candidates_linkedin_config import (
     KEYWORDS,
     SECTORS,
