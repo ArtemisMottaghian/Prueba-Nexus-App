@@ -2,19 +2,20 @@
    Sidebar — NexusAI
    =================================================== */
 
+/* --clr-*: usado por Inbox, UserManagement (Configuración), etc. Sincronizado con el botón de tema (data-bs-theme en <html>). */
 :root {
-  --clr-bg: #0d0d14;
-  --clr-surface: #13131f;
-  --clr-surface-2: #1a1a2e;
-  --clr-border: rgba(124, 58, 237, 0.25);
+  --clr-bg: #ffffff;
+  --clr-surface: #ffffff;
+  --clr-surface-2: #f3f4f6;
+  --clr-border: rgba(124, 58, 237, 0.18);
   --clr-purple: #7c3aed;
   --clr-purple-light: #9b5de5;
   --clr-cyan: #00d4ff;
-  --clr-text: #e8e8f0;
-  --clr-text-muted: #7a7a9a;
-  --clr-error: #f87171;
-  --clr-error-bg: rgba(248, 113, 113, 0.08);
-  --clr-error-border: rgba(248, 113, 113, 0.45);
+  --clr-text: #111827;
+  --clr-text-muted: #6b7280;
+  --clr-error: #dc2626;
+  --clr-error-bg: rgba(220, 38, 38, 0.08);
+  --clr-error-border: rgba(220, 38, 38, 0.35);
 
   --radius-sm: 8px;
   --radius-md: 14px;
@@ -26,6 +27,18 @@
   --sidebar-link-gap: 4px;
   --sidebar-nav-pad-x: 12px;
   --sidebar-item-pad-x: 16px;
+}
+
+[data-bs-theme='dark'] {
+  --clr-bg: #0d0d14;
+  --clr-surface: #13131f;
+  --clr-surface-2: #1a1a2e;
+  --clr-border: rgba(124, 58, 237, 0.25);
+  --clr-text: #e8e8f0;
+  --clr-text-muted: #7a7a9a;
+  --clr-error: #f87171;
+  --clr-error-bg: rgba(248, 113, 113, 0.08);
+  --clr-error-border: rgba(248, 113, 113, 0.45);
 }
 
 /* --- CONTENEDOR PRINCIPAL DEL SIDEBAR --- */
