@@ -83,3 +83,14 @@ class ClientDetailOut(ClientOut):
 
 class MessageResponse(BaseModel):
     message: str
+
+class ContactOut(BaseModel):
+    id: int
+    full_name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    job_title: Optional[str] = None
+    candidate_url: Optional[str] = None
+    last_interaction: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
