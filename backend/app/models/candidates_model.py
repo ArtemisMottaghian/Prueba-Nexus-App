@@ -27,7 +27,9 @@ class Candidate(Base):
         nullable=True,
         index=True 
     )
-    
+
+    verified = Column(Boolean, default=False, nullable=False)
+
     notes = Column(Text, nullable=True)
     
     created_at = Column(

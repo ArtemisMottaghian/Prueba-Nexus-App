@@ -14,6 +14,7 @@ from app.schemas.candidates_schemas import (
     MessageResponse,
     FavoriteRequest,
     CandidateScraperStatusOut,
+    VerifyRequest,
 )
 
 router = APIRouter()
@@ -29,9 +30,10 @@ async def read_candidates(
     skills: Optional[str] = None,
     status: Optional[str] = None,
     source: Optional[str] = None,
+    verified: Optional[bool] = None,
     db: AsyncSession = Depends(get_db)
 ):
-    return await candidates_service.get_all_candidates(db, location, skills, status, source)
+    return await candidates_service.get_all_candidates(db, location, skills, status, source,verified)
 
 # -----------------
 # Estado de los scrapers de candidatos
@@ -137,3 +139,19 @@ async def mark_favorite(
         "message": f"Candidato {'marcado' if body.favorite else 'desmarcado'} como favorito"
     }
 
+# -----------------
+# Verificar candidato
+# PATCH /api/candidates/{candidate_id}/verify
+# -----------------
+@router.patch("/{candidate_id}/verify", response_model=MessageResponse)
+async def verify_candidate(
+    candidate_id: int, body: VerifyRequest, db: AsyncSession = Depends(get_db)
+):
+    candidate = await candidates_service.get_candidate_by_id(db, candidate_id)
+    if candidate is None:
+        raise HTTPException(status_code=404, detail="El candidato no existe")
+
+    await candidates_service.set_verified(db, candidate_id, body.verified)
+    return {
+        "message": f"Candidato {'verificado' if body.verified else 'desverificado'} correctamente"
+    }
