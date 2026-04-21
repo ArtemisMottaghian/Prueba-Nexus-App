@@ -9,9 +9,12 @@ import urllib.parse
 import re
 from bs4 import BeautifulSoup
 
-# Silenciamos el aviso de Google
+# 1. Silenciamos a Google
 warnings.filterwarnings("ignore", category=FutureWarning)
 import google.generativeai as genai
+
+# 2. Silenciamos DEFINITIVAMENTE el aviso de InsecureRequestWarning de requests
+requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -22,74 +25,79 @@ GEMINI_API_KEY = os.getenv("GOOGLE_AI_KEY")
 os.environ["PGCLIENTENCODING"] = "utf-8"
 
 if not GEMINI_API_KEY:
-    print("❌ ERROR CRÍTICO: No se ha encontrado GOOGLE_AI_KEY en el .env.")
+    print("[ERROR CRÍTICO] No se ha encontrado GOOGLE_AI_KEY en el .env.")
 else:
-    print("✅ API KEY de Gemini cargada correctamente.")
+    print("[OK] API KEY de Gemini cargada correctamente.")
     genai.configure(api_key=GEMINI_API_KEY)
 
 
 # ==========================================
-# 1. SCRAPERS MERCANTILES (Empresite + eInforma)
+# 1. SCRAPERS MERCANTILES Y ESCÁNER WEB
 # ==========================================
-def buscar_datos_mercantiles_empresite(nombre_empresa: str) -> dict:
-    print(f"   -> [1.5/3] Buscando CIF en Empresite para: {nombre_empresa}")
-    datos_mercantiles = {"cif": None, "address": None, "phone": None}
-    
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }
-    
-    try:
-        query = urllib.parse.quote(nombre_empresa)
-        url_busqueda = f"https://empresite.eleconomista.es/buscar/?q={query}"
+def buscar_cif_en_web_oficial(dominio: str) -> str:
+    """Entra en la web de la empresa para robar el CIF o NIF."""
+    if not dominio or dominio == "Desconocida":
+        return None
         
-        response_search = requests.get(url_busqueda, headers=headers, timeout=10)
-        soup_search = BeautifulSoup(response_search.text, 'html.parser')
-        
-        primer_resultado = soup_search.select_first("h2 a")
-        if not primer_resultado or not primer_resultado.has_attr("href"):
-            print("   -> [AVISO] No se encontró enlace válido en Empresite.")
-            return datos_mercantiles
-            
-        url_empresa = primer_resultado["href"]
-        response_empresa = requests.get(url_empresa, headers=headers, timeout=10)
-        soup_empresa = BeautifulSoup(response_empresa.text, 'html.parser')
-        
-        texto_pagina = soup_empresa.get_text()
-        match_cif = re.search(r'[A-W]\d{8}', texto_pagina)
-        if match_cif:
-            datos_mercantiles["cif"] = match_cif.group()
-            print(f"   -> [ÉXITO] CIF Encontrado en Empresite: {datos_mercantiles['cif']}")
-            
-        direccion_tag = soup_empresa.find("span", class_="locality")
-        if direccion_tag:
-            datos_mercantiles["address"] = direccion_tag.text.strip()
-            
-    except Exception as e:
-        print(f"   -> [ERROR] Fallo al scrapear Empresite: {str(e)[:50]}")
-        
-    return datos_mercantiles
-
-
-def buscar_datos_mercantiles_einforma_fallback(nombre_empresa: str) -> dict:
-    print(f"   -> [PLAN B] Intentando rescatar CIF desde DuckDuckGo/eInforma...")
-    datos_mercantiles = {"cif": None, "address": None, "phone": None}
+    print(f"   -> [NUEVO] Escaneando la web oficial y legales de ({dominio})...")
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0"}
     
+    rutas_a_probar = [
+        f"https://{dominio}", 
+        f"https://{dominio}/aviso-legal", 
+        f"https://{dominio}/legal",
+        f"https://{dominio}/politica-de-privacidad"
+    ]
+    
+    # REGEX MAESTRA ESPAÑOLA:
+    # 1. [A-Z][\-\s]?\d{7}[\-\s]?[A-Z0-9] -> CIF normal y de Ayuntamientos (Ej: B12345678, P1707900B)
+    # 2. \d{8}[\-\s]?[A-Z] -> NIF/DNI normal de autónomos (Ej: 12345678A)
+    # 3. [XYZ][\-\s]?\d{7}[\-\s]?[A-Z] -> NIE de extranjeros (Ej: X1234567A)
+    patron_fiscal = r'\b(?:[A-Z][\-\s]?\d{7}[\-\s]?[A-Z0-9]|\d{8}[\-\s]?[A-Z])\b'
+    
+    for url in rutas_a_probar:
+        try:
+            response = requests.get(url, headers=headers, timeout=5, verify=False)
+            
+            # Buscamos nuestra super-fórmula en el texto
+            match_cif = re.search(patron_fiscal, response.text, re.IGNORECASE) 
+            if match_cif:
+                cif_limpio = match_cif.group().replace("-", "").replace(" ", "").upper()
+                print(f"   -> [ÉXITO WEB] NIF/CIF encontrado en ruta: {url} -> {cif_limpio}")
+                return cif_limpio
+        except Exception:
+            continue
+            
+    return None
+
+def buscar_cif_directorios_alternativos(nombre_empresa: str) -> dict:
+    """Busca el CIF/NIF enfocandose en datoscif.es usando DuckDuckGo."""
+    print(f"   -> [PLAN B] Buscando CIF/NIF en datoscif.es...")
+    datos_mercantiles = {"cif": None, "address": None}
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0"}
+    
+    # Limpiamos el nombre para que el buscador no se confunda
+    nombre_limpio = re.sub(r'[^a-zA-Z0-9\s]', '', nombre_empresa)
+    
     try:
-        query = urllib.parse.quote(f"site:einforma.com {nombre_empresa} CIF")
+        # Apuntamos directamente al nuevo dominio que has propuesto
+        query = urllib.parse.quote(f'"{nombre_limpio}" (CIF OR NIF) site:datoscif.es')
         url_busqueda = f"https://html.duckduckgo.com/html/?q={query}"
         
         response = requests.get(url_busqueda, headers=headers, timeout=10)
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        match_cif = re.search(r'[A-W]\d{8}', soup.get_text())
+        # Aplicamos la Regex Maestra en los resultados
+        patron_fiscal = r'\b(?:[A-Z][\-\s]?\d{7}[\-\s]?[A-Z0-9]|\d{8}[\-\s]?[A-Z])\b'
+        match_cif = re.search(patron_fiscal, soup.get_text(), re.IGNORECASE)
+        
         if match_cif:
-            datos_mercantiles["cif"] = match_cif.group()
-            print(f"   -> [ÉXITO PLAN B] CIF rescatado: {datos_mercantiles['cif']}")
+            cif_limpio = match_cif.group().replace("-", "").replace(" ", "").upper()
+            datos_mercantiles["cif"] = cif_limpio
+            print(f"   -> [EXITO DIRECTORIO] NIF/CIF rescatado desde datoscif.es: {cif_limpio}")
             
     except Exception as e:
-        print(f"   -> [ERROR PLAN B] Fallo al consultar: {str(e)[:50]}")
+        pass
         
     return datos_mercantiles
 
@@ -114,26 +122,28 @@ def extract_company_data(raw_text: str, basic_company_name: str) -> dict:
     except:
         pass
 
-    # --- PASO 2: EMPRESITE / EINFORMA ---
-    time.sleep(random.uniform(2.0, 4.0))
-    datos_mercantiles = buscar_datos_mercantiles_empresite(nombre_limpio)
+    # --- PASO 2: OBTENER CIF (Escáner Web + Directorios) ---
+    cif_encontrado = None
+    dir_encontrada = None
     
-    # Si Empresite falla, activamos el Plan B
-    if not datos_mercantiles.get("cif"):
-        time.sleep(random.uniform(2.0, 3.0))
-        datos_rescate = buscar_datos_mercantiles_einforma_fallback(nombre_limpio)
-        if datos_rescate.get("cif"):
-            datos_mercantiles["cif"] = datos_rescate.get("cif")
-            
-    cif_encontrado = datos_mercantiles.get("cif")
-    dir_encontrada = datos_mercantiles.get("address")
+    # Intento 1: Escanear su propia web (Si Clearbit la encontró)
+    if website_clearbit:
+        cif_encontrado = buscar_cif_en_web_oficial(website_clearbit)
+        
+    # Intento 2: Si no lo encontró en la web, vamos a los directorios
+    if not cif_encontrado:
+        time.sleep(random.uniform(2.0, 4.0)) # Pausa anti-bot
+        datos_directorios = buscar_cif_directorios_alternativos(nombre_limpio)
+        cif_encontrado = datos_directorios.get("cif")
 
     # --- PASO 3: GEMINI ---
     print(f"   -> [3/3] Pasando datos a Gemini para consolidar...")
     if not GEMINI_API_KEY:
-         return {"name": nombre_limpio, "cif": cif_encontrado, "sector": None, "website": website_clearbit, "linkedin_url": None, "address": dir_encontrada, "contact_email": None, "contact_phone": None}
+         return {"name": nombre_limpio, "cif": cif_encontrado, "sector": None, "website": website_clearbit, "linkedin_url": None, "address": "Provincia/Pais no especificado", "contact_email": None, "contact_phone": None}
 
     model = genai.GenerativeModel('gemini-2.5-flash')
+    
+    # PROMPT ENDURECIDO PARA LA DIRECCION
     prompt = f"""
     Actúa como investigador B2B. Oferta de la empresa "{nombre_limpio}".
     Datos previos encontrados:
@@ -146,8 +156,8 @@ def extract_company_data(raw_text: str, basic_company_name: str) -> dict:
     Devuelve ÚNICAMENTE un JSON con estas claves exactas:
     - "name": "{nombre_limpio}"
     - "website": (usa la web dada o dedúcela)
-    - "cif": (usa el CIF dado o pon null)
-    - "address": (usa la dirección dada o dedúcela)
+    - "cif": (Si te he dado un CIF, úsalo. Si es 'Desconocido', usa tu base de conocimiento OBLIGATORIAMENTE para deducir el CIF/NIF real en España de esta empresa. Ej: Banco Santander, Carrefour, Mutua Madrileña, etc. Si es una empresa extranjera sin sede fiscal en España, pon null).
+    - "address": (Usa la dirección dada. Si no la tienes, deduce OBLIGATORIAMENTE la Provincia y el País. NUNCA devuelvas null en address)
     - "sector": (OBLIGATORIO deducirlo)
     - "linkedin_url": (OBLIGATORIO deducirlo)
     - "contact_email": (SOLO si aparece en el texto, si no null)
@@ -158,20 +168,28 @@ def extract_company_data(raw_text: str, basic_company_name: str) -> dict:
         response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
         data = json.loads(response.text)
         
-        # 🛡️ ESCUDO ANTI-IA: Garantizamos que todas las claves existan para evitar KeyError
+        # ESCUDO VALIDADOR MODIFICADO PARA LA DIRECCION
         claves_requeridas = ["name", "website", "cif", "address", "sector", "linkedin_url", "contact_email", "contact_phone"]
         for clave in claves_requeridas:
             if clave not in data:
-                data[clave] = None
+                if clave == "address":
+                    data[clave] = "Provincia/Pais no especificado"
+                else:
+                    data[clave] = None
+        
+        # Segundo chequeo por si Gemini si puso la clave pero con valor null
+        if not data.get("address"):
+            data["address"] = "Provincia/Pais no especificado"
                 
-        print(f"   -> [OK] Datos consolidados por IA.")
+        print(f"   -> Datos consolidados por IA.")
         return data
         
     except Exception as e:
-        print(f"   -> [ERROR] Fallo en Gemini: {str(e)[:50]}")
+        print(f"   -> Fallo en Gemini: {str(e)[:50]}")
         return {
             "name": nombre_limpio, "cif": cif_encontrado, "sector": None, 
-            "website": website_clearbit, "linkedin_url": None, "address": dir_encontrada, 
+            "website": website_clearbit, "linkedin_url": None, 
+            "address": dir_encontrada if dir_encontrada else "Provincia/Pais no especificado", 
             "contact_email": None, "contact_phone": None
         }
 
@@ -225,10 +243,10 @@ def insert_job_offer(cursor, job_data: dict, company_id: int):
 
 
 # ==========================================
-# 4. PUNTO DE ENTRADA (PROCESADOR PRINCIPAL)
+# 4. PUNTO DE ENTRADA 
 # ==========================================
 def process_scraped_job(job_data: dict) -> bool:
-    job_title = job_data.get("title", "Título Desconocido")
+    job_title = job_data.get("title", "Titulo Desconocido")
     basic_company_name = job_data.get("company_name", "Empresa Confidencial")
     scraped_html_text = job_data.get("job_description", "")
     
@@ -236,7 +254,6 @@ def process_scraped_job(job_data: dict) -> bool:
     
     company_data = extract_company_data(scraped_html_text, basic_company_name)
     
-    # Inyectar datos del reclutador para el diccionario final
     reclutador = job_data.get("recruiter_name")
     if reclutador:
         partes = reclutador.strip().split(" ", 1)
@@ -261,15 +278,15 @@ def process_scraped_job(job_data: dict) -> bool:
         insert_job_offer(cursor, job_data, company_id)
 
         conn.commit()
-        print(f" -> [ÉXITO] Guardado en BBDD (ID Empresa: {company_id})")
+        print(f" -> Guardado en BBDD (ID Empresa: {company_id})")
         return True
 
     except psycopg2.IntegrityError:
-        print(f" -> [AVISO] La vacante ya existe (Duplicada).")
+        print(f" -> La vacante ya existe (Duplicada).")
         if conn: conn.rollback()
         return False
     except psycopg2.Error as e:
-        print(f" -> [ERROR BBDD]: {e}")
+        print(f" -> ERROR BBDD: {e}")
         if conn: conn.rollback()
         return False
     finally:
