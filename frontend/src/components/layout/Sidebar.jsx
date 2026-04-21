@@ -5,7 +5,7 @@ import './Sidebar.css';
 
 export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
-  const { logout, hasRole } = useAuth();
+  const { logout, hasRole, hasAnyRole } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -43,18 +43,13 @@ export default function Sidebar({ isOpen, onClose }) {
 
           <nav className="sidebar-nav">
             <div className="sidebar-nav-section">
-              <NavLink
-                to="/"
-                end
-                className="sidebar-item"
-                onClick={onClose}
-              >
+              <NavLink to="/" end className="sidebar-item" onClick={onClose}>
                 <i className="bi bi-house"></i>
                 <span className="sidebar-text">Inicio</span>
               </NavLink>
             </div>
 
-            {(hasRole('admin') || hasRole('reclutador')) && (
+            {hasAnyRole(['admin', 'hr_manager', 'company']) && (
               <div className="sidebar-nav-section">
                 <NavLink
                   to="/vacantes"
@@ -80,11 +75,7 @@ export default function Sidebar({ isOpen, onClose }) {
                   <i className="bi bi-building"></i>
                   <span className="sidebar-text">Clientes</span>
                 </NavLink>
-                <NavLink
-                  to="/inbox"
-                  className="sidebar-item"
-                  onClick={onClose}
-                >
+                <NavLink to="/inbox" className="sidebar-item" onClick={onClose}>
                   <i className="bi bi-envelope"></i>
                   <span className="sidebar-text">Inbox</span>
                 </NavLink>
