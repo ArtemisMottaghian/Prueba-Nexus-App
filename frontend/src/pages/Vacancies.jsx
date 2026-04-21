@@ -6,7 +6,7 @@ import initialJobsData from '../data/dummyData.json';
 import { vacanciesService } from '../services/vacanciesService';
 import { useSearchParams } from 'react-router-dom';
 
-const ITEMS_POR_PAGINA = 10;
+const ITEMS_POR_PAGINA = 20;
 const LS_FAV_KEY = 'nexus_vacantes_favorites';
 const LS_STATUS_KEY = 'nexus_vacantes_status';
 
