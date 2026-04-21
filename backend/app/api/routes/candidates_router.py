@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List,Optional
 
@@ -35,6 +35,20 @@ async def read_candidates(
     db: AsyncSession = Depends(get_db)
 ):
     return await candidates_service.get_all_candidates(db, location, skills, status, source)
+
+#busqueda por nombre o apellido
+@router.get("/search", response_model=List[CandidateFrontendOut])
+async def search_candidates(
+    name: str = Query(..., min_length=3, description="Nombre o apellido a buscar"),
+    db: AsyncSession = Depends(get_db)
+):
+    candidates = await candidates_service.search_candidates_by_name(db, name)
+    
+    #  devuelve un 404 cuando no hay resultados
+    if not candidates:
+        raise HTTPException(status_code=404, detail="No se encontraron candidatos con ese nombre")
+        
+    return candidates
 
 # -----------------
 # Estado de los scrapers de candidatos
