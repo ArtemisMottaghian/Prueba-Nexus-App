@@ -1,10 +1,11 @@
+/* Pipeline Nuevas / Contactadas / En proceso */
 .stats-panel {
-  background: var(--bg-primary); /* Se adapta automáticamente */
+  background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: 24px;
   overflow: hidden;
   backdrop-filter: blur(20px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); /* Sombra suavizada para ambos modos */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   position: relative;
   transition: transform 0.3s ease, border-color 0.3s ease, background 0.3s ease;
 }
@@ -14,7 +15,6 @@
   border-color: var(--color-purple-secondary);
 }
 
-/* Línea de luz superior (usa las variables genéricas de marca) */
 .stats-accent {
   height: 3px;
   background: linear-gradient(
@@ -32,7 +32,6 @@
   position: relative;
 }
 
-/* Separadores sutiles entre columnas (ahora usan el color de borde global) */
 .stats-col:not(:last-child)::after {
   content: '';
   position: absolute;
@@ -46,6 +45,30 @@
     var(--border-color),
     transparent
   );
+}
+
+.stat-col-dot {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin: 0 auto 10px;
+  box-shadow: 0 0 0 3px rgba(124, 63, 255, 0.12);
+}
+
+.stat-col-dot--purple {
+  background: var(--color-purple-secondary);
+  box-shadow: 0 0 0 3px rgba(124, 63, 255, 0.15);
+}
+
+.stat-col-dot--cyan {
+  background: var(--color-cyan-primary);
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.15);
+}
+
+.stat-col-dot--magenta {
+  background: #ff00e5;
+  box-shadow: 0 0 0 3px rgba(255, 0, 229, 0.12);
 }
 
 .stat-label {
@@ -64,8 +87,6 @@
   margin-bottom: 8px;
 }
 
-/* Colores de los números 
-   (Le he quitado el brillo extremo porque en modo claro hace que sea difícil de leer) */
 .stat-number-purple {
   color: var(--color-violet);
 }
@@ -75,7 +96,7 @@
 }
 
 .stat-number-violet {
-  color: #ff00e5; /* Mantenemos este violeta vibrante tuyo */
+  color: #ff00e5;
 }
 
 .stat-change {
@@ -87,14 +108,13 @@
   gap: 4px;
 }
 
-/* Barra de progreso LED */
 .stats-bar-container {
   padding: 0 24px 24px;
 }
 
 .stats-bar-track {
   height: 8px;
-  background: var(--bg-tertiary); /* Carril gris clarito en light, oscuro en dark */
+  background: var(--bg-tertiary);
   border-radius: 9999px;
   display: flex;
   overflow: hidden;

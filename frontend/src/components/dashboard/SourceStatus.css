@@ -1,5 +1,11 @@
+.source-status-section__title {
+  color: var(--text-primary, inherit);
+  letter-spacing: 0.02em;
+}
+
+/* Tarjetas estado scrapers (vacantes) */
 .source-card {
-  background: var(--bg-primary); /* Se adapta automáticamente */
+  background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 16px;
@@ -8,16 +14,15 @@
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Sombra unificada */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-/* Efecto de brillo sutil en el borde según el estado */
 .source-card.status-success { border-left: 4px solid #10b981; }
 .source-card.status-warning { border-left: 4px solid #f59e0b; }
 .source-card.status-danger { border-left: 4px solid #ef4444; }
 
 .source-card:hover {
-  background: var(--bg-secondary); /* Hover adaptativo */
+  background: var(--bg-secondary);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
@@ -33,7 +38,6 @@
   font-size: 1.25rem;
 }
 
-/* Colores de iconos con resplandor (Se ven bien en ambos modos) */
 .bg-success-soft {
   background: rgba(16, 185, 129, 0.15);
   color: #10b981;

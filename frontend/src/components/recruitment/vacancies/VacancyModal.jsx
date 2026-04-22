@@ -5,17 +5,39 @@ import {
   updateEstadoCuenta,
 } from '../../../services/clientesService';
 import { vacanciesService } from '../../../services/vacanciesService';
+import { useAuth } from '../../../context/AuthContext';
 import CrmEmpresaPanel from '../../crm/CrmEmpresaPanel';
 import './VacancyModal.css';
 
-export default function VacancyModal({ job, onClose, onUpdateStatus, onToggleFavorite }) {
+export default function VacancyModal({
+  job,
+  onClose,
+  onUpdateStatus,
+  onToggleFavorite,
+}) {
+  const { hasRole } = useAuth();
+  const isReclutador = hasRole('hr_manager') || hasRole('reclutador');
+
   const [activeTab, setActiveTab] = useState('detalles');
   const [localStatus, setLocalStatus] = useState(job?.status || '');
-  const [localIsFavorite, setLocalIsFavorite] = useState(job?.isFavorite || false);
-  const [localSeguimiento, setLocalSeguimiento] = useState(job?.seguimiento || []);
+  const [localIsFavorite, setLocalIsFavorite] = useState(
+    job?.isFavorite || false
+  );
+  const [localSeguimiento, setLocalSeguimiento] = useState(
+    job?.seguimiento || []
+  );
   const [noteText, setNoteText] = useState('');
   const [savingNote, setSavingNote] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Seguimiento candidato
+  const [candidatosList, setCandidatosList] = useState(job?.candidatos || []);
+  const [candForm, setCandForm] = useState({
+    nombre: '',
+    fase: 'Enviado CV',
+    resultado: 'Pendiente',
+    notas: '',
+  });
 
   // CRM de la EMPRESA asociada a la vacante (Issue #329)
   const [empresaCrm, setEmpresaCrm] = useState(null);
@@ -94,6 +116,22 @@ export default function VacancyModal({ job, onClose, onUpdateStatus, onToggleFav
     }
   };
 
+  const handleAddCandidato = () => {
+    if (!candForm.nombre.trim()) return;
+    const nuevo = {
+      ...candForm,
+      nombre: candForm.nombre.trim(),
+      fecha: new Date().toLocaleDateString('es-ES'),
+    };
+    setCandidatosList((prev) => [nuevo, ...prev]);
+    setCandForm({
+      nombre: '',
+      fase: 'Enviado CV',
+      resultado: 'Pendiente',
+      notas: '',
+    });
+  };
+
   const getBadgeClass = (status) => {
     const map = {
       Nueva: 'badge-nueva',
@@ -108,7 +146,7 @@ export default function VacancyModal({ job, onClose, onUpdateStatus, onToggleFav
     <>
       <div className="modal-backdrop fade show"></div>
       <div className="modal fade show d-block" tabIndex="-1" role="dialog">
-        <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div className="modal-dialog modal-lg modal-vacancy modal-dialog-centered modal-dialog-scrollable">
           <div className="modal-content">
             {/* HEADER */}
             <div className="modal-header">
@@ -148,10 +186,18 @@ export default function VacancyModal({ job, onClose, onUpdateStatus, onToggleFav
                 </select>
                 <button
                   className="btn-icon btn-star-toggle"
-                  title={localIsFavorite ? 'Quitar de favoritos' : 'Marcar favorita'}
+                  title={
+                    localIsFavorite ? 'Quitar de favoritos' : 'Marcar favorita'
+                  }
                   onClick={handleToggleFavoriteModal}
                 >
-                  <i className={localIsFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'}></i>
+                  <i
+                    className={
+                      localIsFavorite
+                        ? 'bi bi-star-fill text-warning'
+                        : 'bi bi-star'
+                    }
+                  ></i>
                 </button>
               </div>
 
@@ -165,22 +211,35 @@ export default function VacancyModal({ job, onClose, onUpdateStatus, onToggleFav
                     <i className="bi bi-info-circle me-2"></i>Detalles
                   </button>
                 </li>
+                {!isReclutador && (
+                  <li className="nav-item">
+                    <button
+                      className={`nav-link ${activeTab === 'crm' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('crm')}
+                      title="Seguimiento comercial vinculado a la empresa"
+                    >
+                      <i className="bi bi-building-check me-2"></i>
+                      CRM Empresa
+                    </button>
+                  </li>
+                )}
+                {!isReclutador && (
+                  <li className="nav-item">
+                    <button
+                      className={`nav-link ${activeTab === 'seguimiento' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('seguimiento')}
+                    >
+                      <i className="bi bi-list-check me-2"></i>Actividad vacante
+                    </button>
+                  </li>
+                )}
                 <li className="nav-item">
                   <button
-                    className={`nav-link ${activeTab === 'crm' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('crm')}
-                    title="Seguimiento comercial vinculado a la empresa"
+                    className={`nav-link ${activeTab === 'candidatos' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('candidatos')}
                   >
-                    <i className="bi bi-building-check me-2"></i>
-                    CRM Empresa
-                  </button>
-                </li>
-                <li className="nav-item">
-                  <button
-                    className={`nav-link ${activeTab === 'seguimiento' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('seguimiento')}
-                  >
-                    <i className="bi bi-list-check me-2"></i>Actividad vacante
+                    <i className="bi bi-people-fill me-2"></i>Seguimiento
+                    candidato
                   </button>
                 </li>
                 <li className="nav-item">
@@ -257,8 +316,8 @@ export default function VacancyModal({ job, onClose, onUpdateStatus, onToggleFav
                   </div>
                 )}
 
-                {/* TAB CRM EMPRESA — Issue #329 */}
-                {activeTab === 'crm' && (
+                {/* TAB CRM EMPRESA — oculto para reclutador */}
+                {activeTab === 'crm' && !isReclutador && (
                   <div className="tab-pane fade show active">
                     <div className="detail-section">
                       <h4 className="section-title">
@@ -289,10 +348,12 @@ export default function VacancyModal({ job, onClose, onUpdateStatus, onToggleFav
                   </div>
                 )}
 
-                {activeTab === 'seguimiento' && (
+                {activeTab === 'seguimiento' && !isReclutador && (
                   <div className="tab-pane fade show active">
                     <div className="detail-section">
-                      <h4 className="section-title">Actividad de esta vacante</h4>
+                      <h4 className="section-title">
+                        Actividad de esta vacante
+                      </h4>
 
                       {/* Formulario para añadir nota */}
                       <div className="add-note-form mb-4">
@@ -312,9 +373,18 @@ export default function VacancyModal({ job, onClose, onUpdateStatus, onToggleFav
                           disabled={savingNote || !noteText.trim()}
                         >
                           {savingNote ? (
-                            <><span className="spinner-border spinner-border-sm me-2" role="status" />Guardando...</>
+                            <>
+                              <span
+                                className="spinner-border spinner-border-sm me-2"
+                                role="status"
+                              />
+                              Guardando...
+                            </>
                           ) : (
-                            <><i className="bi bi-plus-circle me-2"></i>Agregar nota</>
+                            <>
+                              <i className="bi bi-plus-circle me-2"></i>Agregar
+                              nota
+                            </>
                           )}
                         </button>
                       </div>
@@ -341,6 +411,172 @@ export default function VacancyModal({ job, onClose, onUpdateStatus, onToggleFav
                           <small className="text-muted">
                             ¿Buscas el seguimiento comercial? Ahora vive en la
                             pestaña <strong>CRM Empresa</strong>.
+                          </small>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'candidatos' && (
+                  <div className="tab-pane fade show active">
+                    <div className="detail-section">
+                      <h4 className="section-title">
+                        Seguimiento de candidatos
+                      </h4>
+
+                      {/* Formulario añadir candidato */}
+                      <div className="cand-tracking-form mb-4">
+                        <div className="cand-form-row">
+                          <div className="cand-form-field cand-form-field--wide">
+                            <label className="field-label">
+                              Nombre del candidato
+                            </label>
+                            <input
+                              type="text"
+                              className="form-control input-field"
+                              placeholder="Ej: Ana García"
+                              value={candForm.nombre}
+                              onChange={(e) =>
+                                setCandForm((f) => ({
+                                  ...f,
+                                  nombre: e.target.value,
+                                }))
+                              }
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleAddCandidato();
+                              }}
+                            />
+                          </div>
+                          <div className="cand-form-field">
+                            <label className="field-label">
+                              Tipo de entrevista / Fase
+                            </label>
+                            <select
+                              className="form-select input-field"
+                              value={candForm.fase}
+                              onChange={(e) =>
+                                setCandForm((f) => ({
+                                  ...f,
+                                  fase: e.target.value,
+                                }))
+                              }
+                            >
+                              <option>Enviado CV</option>
+                              <option>Entrevista telefónica</option>
+                              <option>Primera entrevista</option>
+                              <option>Segunda entrevista</option>
+                              <option>Prueba técnica</option>
+                              <option>Entrevista final</option>
+                              <option>Oferta enviada</option>
+                              <option>Contratado</option>
+                            </select>
+                          </div>
+                          <div className="cand-form-field">
+                            <label className="field-label">Resultado</label>
+                            <select
+                              className="form-select input-field"
+                              value={candForm.resultado}
+                              onChange={(e) =>
+                                setCandForm((f) => ({
+                                  ...f,
+                                  resultado: e.target.value,
+                                }))
+                              }
+                            >
+                              <option>Pendiente</option>
+                              <option>Positivo</option>
+                              <option>Negativo</option>
+                              <option>En espera</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="cand-form-notes-row">
+                          <textarea
+                            className="form-control input-field"
+                            rows={2}
+                            placeholder="Observaciones, feedback de la entrevista..."
+                            value={candForm.notas}
+                            onChange={(e) =>
+                              setCandForm((f) => ({
+                                ...f,
+                                notas: e.target.value,
+                              }))
+                            }
+                          />
+                          <button
+                            className="btn btn-primary-custom cand-add-btn"
+                            onClick={handleAddCandidato}
+                            disabled={!candForm.nombre.trim()}
+                          >
+                            <i className="bi bi-person-plus-fill"></i>
+                            <span>Añadir</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Lista de candidatos */}
+                      {candidatosList.length > 0 ? (
+                        <div className="cand-tracking-list">
+                          {candidatosList.map((c, i) => (
+                            <div key={i} className="cand-tracking-item">
+                              {/* Avatar inicial */}
+                              <div className="cand-avatar">
+                                {c.nombre.charAt(0).toUpperCase()}
+                              </div>
+                              {/* Cuerpo */}
+                              <div className="cand-body">
+                                <div className="cand-body-top">
+                                  <span className="cand-nombre">
+                                    {c.nombre}
+                                  </span>
+                                  <span
+                                    className={`cand-resultado-badge cand-resultado-${c.resultado.toLowerCase().replace(/\s+/g, '-')}`}
+                                  >
+                                    {c.resultado === 'Pendiente' && (
+                                      <i className="bi bi-clock-fill me-1"></i>
+                                    )}
+                                    {c.resultado === 'Positivo' && (
+                                      <i className="bi bi-check-circle-fill me-1"></i>
+                                    )}
+                                    {c.resultado === 'Negativo' && (
+                                      <i className="bi bi-x-circle-fill me-1"></i>
+                                    )}
+                                    {c.resultado === 'En espera' && (
+                                      <i className="bi bi-pause-circle-fill me-1"></i>
+                                    )}
+                                    {c.resultado}
+                                  </span>
+                                </div>
+                                <div className="cand-body-mid">
+                                  <span className="cand-fase-badge">
+                                    <i className="bi bi-diagram-3 me-1"></i>
+                                    {c.fase}
+                                  </span>
+                                  <span className="cand-fecha">
+                                    <i className="bi bi-calendar3 me-1"></i>
+                                    {c.fecha}
+                                  </span>
+                                </div>
+                                {c.notas && (
+                                  <div className="cand-notas">
+                                    <i className="bi bi-chat-left-text me-1"></i>
+                                    {c.notas}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="tab-empty">
+                          <i className="bi bi-people"></i>
+                          <p>
+                            No hay candidatos registrados para esta vacante.
+                          </p>
+                          <small className="text-muted">
+                            Usa el formulario de arriba para añadir el primer
+                            candidato.
                           </small>
                         </div>
                       )}
@@ -400,9 +636,13 @@ export default function VacancyModal({ job, onClose, onUpdateStatus, onToggleFav
                 disabled={saveSuccess}
               >
                 {saveSuccess ? (
-                  <><i className="bi bi-check2-all me-2"></i>¡Guardado!</>
+                  <>
+                    <i className="bi bi-check2-all me-2"></i>¡Guardado!
+                  </>
                 ) : (
-                  <><i className="bi bi-check-circle me-2"></i>Guardar cambios</>
+                  <>
+                    <i className="bi bi-check-circle me-2"></i>Guardar cambios
+                  </>
                 )}
               </button>
             </div>

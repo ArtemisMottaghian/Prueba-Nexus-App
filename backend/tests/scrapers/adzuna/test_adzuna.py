@@ -1,6 +1,6 @@
 import pytest
 
-from app.services.scrapers.adzuna import determine_work_modality
+from backend.app.services.scrapers.scraper_vacancies_adzuna import determine_work_modality
 
 
 @pytest.mark.parametrize(

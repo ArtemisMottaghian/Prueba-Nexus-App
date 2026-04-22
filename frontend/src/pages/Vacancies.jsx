@@ -6,7 +6,7 @@ import initialJobsData from '../data/dummyData.json';
 import { vacanciesService } from '../services/vacanciesService';
 import { useSearchParams } from 'react-router-dom';
 
-const ITEMS_POR_PAGINA = 10;
+const ITEMS_POR_PAGINA = 20;
 const LS_FAV_KEY = 'nexus_vacantes_favorites';
 const LS_STATUS_KEY = 'nexus_vacantes_status';
 
@@ -15,7 +15,8 @@ const applyLocalOverrides = (jobs) => {
   const savedStatus = JSON.parse(localStorage.getItem(LS_STATUS_KEY) || '{}');
   return jobs.map((job) => ({
     ...job,
-    isFavorite: savedFavs[job.id] !== undefined ? savedFavs[job.id] : job.isFavorite,
+    isFavorite:
+      savedFavs[job.id] !== undefined ? savedFavs[job.id] : job.isFavorite,
     status: savedStatus[job.id] || job.status,
   }));
 };
@@ -46,7 +47,9 @@ export default function Vacancies() {
         setJobs(applyLocalOverrides(data));
       } catch (error) {
         console.log('Backend offline o error. Usando dummyData.json...', error);
-        setJobs(applyLocalOverrides(initialJobsData.vacantes || initialJobsData));
+        setJobs(
+          applyLocalOverrides(initialJobsData.vacantes || initialJobsData)
+        );
       } finally {
         setLoading(false);
       }
@@ -102,7 +105,10 @@ export default function Vacancies() {
     try {
       await vacanciesService.updateVacancyStatus(jobId, newStatus);
     } catch (error) {
-      console.error('Error al guardar el estado en servidor (persistido localmente):', error);
+      console.error(
+        'Error al guardar el estado en servidor (persistido localmente):',
+        error
+      );
     }
   };
 
@@ -122,7 +128,10 @@ export default function Vacancies() {
     try {
       await vacanciesService.toggleFavorite(jobId, newStatus);
     } catch (error) {
-      console.error('Error al cambiar favorito en servidor (persistido localmente):', error);
+      console.error(
+        'Error al cambiar favorito en servidor (persistido localmente):',
+        error
+      );
     }
   };
 

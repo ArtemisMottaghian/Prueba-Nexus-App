@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -8,6 +9,8 @@ from datetime import datetime
 from sqlalchemy import update
 
 from app.db.session import AsyncSessionLocal
+from app.models.user_model import User
+from app.schemas.users_schemas import UserType
 from app.models.job_model import JobOffer, JobPortal
 from app.models.clients_model import Client
 from app.models.contacts_model import Contact
@@ -224,7 +227,7 @@ async def apply_bulk_action(db: AsyncSession, vacancy_ids: List[int], action: st
         await db.rollback()
         raise e
 
-#actualizar estado de vacante
+# actualizar estado de vacante
 async def update_vacancy_status(db: AsyncSession, vacancy_id: int, new_status: str):
     clean_status = new_status.strip().lower()
     
@@ -326,3 +329,62 @@ async def get_distinct_locations(db: AsyncSession) -> List[str]:
             normalized.add(name)
 
     return sorted(normalized)
+
+async def assign_hr_to_vacancies(db: AsyncSession, hr_id:int, vacancy_ids: List[int]) -> int:
+    """
+    Asigna masivamente un conjunto de vacantes a un usuario interno de RRHH.
+    Valida que el usuario exista y tenga el rol correcto antes de proceder.
+    """
+
+    if not vacancy_ids:
+        return
+
+    try:
+        user_query = select(User).where(User.id == hr_id)
+        user_result = await db.execute(user_query)
+        user =  user_result.scalar_one_or_none()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="El usuario de destino no existe.")
+
+        if user.role != UserType.hr_manager:
+            raise HTTPException(
+                status_code=400,
+                detail=f"El usuario debe tener el rol: '{UserType.hr_manager.value}' para gestionar vacantes."
+            )
+        
+        stmt = (
+            update(JobOffer)
+            .where(JobOffer.id.in_(vacancy_ids))
+            .values(managed_by_id=hr_id)
+            .execution_options(synchronize_session="fetch")
+        )
+
+        result = await db.execute(stmt)
+        await db.commit()
+
+        return result.rowcount
+    
+    except HTTPException:
+        raise
+            
+    except Exception as e:
+        await db.rollback()
+        print(f"Error al asignar vacantes: {e}")
+        raise e
+
+async def get_vacancies_by_hr(db: AsyncSession, hr_id: int) -> List[JobOffer]:
+    """
+    Obtiene el listado de vacantes asignadas a un gestor de RRHH específico.
+    """
+
+    try:
+        query = select(JobOffer).where(JobOffer.managed_by_id == hr_id)
+
+        query = query.order_by(JobOffer.published_at.desc())
+
+        result = await db.execute(query)
+        return result.scalars().all()
+    except Exception as e:
+        print(f"Error al obtener las vacatantes: {e}")
+        raise e
