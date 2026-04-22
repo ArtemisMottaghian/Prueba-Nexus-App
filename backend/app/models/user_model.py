@@ -31,6 +31,6 @@ class User(Base):
     # 'managed_offers" accede a ofertas donde este usuario es el gestor
     managed_offers = relationship("JobOffer", back_populates="manager")
 
-    client_profile = relationship("Client", back_populates="user", uselist=False)
+    #client_profile = relationship("Client", back_populates="user", uselist=False)
 
 
