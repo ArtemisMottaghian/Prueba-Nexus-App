@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, BigInteger, ForeignKey, DateTime, Text, Enum as PgEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from app.db.connection import Base
+from app.db.base import Base
 from app.models.leadStatus_model import LeadStatus
 
 

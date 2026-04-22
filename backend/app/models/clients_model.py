@@ -28,9 +28,9 @@ class Client(Base):
     original_offer = relationship("JobOffer", back_populates="related_client")
 
     # cascade="all, delete-orphan" significa que si borras el cliente, sus contactos se borran también.
-    contacts = relationship(
-        "Contact", back_populates="client", cascade="all, delete-orphan"
-    )
+    #contacts = relationship(
+        #"Contact", back_populates="client", cascade="all, delete-orphan"
+    #)
     history = relationship(
         "TrackingHistory", back_populates="client", cascade="all, delete-orphan"
     )
