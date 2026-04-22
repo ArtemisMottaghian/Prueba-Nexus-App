@@ -1,0 +1,139 @@
+/* ===================================================
+   SmartMatchResults.css — Diseño NexusAI Final
+   =================================================== */
+
+.smart-match-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 13, 20, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000; /* Por encima de todo */
+  animation: fadeIn 0.25s ease-out;
+}
+
+.smart-match-modal {
+  width: 90%;
+  max-width: 500px;
+  background: #13131f; /* var(--clr-surface) */
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+}
+
+.smart-match-header {
+  padding: 1.25rem 1.5rem;
+  background: #1a1a2e; /* var(--clr-surface-2) */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #00d4ff; /* var(--clr-cyan) */
+}
+
+.header-title h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* --- BOTÓN X (ADIÓS RECUADRO GRIS) --- */
+.btn-close-custom {
+  all: unset; /* Reset total de estilos de navegador */
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: #7a7a9a;
+  transition: all 0.2s ease;
+}
+
+.btn-close-custom:hover {
+  background: rgba(248, 113, 113, 0.1);
+  color: #f87171;
+  transform: rotate(90deg);
+}
+
+/* --- ESTADO VACÍO --- */
+.empty-match-container {
+  padding: 3rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.empty-icon-wrapper {
+  background: rgba(124, 58, 237, 0.1);
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.empty-icon-wrapper i {
+  font-size: 2.5rem;
+  color: #7c3aed; /* var(--clr-purple) */
+}
+
+.empty-match-container h4 {
+  color: #e8e8f0;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+}
+
+.empty-match-container p {
+  color: #7a7a9a;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  max-width: 300px;
+}
+
+/* --- BOTÓN CERRAR ABAJO (ADIÓS RECUADRO GRIS) --- */
+.btn-simple-nexus {
+  all: unset; /* Reset total */
+  cursor: pointer;
+  margin-top: 1.5rem;
+  padding: 10px 30px;
+  background: transparent;
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: 10px;
+  color: #e8e8f0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-simple-nexus:hover {
+  background: rgba(124, 58, 237, 0.1);
+  border-color: #7c3aed;
+  box-shadow: 0 0 15px rgba(124, 58, 237, 0.2);
+}
+
+/* --- ANIMACIONES --- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Reset global por si Bootstrap intenta meter mano */
+button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
