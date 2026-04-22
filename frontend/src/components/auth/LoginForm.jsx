@@ -191,7 +191,7 @@ export default function LoginForm() {
 
             {/* Botón principal */}
             <button type="submit" className="submit-btn" disabled={loading}>
-              {loading ? 'Cargando...' : 'Iniciar Sesión →'}
+              {loading ? 'Cargando...' : 'Entrar'}
             </button>
           </form>
 
