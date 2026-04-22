@@ -13,6 +13,8 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 
+from app.models.user_model import User
+
 
 class LeadStatus(str, enum.Enum):
     new = "new"
@@ -48,15 +50,15 @@ class Company(Base):
     )
 
     comments = relationship("CompanyComment", back_populates="company")
-    managed_by_id = Column(BigInteger, ForeignKey("users.id"), nullable=True)
-    manager = relationship("User", foreign_keys=[managed_by_id])
+    managed_by_id = Column(BigInteger, ForeignKey(User.id), nullable=True)
+    manager = relationship(User, foreign_keys=[managed_by_id])
 
 class CompanyComment(Base):
     __tablename__= 'company_comments'
 
     id = Column(BigInteger, primary_key=True, index=True)
     company_id = Column(BigInteger, ForeignKey('companies.id', ondelete='CASCADE'))
-    user_id = Column(BigInteger, ForeignKey('users.id'))
+    user_id = Column(BigInteger, ForeignKey(User.id), nullable=False)
     comment = Column(Text, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
