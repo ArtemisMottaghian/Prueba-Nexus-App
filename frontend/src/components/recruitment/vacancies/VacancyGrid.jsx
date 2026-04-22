@@ -16,14 +16,19 @@ export default function VacancyGrid({
 
   const handleOpenModal = async (jobId) => {
     try {
-      // Pedimos el detalle completo (¡con descripción!)
+      // Intentar cargar el detalle completo desde la API (con descripción)
       const fullJobData = await vacanciesService.getVacancyById(jobId);
-      // Se lo pasamos al modal
       setSelectedJob(fullJobData);
     } catch (error) {
-      console.error('Error al cargar la descripción de la vacante:', error);
-      alert('No se pudo cargar el detalle de la vacante.');
-    } // <--- Llave del catch cerrada correctamente
+      console.error('Error al cargar detalle desde API, usando datos de tarjeta:', error);
+      // Fallback: usar los datos ya cargados en la grid (siempre disponibles)
+      const fallbackJob = jobs.find((j) => j.id === jobId);
+      if (fallbackJob) {
+        setSelectedJob(fallbackJob);
+      } else {
+        alert('No se pudo cargar el detalle de la vacante.');
+      }
+    }
   };
 
   return (
@@ -88,6 +93,7 @@ export default function VacancyGrid({
           job={selectedJob}
           onClose={() => setSelectedJob(null)}
           onUpdateStatus={onUpdateJobStatus}
+          onToggleFavorite={onToggleFavorite}
         />
       )}
     </>
