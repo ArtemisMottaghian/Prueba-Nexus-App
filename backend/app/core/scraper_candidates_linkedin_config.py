@@ -15,5 +15,5 @@ LOCATIONS = [
     "España"   
 ]
 
-HEADLESS_MODE = False # Si lo ponemos en True no abre navegador
+HEADLESS_MODE = True # Si lo ponemos en True no abre navegador
 MAX_PROFILES_PER_SEARCH = 5 # Cambiar aquí para añadir el numero de candidatos que queremos que nos saque por cada scrapeo

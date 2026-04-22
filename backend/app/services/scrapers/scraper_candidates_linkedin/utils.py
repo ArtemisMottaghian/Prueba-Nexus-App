@@ -69,3 +69,4 @@ async def upsert_scraped_candidate(db: AsyncSession, data: dict):
         await db.rollback()
         print(f"Error critico al guardar en la BD para {email}: {str(e)}\n")
         return False
+    

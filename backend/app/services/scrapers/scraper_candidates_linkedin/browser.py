@@ -57,3 +57,4 @@ async def get_browser_context(headless: bool = False):
     except Exception as e:
         print(f"Error al inicializar el navegador: {e}")
         return None, None, None
+    

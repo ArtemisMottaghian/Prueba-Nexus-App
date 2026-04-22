@@ -17,9 +17,9 @@ from app.core.scraper_candidates_linkedin_config import (
     MAX_PROFILES_PER_SEARCH,
 )
 
-# ==============================================================================
+
 # FUNCIONES AUXILIARES DE EXTRACCIÓN (Subtareas)
-# ==============================================================================
+
 
 async def apply_stealth_mode(page: Page) -> None:
     """
@@ -296,9 +296,9 @@ async def extract_skills_data(page: Page, url: str, fallback_keyword: str) -> st
 
     return ", ".join(skill_list) if skill_list else fallback_keyword
 
-# ==============================================================================
+
 # ORQUESTADORES PRINCIPALES DE LINKEDIN
-# ==============================================================================
+
 
 async def extract_profile_data(page: Page, url: str, keyword: str, search_location: str) -> Optional[Dict[str, Any]]:
     print(f"\nEntrando al perfil: {url}")
