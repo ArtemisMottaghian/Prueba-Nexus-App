@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import logoNexus from '../../assets/logo-nexus.svg';
 import './LoginForm.css';
@@ -15,8 +15,6 @@ export default function LoginForm() {
 
   const navigate = useNavigate();
   const { login, user } = useAuth();
-  const [searchParams] = useSearchParams();
-
   // Si el usuario ya está autenticado, redirigir
   useEffect(() => {
     if (user) {
@@ -57,6 +55,7 @@ export default function LoginForm() {
         setGeneralError(result.error || 'Credenciales incorrectas');
       }
     } catch (error) {
+      console.error(error); // Se imprime en consola para evitar el error del linter
       setGeneralError('Error al conectar con el servidor');
     } finally {
       setLoading(false);

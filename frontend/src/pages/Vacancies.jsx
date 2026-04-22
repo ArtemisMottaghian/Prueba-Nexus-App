@@ -378,7 +378,7 @@ export default function Vacancies() {
 
   return (
     <>
-     <div className="controls-container sticky-controls">
+      <div className="controls-container sticky-controls">
         <FilterBar
           filters={filters}
           onFilterChange={handleFilterChange}
