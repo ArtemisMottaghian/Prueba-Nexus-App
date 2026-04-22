@@ -39,6 +39,11 @@ export default function VacancyModal({
     notas: '',
   });
 
+  // Documentos locales
+  const [localDocs, setLocalDocs] = useState(job?.documentos || []);
+  const [docTipo, setDocTipo] = useState('CV');
+  const [draggingOver, setDraggingOver] = useState(false);
+
   // Contacto empresa — mensaje automático
   const [mensajeGenerado, setMensajeGenerado] = useState('');
   const [generandoMensaje, setGenerandoMensaje] = useState(false);
@@ -119,6 +124,36 @@ export default function VacancyModal({
     } catch (err) {
       console.error('Error actualizando estado de cuenta:', err);
     }
+  };
+
+  const handleAdjuntarArchivos = (files) => {
+    if (!files?.length) return;
+    const nuevos = Array.from(files).map((f) => ({
+      nombre: f.name,
+      tipo: docTipo,
+      fecha: new Date().toLocaleDateString('es-ES'),
+      tamaño:
+        f.size > 1024 * 1024
+          ? `${(f.size / (1024 * 1024)).toFixed(1)} MB`
+          : `${(f.size / 1024).toFixed(0)} KB`,
+    }));
+    setLocalDocs((prev) => [...nuevos, ...prev]);
+  };
+
+  const handleEliminarDoc = (index) => {
+    setLocalDocs((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const getDocIcon = (nombre) => {
+    const ext = nombre.split('.').pop().toLowerCase();
+    if (['pdf'].includes(ext)) return 'bi-file-earmark-pdf text-danger';
+    if (['doc', 'docx'].includes(ext))
+      return 'bi-file-earmark-word text-primary';
+    if (['xls', 'xlsx'].includes(ext))
+      return 'bi-file-earmark-excel text-success';
+    if (['jpg', 'jpeg', 'png', 'gif'].includes(ext))
+      return 'bi-file-earmark-image text-info';
+    return 'bi-file-earmark-text';
   };
 
   const handleGenerarMensaje = (contacto) => {
@@ -813,31 +848,100 @@ export default function VacancyModal({
                 {activeTab === 'documentos' && (
                   <div className="tab-pane fade show active">
                     <div className="detail-section">
-                      <h4 className="section-title">Archivos adjuntos</h4>
-                      {job.documentos?.length > 0 ? (
-                        job.documentos.map((doc, i) => (
-                          <div key={i} className="doc-item">
-                            <div className="doc-icon">
-                              <i className="bi bi-file-earmark-text"></i>
-                            </div>
-                            <div className="flex-grow-1">
-                              <div className="doc-name">{doc.nombre}</div>
-                              <div className="doc-meta">
-                                {doc.tipo} · {doc.fecha}
+                      <h4 className="section-title">Adjuntar documentos</h4>
+
+                      {/* Zona de tipo + drop */}
+                      <div className="doc-upload-row mb-3">
+                        <select
+                          className="form-select input-field doc-tipo-select"
+                          value={docTipo}
+                          onChange={(e) => setDocTipo(e.target.value)}
+                        >
+                          <option>CV</option>
+                          <option>Oferta económica</option>
+                          <option>Contrato</option>
+                          <option>Prueba técnica</option>
+                          <option>Informe</option>
+                          <option>Otro</option>
+                        </select>
+                        <label
+                          className={`doc-dropzone ${draggingOver ? 'doc-dropzone--active' : ''}`}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            setDraggingOver(true);
+                          }}
+                          onDragLeave={() => setDraggingOver(false)}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            setDraggingOver(false);
+                            handleAdjuntarArchivos(e.dataTransfer.files);
+                          }}
+                        >
+                          <input
+                            type="file"
+                            multiple
+                            style={{ display: 'none' }}
+                            onChange={(e) =>
+                              handleAdjuntarArchivos(e.target.files)
+                            }
+                          />
+                          <i className="bi bi-cloud-arrow-up-fill"></i>
+                          <span>
+                            Arrastra archivos aquí o{' '}
+                            <strong>haz clic para seleccionar</strong>
+                          </span>
+                          <small>PDF, Word, Excel, imágenes…</small>
+                        </label>
+                      </div>
+
+                      {/* Lista de documentos */}
+                      <h4 className="section-title">
+                        Archivos adjuntos{' '}
+                        {localDocs.length > 0 && (
+                          <span className="doc-count">{localDocs.length}</span>
+                        )}
+                      </h4>
+                      {localDocs.length > 0 ? (
+                        <div className="doc-list">
+                          {localDocs.map((doc, i) => (
+                            <div key={i} className="doc-item">
+                              <div className="doc-icon">
+                                <i
+                                  className={`bi ${getDocIcon(doc.nombre)}`}
+                                ></i>
+                              </div>
+                              <div className="flex-grow-1">
+                                <div className="doc-name">{doc.nombre}</div>
+                                <div className="doc-meta">
+                                  <span className="doc-tipo-badge">
+                                    {doc.tipo}
+                                  </span>
+                                  {doc.tamaño && <span>· {doc.tamaño}</span>}
+                                  <span>· {doc.fecha}</span>
+                                </div>
+                              </div>
+                              <div className="d-flex gap-1">
+                                <button
+                                  className="btn-icon btn-icon-sm"
+                                  title="Descargar"
+                                >
+                                  <i className="bi bi-download"></i>
+                                </button>
+                                <button
+                                  className="btn-icon btn-icon-sm btn-icon-danger"
+                                  title="Eliminar"
+                                  onClick={() => handleEliminarDoc(i)}
+                                >
+                                  <i className="bi bi-trash3"></i>
+                                </button>
                               </div>
                             </div>
-                            <button
-                              className="btn-icon btn-icon-sm"
-                              title="Descargar"
-                            >
-                              <i className="bi bi-download"></i>
-                            </button>
-                          </div>
-                        ))
+                          ))}
+                        </div>
                       ) : (
                         <div className="tab-empty">
                           <i className="bi bi-file-earmark"></i>
-                          <p>No hay documentos adjuntos.</p>
+                          <p>No hay documentos adjuntos todavía.</p>
                         </div>
                       )}
                     </div>
