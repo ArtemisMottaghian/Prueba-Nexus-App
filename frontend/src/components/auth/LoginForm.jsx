@@ -15,7 +15,6 @@ export default function LoginForm() {
 
   const navigate = useNavigate();
   const { login, user } = useAuth();
-  // Si el usuario ya está autenticado, redirigir
   useEffect(() => {
     if (user) {
       navigate(getDefaultRouteForRole(user.role));
@@ -55,7 +54,7 @@ export default function LoginForm() {
         setGeneralError(result.error || 'Credenciales incorrectas');
       }
     } catch (error) {
-      console.error(error); // Se imprime en consola para evitar el error del linter
+      console.error(error);
       setGeneralError('Error al conectar con el servidor');
     } finally {
       setLoading(false);
@@ -108,7 +107,6 @@ export default function LoginForm() {
         </div>
       </div>
 
-      {/* ===== PANEL DERECHO (Formulario) ===== */}
       <div className="login-panel-form">
         <div className="form-container">
           <div className="form-header">
@@ -185,6 +183,7 @@ export default function LoginForm() {
                 />
                 Recordarme
               </label>
+
               <a href="#" className="forgot-password">
                 ¿Olvidaste tu contraseña?
               </a>
@@ -196,11 +195,7 @@ export default function LoginForm() {
             </button>
           </form>
 
-          <div className="register-link">
-            ¿No tienes una cuenta? <a href="#">Regístrate gratis</a>
-          </div>
-
-          <div className="form-footer">
+          <div className="form-footer" style={{ marginTop: '3rem' }}>
             <a href="#">Términos</a>
             <a href="#">Privacidad</a>
             <a href="#">Ayuda</a>
