@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { CANDIDATE_STATUS_SELECT_OPTIONS } from '../../../constants/candidateStatus';
 import './CandidateModal.css';
 
@@ -10,11 +10,7 @@ export default function CandidateModal({
   onVerify,
 }) {
   const [activeTab, setActiveTab] = useState('detalles');
-  const [localStatus, setLocalStatus] = useState(candidate?.status || '');
-
-  useEffect(() => {
-    setLocalStatus(candidate?.status || '');
-  }, [candidate?.id, candidate?.status]);
+  const [localStatus, setLocalStatus] = useState(() => candidate?.status || '');
 
   if (!candidate) return null;
 

@@ -88,6 +88,7 @@ export default function CandidateGrid({
 
       {selectedCandidate && (
         <CandidateModal
+          key={selectedCandidate.id}
           candidate={
             filteredCandidates.find((c) => c.id === selectedCandidate.id) ||
             selectedCandidate
