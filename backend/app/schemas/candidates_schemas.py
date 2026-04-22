@@ -137,7 +137,8 @@ class CandidateScraperStatusOut(BaseModel):
 class FavoriteRequest(BaseModel):
     favorite: bool
 
-
+class VerifyRequest(BaseModel):
+    verified: bool
 
 
 
