@@ -41,7 +41,6 @@ export default function VacancyCard({
     return (
       <div className="vacante-card-list mb-2" onClick={onClick}>
         <div className="list-wrapper">
-          
           <div className="list-main-info">
             <input
               className="form-check-input custom-checkbox"
@@ -64,12 +63,20 @@ export default function VacancyCard({
             </div>
             <div className="list-actions">
               <span className={`badge ${badgeClass}`}>{job.status}</span>
-              <button className="btn-favorite-star" onClick={handleFavoriteClick}>
-                <i className={job.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'}></i>
+              <button
+                className="btn-favorite-star"
+                onClick={handleFavoriteClick}
+              >
+                <i
+                  className={
+                    job.isFavorite
+                      ? 'bi bi-star-fill text-warning'
+                      : 'bi bi-star'
+                  }
+                ></i>
               </button>
             </div>
           </div>
-
         </div>
       </div>
     );
@@ -100,7 +107,11 @@ export default function VacancyCard({
           </select>
         </div>
         <button className="btn-favorite-star" onClick={handleFavoriteClick}>
-          <i className={job.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'}></i>
+          <i
+            className={
+              job.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'
+            }
+          ></i>
         </button>
       </div>
 
