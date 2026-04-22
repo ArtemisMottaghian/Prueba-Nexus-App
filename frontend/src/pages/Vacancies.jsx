@@ -338,7 +338,7 @@ export default function Vacancies() {
       matchLocation &&
       matchSource &&
       matchFavorite &&
-      matchText // <--- Añadimos matchText a la comprobación final
+      matchText
     );
   });
 
@@ -378,22 +378,35 @@ export default function Vacancies() {
 
   return (
     <>
-      <FilterBar
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onClearFilters={handleClearFilters}
-        locationOptions={locationOptions}
-        statusOptions={['Nueva', 'Contactada', 'En proceso', 'Descartada']}
-        industryOptions={[
-          'Technology',
-          'Finance',
-          'Healthcare',
-          'Hospitality',
-          'Legal',
-          'Otros',
-        ]}
-        sourceOptions={['LinkedIn', 'InfoJobs', 'Adzuna', 'Otro']}
-      />
+     <div className="controls-container sticky-controls">
+        <FilterBar
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onClearFilters={handleClearFilters}
+          locationOptions={locationOptions}
+          statusOptions={['Nueva', 'Contactada', 'En proceso', 'Descartada']}
+          industryOptions={[
+            'Technology',
+            'Finance',
+            'Healthcare',
+            'Hospitality',
+            'Legal',
+            'Otros',
+          ]}
+          sourceOptions={['LinkedIn', 'InfoJobs', 'Adzuna', 'Otro']}
+        />
+
+        {selectedVacancies.length > 0 && (
+          <div className="bulk-actions-wrapper animate__animated animate__fadeInDown animate__faster">
+            <BulkActions
+              selectedCount={selectedVacancies.length}
+              label="vacante"
+              onDiscard={handleBulkDiscard}
+              onClear={() => setSelectedVacancies([])}
+            />
+          </div>
+        )}
+      </div>
 
       {!loading && (
         <div className="d-flex justify-content-between align-items-center mb-3">
@@ -435,15 +448,6 @@ export default function Vacancies() {
         </div>
       )}
 
-      {selectedVacancies.length > 0 && (
-        <BulkActions
-          selectedCount={selectedVacancies.length}
-          label="vacante"
-          onDiscard={handleBulkDiscard}
-          onClear={() => setSelectedVacancies([])}
-        />
-      )}
-
       {loading ? (
         <div className="text-center p-5 text-muted">Cargando vacantes...</div>
       ) : (
@@ -457,7 +461,6 @@ export default function Vacancies() {
         />
       )}
 
-      {/* Paginación */}
       {!loading && totalPaginas > 1 && (
         <div className="clientes-pagination" style={{ marginTop: '1rem' }}>
           <span className="clientes-pagination__info">

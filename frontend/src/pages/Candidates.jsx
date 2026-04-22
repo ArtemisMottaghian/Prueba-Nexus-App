@@ -218,40 +218,46 @@ export default function Candidates() {
 
   return (
     <>
-      <FilterBar
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onClearFilters={handleClearFilters}
-        statusOptions={[
-          { value: 'Nuevo', label: 'Nuevo' },
-          { value: 'Contactado', label: 'Contactado' },
-          { value: 'En proceso', label: 'En proceso' },
-          { value: 'Descartado', label: 'Descartado' },
-        ]}
-        sourceOptions={[
-          { value: 'LinkedIn', label: 'LinkedIn' },
-          { value: 'InfoJobs', label: 'InfoJobs' },
-          { value: 'Carga Manual', label: 'Carga Manual' },
-          { value: 'GitHub API', label: 'GitHub API' },
-        ]}
-        skillsOptions={skillsOptions}
-        disponibilidadOptions={DISPONIBILIDAD_OPTIONS}
-        experienciaOptions={EXPERIENCIA_OPTIONS}
-        provinciaOptions={provinciaOptions}
-      />
+      <div className="controls-container sticky-controls">
+        <FilterBar
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onClearFilters={handleClearFilters}
+          statusOptions={[
+            { value: 'Nuevo', label: 'Nuevo' },
+            { value: 'Contactado', label: 'Contactado' },
+            { value: 'En proceso', label: 'En proceso' },
+            { value: 'Descartado', label: 'Descartado' },
+          ]}
+          sourceOptions={[
+            { value: 'LinkedIn', label: 'LinkedIn' },
+            { value: 'InfoJobs', label: 'InfoJobs' },
+            { value: 'Carga Manual', label: 'Carga Manual' },
+            { value: 'GitHub API', label: 'GitHub API' },
+          ]}
+          skillsOptions={skillsOptions}
+          disponibilidadOptions={DISPONIBILIDAD_OPTIONS}
+          experienciaOptions={EXPERIENCIA_OPTIONS}
+          provinciaOptions={provinciaOptions}
+        />
+
+        {selectedCandidates.length > 0 && (
+          <div className="bulk-actions-wrapper animate__animated animate__fadeInDown animate__faster">
+            <BulkActions
+              selectedCount={selectedCandidates.length}
+              onClear={() => setSelectedCandidates([])}
+            />
+          </div>
+        )}
+      </div>
 
       {!loading && (
-        <div className="mb-3 text-muted small">
-          Mostrando {filteredCandidates.length} candidatos de{' '}
-          {candidates.length}
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <div className="text-muted small">
+            Mostrando {filteredCandidates.length} candidatos de{' '}
+            {candidates.length}
+          </div>
         </div>
-      )}
-
-      {selectedCandidates.length > 0 && (
-        <BulkActions
-          selectedCount={selectedCandidates.length}
-          onClear={() => setSelectedCandidates([])}
-        />
       )}
 
       {loading ? (
@@ -266,8 +272,6 @@ export default function Candidates() {
           onToggleFavorite={handleToggleFavorite}
         />
       )}
-
-      {/* Paginación */}
       {!loading && totalPaginas > 1 && (
         <div className="clientes-pagination" style={{ marginTop: '1rem' }}>
           <span className="clientes-pagination__info">
