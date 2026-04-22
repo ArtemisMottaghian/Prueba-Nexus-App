@@ -14,7 +14,10 @@ from app.schemas.vacancies_schemas import (
     FavoriteRequest,
     BulkActionRequest,
     MessageResponse,
+    StatusRequest, 
 )
+from app.schemas.clients_schemas import (ContactOut)
+from app.services.clients_service import get_contact_by_vacancy
 
 router = APIRouter()
 
@@ -123,6 +126,13 @@ async def assign_hr_to_vacancies(
         "message": f"Se han asignado {assgined_count} vacantes al gestor de RRHH correctamente"
     }
 
+    await vacancies_service.update_vacancy_status(db, vacancy_id, body.status)
+    return {"message": f"Estado actualizado a '{body.status}'"}
+
+# Devuelve contactos del cliente vinculado
+@router.get("/{vacancy_id}/contact", response_model=List[ContactOut])
+async def get_vacancy_contact(vacancy_id: int, db: AsyncSession = Depends(get_db)):
+    return await get_contact_by_vacancy(db, vacancy_id)
 
 # -----------------
 # Obtener vacantes asignadas a un HR específico

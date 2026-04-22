@@ -9,7 +9,7 @@ from app.models.clients_model import Client
 from app.models.contacts_model import Contact
 from app.models.job_model import JobOffer
 from app.schemas.clients_schemas import (
-    ClientCreate, ClientUpdate, ClientOut, ClientDetailOut, VacancyOut
+    ClientCreate, ClientUpdate, ClientOut, ClientDetailOut, VacancyOut, ContactOut
 )
 
 
@@ -242,3 +242,18 @@ async def get_client_vacancies(db: AsyncSession, client_id: int) -> List[Vacancy
     except SQLAlchemyError as e:
         print(f"Error al obtener vacantes del cliente {client_id}: {e}")
         raise HTTPException(status_code=500, detail="Error retrieving client positions")
+
+async def get_contacts_by_client(db: AsyncSession, client_id: int) -> List[ContactOut]:
+    await _get_client_or_404(db, client_id)
+    result = await db.execute(
+        select(Contact).where(Contact.client_id == client_id).order_by(Contact.id.asc())
+    )
+    contacts = result.scalars().all()
+    return [ContactOut.model_validate(c) for c in contacts]
+
+async def get_contact_by_vacancy(db: AsyncSession, vacancy_id: int) -> List[ContactOut]:
+    result = await db.execute(select(Client).where(Client.original_offer_id == vacancy_id))
+    client = result.scalars().first()
+    if not client:
+        raise HTTPException(status_code=404, detail="No hay cliente vinculado a esta vacante")
+    return await get_contacts_by_client(db, client.id)

@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from typing import List
 
-from app.schemas.clients_schemas import ClientUpdate, ClientOut, ClientDetailOut, ClientCreate, VacancyOut,MessageResponse
+from app.schemas.clients_schemas import ClientUpdate, ClientOut, ClientDetailOut, ClientCreate, VacancyOut,MessageResponse, ContactOut
 from app.services import clients_service
 from app.db.connection import get_db
 from backend.app.services import comments_service
@@ -141,3 +141,8 @@ async def read_client_notes(
 ):
     comentarios = await comments_service.get_client_comments(db, client_id)
     return comentarios
+
+# Obtener datos de contacto por cliente o por vacante
+@router.get("/{vacancy_id}/contact", response_model=List[ContactOut])
+async def get_vacancy_contact(vacancy_id: int, db: AsyncSession = Depends(get_db)):
+    return await clients_service.get_contact_by_vacancy(db, vacancy_id) 
