@@ -11,7 +11,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from app.db.base_class import Base
+from app.db.base import Base
 
 
 class LeadStatus(str, enum.Enum):
@@ -54,7 +54,7 @@ class Company(Base):
 class CompanyComment(Base):
     __tablename__= 'company_comments'
 
-    id = Column(BigInteger, primary_ket=True, index=True)
+    id = Column(BigInteger, primary_key=True, index=True)
     company_id = Column(BigInteger, ForeignKey('companies.id', ondelete='CASCADE'))
     user_id = Column(BigInteger, ForeignKey('users.id'))
     comment = Column(Text, nullable=False)
