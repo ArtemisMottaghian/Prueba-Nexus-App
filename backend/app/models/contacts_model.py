@@ -15,3 +15,4 @@ class Contact(Base):
     last_interaction = Column(DateTime(timezone=True))
 
     client = relationship("Client", back_populates="contacts")
+    company = relationship("Company", back_populates="contacts")

@@ -10,6 +10,7 @@ class TrackingHistory(Base):
 
     id = Column(BigInteger, primary_key=True, index=True)
     client_id = Column(BigInteger, ForeignKey("clients.id", ondelete="CASCADE"))
+    company_id = Column(BigInteger, ForeignKey("companies.id", ondelete="CASCADE"), nullable=True)
     offer_id = Column(BigInteger, ForeignKey("job_offers.id"))
     action_type = Column(String(255))
     previous_status = Column(PgEnum(LeadStatus, name="lead_status", create_type=False))
@@ -18,5 +19,6 @@ class TrackingHistory(Base):
     recorded_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
     client = relationship("Client", back_populates="history")
+    company = relationship("Company", back_populates="tracking_history")
     offer = relationship("JobOffer", back_populates="tracking_entries")
 
