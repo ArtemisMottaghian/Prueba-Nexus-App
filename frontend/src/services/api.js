@@ -33,6 +33,7 @@ export const ENDPOINTS = {
   recruitment: {
     candidatos: {
       list: `${BASE_URL}/api/candidates`,
+      verify: (id) => `${BASE_URL}/api/candidates/${id}/verify`,
       scraperStatus: `${BASE_URL}/api/candidates/scraper-status`,
       filter: (params) => {
         const query = new URLSearchParams(params).toString();
