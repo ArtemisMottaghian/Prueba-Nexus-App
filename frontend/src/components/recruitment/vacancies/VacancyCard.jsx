@@ -36,61 +36,52 @@ export default function VacancyCard({
     }
   };
 
+  // VISTA DE LISTA (Responsive Corregido)
   if (isListView) {
     return (
-      <div
-        className="vacante-card-list mb-2"
-        onClick={onClick}
-        style={{ cursor: 'pointer' }}
-      >
-        <div className="d-flex align-items-center justify-content-between w-100 p-3">
-          <div className="d-flex align-items-center gap-3">
+      <div className="vacante-card-list mb-2" onClick={onClick}>
+        <div className="list-wrapper">
+          
+          <div className="list-main-info">
             <input
-              className="form-check-input"
+              className="form-check-input custom-checkbox"
               type="checkbox"
               checked={isSelected || false}
               onChange={handleCheckboxClick}
               onClick={handleChildClick}
             />
-            {/* CAMBIO: Eliminado text-white, añadido text-body */}
-            <h5 className="mb-0 text-body vacante-title-list-sm">
-              {job.title}
-            </h5>
-            <span className="text-muted small">|</span>
-            <span className="detail-text">{job.companyName}</span>
+            <div className="list-text-group">
+              <h5 className="list-title">{job.title}</h5>
+              <span className="list-separator">|</span>
+              <span className="list-company">{job.companyName}</span>
+            </div>
           </div>
-          <div className="d-flex align-items-center gap-4">
-            <span className="detail-text opacity-75">
-              <i className="bi bi-geo-alt me-1"></i>
-              {job.location}
-            </span>
-            <span className={`badge ${badgeClass}`}>{job.status}</span>
-            <button
-              className="btn-icon btn-icon-sm"
-              onClick={handleFavoriteClick}
-            >
-              <i
-                className={
-                  job.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'
-                }
-              ></i>
-            </button>
+
+          <div className="list-meta-info">
+            <div className="list-location">
+              <i className="bi bi-geo-alt"></i>
+              <span>{job.location}</span>
+            </div>
+            <div className="list-actions">
+              <span className={`badge ${badgeClass}`}>{job.status}</span>
+              <button className="btn-favorite-star" onClick={handleFavoriteClick}>
+                <i className={job.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'}></i>
+              </button>
+            </div>
           </div>
+
         </div>
       </div>
     );
   }
 
+  // VISTA DE GRID (Tarjetas normales)
   return (
-    <div
-      className="vacante-card"
-      onClick={onClick}
-      style={{ cursor: 'pointer' }}
-    >
+    <div className="vacante-card" onClick={onClick}>
       <div className="card-header-row">
-        <div className="d-flex align-items-center gap-2">
+        <div className="header-left">
           <input
-            className="form-check-input mt-0 checkbox-lg"
+            className="form-check-input checkbox-lg"
             type="checkbox"
             checked={isSelected || false}
             onChange={handleCheckboxClick}
@@ -108,12 +99,8 @@ export default function VacancyCard({
             <option value="Descartada">Descartada</option>
           </select>
         </div>
-        <button className="btn-icon btn-icon-sm" onClick={handleFavoriteClick}>
-          <i
-            className={
-              job.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'
-            }
-          ></i>
+        <button className="btn-favorite-star" onClick={handleFavoriteClick}>
+          <i className={job.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'}></i>
         </button>
       </div>
 
