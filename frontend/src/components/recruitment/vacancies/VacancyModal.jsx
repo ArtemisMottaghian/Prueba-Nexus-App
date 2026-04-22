@@ -39,6 +39,11 @@ export default function VacancyModal({
     notas: '',
   });
 
+  // Contacto empresa — mensaje automático
+  const [mensajeGenerado, setMensajeGenerado] = useState('');
+  const [generandoMensaje, setGenerandoMensaje] = useState(false);
+  const [mensajeCopied, setMensajeCopied] = useState(false);
+
   // CRM de la EMPRESA asociada a la vacante (Issue #329)
   const [empresaCrm, setEmpresaCrm] = useState(null);
   const [loadingEmpresa, setLoadingEmpresa] = useState(false);
@@ -114,6 +119,26 @@ export default function VacancyModal({
     } catch (err) {
       console.error('Error actualizando estado de cuenta:', err);
     }
+  };
+
+  const handleGenerarMensaje = (contacto) => {
+    setGenerandoMensaje(true);
+    setMensajeGenerado('');
+    const nombre = contacto?.nombre || 'Responsable de selección';
+    const empresa = job.companyName || 'su empresa';
+    const puesto = job.title || 'el puesto';
+    const mensaje = `Hola ${nombre},\n\nMe pongo en contacto contigo desde Nexus porque hemos identificado que ${empresa} está buscando un/a ${puesto}.\n\nContamos con candidatos/as especializados/as en este perfil que podrían encajar perfectamente en vuestra búsqueda. Estaría encantado/a de compartir algunos perfiles con vosotros sin ningún compromiso.\n\n¿Tendríais unos minutos esta semana para una breve llamada?\n\nQuedo a vuestra disposición.\n\nUn saludo,\nEquipo Nexus Talent`;
+    setTimeout(() => {
+      setMensajeGenerado(mensaje);
+      setGenerandoMensaje(false);
+    }, 600);
+  };
+
+  const handleCopiarMensaje = () => {
+    navigator.clipboard.writeText(mensajeGenerado).then(() => {
+      setMensajeCopied(true);
+      setTimeout(() => setMensajeCopied(false), 2000);
+    });
   };
 
   const handleAddCandidato = () => {
@@ -211,6 +236,17 @@ export default function VacancyModal({
                     <i className="bi bi-info-circle me-2"></i>Detalles
                   </button>
                 </li>
+                {!isReclutador && (
+                  <li className="nav-item">
+                    <button
+                      className={`nav-link ${activeTab === 'contacto' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('contacto')}
+                      title="Contacto de la empresa para esta vacante"
+                    >
+                      <i className="bi bi-person-lines-fill me-2"></i>Contacto
+                    </button>
+                  </li>
+                )}
                 {!isReclutador && (
                   <li className="nav-item">
                     <button
@@ -315,6 +351,196 @@ export default function VacancyModal({
                     </div>
                   </div>
                 )}
+
+                {/* TAB CONTACTO — oculto para reclutador */}
+                {activeTab === 'contacto' &&
+                  !isReclutador &&
+                  (() => {
+                    // Construimos lista de contactos a partir del objeto job
+                    const contactos = job.contactos?.length
+                      ? job.contactos
+                      : job.contactEmail || job.contactPhone || job.contactName
+                        ? [
+                            {
+                              nombre: job.contactName || 'Responsable',
+                              email: job.contactEmail,
+                              telefono: job.contactPhone,
+                              cargo: job.contactRole || '',
+                            },
+                          ]
+                        : [];
+
+                    return (
+                      <div className="tab-pane fade show active">
+                        <div className="detail-section">
+                          <h4 className="section-title">
+                            Contacto de la empresa
+                          </h4>
+
+                          {contactos.length > 0 ? (
+                            <div className="contact-cards-grid">
+                              {contactos.map((c, i) => (
+                                <div key={i} className="contact-card">
+                                  <div className="contact-avatar">
+                                    {(c.nombre || '?').charAt(0).toUpperCase()}
+                                  </div>
+                                  <div className="contact-info">
+                                    <div className="contact-nombre">
+                                      {c.nombre || '—'}
+                                    </div>
+                                    {c.cargo && (
+                                      <div className="contact-cargo">
+                                        {c.cargo}
+                                      </div>
+                                    )}
+                                    <div className="contact-data-row">
+                                      {c.email && (
+                                        <a
+                                          href={`mailto:${c.email}`}
+                                          className="contact-link"
+                                        >
+                                          <i className="bi bi-envelope-fill"></i>
+                                          {c.email}
+                                        </a>
+                                      )}
+                                      {c.telefono && (
+                                        <a
+                                          href={`tel:${c.telefono}`}
+                                          className="contact-link"
+                                        >
+                                          <i className="bi bi-telephone-fill"></i>
+                                          {c.telefono}
+                                        </a>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <button
+                                    className="btn btn-primary-custom btn-sm contact-msg-btn"
+                                    onClick={() => handleGenerarMensaje(c)}
+                                    disabled={generandoMensaje}
+                                    title="Generar mensaje de contacto automático"
+                                  >
+                                    <i className="bi bi-magic me-1"></i>
+                                    Generar mensaje
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="contact-empty">
+                              <i className="bi bi-person-x"></i>
+                              <p>
+                                No se han detectado contactos para esta empresa.
+                              </p>
+                              <small>
+                                La IA mostrará aquí automáticamente los
+                                contactos cuando estén disponibles.
+                              </small>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Sección mensaje automático */}
+                        <div className="detail-section">
+                          <h4 className="section-title">
+                            <i
+                              className="bi bi-magic me-2"
+                              style={{ color: 'var(--color-purple-secondary)' }}
+                            ></i>
+                            Mensaje de contacto automático
+                          </h4>
+
+                          {!mensajeGenerado && !generandoMensaje && (
+                            <div className="msg-placeholder">
+                              <i className="bi bi-chat-square-dots"></i>
+                              <p>
+                                Selecciona un contacto y pulsa{' '}
+                                <strong>Generar mensaje</strong> para que la IA
+                                redacte un primer contacto personalizado.
+                              </p>
+                              {contactos.length === 0 && (
+                                <button
+                                  className="btn btn-primary-custom btn-sm mt-2"
+                                  onClick={() => handleGenerarMensaje(null)}
+                                  disabled={generandoMensaje}
+                                >
+                                  <i className="bi bi-magic me-2"></i>Generar
+                                  mensaje genérico
+                                </button>
+                              )}
+                            </div>
+                          )}
+
+                          {generandoMensaje && (
+                            <div className="text-center py-3 text-muted small">
+                              <div
+                                className="spinner-border spinner-border-sm me-2"
+                                role="status"
+                              ></div>
+                              Generando mensaje...
+                            </div>
+                          )}
+
+                          {mensajeGenerado && !generandoMensaje && (
+                            <div className="msg-generated">
+                              <div className="msg-generated-header">
+                                <span className="msg-generated-label">
+                                  <i className="bi bi-check-circle-fill text-success me-2"></i>
+                                  Mensaje listo
+                                </span>
+                                <button
+                                  className="btn-icon btn-icon-sm"
+                                  onClick={handleCopiarMensaje}
+                                  title="Copiar al portapapeles"
+                                >
+                                  {mensajeCopied ? (
+                                    <i className="bi bi-check2 text-success"></i>
+                                  ) : (
+                                    <i className="bi bi-clipboard"></i>
+                                  )}
+                                </button>
+                              </div>
+                              <textarea
+                                className="form-control msg-textarea"
+                                rows={8}
+                                value={mensajeGenerado}
+                                onChange={(e) =>
+                                  setMensajeGenerado(e.target.value)
+                                }
+                              />
+                              <div className="msg-generated-actions">
+                                <button
+                                  className="btn btn-secondary-custom btn-sm"
+                                  onClick={() =>
+                                    handleGenerarMensaje(contactos[0] || null)
+                                  }
+                                >
+                                  <i className="bi bi-arrow-clockwise me-1"></i>
+                                  Regenerar
+                                </button>
+                                <button
+                                  className="btn btn-primary-custom btn-sm"
+                                  onClick={handleCopiarMensaje}
+                                >
+                                  {mensajeCopied ? (
+                                    <>
+                                      <i className="bi bi-check2 me-1"></i>
+                                      ¡Copiado!
+                                    </>
+                                  ) : (
+                                    <>
+                                      <i className="bi bi-clipboard me-1"></i>
+                                      Copiar
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                 {/* TAB CRM EMPRESA — oculto para reclutador */}
                 {activeTab === 'crm' && !isReclutador && (
