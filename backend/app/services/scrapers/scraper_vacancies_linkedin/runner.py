@@ -24,7 +24,7 @@ from app.services.scrapers.scraper_vacancies_linkedin.browser import (
 from app.services.scraper_logs_service import log_scraper_error
 
 
-def is_recent_enough(publish_date_str: str | None, max_days: int = 1) -> bool:
+def is_recent_enough(publish_date_str: str | None, max_days: int = 14) -> bool:
     """
     Comprueba si la oferta fue publicada dentro del límite de días permitido.
     """
