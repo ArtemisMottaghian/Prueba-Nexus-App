@@ -6,8 +6,9 @@ from enum import Enum
 class LeadStatus(str, Enum):
     new = "new"
     contacted = "contacted"
-    interested = "interested"
-    not_interested = "not_interested"
+    in_progress = "in_progress"
+    negotiating = "negotiating"
+    discarded = "discarded"
     converted = "converted"
 
 

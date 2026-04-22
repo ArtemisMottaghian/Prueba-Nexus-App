@@ -17,8 +17,9 @@ from app.db.base import Base
 class LeadStatus(str, enum.Enum):
     new = "new"
     contacted = "contacted"
-    interested = "interested"
-    not_interested = "not_interested"
+    in_progress = "in_progress"
+    negotiating = "negotiating"
+    discarded = "discarded"
     converted = "converted"
 
 
