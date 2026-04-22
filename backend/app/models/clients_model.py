@@ -23,7 +23,7 @@ class Client(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    user = relationship("User", back_populates="client_profile")
+    #user = relationship("User", back_populates="client_profile")
     source_portal = relationship("JobPortal", back_populates="clients")
     original_offer = relationship("JobOffer", back_populates="related_client")
 
