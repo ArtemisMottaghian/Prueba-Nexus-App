@@ -41,14 +41,30 @@ export default function Candidates() {
   // Paginación
   const [paginaActual, setPaginaActual] = useState(1);
 
+  const apiListQuery = useMemo(
+    () =>
+      filtersToApiQuery({
+        location: filters.location,
+        habilidades: filters.habilidades,
+        status: filters.status,
+        source: filters.source,
+        verified: filters.verified,
+      }),
+    [
+      filters.location,
+      filters.habilidades,
+      filters.status,
+      filters.source,
+      filters.verified,
+    ]
+  );
+
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
       try {
-        const data = await candidatesService.getAllCandidates(
-          filtersToApiQuery(filters)
-        );
+        const data = await candidatesService.getAllCandidates(apiListQuery);
         if (!cancelled) setCandidates(data);
       } catch {
         if (!cancelled) {
@@ -63,13 +79,7 @@ export default function Candidates() {
     return () => {
       cancelled = true;
     };
-  }, [
-    filters.location,
-    filters.habilidades,
-    filters.status,
-    filters.source,
-    filters.verified,
-  ]);
+  }, [apiListQuery]);
 
   const handleToggleFavorite = async (candidateId, currentIsFavorite) => {
     const newFavoriteStatus = !currentIsFavorite;
@@ -117,18 +127,14 @@ export default function Candidates() {
 
   const handleVerify = async (candidateId) => {
     setCandidates((prev) =>
-      prev.map((c) =>
-        c.id === candidateId ? { ...c, verified: true } : c
-      )
+      prev.map((c) => (c.id === candidateId ? { ...c, verified: true } : c))
     );
     try {
       await candidatesService.verifyCandidate(candidateId, true);
     } catch (e) {
       console.error('No se pudo verificar el candidato', e);
       setCandidates((prev) =>
-        prev.map((c) =>
-          c.id === candidateId ? { ...c, verified: false } : c
-        )
+        prev.map((c) => (c.id === candidateId ? { ...c, verified: false } : c))
       );
     }
   };
