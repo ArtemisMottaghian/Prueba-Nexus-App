@@ -267,6 +267,15 @@ CREATE TABLE candidate_comments (
 );
 COMMENT ON TABLE candidate_comments IS 'Comentarios y notas sobre candidatos';
 
+-- Comentarios sobre empresas
+CREATE TABLE IF NOT EXISTS company_comments (
+    id BIGSERIAL PRIMARY KEY,
+    company_id BIGINT REFERENCES companies(id) ON DELETE CASCADE,
+    user_id BIGINT REFERENCES users(id),
+    comment TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 
 -- =============================================
 -- FUNCIONES Y TRIGGERS

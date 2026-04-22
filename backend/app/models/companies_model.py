@@ -47,6 +47,20 @@ class Company(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    comments = relationship("ClientComment", back_populates="company")
+    comments = relationship("CompanyComment", back_populates="company")
     managed_by_id = Column(BigInteger, ForeignKey("users.id"), nullable=True)
     manager = relationship("User", foreign_keys=[managed_by_id])
+
+class CompanyComment(Base):
+    __tablename__= 'company_comments'
+
+    id = Column(BigInteger, primary_ket=True, index=True)
+    company_id = Column(BigInteger, ForeignKey('companies.id', ondelete='CASCADE'))
+    user_id = Column(BigInteger, ForeignKey('users.id'))
+    comment = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    company = relationship("Company", back_populates="comments")
