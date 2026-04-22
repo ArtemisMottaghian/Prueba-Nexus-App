@@ -12,7 +12,7 @@ from app.models.job_model import JobOffer
 from app.models.clients_model import Client
 from app.models.contacts_model import Contact
 
-from app.schemas.job_offer import ScrapedJobOffer
+from backend.app.schemas.job_offer_schemas import ScrapedJobOffer
 from app.services.scrapers.scraper_vacancies_linkedin.runner import extract_linked
 from app.services.scrapers.scraper_vacancies_adzuna import extract_adzuna
 from app.services.scrapers.scraper_vacancies_infojobs.runner import extract_infojobs

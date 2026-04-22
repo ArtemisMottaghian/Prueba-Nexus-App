@@ -3,7 +3,7 @@ import httpx
 from app.core.config import settings
 from app.db.models import JobOffer
 from sqlalchemy.dialects.postgresql import insert
-from app.schemas.job_offer import JobOfferRequest
+from backend.app.schemas.job_offer_schemas import JobOfferRequest
 from app.db.session import AsyncSessionLocal as SessionLocal
 from app.services.scraper_logs_service import log_scraper_error
 

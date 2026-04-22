@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, BigInteger, Text, ForeignKey, Ch
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import relationship
 from app.db.connection import Base
-from app.schemas.job_offer import OfferStatus
+from backend.app.schemas.job_offer_schemas import OfferStatus
 from app.models.aplication_model import ApplicationStatus
 from app.models.candidates_model import Candidate
 from app.models.user_model import User
@@ -28,11 +28,10 @@ class JobOffer(Base):
     managed_by_id = Column(BigInteger, ForeignKey("users.id"), nullable=True)
     external_id = Column(String(255), nullable=True)
     title = Column(String(255), nullable=False)
-    company_name = Column(String(255))
+    company_id = Column(BigInteger, ForeignKey("companies.id"))
     location = Column(String(255))
     offer_url = Column(Text)
     job_description = Column(Text)
-    company_description = Column(Text)
     published_at = Column(DateTime(timezone=True))
     sector = Column(String(255))
     salary_min = Column(Integer)
