@@ -1,5 +1,5 @@
 # Fichero creado para reunir aqui todas la clases de manera extensiva y mantener limpio el main
-from app.db.connection import Base
+from app.db.base import Base
 
 from .aplication_model import ApplicationStatus
 from .candidates_model import Candidate, CandidateStatus

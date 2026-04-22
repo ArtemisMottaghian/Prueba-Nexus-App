@@ -2,7 +2,7 @@ import enum
 from sqlalchemy import Column, String, Boolean, DateTime, BigInteger, Enum as PgEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from app.db.connection import Base
+from app.db.base import Base
 
 class UserRole(str, enum.Enum):
     admin = "admin"

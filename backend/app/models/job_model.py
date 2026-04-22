@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, BigInteger, Text, ForeignKey, CheckConstraint, UniqueConstraint,DateTime, Enum as PgEnum, func,Boolean
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import relationship
-from app.db.connection import Base
+from app.db.base import Base
 from app.schemas.job_offer import OfferStatus
 from app.models.aplication_model import ApplicationStatus
 from app.models.candidates_model import Candidate
