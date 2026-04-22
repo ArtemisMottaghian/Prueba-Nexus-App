@@ -1,4 +1,8 @@
 .ara-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 105; 
+  -webkit-backdrop-filter: blur(12px); 
   background: var(--bg-primary); 
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-color);
