@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, BigInteger, DateTime, ForeignKey,Text, func, Enum as PgEnum
 from sqlalchemy.orm import relationship
-from app.db.connection import Base
+from app.db.base import Base
 from app.schemas.clients_schemas import EntityType, LeadStatus
 
 
