@@ -47,11 +47,18 @@ async def gather_raw_offers() -> list[dict]:
     for name, scraper_func in scrapers:
         print(f"\nIniciando scraper: {name.upper()}...")
         try:
-            result = await scraper_func()
+            result = await asyncio.wait_for(scraper_func(), timeout=300)  # 5 min máximo
 
             if isinstance(result, list):
                 raw_offers.extend(result)
                 print(f"{name.upper()} terminado. {len(result)} ofertas extraídas.")
+
+        except asyncio.TimeoutError:
+            print(f"TIMEOUT en {name.upper()} — saltando scraper")
+            await log_scraper_error(
+                error_code=f"SCRAPER_{name.upper()}_TIMEOUT",
+                message=f"scraper={name} | stage=gather | exc=TimeoutError after 300s",
+            )
 
         except Exception as e:
             print(f"Error crítico en {name.upper()}: {e}")
