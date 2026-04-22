@@ -9,6 +9,7 @@ export default function CandidateGrid({
   onSelectCandidate,
   onUpdateCandidateStatus,
   onToggleFavorite,
+  onVerify,
 }) {
   const [viewMode, setViewMode] = useState('grid');
   const [selectedCandidate, setSelectedCandidate] = useState(null);
@@ -78,6 +79,7 @@ export default function CandidateGrid({
                 onSelect={onSelectCandidate}
                 onUpdateStatus={onUpdateCandidateStatus}
                 onToggleFavorite={onToggleFavorite}
+                onVerify={onVerify}
               />
             </div>
           ))
@@ -93,6 +95,7 @@ export default function CandidateGrid({
           onClose={() => setSelectedCandidate(null)}
           onUpdateStatus={onUpdateCandidateStatus}
           onToggleFavorite={onToggleFavorite}
+          onVerify={onVerify}
         />
       )}
     </>

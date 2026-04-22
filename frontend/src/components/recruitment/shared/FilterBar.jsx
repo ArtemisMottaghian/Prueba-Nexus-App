@@ -21,6 +21,7 @@ export default function FilterBar({
   disponibilidadOptions = null,
   experienciaOptions = null,
   provinciaOptions = null,
+  showVerifiedFilter = false,
 }) {
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -29,6 +30,7 @@ export default function FilterBar({
     'experiencia',
     'disponibilidad',
     'provincia',
+    ...(showVerifiedFilter ? ['verified'] : []),
   ];
   const hasExtraFilters = extraFilterKeys.some(
     (k) => filters[k] && filters[k] !== 'All'
@@ -40,7 +42,8 @@ export default function FilterBar({
     filters.location !== 'All' ||
     filters.industry !== 'All' ||
     filters.source !== 'All' ||
-    hasExtraFilters;
+    hasExtraFilters ||
+    (showVerifiedFilter && filters.verified && filters.verified !== 'All');
 
   return (
     <div className="linkedin-filter-container">
@@ -204,6 +207,20 @@ export default function FilterBar({
                       {opt.label ?? opt}
                     </option>
                   ))}
+                </select>
+              </div>
+            )}
+
+            {showVerifiedFilter && (
+              <div className="filter-group">
+                <label>Verificado</label>
+                <select
+                  value={filters.verified || 'All'}
+                  onChange={(e) => onFilterChange('verified', e.target.value)}
+                >
+                  <option value="All">Todos</option>
+                  <option value="yes">Sí</option>
+                  <option value="no">No</option>
                 </select>
               </div>
             )}

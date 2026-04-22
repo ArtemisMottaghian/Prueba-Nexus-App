@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { CANDIDATE_STATUS_SELECT_OPTIONS } from '../../../constants/candidateStatus';
 import './CandidateModal.css';
 
 export default function CandidateModal({
@@ -6,15 +7,24 @@ export default function CandidateModal({
   onClose,
   onUpdateStatus,
   onToggleFavorite,
+  onVerify,
 }) {
   const [activeTab, setActiveTab] = useState('detalles');
   const [localStatus, setLocalStatus] = useState(candidate?.status || '');
+
+  useEffect(() => {
+    setLocalStatus(candidate?.status || '');
+  }, [candidate?.id, candidate?.status]);
 
   if (!candidate) return null;
 
   const handleSave = () => {
     onUpdateStatus(candidate.id, localStatus);
     onClose();
+  };
+
+  const handleVerify = () => {
+    if (onVerify && !candidate.verified) onVerify(candidate.id);
   };
 
   return (
@@ -26,14 +36,19 @@ export default function CandidateModal({
             <div className="modal-header">
               <div className="flex-grow-1">
                 <h2 className="modal-title">{candidate.name}</h2>
-                <div className="d-flex align-items-center gap-2 mt-1">
+                <div className="d-flex align-items-center gap-2 mt-1 flex-wrap">
                   <span className="modal-subtitle">{candidate.specialty}</span>
                   {candidate.isAvailable && (
                     <span className="badge badge-client-sm">Disponible</span>
                   )}
+                  {candidate.verified && (
+                    <span className="badge bg-success-subtle text-success">
+                      <i className="bi bi-patch-check-fill me-1" />
+                      Verificado
+                    </span>
+                  )}
                 </div>
               </div>
-              {/* CAMBIO AQUÍ: Quitamos btn-close-white */}
               <button
                 type="button"
                 className="btn-close"
@@ -42,17 +57,28 @@ export default function CandidateModal({
             </div>
 
             <div className="modal-body">
-              <div className="d-flex align-items-center gap-3 mb-4">
+              <div className="d-flex align-items-center gap-3 mb-4 flex-wrap">
                 <select
                   className="form-select select-status-inline"
                   value={localStatus}
                   onChange={(e) => setLocalStatus(e.target.value)}
                 >
-                  <option value="Nuevo">Nuevo</option>
-                  <option value="Contactado">Contactado</option>
-                  <option value="En proceso">En proceso</option>
-                  <option value="Descartado">Descartado</option>
+                  {CANDIDATE_STATUS_SELECT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
                 </select>
+                {onVerify && !candidate.verified && (
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={handleVerify}
+                  >
+                    <i className="bi bi-patch-check me-1" />
+                    Verificar candidato
+                  </button>
+                )}
                 <button
                   className={`btn-icon ${candidate.isFavorite ? 'text-warning' : ''}`}
                   onClick={() =>

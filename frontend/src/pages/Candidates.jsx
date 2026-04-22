@@ -4,11 +4,25 @@ import CandidateGrid from '../components/recruitment/candidates/CandidateGrid';
 import BulkActions from '../components/recruitment/shared/BulkActions';
 import initialCandidatesData from '../data/candidatesData.json';
 import { candidatesService } from '../services/candidatesService';
+import { CANDIDATE_STATUS_OPTIONS } from '../constants/candidateStatus';
 
 const ITEMS_POR_PAGINA = 10;
 
+/** Construye el objeto de query para GET /api/candidates (servidor). */
+function filtersToApiQuery(f) {
+  const q = {};
+  if (f.verified === 'yes') q.verified = true;
+  if (f.verified === 'no') q.verified = false;
+  if (f.location && f.location !== 'All') q.location = f.location;
+  if (f.habilidades && f.habilidades !== 'All') q.skills = f.habilidades;
+  if (f.status && f.status !== 'All') q.status = f.status;
+  if (f.source && f.source !== 'All') q.source = f.source;
+  return q;
+}
+
 export default function Candidates() {
   const [filters, setFilters] = useState({
+    search: '',
     status: 'All',
     industry: 'All',
     location: 'All',
@@ -17,6 +31,7 @@ export default function Candidates() {
     disponibilidad: 'All',
     experiencia: 'All',
     provincia: 'All',
+    verified: 'All',
   });
 
   const [selectedCandidates, setSelectedCandidates] = useState([]);
@@ -26,22 +41,35 @@ export default function Candidates() {
   // Paginación
   const [paginaActual, setPaginaActual] = useState(1);
 
-  // Carga inicial de datos
   useEffect(() => {
-    const fetchCandidates = async () => {
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
       try {
-        const data = await candidatesService.getAllCandidates();
-        setCandidates(data);
+        const data = await candidatesService.getAllCandidates(
+          filtersToApiQuery(filters)
+        );
+        if (!cancelled) setCandidates(data);
       } catch {
-        console.log('Backend offline. Using candidatesData.json...');
-        setCandidates(initialCandidatesData);
+        if (!cancelled) {
+          console.log('Backend offline. Using candidatesData.json...');
+          setCandidates(initialCandidatesData);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
-
-    fetchCandidates();
-  }, []);
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    filters.location,
+    filters.habilidades,
+    filters.status,
+    filters.source,
+    filters.verified,
+  ]);
 
   const handleToggleFavorite = async (candidateId, currentIsFavorite) => {
     const newFavoriteStatus = !currentIsFavorite;
@@ -74,6 +102,7 @@ export default function Candidates() {
 
   const handleClearFilters = () => {
     setFilters({
+      search: '',
       status: 'All',
       industry: 'All',
       location: 'All',
@@ -82,7 +111,26 @@ export default function Candidates() {
       disponibilidad: 'All',
       experiencia: 'All',
       provincia: 'All',
+      verified: 'All',
     });
+  };
+
+  const handleVerify = async (candidateId) => {
+    setCandidates((prev) =>
+      prev.map((c) =>
+        c.id === candidateId ? { ...c, verified: true } : c
+      )
+    );
+    try {
+      await candidatesService.verifyCandidate(candidateId, true);
+    } catch (e) {
+      console.error('No se pudo verificar el candidato', e);
+      setCandidates((prev) =>
+        prev.map((c) =>
+          c.id === candidateId ? { ...c, verified: false } : c
+        )
+      );
+    }
   };
 
   const handleSelectCandidate = (id) => {
@@ -107,6 +155,11 @@ export default function Candidates() {
   const skillsOptions = [
     ...new Set(candidates.map((c) => c.specialty).filter(Boolean)),
   ].sort();
+  const locationOptions = useMemo(
+    () =>
+      [...new Set(candidates.map((c) => c.location).filter(Boolean))].sort(),
+    [candidates]
+  );
   const provinciaOptions = [
     ...new Set(candidates.map((c) => c.location).filter(Boolean)),
   ].sort();
@@ -128,21 +181,20 @@ export default function Candidates() {
     return match ? parseInt(match[0], 10) : 0;
   };
 
-  // Lógica de filtrado
+  // Filtro en cliente: búsqueda, sector, disponibilidad, experiencia, provincia
+  // (estado, ubicación, skills, origen, verificado van al API en getAllCandidates)
   const filteredCandidates = candidates.filter((candidate) => {
-    const matchEstado =
-      filters.status === 'All' || candidate.status === filters.status;
+    const term = (filters.search || '').trim().toLowerCase();
+    const matchSearch =
+      !term ||
+      candidate.name?.toLowerCase().includes(term) ||
+      (candidate.email && candidate.email.toLowerCase().includes(term)) ||
+      String(candidate.specialty || '')
+        .toLowerCase()
+        .includes(term);
+
     const matchEspecialidad =
       filters.industry === 'All' || candidate.specialty === filters.industry;
-    const matchUbicacion =
-      filters.location === 'All' || candidate.location === filters.location;
-    const matchOrigen =
-      filters.source === 'All' || candidate.source === filters.source;
-
-    // Habilidades (#108)
-    const matchHabilidades =
-      filters.habilidades === 'All' ||
-      candidate.specialty === filters.habilidades;
 
     // Disponibilidad (#108)
     const matchDisponibilidad = (() => {
@@ -161,16 +213,12 @@ export default function Candidates() {
       return true;
     })();
 
-    // Provincia (#108)
     const matchProvincia =
       filters.provincia === 'All' || candidate.location === filters.provincia;
 
     return (
-      matchEstado &&
+      matchSearch &&
       matchEspecialidad &&
-      matchUbicacion &&
-      matchOrigen &&
-      matchHabilidades &&
       matchDisponibilidad &&
       matchExperiencia &&
       matchProvincia
@@ -223,22 +271,19 @@ export default function Candidates() {
           filters={filters}
           onFilterChange={handleFilterChange}
           onClearFilters={handleClearFilters}
-          statusOptions={[
-            { value: 'Nuevo', label: 'Nuevo' },
-            { value: 'Contactado', label: 'Contactado' },
-            { value: 'En proceso', label: 'En proceso' },
-            { value: 'Descartado', label: 'Descartado' },
-          ]}
+          statusOptions={CANDIDATE_STATUS_OPTIONS}
           sourceOptions={[
             { value: 'LinkedIn', label: 'LinkedIn' },
             { value: 'InfoJobs', label: 'InfoJobs' },
             { value: 'Carga Manual', label: 'Carga Manual' },
             { value: 'GitHub API', label: 'GitHub API' },
           ]}
+          locationOptions={locationOptions}
           skillsOptions={skillsOptions}
           disponibilidadOptions={DISPONIBILIDAD_OPTIONS}
           experienciaOptions={EXPERIENCIA_OPTIONS}
           provinciaOptions={provinciaOptions}
+          showVerifiedFilter
         />
 
         {selectedCandidates.length > 0 && (
@@ -270,6 +315,7 @@ export default function Candidates() {
           onSelectCandidate={handleSelectCandidate}
           onUpdateCandidateStatus={handleUpdateCandidateStatus}
           onToggleFavorite={handleToggleFavorite}
+          onVerify={handleVerify}
         />
       )}
       {!loading && totalPaginas > 1 && (
