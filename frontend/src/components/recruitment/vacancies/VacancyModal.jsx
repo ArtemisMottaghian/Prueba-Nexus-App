@@ -9,52 +9,6 @@ import { useAuth } from '../../../context/AuthContext';
 import CrmEmpresaPanel from '../../crm/CrmEmpresaPanel';
 import './VacancyModal.css';
 
-function parseDescripcion(texto) {
-  if (!texto) return [];
-
-  // Títulos típicos de ofertas de empleo en español
-  const TITULOS_REGEX =
-    /(Requisitos mínimos|Requisitos|Se valorará|Funciones|Se ofrece|Condiciones|Horario|Perfil)\s*:/gi;
-
-  // Insertamos un separador antes de cada título para poder trocear
-  const normalizado = texto.replace(TITULOS_REGEX, '\n§§$1:\n');
-
-  // Troceamos en secciones
-  const trozos = normalizado
-    .split('\n§§')
-    .map((t) => t.trim())
-    .filter(Boolean);
-
-  return trozos.map((trozo) => {
-    // Detecta si el trozo empieza con un título
-    const matchTitulo = trozo.match(/^([^:\n]{3,40}):\s*/);
-    const titulo = matchTitulo ? matchTitulo[1].trim() : null;
-    const cuerpo = matchTitulo ? trozo.slice(matchTitulo[0].length) : trozo;
-
-    // Divide el cuerpo por el símbolo · (bullets)
-    const partes = cuerpo
-      .split('·')
-      .map((p) => p.trim())
-      .filter(Boolean);
-
-    // Si hay más de una parte => hay bullets
-    if (partes.length > 1) {
-      return {
-        titulo,
-        intro:
-          partes[0].endsWith(':') || partes[0].endsWith('.') ? partes[0] : null,
-        bullets:
-          partes[0].endsWith(':') || partes[0].endsWith('.')
-            ? partes.slice(1)
-            : partes,
-      };
-    }
-
-    // Si no hay bullets, es solo texto
-    return { titulo, intro: cuerpo, bullets: [] };
-  });
-}
-
 export default function VacancyModal({
   job,
   onClose,
@@ -372,84 +326,73 @@ export default function VacancyModal({
               <div className="tab-content">
                 {activeTab === 'detalles' && (
                   <div className="tab-pane fade show active">
+                    
                     <div className="detail-section">
                       <h4 className="section-title">Información General</h4>
                       <div className="detail-grid">
+                        
+                        {/* Sector / Industria */}
                         <div className="detail-field">
-                          <div className="detail-icon icon-blue">
-                            <i className="bi bi-geo-alt-fill"></i>
+                          <div className="detail-icon icon-orange"><i className="bi bi-briefcase"></i></div>
+                          <div>
+                            <div className="field-label">Sector / Industria</div>
+                            <div className="field-value">{job.industry || job.sector || 'No especificado'}</div>
                           </div>
+                        </div>
+
+                        {/* Vacantes Activas  */}
+                        <div className="detail-field">
+                          <div className="detail-icon icon-purple"><i className="bi bi-layers"></i></div>
+                          <div>
+                            <div className="field-label">Vacantes Activas Empresa</div>
+                            <div className="field-value">
+                              {job.activeVacancies !== undefined ? job.activeVacancies : '—'}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Ubicación */}
+                        <div className="detail-field">
+                          <div className="detail-icon icon-blue"><i className="bi bi-geo-alt"></i></div>
                           <div>
                             <div className="field-label">Ubicación</div>
-                            <div className="field-value">
-                              {job.location || 'No especificada'}
-                            </div>
+                            <div className="field-value">{job.location || 'No especificada'}</div>
                           </div>
                         </div>
+
+                        {/* Salario */}
                         <div className="detail-field">
-                          <div className="detail-icon icon-purple">
-                            <i className="bi bi-cash-stack"></i>
-                          </div>
+                          <div className="detail-icon icon-green"><i className="bi bi-cash-stack"></i></div>
                           <div>
-                            <div className="field-label">Salario</div>
-                            <div className="field-value">
-                              {job.salary || 'A convenir'}
-                            </div>
+                            <div className="field-label">Rango Salarial</div>
+                            <div className="field-value">{job.salary || 'A convenir'}</div>
                           </div>
                         </div>
+
+                        {/* Fuente */}
                         <div className="detail-field">
-                          <div className="detail-icon icon-cyan">
-                            <i className="bi bi-briefcase-fill"></i>
-                          </div>
+                          <div className="detail-icon icon-cyan"><i className="bi bi-globe"></i></div>
                           <div>
-                            <div className="field-label">Fuente</div>
-                            <div className="field-value">
-                              <SourceOriginBadge
-                                source={job.source || 'Nexus'}
-                              />
-                            </div>
+                            <div className="field-label">Fuente de origen</div>
+                            <div className="field-value"><SourceOriginBadge source={job.source} /></div>
                           </div>
                         </div>
+
+                        {/* Tiempo */}
                         <div className="detail-field">
-                          <div className="detail-icon icon-amber">
-                            <i className="bi bi-clock-fill"></i>
-                          </div>
+                          <div className="detail-icon icon-gray"><i className="bi bi-clock"></i></div>
                           <div>
-                            <div className="field-label">Publicada</div>
-                            <div className="field-value">{job.time || '—'}</div>
+                            <div className="field-label">Publicado hace</div>
+                            <div className="field-value">{job.time}</div>
                           </div>
                         </div>
                       </div>
                     </div>
+
                     <div className="detail-section">
-                      <h4 className="section-title">Descripción del puesto</h4>
+                      <h4 className="section-title">Descripción</h4>
                       <div className="vacancy-description">
-                        {job.description ? (
-                          parseDescripcion(job.description).map(
-                            (seccion, idx) => (
-                              <div
-                                key={idx}
-                                className="vacancy-description-block"
-                              >
-                                {seccion.titulo && (
-                                  <h5 className="vacancy-description-subtitle">
-                                    {seccion.titulo}
-                                  </h5>
-                                )}
-                                {seccion.intro && <p>{seccion.intro}</p>}
-                                {seccion.bullets.length > 0 && (
-                                  <ul className="vacancy-description-list">
-                                    {seccion.bullets.map((b, i) => (
-                                      <li key={i}>{b}</li>
-                                    ))}
-                                  </ul>
-                                )}
-                              </div>
-                            )
-                          )
-                        ) : (
-                          <p>No hay descripción disponible.</p>
-                        )}
+                        <p>{job.description || 'Sin descripción detallada disponible actualmente.'}</p>
                       </div>
                     </div>
                   </div>
@@ -552,6 +495,7 @@ export default function VacancyModal({
                             ></i>
                             Mensaje de contacto automático
                           </h4>
+
                           {!mensajeGenerado && !generandoMensaje && (
                             <div className="msg-placeholder">
                               <i className="bi bi-chat-square-dots"></i>
