@@ -552,7 +552,6 @@ export default function VacancyModal({
                             ></i>
                             Mensaje de contacto automático
                           </h4>
-
                           {!mensajeGenerado && !generandoMensaje && (
                             <div className="msg-placeholder">
                               <i className="bi bi-chat-square-dots"></i>
