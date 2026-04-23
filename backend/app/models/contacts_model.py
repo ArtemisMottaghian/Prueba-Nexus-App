@@ -15,5 +15,5 @@ class Contact(Base):
     linkedin_url = Column(String(255), nullable=True)
     last_interaction = Column(DateTime(timezone=True))
 
-    client = relationship("Client", back_populates="contacts")
+    #client = relationship("Client", back_populates="contacts")
     company = relationship("Company", back_populates="contacts")
