@@ -9,6 +9,51 @@ import { useAuth } from '../../../context/AuthContext';
 import CrmEmpresaPanel from '../../crm/CrmEmpresaPanel';
 import './VacancyModal.css';
 
+
+function parseDescripcion(texto) {
+  if (!texto) return [];
+
+  // Títulos típicos de ofertas de empleo en español
+  const TITULOS_REGEX =
+    /(Requisitos mínimos|Requisitos|Se valorará|Funciones|Se ofrece|Condiciones|Horario|Perfil)\s*:/gi;
+
+  // Insertamos un separador antes de cada título para poder trocear
+  const normalizado = texto.replace(TITULOS_REGEX, '\n§§$1:\n');
+
+  // Troceamos en secciones
+  const trozos = normalizado
+    .split('\n§§')
+    .map((t) => t.trim())
+    .filter(Boolean);
+
+  return trozos.map((trozo) => {
+    // Detecta si el trozo empieza con un título
+    const matchTitulo = trozo.match(/^([^:\n]{3,40}):\s*/);
+    const titulo = matchTitulo ? matchTitulo[1].trim() : null;
+    const cuerpo = matchTitulo ? trozo.slice(matchTitulo[0].length) : trozo;
+
+    // Divide el cuerpo por el símbolo · (bullets)
+    const partes = cuerpo
+      .split('·')
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    // Si hay más de una parte => hay bullets
+    if (partes.length > 1) {
+      return {
+        titulo,
+        intro: partes[0].endsWith(':') || partes[0].endsWith('.') ? partes[0] : null,
+        bullets: partes[0].endsWith(':') || partes[0].endsWith('.')
+          ? partes.slice(1)
+          : partes,
+      };
+    }
+
+    // Si no hay bullets, es solo texto
+    return { titulo, intro: cuerpo, bullets: [] };
+  });
+}
+
 export default function VacancyModal({
   job,
   onClose,
@@ -375,13 +420,30 @@ export default function VacancyModal({
                         </div>
                       </div>
                     </div>
-
                     <div className="detail-section">
                       <h4 className="section-title">Descripción del puesto</h4>
                       <div className="vacancy-description">
-                        <p>
-                          {job.description || 'No hay descripción disponible.'}
-                        </p>
+                        {job.description ? (
+                          parseDescripcion(job.description).map((seccion, idx) => (
+                            <div key={idx} className="vacancy-description-block">
+                              {seccion.titulo && (
+                                <h5 className="vacancy-description-subtitle">
+                                  {seccion.titulo}
+                                </h5>
+                              )}
+                              {seccion.intro && <p>{seccion.intro}</p>}
+                              {seccion.bullets.length > 0 && (
+                                <ul className="vacancy-description-list">
+                                  {seccion.bullets.map((b, i) => (
+                                    <li key={i}>{b}</li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          ))
+                        ) : (
+                          <p>No hay descripción disponible.</p>
+                        )}
                       </div>
                     </div>
                   </div>
