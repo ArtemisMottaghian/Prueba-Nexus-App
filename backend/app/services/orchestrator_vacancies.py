@@ -5,15 +5,13 @@ load_dotenv()
 from datetime import datetime, timedelta, timezone
 from typing import Any
 from sqlalchemy.dialects.postgresql import insert
-
 from app.db.session import AsyncSessionLocal
-from app.db.connection import Base
+
 
 from app.models.user_model import User
 from app.models.job_model import JobOffer
 from app.models.contacts_model import Contact
 from app.models.companies_model import Company 
-from app.models.clients_model import Client
 
 from app.schemas.job_offer import ScrapedJobOffer
 from app.services.scrapers.scraper_vacancies_linkedin.runner import extract_linked

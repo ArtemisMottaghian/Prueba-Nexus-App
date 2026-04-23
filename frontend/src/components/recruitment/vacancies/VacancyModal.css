@@ -760,3 +760,56 @@
 .btn-icon-danger:hover {
   opacity: 1;
 }
+.vacancy-description-block {
+  margin-bottom: 1.25rem;
+}
+.vacancy-description-block:last-child {
+  margin-bottom: 0;
+}
+
+.vacancy-description-subtitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-purple-secondary, #6b4eff);
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.vacancy-description p {
+  line-height: 1.65;
+  margin-bottom: 0.5rem;
+  text-align: justify;
+  hyphens: auto;
+}
+
+.vacancy-description-list {
+  padding-left: 1.25rem;
+  margin: 0.5rem 0;
+}
+
+.vacancy-description-list li {
+  line-height: 1.6;
+  margin-bottom: 0.35rem;
+  padding-left: 0.25rem;
+}
+
+.vacancy-description-list li::marker {
+  color: var(--color-purple-secondary, #6b4eff);
+}
+.seguimiento-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.seguimiento-card-header .btn-icon {
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+}
+
+.seguimiento-card:hover .seguimiento-card-header .btn-icon {
+  opacity: 1;
+}
