@@ -9,35 +9,30 @@ import { useAuth } from '../../../context/AuthContext';
 import CrmEmpresaPanel from '../../crm/CrmEmpresaPanel';
 import './VacancyModal.css';
 
+/**
+ * Helper para estructurar la descripción en secciones y bullets
+ */
 function parseDescripcion(texto) {
   if (!texto) return [];
 
-  // Títulos típicos de ofertas de empleo en español
   const TITULOS_REGEX =
     /(Requisitos mínimos|Requisitos|Se valorará|Funciones|Se ofrece|Condiciones|Horario|Perfil)\s*:/gi;
-
-  // Insertamos un separador antes de cada título para poder trocear
   const normalizado = texto.replace(TITULOS_REGEX, '\n§§$1:\n');
-
-  // Troceamos en secciones
   const trozos = normalizado
     .split('\n§§')
     .map((t) => t.trim())
     .filter(Boolean);
 
   return trozos.map((trozo) => {
-    // Detecta si el trozo empieza con un título
     const matchTitulo = trozo.match(/^([^:\n]{3,40}):\s*/);
     const titulo = matchTitulo ? matchTitulo[1].trim() : null;
     const cuerpo = matchTitulo ? trozo.slice(matchTitulo[0].length) : trozo;
 
-    // Divide el cuerpo por el símbolo · (bullets)
     const partes = cuerpo
       .split('·')
       .map((p) => p.trim())
       .filter(Boolean);
 
-    // Si hay más de una parte => hay bullets
     if (partes.length > 1) {
       return {
         titulo,
@@ -49,8 +44,6 @@ function parseDescripcion(texto) {
             : partes,
       };
     }
-
-    // Si no hay bullets, es solo texto
     return { titulo, intro: cuerpo, bullets: [] };
   });
 }
@@ -76,7 +69,7 @@ export default function VacancyModal({
   const [savingNote, setSavingNote] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Seguimiento candidato
+  // Estados para Candidatos y Documentos
   const [candidatosList, setCandidatosList] = useState(job?.candidatos || []);
   const [candForm, setCandForm] = useState({
     nombre: '',
@@ -84,23 +77,18 @@ export default function VacancyModal({
     resultado: 'Pendiente',
     notas: '',
   });
-
-  // Documentos locales
   const [localDocs, setLocalDocs] = useState(job?.documentos || []);
   const [docTipo, setDocTipo] = useState('CV');
   const [draggingOver, setDraggingOver] = useState(false);
 
-  // Contacto empresa — mensaje automático
+  // Estados para CRM y Mensajería
   const [mensajeGenerado, setMensajeGenerado] = useState('');
   const [generandoMensaje, setGenerandoMensaje] = useState(false);
   const [mensajeCopied, setMensajeCopied] = useState(false);
-
-  // CRM de la EMPRESA asociada a la vacante (Issue #329)
   const [empresaCrm, setEmpresaCrm] = useState(null);
   const [loadingEmpresa, setLoadingEmpresa] = useState(false);
 
   useEffect(() => {
-    // Cargamos el CRM solo cuando se abre la pestaña CRM y hay empresa identificada
     let cancelado = false;
     if (activeTab !== 'crm' || !job?.companyName || empresaCrm) return;
 
@@ -115,7 +103,6 @@ export default function VacancyModal({
         if (!cancelado) setLoadingEmpresa(false);
       }
     })();
-
     return () => {
       cancelado = true;
     };
@@ -127,8 +114,8 @@ export default function VacancyModal({
     if (onUpdateStatus) onUpdateStatus(job.id, localStatus);
     try {
       await vacanciesService.updateVacancy(job.id, { status: localStatus });
-    } catch {
-      // Persiste localmente vía Vacancies.jsx (handleUpdateJobStatus ya lo guarda en LS)
+    } catch (err) {
+      console.error('Error al actualizar vacante:', err);
     }
     setSaveSuccess(true);
     setTimeout(() => {
@@ -155,7 +142,7 @@ export default function VacancyModal({
     try {
       await vacanciesService.addNote(job.id, nuevaNota.texto);
     } catch {
-      // Nota añadida localmente, se sincronizará cuando el backend esté disponible
+      /* Persistencia local */
     } finally {
       setSavingNote(false);
     }
@@ -163,12 +150,11 @@ export default function VacancyModal({
 
   const handleUpdateEstadoCuenta = async (nuevoEstado) => {
     if (!empresaCrm) return;
-    // Optimistic update: el cambio se refleja inmediatamente
     setEmpresaCrm((prev) => ({ ...prev, estadoCuenta: nuevoEstado }));
     try {
       await updateEstadoCuenta(empresaCrm.id, nuevoEstado);
     } catch (err) {
-      console.error('Error actualizando estado de cuenta:', err);
+      console.error(err);
     }
   };
 
@@ -239,13 +225,12 @@ export default function VacancyModal({
   };
 
   const getBadgeClass = (status) => {
-    const map = {
-      Nueva: 'badge-nueva',
-      Contactada: 'badge-contactada',
-      'En proceso': 'badge-en-proceso',
-      Descartada: 'badge-descartada',
-    };
-    return map[status] || 'badge-nueva';
+    const s = status?.toLowerCase();
+    if (s === 'new' || s === 'nueva') return 'badge-nueva';
+    if (s === 'contacted' || s === 'contactada') return 'badge-contactada';
+    if (s === 'in progress' || s === 'en proceso') return 'badge-en-proceso';
+    if (s === 'rejected' || s === 'descartada') return 'badge-descartada';
+    return 'badge-nueva';
   };
 
   return (
@@ -262,14 +247,13 @@ export default function VacancyModal({
                   <i className="bi bi-building modal-header-icon"></i>
                   <span className="modal-subtitle">{job.companyName}</span>
                   {job.isClient && (
-                    <span className="badge-client-sm">Cliente</span>
+                    <span className="badge-client-sm">Cliente Nexus</span>
                   )}
                   <span className={`badge ${getBadgeClass(localStatus)} ms-1`}>
                     {localStatus}
                   </span>
                 </div>
               </div>
-              {/* Quitamos btn-close-white para soporte multi-tema */}
               <button
                 type="button"
                 className="btn-close"
@@ -285,10 +269,10 @@ export default function VacancyModal({
                   value={localStatus}
                   onChange={(e) => setLocalStatus(e.target.value)}
                 >
-                  <option value="Nueva">Nueva</option>
-                  <option value="Contactada">Contactada</option>
-                  <option value="En proceso">En proceso</option>
-                  <option value="Descartada">Descartada</option>
+                  <option value="New">Nueva (New)</option>
+                  <option value="Contacted">Contactada</option>
+                  <option value="In progress">En proceso</option>
+                  <option value="Rejected">Descartada</option>
                 </select>
                 <button
                   className="btn-icon btn-star-toggle"
@@ -318,37 +302,33 @@ export default function VacancyModal({
                   </button>
                 </li>
                 {!isReclutador && (
-                  <li className="nav-item">
-                    <button
-                      className={`nav-link ${activeTab === 'contacto' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('contacto')}
-                      title="Contacto de la empresa para esta vacante"
-                    >
-                      <i className="bi bi-person-lines-fill me-2"></i>Contacto
-                    </button>
-                  </li>
-                )}
-                {!isReclutador && (
-                  <li className="nav-item">
-                    <button
-                      className={`nav-link ${activeTab === 'crm' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('crm')}
-                      title="Seguimiento comercial vinculado a la empresa"
-                    >
-                      <i className="bi bi-building-check me-2"></i>
-                      CRM Empresa
-                    </button>
-                  </li>
-                )}
-                {!isReclutador && (
-                  <li className="nav-item">
-                    <button
-                      className={`nav-link ${activeTab === 'seguimiento' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('seguimiento')}
-                    >
-                      <i className="bi bi-list-check me-2"></i>Actividad vacante
-                    </button>
-                  </li>
+                  <>
+                    <li className="nav-item">
+                      <button
+                        className={`nav-link ${activeTab === 'contacto' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('contacto')}
+                      >
+                        <i className="bi bi-person-lines-fill me-2"></i>Contacto
+                      </button>
+                    </li>
+                    <li className="nav-item">
+                      <button
+                        className={`nav-link ${activeTab === 'crm' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('crm')}
+                      >
+                        <i className="bi bi-building-check me-2"></i>CRM Empresa
+                      </button>
+                    </li>
+                    <li className="nav-item">
+                      <button
+                        className={`nav-link ${activeTab === 'seguimiento' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('seguimiento')}
+                      >
+                        <i className="bi bi-list-check me-2"></i>Actividad
+                        vacante
+                      </button>
+                    </li>
+                  </>
                 )}
                 <li className="nav-item">
                   <button
@@ -356,7 +336,6 @@ export default function VacancyModal({
                     onClick={() => setActiveTab('candidatos')}
                   >
                     <i className="bi bi-people-fill me-2"></i>Seguimiento
-                    candidato
                   </button>
                 </li>
                 <li className="nav-item">
@@ -364,7 +343,7 @@ export default function VacancyModal({
                     className={`nav-link ${activeTab === 'documentos' ? 'active' : ''}`}
                     onClick={() => setActiveTab('documentos')}
                   >
-                    <i className="bi bi-file-earmark me-2"></i>Documentos
+                    <i className="bi bi-file-earmark me-2"></i>Docs
                   </button>
                 </li>
               </ul>
@@ -376,8 +355,36 @@ export default function VacancyModal({
                       <h4 className="section-title">Información General</h4>
                       <div className="detail-grid">
                         <div className="detail-field">
+                          <div className="detail-icon icon-orange">
+                            <i className="bi bi-briefcase"></i>
+                          </div>
+                          <div>
+                            <div className="field-label">
+                              Sector / Industria
+                            </div>
+                            <div className="field-value">
+                              {job.industry || job.sector || 'No especificado'}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="detail-field">
+                          <div className="detail-icon icon-purple">
+                            <i className="bi bi-layers"></i>
+                          </div>
+                          <div>
+                            <div className="field-label">
+                              Vacantes Activas Empresa
+                            </div>
+                            <div className="field-value">
+                              {job.activeVacancies !== undefined
+                                ? job.activeVacancies
+                                : '—'}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="detail-field">
                           <div className="detail-icon icon-blue">
-                            <i className="bi bi-geo-alt-fill"></i>
+                            <i className="bi bi-geo-alt"></i>
                           </div>
                           <div>
                             <div className="field-label">Ubicación</div>
@@ -387,11 +394,11 @@ export default function VacancyModal({
                           </div>
                         </div>
                         <div className="detail-field">
-                          <div className="detail-icon icon-purple">
+                          <div className="detail-icon icon-green">
                             <i className="bi bi-cash-stack"></i>
                           </div>
                           <div>
-                            <div className="field-label">Salario</div>
+                            <div className="field-label">Rango Salarial</div>
                             <div className="field-value">
                               {job.salary || 'A convenir'}
                             </div>
@@ -399,28 +406,27 @@ export default function VacancyModal({
                         </div>
                         <div className="detail-field">
                           <div className="detail-icon icon-cyan">
-                            <i className="bi bi-briefcase-fill"></i>
+                            <i className="bi bi-globe"></i>
                           </div>
                           <div>
-                            <div className="field-label">Fuente</div>
+                            <div className="field-label">Fuente de origen</div>
                             <div className="field-value">
-                              <SourceOriginBadge
-                                source={job.source || 'Nexus'}
-                              />
+                              <SourceOriginBadge source={job.source} />
                             </div>
                           </div>
                         </div>
                         <div className="detail-field">
-                          <div className="detail-icon icon-amber">
-                            <i className="bi bi-clock-fill"></i>
+                          <div className="detail-icon icon-gray">
+                            <i className="bi bi-clock"></i>
                           </div>
                           <div>
-                            <div className="field-label">Publicada</div>
+                            <div className="field-label">Publicado hace</div>
                             <div className="field-value">{job.time || '—'}</div>
                           </div>
                         </div>
                       </div>
                     </div>
+
                     <div className="detail-section">
                       <h4 className="section-title">Descripción del puesto</h4>
                       <div className="vacancy-description">
@@ -455,216 +461,116 @@ export default function VacancyModal({
                   </div>
                 )}
 
-                {/* TAB CONTACTO — oculto para reclutador */}
-                {activeTab === 'contacto' &&
-                  !isReclutador &&
-                  (() => {
-                    // Construimos lista de contactos a partir del objeto job
-                    const contactos = job.contactos?.length
-                      ? job.contactos
-                      : job.contactEmail || job.contactPhone || job.contactName
-                        ? [
-                            {
-                              nombre: job.contactName || 'Responsable',
-                              email: job.contactEmail,
-                              telefono: job.contactPhone,
-                              cargo: job.contactRole || '',
-                            },
-                          ]
-                        : [];
+                {activeTab === 'contacto' && !isReclutador && (
+                  <div className="tab-pane fade show active">
+                    <div className="detail-section">
+                      <h4 className="section-title">Contacto de la empresa</h4>
+                      {(() => {
+                        const contactos = job.contactos?.length
+                          ? job.contactos
+                          : job.contactEmail ||
+                              job.contactPhone ||
+                              job.contactName
+                            ? [
+                                {
+                                  nombre: job.contactName || 'Responsable',
+                                  email: job.contactEmail,
+                                  telefono: job.contactPhone,
+                                  cargo: job.contactRole || '',
+                                },
+                              ]
+                            : [];
 
-                    return (
-                      <div className="tab-pane fade show active">
-                        <div className="detail-section">
-                          <h4 className="section-title">
-                            Contacto de la empresa
-                          </h4>
-
-                          {contactos.length > 0 ? (
-                            <div className="contact-cards-grid">
-                              {contactos.map((c, i) => (
-                                <div key={i} className="contact-card">
-                                  <div className="contact-avatar">
-                                    {(c.nombre || '?').charAt(0).toUpperCase()}
-                                  </div>
-                                  <div className="contact-info">
-                                    <div className="contact-nombre">
-                                      {c.nombre || '—'}
-                                    </div>
-                                    {c.cargo && (
-                                      <div className="contact-cargo">
-                                        {c.cargo}
-                                      </div>
-                                    )}
-                                    <div className="contact-data-row">
-                                      {c.email && (
-                                        <a
-                                          href={`mailto:${c.email}`}
-                                          className="contact-link"
-                                        >
-                                          <i className="bi bi-envelope-fill"></i>
-                                          {c.email}
-                                        </a>
-                                      )}
-                                      {c.telefono && (
-                                        <a
-                                          href={`tel:${c.telefono}`}
-                                          className="contact-link"
-                                        >
-                                          <i className="bi bi-telephone-fill"></i>
-                                          {c.telefono}
-                                        </a>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <button
-                                    className="btn btn-primary-custom btn-sm contact-msg-btn"
-                                    onClick={() => handleGenerarMensaje(c)}
-                                    disabled={generandoMensaje}
-                                    title="Generar mensaje de contacto automático"
-                                  >
-                                    <i className="bi bi-magic me-1"></i>
-                                    Generar mensaje
-                                  </button>
+                        return contactos.length > 0 ? (
+                          <div className="contact-cards-grid">
+                            {contactos.map((c, i) => (
+                              <div key={i} className="contact-card">
+                                <div className="contact-avatar">
+                                  {(c.nombre || '?').charAt(0).toUpperCase()}
                                 </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="contact-empty">
-                              <i className="bi bi-person-x"></i>
-                              <p>
-                                No se han detectado contactos para esta empresa.
-                              </p>
-                              <small>
-                                La IA mostrará aquí automáticamente los
-                                contactos cuando estén disponibles.
-                              </small>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Sección mensaje automático */}
-                        <div className="detail-section">
-                          <h4 className="section-title">
-                            <i
-                              className="bi bi-magic me-2"
-                              style={{ color: 'var(--color-purple-secondary)' }}
-                            ></i>
-                            Mensaje de contacto automático
-                          </h4>
-                          {!mensajeGenerado && !generandoMensaje && (
-                            <div className="msg-placeholder">
-                              <i className="bi bi-chat-square-dots"></i>
-                              <p>
-                                Selecciona un contacto y pulsa{' '}
-                                <strong>Generar mensaje</strong> para que la IA
-                                redacte un primer contacto personalizado.
-                              </p>
-                              {contactos.length === 0 && (
+                                <div className="contact-info">
+                                  <div className="contact-nombre">
+                                    {c.nombre || '—'}
+                                  </div>
+                                  {c.cargo && (
+                                    <div className="contact-cargo">
+                                      {c.cargo}
+                                    </div>
+                                  )}
+                                  <div className="contact-data-row">
+                                    {c.email && (
+                                      <a
+                                        href={`mailto:${c.email}`}
+                                        className="contact-link"
+                                      >
+                                        <i className="bi bi-envelope-fill"></i>{' '}
+                                        {c.email}
+                                      </a>
+                                    )}
+                                    {c.telefono && (
+                                      <a
+                                        href={`tel:${c.telefono}`}
+                                        className="contact-link"
+                                      >
+                                        <i className="bi bi-telephone-fill"></i>{' '}
+                                        {c.telefono}
+                                      </a>
+                                    )}
+                                  </div>
+                                </div>
                                 <button
-                                  className="btn btn-primary-custom btn-sm mt-2"
-                                  onClick={() => handleGenerarMensaje(null)}
+                                  className="btn btn-primary-custom btn-sm contact-msg-btn"
+                                  onClick={() => handleGenerarMensaje(c)}
                                   disabled={generandoMensaje}
                                 >
-                                  <i className="bi bi-magic me-2"></i>Generar
-                                  mensaje genérico
-                                </button>
-                              )}
-                            </div>
-                          )}
-
-                          {generandoMensaje && (
-                            <div className="text-center py-3 text-muted small">
-                              <div
-                                className="spinner-border spinner-border-sm me-2"
-                                role="status"
-                              ></div>
-                              Generando mensaje...
-                            </div>
-                          )}
-
-                          {mensajeGenerado && !generandoMensaje && (
-                            <div className="msg-generated">
-                              <div className="msg-generated-header">
-                                <span className="msg-generated-label">
-                                  <i className="bi bi-check-circle-fill text-success me-2"></i>
-                                  Mensaje listo
-                                </span>
-                                <button
-                                  className="btn-icon btn-icon-sm"
-                                  onClick={handleCopiarMensaje}
-                                  title="Copiar al portapapeles"
-                                >
-                                  {mensajeCopied ? (
-                                    <i className="bi bi-check2 text-success"></i>
-                                  ) : (
-                                    <i className="bi bi-clipboard"></i>
-                                  )}
+                                  <i className="bi bi-magic me-1"></i> Generar
+                                  mensaje
                                 </button>
                               </div>
-                              <textarea
-                                className="form-control msg-textarea"
-                                rows={8}
-                                value={mensajeGenerado}
-                                onChange={(e) =>
-                                  setMensajeGenerado(e.target.value)
-                                }
-                              />
-                              <div className="msg-generated-actions">
-                                <button
-                                  className="btn btn-secondary-custom btn-sm"
-                                  onClick={() =>
-                                    handleGenerarMensaje(contactos[0] || null)
-                                  }
-                                >
-                                  <i className="bi bi-arrow-clockwise me-1"></i>
-                                  Regenerar
-                                </button>
-                                <button
-                                  className="btn btn-primary-custom btn-sm"
-                                  onClick={handleCopiarMensaje}
-                                >
-                                  {mensajeCopied ? (
-                                    <>
-                                      <i className="bi bi-check2 me-1"></i>
-                                      ¡Copiado!
-                                    </>
-                                  ) : (
-                                    <>
-                                      <i className="bi bi-clipboard me-1"></i>
-                                      Copiar
-                                    </>
-                                  )}
-                                </button>
-                              </div>
-                            </div>
-                          )}
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="contact-empty">
+                            <i className="bi bi-person-x"></i>
+                            <p>
+                              No se han detectado contactos para esta empresa.
+                            </p>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                    {mensajeGenerado && (
+                      <div className="detail-section">
+                        <h4 className="section-title">
+                          <i className="bi bi-magic me-2"></i> Mensaje generado
+                        </h4>
+                        <textarea
+                          className="form-control msg-textarea"
+                          rows={8}
+                          value={mensajeGenerado}
+                          onChange={(e) => setMensajeGenerado(e.target.value)}
+                        />
+                        <div className="msg-generated-actions mt-2">
+                          <button
+                            className="btn btn-primary-custom btn-sm"
+                            onClick={handleCopiarMensaje}
+                          >
+                            {mensajeCopied ? '¡Copiado!' : 'Copiar mensaje'}
+                          </button>
                         </div>
                       </div>
-                    );
-                  })()}
+                    )}
+                  </div>
+                )}
 
-                {/* TAB CRM EMPRESA — oculto para reclutador */}
                 {activeTab === 'crm' && !isReclutador && (
                   <div className="tab-pane fade show active">
                     <div className="detail-section">
                       <h4 className="section-title">
                         Seguimiento comercial de la empresa
                       </h4>
-                      <p className="crm-tab-hint">
-                        <i className="bi bi-info-circle me-2"></i>
-                        Esta información está vinculada a la{' '}
-                        <strong>empresa</strong> ({job.companyName}) y es la
-                        misma para todas sus vacantes.
-                      </p>
                       {loadingEmpresa ? (
-                        <div className="text-center py-4 text-muted small">
-                          <div
-                            className="spinner-border spinner-border-sm me-2"
-                            role="status"
-                          ></div>
-                          Cargando seguimiento comercial...
-                        </div>
+                        <p>Cargando datos comerciales...</p>
                       ) : (
                         <CrmEmpresaPanel
                           empresa={empresaCrm}
@@ -682,66 +588,32 @@ export default function VacancyModal({
                       <h4 className="section-title">
                         Actividad de esta vacante
                       </h4>
-
-                      {/* Formulario para añadir nota */}
                       <div className="add-note-form mb-4">
                         <textarea
                           className="form-control input-field mb-2"
                           rows={2}
-                          placeholder="Escribe una nota o actividad..."
+                          placeholder="Escribe una nota..."
                           value={noteText}
                           onChange={(e) => setNoteText(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && e.ctrlKey) handleAddNote();
-                          }}
                         />
                         <button
                           className="btn btn-primary-custom btn-sm"
                           onClick={handleAddNote}
                           disabled={savingNote || !noteText.trim()}
                         >
-                          {savingNote ? (
-                            <>
-                              <span
-                                className="spinner-border spinner-border-sm me-2"
-                                role="status"
-                              />
-                              Guardando...
-                            </>
-                          ) : (
-                            <>
-                              <i className="bi bi-plus-circle me-2"></i>Agregar
-                              nota
-                            </>
-                          )}
+                          Agregar nota
                         </button>
                       </div>
-
-                      {localSeguimiento.length > 0 ? (
-                        <div className="seguimiento-timeline">
-                          {localSeguimiento.map((item, i) => (
-                            <div key={i} className="seguimiento-item">
-                              <div className="seguimiento-dot"></div>
-                              <div className="seguimiento-card">
-                                <p>{item.texto}</p>
-                                <span className="activity-time">
-                                  <i className="bi bi-clock me-1"></i>
-                                  {item.fecha}
-                                </span>
-                              </div>
+                      <div className="seguimiento-timeline">
+                        {localSeguimiento.map((item, i) => (
+                          <div key={i} className="seguimiento-item">
+                            <div className="seguimiento-card">
+                              <p>{item.texto}</p>
+                              <span>{item.fecha}</span>
                             </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="tab-empty">
-                          <i className="bi bi-list-check"></i>
-                          <p>No hay actividad registrada aún.</p>
-                          <small className="text-muted">
-                            ¿Buscas el seguimiento comercial? Ahora vive en la
-                            pestaña <strong>CRM Empresa</strong>.
-                          </small>
-                        </div>
-                      )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -752,162 +624,50 @@ export default function VacancyModal({
                       <h4 className="section-title">
                         Seguimiento de candidatos
                       </h4>
-
-                      {/* Formulario añadir candidato */}
                       <div className="cand-tracking-form mb-4">
-                        <div className="cand-form-row">
-                          <div className="cand-form-field cand-form-field--wide">
-                            <label className="field-label">
-                              Nombre del candidato
-                            </label>
-                            <input
-                              type="text"
-                              className="form-control input-field"
-                              placeholder="Ej: Ana García"
-                              value={candForm.nombre}
-                              onChange={(e) =>
-                                setCandForm((f) => ({
-                                  ...f,
-                                  nombre: e.target.value,
-                                }))
-                              }
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleAddCandidato();
-                              }}
-                            />
-                          </div>
-                          <div className="cand-form-field">
-                            <label className="field-label">
-                              Tipo de entrevista / Fase
-                            </label>
-                            <select
-                              className="form-select input-field"
-                              value={candForm.fase}
-                              onChange={(e) =>
-                                setCandForm((f) => ({
-                                  ...f,
-                                  fase: e.target.value,
-                                }))
-                              }
-                            >
-                              <option>Enviado CV</option>
-                              <option>Entrevista telefónica</option>
-                              <option>Primera entrevista</option>
-                              <option>Segunda entrevista</option>
-                              <option>Prueba técnica</option>
-                              <option>Entrevista final</option>
-                              <option>Oferta enviada</option>
-                              <option>Contratado</option>
-                            </select>
-                          </div>
-                          <div className="cand-form-field">
-                            <label className="field-label">Resultado</label>
-                            <select
-                              className="form-select input-field"
-                              value={candForm.resultado}
-                              onChange={(e) =>
-                                setCandForm((f) => ({
-                                  ...f,
-                                  resultado: e.target.value,
-                                }))
-                              }
-                            >
-                              <option>Pendiente</option>
-                              <option>Positivo</option>
-                              <option>Negativo</option>
-                              <option>En espera</option>
-                            </select>
-                          </div>
-                        </div>
-                        <div className="cand-form-notes-row">
-                          <textarea
-                            className="form-control input-field"
-                            rows={2}
-                            placeholder="Observaciones, feedback de la entrevista..."
-                            value={candForm.notas}
+                        <div className="cand-form-row gap-2 d-flex">
+                          <input
+                            className="form-control"
+                            placeholder="Nombre"
+                            value={candForm.nombre}
                             onChange={(e) =>
-                              setCandForm((f) => ({
-                                ...f,
-                                notas: e.target.value,
-                              }))
+                              setCandForm({
+                                ...candForm,
+                                nombre: e.target.value,
+                              })
                             }
                           />
                           <button
-                            className="btn btn-primary-custom cand-add-btn"
+                            className="btn btn-primary-custom"
                             onClick={handleAddCandidato}
-                            disabled={!candForm.nombre.trim()}
                           >
-                            <i className="bi bi-person-plus-fill"></i>
-                            <span>Añadir</span>
+                            Añadir
                           </button>
                         </div>
                       </div>
-
-                      {/* Lista de candidatos */}
-                      {candidatosList.length > 0 ? (
-                        <div className="cand-tracking-list">
-                          {candidatosList.map((c, i) => (
-                            <div key={i} className="cand-tracking-item">
-                              {/* Avatar inicial */}
-                              <div className="cand-avatar">
-                                {c.nombre.charAt(0).toUpperCase()}
-                              </div>
-                              {/* Cuerpo */}
-                              <div className="cand-body">
-                                <div className="cand-body-top">
-                                  <span className="cand-nombre">
-                                    {c.nombre}
-                                  </span>
-                                  <span
-                                    className={`cand-resultado-badge cand-resultado-${c.resultado.toLowerCase().replace(/\s+/g, '-')}`}
-                                  >
-                                    {c.resultado === 'Pendiente' && (
-                                      <i className="bi bi-clock-fill me-1"></i>
-                                    )}
-                                    {c.resultado === 'Positivo' && (
-                                      <i className="bi bi-check-circle-fill me-1"></i>
-                                    )}
-                                    {c.resultado === 'Negativo' && (
-                                      <i className="bi bi-x-circle-fill me-1"></i>
-                                    )}
-                                    {c.resultado === 'En espera' && (
-                                      <i className="bi bi-pause-circle-fill me-1"></i>
-                                    )}
-                                    {c.resultado}
-                                  </span>
-                                </div>
-                                <div className="cand-body-mid">
-                                  <span className="cand-fase-badge">
-                                    <i className="bi bi-diagram-3 me-1"></i>
-                                    {c.fase}
-                                  </span>
-                                  <span className="cand-fecha">
-                                    <i className="bi bi-calendar3 me-1"></i>
-                                    {c.fecha}
-                                  </span>
-                                </div>
-                                {c.notas && (
-                                  <div className="cand-notas">
-                                    <i className="bi bi-chat-left-text me-1"></i>
-                                    {c.notas}
-                                  </div>
-                                )}
-                              </div>
+                      <div className="cand-tracking-list">
+                        {candidatosList.length > 0 ? (
+                          candidatosList.map((c, i) => (
+                            <div
+                              key={i}
+                              className="cand-tracking-item p-2 border-bottom d-flex justify-content-between align-items-center"
+                            >
+                              <span>
+                                <strong>{c.nombre}</strong> - {c.fase}
+                              </span>
+                              <span
+                                className={`badge cand-resultado-${c.resultado.toLowerCase().replace(/\s+/g, '-')}`}
+                              >
+                                {c.resultado}
+                              </span>
                             </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="tab-empty">
-                          <i className="bi bi-people"></i>
-                          <p>
-                            No hay candidatos registrados para esta vacante.
+                          ))
+                        ) : (
+                          <p className="text-center p-3 text-muted">
+                            Sin candidatos asignados.
                           </p>
-                          <small className="text-muted">
-                            Usa el formulario de arriba para añadir el primer
-                            candidato.
-                          </small>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -915,109 +675,62 @@ export default function VacancyModal({
                 {activeTab === 'documentos' && (
                   <div className="tab-pane fade show active">
                     <div className="detail-section">
-                      <h4 className="section-title">Adjuntar documentos</h4>
-
-                      {/* Zona de tipo + drop */}
-                      <div className="doc-upload-row mb-3">
-                        <select
-                          className="form-select input-field doc-tipo-select"
-                          value={docTipo}
-                          onChange={(e) => setDocTipo(e.target.value)}
-                        >
-                          <option>CV</option>
-                          <option>Oferta económica</option>
-                          <option>Contrato</option>
-                          <option>Prueba técnica</option>
-                          <option>Informe</option>
-                          <option>Otro</option>
-                        </select>
+                      <h4 className="section-title">Documentos</h4>
+                      <div
+                        className={`doc-dropzone p-4 border-dashed text-center ${draggingOver ? 'bg-light' : ''}`}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setDraggingOver(true);
+                        }}
+                        onDragLeave={() => setDraggingOver(false)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setDraggingOver(false);
+                          handleAdjuntarArchivos(e.dataTransfer.files);
+                        }}
+                      >
+                        <p>Arrastra archivos aquí o haz clic para subir</p>
+                        <input
+                          type="file"
+                          multiple
+                          className="d-none"
+                          id="fileIn"
+                          onChange={(e) =>
+                            handleAdjuntarArchivos(e.target.files)
+                          }
+                        />
                         <label
-                          className={`doc-dropzone ${draggingOver ? 'doc-dropzone--active' : ''}`}
-                          onDragOver={(e) => {
-                            e.preventDefault();
-                            setDraggingOver(true);
-                          }}
-                          onDragLeave={() => setDraggingOver(false)}
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            setDraggingOver(false);
-                            handleAdjuntarArchivos(e.dataTransfer.files);
-                          }}
+                          htmlFor="fileIn"
+                          className="btn btn-outline-primary btn-sm"
                         >
-                          <input
-                            type="file"
-                            multiple
-                            style={{ display: 'none' }}
-                            onChange={(e) =>
-                              handleAdjuntarArchivos(e.target.files)
-                            }
-                          />
-                          <i className="bi bi-cloud-arrow-up-fill"></i>
-                          <span>
-                            Arrastra archivos aquí o{' '}
-                            <strong>haz clic para seleccionar</strong>
-                          </span>
-                          <small>PDF, Word, Excel, imágenes…</small>
+                          Seleccionar archivos
                         </label>
                       </div>
-
-                      {/* Lista de documentos */}
-                      <h4 className="section-title">
-                        Archivos adjuntos{' '}
-                        {localDocs.length > 0 && (
-                          <span className="doc-count">{localDocs.length}</span>
-                        )}
-                      </h4>
-                      {localDocs.length > 0 ? (
-                        <div className="doc-list">
-                          {localDocs.map((doc, i) => (
-                            <div key={i} className="doc-item">
-                              <div className="doc-icon">
-                                <i
-                                  className={`bi ${getDocIcon(doc.nombre)}`}
-                                ></i>
-                              </div>
-                              <div className="flex-grow-1">
-                                <div className="doc-name">{doc.nombre}</div>
-                                <div className="doc-meta">
-                                  <span className="doc-tipo-badge">
-                                    {doc.tipo}
-                                  </span>
-                                  {doc.tamaño && <span>· {doc.tamaño}</span>}
-                                  <span>· {doc.fecha}</span>
-                                </div>
-                              </div>
-                              <div className="d-flex gap-1">
-                                <button
-                                  className="btn-icon btn-icon-sm"
-                                  title="Descargar"
-                                >
-                                  <i className="bi bi-download"></i>
-                                </button>
-                                <button
-                                  className="btn-icon btn-icon-sm btn-icon-danger"
-                                  title="Eliminar"
-                                  onClick={() => handleEliminarDoc(i)}
-                                >
-                                  <i className="bi bi-trash3"></i>
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="tab-empty">
-                          <i className="bi bi-file-earmark"></i>
-                          <p>No hay documentos adjuntos todavía.</p>
-                        </div>
-                      )}
+                      <div className="doc-list mt-3">
+                        {localDocs.map((doc, i) => (
+                          <div
+                            key={i}
+                            className="doc-item d-flex justify-content-between p-2"
+                          >
+                            <span>
+                              <i className={`bi ${getDocIcon(doc.nombre)}`}></i>{' '}
+                              {doc.nombre}
+                            </span>
+                            <button
+                              className="btn btn-link text-danger"
+                              onClick={() => handleEliminarDoc(i)}
+                            >
+                              <i className="bi bi-trash"></i>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* FOOTER */}
             <div className="modal-footer">
               <button
                 type="button"
@@ -1032,15 +745,7 @@ export default function VacancyModal({
                 onClick={handleSave}
                 disabled={saveSuccess}
               >
-                {saveSuccess ? (
-                  <>
-                    <i className="bi bi-check2-all me-2"></i>¡Guardado!
-                  </>
-                ) : (
-                  <>
-                    <i className="bi bi-check-circle me-2"></i>Guardar cambios
-                  </>
-                )}
+                {saveSuccess ? '¡Guardado!' : 'Guardar cambios'}
               </button>
             </div>
           </div>
