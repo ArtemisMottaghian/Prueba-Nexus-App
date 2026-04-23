@@ -9,7 +9,6 @@ import { useAuth } from '../../../context/AuthContext';
 import CrmEmpresaPanel from '../../crm/CrmEmpresaPanel';
 import './VacancyModal.css';
 
-
 function parseDescripcion(texto) {
   if (!texto) return [];
 
@@ -42,10 +41,12 @@ function parseDescripcion(texto) {
     if (partes.length > 1) {
       return {
         titulo,
-        intro: partes[0].endsWith(':') || partes[0].endsWith('.') ? partes[0] : null,
-        bullets: partes[0].endsWith(':') || partes[0].endsWith('.')
-          ? partes.slice(1)
-          : partes,
+        intro:
+          partes[0].endsWith(':') || partes[0].endsWith('.') ? partes[0] : null,
+        bullets:
+          partes[0].endsWith(':') || partes[0].endsWith('.')
+            ? partes.slice(1)
+            : partes,
       };
     }
 
@@ -424,23 +425,28 @@ export default function VacancyModal({
                       <h4 className="section-title">Descripción del puesto</h4>
                       <div className="vacancy-description">
                         {job.description ? (
-                          parseDescripcion(job.description).map((seccion, idx) => (
-                            <div key={idx} className="vacancy-description-block">
-                              {seccion.titulo && (
-                                <h5 className="vacancy-description-subtitle">
-                                  {seccion.titulo}
-                                </h5>
-                              )}
-                              {seccion.intro && <p>{seccion.intro}</p>}
-                              {seccion.bullets.length > 0 && (
-                                <ul className="vacancy-description-list">
-                                  {seccion.bullets.map((b, i) => (
-                                    <li key={i}>{b}</li>
-                                  ))}
-                                </ul>
-                              )}
-                            </div>
-                          ))
+                          parseDescripcion(job.description).map(
+                            (seccion, idx) => (
+                              <div
+                                key={idx}
+                                className="vacancy-description-block"
+                              >
+                                {seccion.titulo && (
+                                  <h5 className="vacancy-description-subtitle">
+                                    {seccion.titulo}
+                                  </h5>
+                                )}
+                                {seccion.intro && <p>{seccion.intro}</p>}
+                                {seccion.bullets.length > 0 && (
+                                  <ul className="vacancy-description-list">
+                                    {seccion.bullets.map((b, i) => (
+                                      <li key={i}>{b}</li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            )
+                          )
                         ) : (
                           <p>No hay descripción disponible.</p>
                         )}
