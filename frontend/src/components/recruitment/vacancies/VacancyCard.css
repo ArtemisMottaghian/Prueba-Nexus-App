@@ -1,185 +1,143 @@
-/* --- ESTILOS COMUNES --- */
-.vacante-card-list, .vacante-card {
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-}
-
-.btn-favorite-star {
-    background: none;
-    border: none;
-    padding: 5px;
-    font-size: 1.2rem;
-    color: #cbd5e1;
-}
-
-.badge {
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 700;
-}
-
-.badge-nueva { background-color: #f0e7ff; color: #7c3aed; }
-.badge-contactada { background-color: #e0f2fe; color: #0284c7; }
-.badge-en-proceso { background-color: #fef3c7; color: #d97706; }
-.badge-descartada { background-color: #fee2e2; color: #dc2626; }
-
-/* --- ESTILOS VISTA LISTA --- */
-.vacante-card-list {
-    background: white;
-    border: 1px solid #eef2f6;
-    border-radius: 12px;
-}
-
-.list-wrapper {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 20px;
-    width: 100%;
-}
-
-.list-main-info {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    flex: 1;
-    min-width: 0;
-}
-
-.list-text-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    overflow: hidden;
-}
-
-.list-title {
-    font-size: 1rem;
-    font-weight: 700;
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.list-separator {
-    color: #cbd5e1;
-}
-
-.list-company {
-    color: #64748b;
-    font-size: 0.9rem;
-    white-space: nowrap;
-}
-
-.list-meta-info {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-}
-
-.list-location {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #64748b;
-    font-size: 0.9rem;
-}
-
-.list-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-/* --- MÓVIL (VISTA LISTA) --- */
-@media (max-width: 768px) {
-    .list-wrapper {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 15px;
-        gap: 12px;
-    }
-
-    .list-main-info {
-        width: 100%;
-    }
-
-    .list-text-group {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 2px;
-    }
-
-    .list-separator {
-        display: none;
-    }
-
-    .list-title {
-        white-space: normal; 
-        font-size: 1.1rem;
-    }
-
-    .list-meta-info {
-        width: 100%;
-        justify-content: space-between;
-        border-top: 1px solid #f1f5f9;
-        padding-top: 10px;
-        gap: 0;
-    }
-}
-
-/* --- ESTILOS VISTA GRID (TARJETAS) --- */
-.vacante-card {
-    background: white;
-    padding: 20px;
-    border-radius: 16px;
-    border: 1px solid #f0f0f0;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
+/* ===================================================
+   ESTILOS DE CABECERA Y ESTRELLA (COMUNES)
+   =================================================== */
 
 .card-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 12px;
 }
 
 .header-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.vacante-details {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+.btn-favorite-star {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
 }
 
-.detail-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.btn-favorite-star i {
+  font-size: 1.25rem;
+  color: #adb5bd;
+  -webkit-text-stroke: 0px !important;
 }
 
-.detail-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.btn-favorite-star .bi-star-fill {
+  color: #ffc107 !important;
 }
 
-.icon-purple { background: #f5f3ff; color: #7c3aed; }
-.icon-cyan { background: #ecfeff; color: #0891b2; }
-
-.vacante-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 5px;
+.btn-favorite-star:hover {
+  transform: scale(1.2);
 }
+
+/* ===================================================
+   TARJETAS CON FONDO ADAPTATIVO (CLARO/OSCURO)
+   =================================================== */
+
+/* 1. Estado Base: Fondo Blanco */
+.vacante-card, 
+.vacante-card-list {
+  background: #ffffff !important; /* 🌟 Forzamos fondo blanco en modo claro */
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+/* 2. MODO OSCURO (Dark Mode) 🌙 */
+[data-theme='dark'] .vacante-card,
+[data-theme='dark'] .vacante-card-list {
+  background: var(--bg-secondary) !important; 
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* --- DISEÑO MODO LISTA RESPONSIVE --- */
+.vacante-card-list {
+  border-radius: 12px;
+  width: 100%;
+}
+
+.list-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+}
+
+.list-main-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.list-text-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.list-separator { color: var(--border-color); margin: 0 4px; }
+
+.list-meta-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* --- DISEÑO MODO GRID --- */
+.vacante-card {
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.vacante-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 10px 0 15px 0;
+  color: var(--text-primary);
+}
+
+
+.detail-item { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.detail-icon { 
+  width: 28px; 
+  height: 28px; 
+  border-radius: 6px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+}
+
+.icon-purple { background: rgba(111, 66, 193, 0.1); color: #6f42c1; }
+.icon-cyan { background: rgba(13, 202, 240, 0.1); color: #0dcaf0; }
+.icon-orange { background: rgba(253, 126, 20, 0.1); color: #fd7e14; }
+.icon-green { background: rgba(25, 135, 84, 0.1); color: #198754; }
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+  .list-wrapper { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .list-text-group { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .list-separator { display: none; }
+  .list-meta-info { 
+    width: 100%; 
+    justify-content: space-between; 
+    border-top: 1px solid var(--border-color); 
+    padding-top: 8px; 
+  }
+}
+

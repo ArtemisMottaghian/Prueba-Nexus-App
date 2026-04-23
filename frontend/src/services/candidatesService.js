@@ -17,7 +17,6 @@ const mapCandidateData = (c) => ({
     : c.time || 'Reciente',
 });
 
-/** Parámetros alineados con GET /api/candidates (query). */
 function buildListUrl(query = {}) {
   const sp = new URLSearchParams();
   if (query.verified === true) sp.set('verified', 'true');
@@ -69,6 +68,38 @@ export const candidatesService = {
       return mapCandidateData(data);
     } catch (error) {
       console.error(`Error al obtener detalle del candidato ${id}:`, error);
+      throw error;
+    }
+  },
+
+  updateCandidateStatus: async (id, newStatus) => {
+    try {
+      const response = await authFetch(
+        ENDPOINTS.recruitment.candidatos.updateStatus(id),
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
+      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error(`Error al actualizar estado del candidato ${id}:`, error);
+      throw error;
+    }
+  },
+
+  deleteCandidate: async (id) => {
+    try {
+      const response = await authFetch(
+        ENDPOINTS.recruitment.candidatos.delete(id),
+        { method: 'DELETE' }
+      );
+      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error(`Error al eliminar el candidato ${id}:`, error);
       throw error;
     }
   },
