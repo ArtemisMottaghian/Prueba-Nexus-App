@@ -200,4 +200,47 @@ export const vacanciesService = {
       throw error;
     }
   },
+
+  // Editar una nota existente
+  updateNote: async (id, noteId, texto) => {
+    try {
+      const response = await authFetch(
+        ENDPOINTS.recruitment.vacantes.detail(id) + `/notes/${noteId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ texto }),
+        }
+      );
+      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error(
+        `Error al actualizar nota ${noteId} de vacante ${id}:`,
+        error
+      );
+      throw error;
+    }
+  },
+
+  // Eliminar una nota
+  deleteNote: async (id, noteId) => {
+    try {
+      const response = await authFetch(
+        ENDPOINTS.recruitment.vacantes.detail(id) + `/notes/${noteId}`,
+        {
+          method: 'DELETE',
+        }
+      );
+      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      // DELETE suele responder 204 sin cuerpo
+      return response.status === 204 ? null : await response.json();
+    } catch (error) {
+      console.error(
+        `Error al eliminar nota ${noteId} de vacante ${id}:`,
+        error
+      );
+      throw error;
+    }
+  },
 };
