@@ -6,6 +6,11 @@ export default function FilterBar({
   onFilterChange,
   onClearFilters,
   locationOptions = [],
+  industryOptions = [
+    { value: 'Technology', label: 'Tecnología' },
+    { value: 'Finance', label: 'Finanzas' },
+    { value: 'Healthcare', label: 'Salud' },
+  ],
   statusOptions = [
     { value: 'New', label: 'Nuevas' },
     { value: 'Contacted', label: 'Contactados' },
@@ -116,9 +121,11 @@ export default function FilterBar({
                 onChange={(e) => onFilterChange('industry', e.target.value)}
               >
                 <option value="All">Todas</option>
-                <option value="Technology">Tecnología</option>
-                <option value="Finance">Finanzas</option>
-                <option value="Healthcare">Salud</option>
+                {industryOptions.map((opt) => (
+                  <option key={opt.value ?? opt} value={opt.value ?? opt}>
+                    {opt.label ?? opt}
+                  </option>
+                ))}
               </select>
             </div>
 

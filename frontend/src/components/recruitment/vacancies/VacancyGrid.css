@@ -2,57 +2,58 @@
 .vacancies-grid {
   display: grid;
   gap: 20px;
-  /* Móvil: 1 columna */
   grid-template-columns: 1fr;
 }
 
 @media (min-width: 576px) {
-  .vacancies-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .vacancies-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (min-width: 992px) {
-  .vacancies-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  .vacancies-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (min-width: 1400px) {
-  .vacancies-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
+  .vacancies-grid { grid-template-columns: repeat(4, 1fr); }
 }
 
 @media (min-width: 1700px) {
-  .vacancies-grid {
-    grid-template-columns: repeat(5, 1fr);
-  }
+  .vacancies-grid { grid-template-columns: repeat(5, 1fr); }
 }
 
-/* Cada celda del grid estira la tarjeta al alto completo */
 .vacancies-grid > div {
   display: flex;
 }
 
-/* Vista de lista */
+/* ── Vista de lista (Mejorada para Responsive) ──── */
 .vacancies-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  width: 100%;
 }
 
+/* Asegura que el contenedor del map ocupe todo el ancho */
+.vacancies-list > div {
+  width: 100%;
+  display: block;
+}
+
+/* ── Cabecera de resultados ─────────────────────── */
 .results-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
+  flex-wrap: wrap; /* Para que en móvil no se amontone */
+  gap: 10px;
 }
 
 .results-title {
   color: var(--text-primary);
   font-size: 1.5rem;
   font-weight: 700;
+  margin: 0;
 }
 
 /* --- Selector de vista Adaptativo --- */
@@ -99,4 +100,20 @@
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   color: var(--text-muted);
+}
+
+/* AJUSTES PARA MÓVIL (Pantallas muy pequeñas) */
+@media (max-width: 480px) {
+  .results-title {
+    font-size: 1.2rem;
+  }
+  
+  .view-toggle {
+    width: 100%; /* El selector de vista ocupa todo el ancho en móviles pequeños */
+    justify-content: center;
+  }
+  
+  .view-btn {
+    flex: 1;
+  }
 }

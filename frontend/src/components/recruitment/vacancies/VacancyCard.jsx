@@ -36,7 +36,7 @@ export default function VacancyCard({
     }
   };
 
-  // VISTA DE LISTA (Responsive Corregido)
+  // --- VISTA DE LISTA ---
   if (isListView) {
     return (
       <div className="vacante-card-list mb-2" onClick={onClick}>
@@ -53,6 +53,10 @@ export default function VacancyCard({
               <h5 className="list-title">{job.title}</h5>
               <span className="list-separator">|</span>
               <span className="list-company">{job.companyName}</span>
+              <span className="list-separator">|</span>
+              <span className="list-industry text-muted small">
+                {job.industry || 'Sector no especificado'}
+              </span>
             </div>
           </div>
 
@@ -66,13 +70,10 @@ export default function VacancyCard({
               <button
                 className="btn-favorite-star"
                 onClick={handleFavoriteClick}
+                type="button"
               >
                 <i
-                  className={
-                    job.isFavorite
-                      ? 'bi bi-star-fill text-warning'
-                      : 'bi bi-star'
-                  }
+                  className={job.isFavorite ? 'bi bi-star-fill' : 'bi bi-star'}
                 ></i>
               </button>
             </div>
@@ -82,7 +83,7 @@ export default function VacancyCard({
     );
   }
 
-  // VISTA DE GRID (Tarjetas normales)
+  // --- VISTA DE GRID (CUADRÍCULA) ---
   return (
     <div className="vacante-card" onClick={onClick}>
       <div className="card-header-row">
@@ -106,12 +107,13 @@ export default function VacancyCard({
             <option value="Descartada">Descartada</option>
           </select>
         </div>
-        <button className="btn-favorite-star" onClick={handleFavoriteClick}>
-          <i
-            className={
-              job.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'
-            }
-          ></i>
+        {/* Estrella empujada a la derecha por el CSS */}
+        <button
+          className="btn-favorite-star"
+          onClick={handleFavoriteClick}
+          type="button"
+        >
+          <i className={job.isFavorite ? 'bi bi-star-fill' : 'bi bi-star'}></i>
         </button>
       </div>
 
@@ -129,12 +131,35 @@ export default function VacancyCard({
             )}
           </div>
         </div>
+
         <div className="detail-item">
           <div className="detail-icon icon-cyan">
             <i className="bi bi-geo-alt"></i>
           </div>
           <span className="detail-text">{job.location}</span>
         </div>
+
+        <div className="detail-item">
+          <div className="detail-icon icon-orange">
+            <i className="bi bi-briefcase"></i>
+          </div>
+          <span className="detail-text text-truncate" title={job.industry}>
+            {job.industry || 'Sector no especificado'}
+          </span>
+        </div>
+
+        {(job.salaryMin || job.salaryMax) && (
+          <div className="detail-item">
+            <div className="detail-icon icon-green">
+              <i className="bi bi-cash-stack"></i>
+            </div>
+            <span className="detail-text">
+              {job.salaryMin && job.salaryMax
+                ? `${job.salaryMin} - ${job.salaryMax}`
+                : `${job.salaryMin || job.salaryMax}`}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="vacante-footer">
