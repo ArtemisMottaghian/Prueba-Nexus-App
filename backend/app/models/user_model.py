@@ -2,7 +2,7 @@ import enum
 from sqlalchemy import Column, String, Boolean, DateTime, BigInteger, Enum as PgEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from app.db.connection import Base
+from app.db.base import Base
 
 class UserRole(str, enum.Enum):
     admin = "admin"
@@ -31,6 +31,6 @@ class User(Base):
     # 'managed_offers" accede a ofertas donde este usuario es el gestor
     managed_offers = relationship("JobOffer", back_populates="manager")
 
-    client_profile = relationship("Client", back_populates="user", uselist=False)
+    #client_profile = relationship("Client", back_populates="user", uselist=False)
 
 

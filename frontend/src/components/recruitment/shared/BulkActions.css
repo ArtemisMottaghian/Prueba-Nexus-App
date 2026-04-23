@@ -150,3 +150,12 @@
     width: 110px; 
   }
 }
+.btn-bulk-assign:hover:not(:disabled) {
+  color: #ffffff !important; 
+  transform: translateY(-1px);
+}
+
+.btn-bulk-assign:hover:not(:disabled) i,
+.btn-bulk-assign:hover:not(:disabled) span {
+  color: #ffffff !important;
+}

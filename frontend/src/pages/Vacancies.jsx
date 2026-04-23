@@ -149,6 +149,33 @@ export default function Vacancies() {
     }
   };
 
+  const handleBulkAssign = async (targetUser) => {
+    try {
+      // Llamada al endpoint que preparó Ander en el backend
+      await vacanciesService.applyBulkActions(
+        selectedVacancies,
+        'assign',
+        targetUser
+      );
+
+      // Actualizamos el estado visual (Optimistic UI)
+      setJobs((prevJobs) =>
+        prevJobs.map((job) =>
+          selectedVacancies.includes(job.id)
+            ? { ...job, assignedTo: targetUser }
+            : job
+        )
+      );
+
+      // Limpiamos la selección tras el éxito
+      setSelectedVacancies([]);
+      console.log(`Vacantes asignadas con éxito a ${targetUser}`);
+    } catch (error) {
+      console.error('Error al asignar vacantes masivamente', error);
+      alert('Hubo un problema asignando las vacantes en el servidor.');
+    }
+  };
+
   // Lógica de Filtrado (Local)
   const filteredJobs = jobs.filter((job) => {
     // ESTADO
@@ -402,6 +429,7 @@ export default function Vacancies() {
               selectedCount={selectedVacancies.length}
               label="vacante"
               onDiscard={handleBulkDiscard}
+              onAssign={handleBulkAssign}
               onClear={() => setSelectedVacancies([])}
             />
           </div>

@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, BigInteger, DateTime, ForeignKey,Text, func, Enum as PgEnum
 from sqlalchemy.orm import relationship
-from app.db.connection import Base
+from app.db.base import Base
 from app.schemas.clients_schemas import EntityType, LeadStatus
 
 
@@ -23,7 +23,7 @@ class Client(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    user = relationship("User", back_populates="client_profile")
+    #user = relationship("User", back_populates="client_profile")
     source_portal = relationship("JobPortal", back_populates="clients")
     original_offer = relationship("JobOffer", back_populates="related_client")
 

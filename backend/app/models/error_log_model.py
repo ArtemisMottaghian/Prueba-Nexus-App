@@ -1,5 +1,5 @@
 from sqlalchemy import Column, BigInteger, String, Boolean, Text, TIMESTAMP
-from app.db.connection import Base
+from app.db.base import Base
 from sqlalchemy.sql import func
 
 class ErrorLog(Base):
