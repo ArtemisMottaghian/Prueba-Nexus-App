@@ -162,12 +162,22 @@ export default function VacancyCard({
         )}
       </div>
 
-      {job.assignedTo && (
-        <div className="vacante-assignee">
-          <i className="bi bi-person-check-fill me-1"></i>
-          {job.assignedTo.nombre}
-        </div>
-      )}
+      {job.assignedTo &&
+        (() => {
+          const lista = Array.isArray(job.assignedTo)
+            ? job.assignedTo
+            : [job.assignedTo];
+          return lista.length > 0 ? (
+            <div className="vacante-assignee-group">
+              {lista.map((r, i) => (
+                <span key={i} className="vacante-assignee">
+                  <i className="bi bi-person-check-fill me-1"></i>
+                  {r.nombre}
+                </span>
+              ))}
+            </div>
+          ) : null;
+        })()}
 
       <div className="vacante-footer">
         <SourceOriginBadge source={job.source} />
