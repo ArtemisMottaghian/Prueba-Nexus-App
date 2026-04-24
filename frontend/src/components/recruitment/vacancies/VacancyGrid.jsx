@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import VacancyCard from './VacancyCard';
 import VacancyModal from './VacancyModal';
+import SmartMatchResults from './SmartMatchResults';
 import './VacancyGrid.css';
 import { vacanciesService } from '../../../services/vacanciesService';
 
@@ -13,33 +14,51 @@ export default function VacancyGrid({
   onAsignarVacante,
   currentUser,
   isNegocio,
-  emptyStateReclutador,
 }) {
   const [viewMode, setViewMode] = useState('grid');
   const [selectedJob, setSelectedJob] = useState(null);
 
+  const [matchingJob, setMatchingJob] = useState(null);
+  const [isMatching, setIsMatching] = useState(false);
+  const [activeMatchingId, setActiveMatchingId] = useState(null);
+
   const handleOpenModal = async (jobId) => {
     try {
-      // Intentar cargar el detalle completo desde la API (con descripción)
       const fullJobData = await vacanciesService.getVacancyById(jobId);
       setSelectedJob(fullJobData);
     } catch (error) {
-      console.error(
-        'Error al cargar detalle desde API, usando datos de tarjeta:',
-        error
-      );
-      // Fallback: usar los datos ya cargados en la grid (siempre disponibles)
+      console.error('Error al cargar detalle:', error);
       const fallbackJob = jobs.find((j) => j.id === jobId);
-      if (fallbackJob) {
-        setSelectedJob(fallbackJob);
-      } else {
-        alert('No se pudo cargar el detalle de la vacante.');
-      }
+      if (fallbackJob) setSelectedJob(fallbackJob);
+    }
+  };
+
+  const handleSmartMatch = async (e, job) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+
+    setIsMatching(true);
+    setActiveMatchingId(job.id);
+
+    try {
+      const results = await vacanciesService.getSmartMatch(job.id);
+      setMatchingJob({
+        ...job,
+        candidates: results || [],
+      });
+    } catch (error) {
+      console.error('Error en el algoritmo de matching:', error);
+      setMatchingJob({
+        ...job,
+        candidates: [],
+      });
+    } finally {
+      setIsMatching(false);
+      setActiveMatchingId(null);
     }
   };
 
   return (
-    <>
+    <div className="vacancy-grid-wrapper">
       <div className="results-header mb-4 mt-4">
         <h2 className="results-title">
           <span className="count-highlight">{jobs.length}</span> Vacantes
@@ -67,41 +86,26 @@ export default function VacancyGrid({
         className={viewMode === 'grid' ? 'vacancies-grid' : 'vacancies-list'}
       >
         {jobs.length === 0 ? (
-          <div className="w-100 text-center py-5 rounded-3 empty-state-container">
-            {emptyStateReclutador ? (
-              <>
-                <i className="bi bi-inbox display-4 d-block mb-3"></i>
-                <p className="fw-semibold">
-                  No tienes vacantes asignadas todavía.
-                </p>
-                <small className="text-muted">
-                  El equipo de negocio te asignará vacantes cuando estén listas.
-                </small>
-              </>
-            ) : (
-              <>
-                <i className="bi bi-search display-4 d-block mb-3"></i>
-                <p>No se encontraron vacantes con estos filtros.</p>
-              </>
-            )}
+          <div className="empty-state-container">
+            <i className="bi bi-search display-4 d-block mb-3"></i>
+            <p>No se encontraron vacantes con estos filtros.</p>
           </div>
         ) : (
           jobs.map((job) => (
             <div
               key={job.id}
               onClick={() => handleOpenModal(job.id)}
-              style={{ cursor: 'pointer' }}
+              className="vacancy-card-wrapper"
             >
               <VacancyCard
                 job={job}
                 isListView={viewMode === 'list'}
                 isSelected={selectedVacancies?.includes(job.id)}
-                onSelect={(e) => {
-                  if (e && e.stopPropagation) e.stopPropagation();
-                  onSelectVacancy(job.id);
-                }}
+                onSelect={() => onSelectVacancy(job.id)}
                 onUpdateStatus={onUpdateJobStatus}
                 onToggleFavorite={onToggleFavorite}
+                onSmartMatch={(ev) => handleSmartMatch(ev, job)}
+                isMatching={isMatching && activeMatchingId === job.id}
               />
             </div>
           ))
@@ -119,6 +123,14 @@ export default function VacancyGrid({
           isNegocio={isNegocio}
         />
       )}
-    </>
+
+      {matchingJob && (
+        <SmartMatchResults
+          job={matchingJob}
+          candidates={matchingJob.candidates}
+          onClose={() => setMatchingJob(null)}
+        />
+      )}
+    </div>
   );
 }
