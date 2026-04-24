@@ -58,6 +58,9 @@ export default function VacancyModal({
   onClose,
   onUpdateStatus,
   onToggleFavorite,
+  onAsignarVacante,
+  currentUser,
+  isNegocio,
 }) {
   const { hasRole } = useAuth();
   const isReclutador = hasRole('hr_manager') || hasRole('reclutador');
@@ -86,6 +89,11 @@ export default function VacancyModal({
     resultado: 'Pendiente',
     notas: '',
   });
+
+  // Asignación de reclutador
+  const [localAsignadoA, setLocalAsignadoA] = useState(job?.assignedTo || null);
+  const [reclutadorNombre, setReclutadorNombre] = useState('');
+  const [reclutadorEmail, setReclutadorEmail] = useState('');
 
   // Documentos locales
   const [localDocs, setLocalDocs] = useState(job?.documentos || []);
@@ -251,6 +259,38 @@ export default function VacancyModal({
     } catch (err) {
       console.error('Error actualizando estado de cuenta:', err);
     }
+  };
+
+  const handleAsignarseAMiMismo = () => {
+    const datos = {
+      nombre:
+        currentUser?.name ||
+        currentUser?.username ||
+        currentUser?.email ||
+        'Yo',
+      email: currentUser?.email || '',
+      fecha: new Date().toLocaleDateString('es-ES'),
+    };
+    setLocalAsignadoA(datos);
+    if (onAsignarVacante) onAsignarVacante(job.id, datos);
+  };
+
+  const handleAsignarReclutador = () => {
+    if (!reclutadorNombre.trim() && !reclutadorEmail.trim()) return;
+    const datos = {
+      nombre: reclutadorNombre.trim() || reclutadorEmail.trim(),
+      email: reclutadorEmail.trim(),
+      fecha: new Date().toLocaleDateString('es-ES'),
+    };
+    setLocalAsignadoA(datos);
+    if (onAsignarVacante) onAsignarVacante(job.id, datos);
+    setReclutadorNombre('');
+    setReclutadorEmail('');
+  };
+
+  const handleDesasignar = () => {
+    setLocalAsignadoA(null);
+    if (onAsignarVacante) onAsignarVacante(job.id, null);
   };
 
   const handleAdjuntarArchivos = (files) => {
@@ -572,6 +612,108 @@ export default function VacancyModal({
                         )}
                       </div>
                     </div>
+
+                    {/* ASIGNACIÓN — solo visible para negocio/admin */}
+                    {isNegocio && (
+                      <div className="detail-section">
+                        <h4 className="section-title">
+                          Asignación de reclutador
+                        </h4>
+
+                        {localAsignadoA ? (
+                          <div className="asign-current">
+                            <div className="asign-avatar">
+                              {(localAsignadoA.nombre || '?')
+                                .charAt(0)
+                                .toUpperCase()}
+                            </div>
+                            <div className="asign-info">
+                              <span className="asign-nombre">
+                                {localAsignadoA.nombre}
+                              </span>
+                              {localAsignadoA.email && (
+                                <span className="asign-email">
+                                  {localAsignadoA.email}
+                                </span>
+                              )}
+                              <span className="asign-fecha">
+                                <i className="bi bi-calendar3 me-1"></i>Asignado
+                                el {localAsignadoA.fecha}
+                              </span>
+                            </div>
+                            <button
+                              className="btn-icon btn-icon-sm btn-icon-danger ms-auto"
+                              title="Quitar asignación"
+                              onClick={handleDesasignar}
+                            >
+                              <i className="bi bi-person-dash"></i>
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="asign-form">
+                            <button
+                              className="btn btn-primary-custom btn-sm asign-self-btn"
+                              onClick={handleAsignarseAMiMismo}
+                            >
+                              <i className="bi bi-person-check-fill me-2"></i>
+                              Asignarme esta vacante
+                            </button>
+                            <div className="asign-divider">
+                              <span>o asignar a un reclutador</span>
+                            </div>
+                            <div className="asign-recruiter-row">
+                              <input
+                                type="text"
+                                className="form-control input-field"
+                                placeholder="Nombre del reclutador"
+                                value={reclutadorNombre}
+                                onChange={(e) =>
+                                  setReclutadorNombre(e.target.value)
+                                }
+                              />
+                              <input
+                                type="email"
+                                className="form-control input-field"
+                                placeholder="Email del reclutador"
+                                value={reclutadorEmail}
+                                onChange={(e) =>
+                                  setReclutadorEmail(e.target.value)
+                                }
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter')
+                                    handleAsignarReclutador();
+                                }}
+                              />
+                              <button
+                                className="btn btn-secondary-custom btn-sm"
+                                onClick={handleAsignarReclutador}
+                                disabled={
+                                  !reclutadorNombre.trim() &&
+                                  !reclutadorEmail.trim()
+                                }
+                              >
+                                <i className="bi bi-person-plus-fill me-1"></i>
+                                Asignar
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Vista de asignación para reclutador (solo lectura) */}
+                    {isReclutador && localAsignadoA && (
+                      <div className="detail-section">
+                        <h4 className="section-title">
+                          Vacante asignada por negocio
+                        </h4>
+                        <div className="asign-readonly">
+                          <i className="bi bi-building me-2"></i>
+                          Asignada el {localAsignadoA.fecha} por el equipo de
+                          negocio
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
