@@ -52,9 +52,6 @@ class CompanyUpdate(BaseModel):
 # Se usa en las respuestas de GET, POST y PATCH.
 class CompanyResponse(CompanyBase):
     id: int
-    managed_by_id: Optional[int] = None
-    manager_name: Optional[str] = None
-    manager_email:Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -72,3 +69,9 @@ class CompanyAssignRequest(BaseModel):
     company_ids: List[int] = Field(
         ..., description="Lista de IDs de las empresas a asignar"
     )
+
+# Devuelve el manager de la empresa
+class CompanyWithManagerResponse(CompanyResponse):
+    manager_by_id: Optional[int] = None
+    manager_name: Optional[str] = None
+    manager_email: Optional[str] = None
