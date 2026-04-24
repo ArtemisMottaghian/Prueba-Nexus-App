@@ -52,6 +52,9 @@ class CompanyUpdate(BaseModel):
 # Se usa en las respuestas de GET, POST y PATCH.
 class CompanyResponse(CompanyBase):
     id: int
+    managed_by_id: Optional[int] = None
+    manager_name: Optional[str] = None
+    manager_email:Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
