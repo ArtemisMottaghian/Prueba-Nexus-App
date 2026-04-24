@@ -1,13 +1,20 @@
 from fastapi import HTTPException
 from typing import List, Optional
+from sqlalchemy import select, or_
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import selectinload
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import update
 
 from app.models.user_model import User
 from app.schemas.users_schemas import UserType
-from app.models.job_model import JobOffer, JobPortal
+from app.models.job_model import JobOffer, JobPortal, JobApplication
+from app.models.clients_model import Client
 from app.models.contacts_model import Contact
+from app.models.entity_model import EntityType
+from app.models.leadStatus_model import LeadStatus
+from app.models.candidates_model import Candidate
 
 # Funcion para obtener el listado (Dashboard y Pantalla de Vacantes)
 async def get_vacancies_list(db: AsyncSession, status: Optional[str] = None) -> List[JobOffer]:
@@ -252,3 +259,63 @@ async def get_vacancies_by_hr(db: AsyncSession, hr_id: int) -> List[JobOffer]:
     except Exception as e:
         print(f"Error al obtener las vacatantes: {e}")
         raise e
+
+async def get_suitable_candidates(db: AsyncSession, vacancy_id: int) -> list[dict]:
+    # Obtener vacante
+    vacancy = await get_vacancy_by_id(db, vacancy_id)
+    if vacancy is None:
+        return None # El router lanzara 404
+
+    # Extraer keywords de la vacante
+    raw_text = f"{vacancy.sectior or ''} {vacancy.job_description or ''}"
+    vacancy_keywords = {
+        w.lower()
+        for w in re.split(r"[\s,.()\[\]]+", raw_text)
+        if len(w) >= 3
+    }
+
+    # Candidatos disponibles
+    result = await db.execute(
+        select(Candidate).where(Candidate.status.in_(["active", "passive"]))
+    )
+    candidates = result.scalars().all()
+
+    # Aplicaciones ya existentes para esta vacante (mostrar estado)
+    apps_result = await db.execute(
+        select(JobApplication).where(JobApplication.offer_id == vacancy_id)
+    )
+    apps_by_candidate = {
+        app.candidate_id: app.status.value
+        for app in apps_result.scalars().all()
+    }
+
+    # Calcular score y construir respuesta
+    output = []
+    for c in candidates:
+        candidate_skills = [
+            s.strip().lower()
+            for s in (c.skills or "").split(",")
+            if s.strip()
+        ]
+        if candidate_skills:
+            matches = sum(1 for s in candidate_skills if s in vacancy_keywords)
+            score = round(matches / len(candidate_skills) * 100)
+        else:
+            score = 0
+        
+        output.append({
+            "id": c.id,
+            "name": f"{c.first_name} {c.last_name}".strip(),
+            "speciality": c.skills or "Sin especificar",
+            "location": c.location or "No indicada",
+            "status": c.status.value if hasattr(c.status, "value") else str(c.status),
+            "experience": c.experience or "Consultar CV",
+            "email": c.email,
+            "is_favorite": bool(c.is_favorite),
+            "verified": bool(c.verified),
+            "match_score": score,
+            "application_status": apps_by_candidate.get(c.id),
+        })
+    
+    output.sort(key=lambda x: (x["match_score"], x["id"]), reverse=True)
+    return output
