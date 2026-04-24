@@ -17,8 +17,9 @@ from app.db.base import Base
 class LeadStatus(str, enum.Enum):
     new = "new"
     contacted = "contacted"
-    interested = "interested"
-    not_interested = "not_interested"
+    in_progress = "in_progress"
+    negotiating = "negotiating"
+    discarded = "discarded"
     converted = "converted"
 
 
@@ -48,6 +49,8 @@ class Company(Base):
     )
 
     comments = relationship("CompanyComment", back_populates="company")
+    contacts = relationship("Contact", back_populates="company")
+    tracking_history = relationship("TrackingHistory", back_populates="company")
     managed_by_id = Column(BigInteger, ForeignKey("users.id"), nullable=True)
     manager = relationship("User", foreign_keys=[managed_by_id])
 
@@ -56,7 +59,7 @@ class CompanyComment(Base):
 
     id = Column(BigInteger, primary_key=True, index=True)
     company_id = Column(BigInteger, ForeignKey('companies.id', ondelete='CASCADE'))
-    user_id = Column(BigInteger, ForeignKey('users.id'))
+    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
     comment = Column(Text, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(

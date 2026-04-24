@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, BigInteger, Text, ForeignKey, CheckConstraint, UniqueConstraint,DateTime, Enum as PgEnum, func,Boolean
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import relationship
-from app.db.connection import Base
+from app.db.base import Base
 from app.schemas.job_offer import OfferStatus
 from app.models.aplication_model import ApplicationStatus
 from app.models.candidates_model import Candidate
@@ -18,7 +18,6 @@ class JobPortal(Base):
     is_active = Column(Boolean, default=True)
 
     offers = relationship("JobOffer", back_populates="portal")
-    clients = relationship("Client", back_populates="source_portal")
 
 class JobOffer(Base):
     __tablename__ = "job_offers"
@@ -52,7 +51,6 @@ class JobOffer(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(),server_default=func.now())
     portal = relationship("JobPortal", back_populates="offers")
     applications = relationship("JobApplication", back_populates="offer")
-    related_client = relationship("Client", back_populates="original_offer", uselist=False)
     manager = relationship("User", back_populates="managed_offers", foreign_keys=[managed_by_id])
     tracking_entries = relationship("TrackingHistory", back_populates="offer", cascade="all, delete-orphan")
     search_matches = relationship("SearchResult", back_populates="offer", cascade="all, delete-orphan")

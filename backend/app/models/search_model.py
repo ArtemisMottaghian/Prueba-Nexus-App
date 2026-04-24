@@ -1,4 +1,4 @@
-from app.db.connection import Base
+from app.db.base import Base
 
 from sqlalchemy import (
     Column,

@@ -59,6 +59,10 @@ export default function CandidateCard({
             </h5>
             <span className="text-muted small">|</span>
             <span className="detail-text">{candidate.specialty}</span>
+            <span className="text-muted small">|</span>
+            <span className="detail-text text-muted small">
+              {candidate.experience || 'Experiencia no indicada'}
+            </span>
           </div>
           <div className="d-flex align-items-center gap-2 flex-wrap justify-content-end">
             <span className="detail-text opacity-75">
@@ -83,7 +87,9 @@ export default function CandidateCard({
             )}
             <span className={`badge ${badgeClass}`}>{statusText}</span>
             <button
-              className={`btn-icon btn-icon-sm ${candidate.isFavorite ? 'text-warning' : ''}`}
+              className={`btn-icon btn-icon-sm ${
+                candidate.isFavorite ? 'text-warning' : ''
+              }`}
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleFavorite(candidate.id, candidate.isFavorite);
@@ -139,7 +145,9 @@ export default function CandidateCard({
           )}
         </div>
         <button
-          className={`btn-icon btn-icon-sm ${candidate.isFavorite ? 'text-warning' : ''}`}
+          className={`btn-icon btn-icon-sm ${
+            candidate.isFavorite ? 'text-warning' : ''
+          }`}
           onClick={(e) => {
             e.stopPropagation();
             onToggleFavorite(candidate.id, candidate.isFavorite);
@@ -154,6 +162,7 @@ export default function CandidateCard({
       <h3 className="vacante-title">{candidate.name}</h3>
 
       <div className="vacante-details">
+        {/* 1. Especialidad */}
         <div className="detail-item">
           <div className="detail-icon icon-purple">
             <i className="bi bi-person-badge"></i>
@@ -171,14 +180,28 @@ export default function CandidateCard({
             )}
           </div>
         </div>
+
+        {/* 2. Ubicación */}
         <div className="detail-item">
           <div className="detail-icon icon-cyan">
             <i className="bi bi-geo-alt"></i>
           </div>
           <span className="detail-text">{candidate.location}</span>
         </div>
+
+        {/* 3. Experiencia (NUEVO) */}
         <div className="detail-item">
-          <div className="detail-icon icon-purple">
+          <div className="detail-icon icon-orange">
+            <i className="bi bi-briefcase"></i>
+          </div>
+          <span className="detail-text">
+            {candidate.experience || 'Experiencia no indicada'}
+          </span>
+        </div>
+
+        {/* 4. Email */}
+        <div className="detail-item">
+          <div className="detail-icon icon-gray">
             <i className="bi bi-envelope"></i>
           </div>
           <span className="detail-text">
