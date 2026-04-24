@@ -78,7 +78,10 @@ export default function VacancyCard({
 
             <div className="list-actions">
               <span className={`badge ${badgeClass}`}>{job.status}</span>
-              <button className="btn-favorite-star" onClick={handleFavoriteClick}>
+              <button
+                className="btn-favorite-star"
+                onClick={handleFavoriteClick}
+              >
                 <i
                   className={
                     job.isFavorite
