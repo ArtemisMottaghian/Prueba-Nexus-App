@@ -14,7 +14,6 @@ export default function VacancyGrid({
   onAsignarVacante,
   currentUser,
   isNegocio,
-  emptyStateReclutador,
 }) {
   const [viewMode, setViewMode] = useState('grid');
   const [selectedJob, setSelectedJob] = useState(null);
@@ -22,6 +21,7 @@ export default function VacancyGrid({
   // Estados para el Smart Match (#330)
   const [matchingJob, setMatchingJob] = useState(null);
   const [isMatching, setIsMatching] = useState(false);
+  const [activeMatchingId, setActiveMatchingId] = useState(null);
 
   // Abrir modal de detalles normal
   const handleOpenModal = async (jobId) => {
@@ -35,20 +35,32 @@ export default function VacancyGrid({
     }
   };
 
-  // Activar Algoritmo de IA (#330)
+  // --- LÓGICA SMART MATCH CONEXIÓN BACKEND ---
   const handleSmartMatch = async (e, job) => {
-    e.stopPropagation(); // Evita abrir el modal normal
+    if (e && e.stopPropagation) e.stopPropagation();
+    
     setIsMatching(true);
+    setActiveMatchingId(job.id); // Para que solo brille el botón de esta tarjeta
+
     try {
-      // Llamada al servicio que conecta con el backend
+      // Esta es la llamada a la API que tu compañero ha subido
       const results = await vacanciesService.getSmartMatch(job.id);
-      setMatchingJob({ ...job, candidates: results });
+      
+      // Si la API responde correctamente, seteamos el job con sus candidatos
+      setMatchingJob({ 
+        ...job, 
+        candidates: results || [] 
+      });
     } catch (error) {
-      console.error('Error en Smart Match:', error);
-      // Criterio de aceptación: Si falla o no hay, mostramos estado vacío
-      setMatchingJob({ ...job, candidates: [] });
+      console.error('Error en el algoritmo de matching:', error);
+      // Criterio de aceptación: Mostrar estado vacío si hay error o no hay matches
+      setMatchingJob({ 
+        ...job, 
+        candidates: [] 
+      });
     } finally {
       setIsMatching(false);
+      setActiveMatchingId(null);
     }
   };
 
@@ -63,12 +75,14 @@ export default function VacancyGrid({
           <button
             className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
             onClick={() => setViewMode('grid')}
+            title="Vista cuadrícula"
           >
             <i className="bi bi-grid-3x3-gap"></i>
           </button>
           <button
             className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
             onClick={() => setViewMode('list')}
+            title="Vista lista"
           >
             <i className="bi bi-list-ul"></i>
           </button>
@@ -77,8 +91,7 @@ export default function VacancyGrid({
 
       <div className={viewMode === 'grid' ? 'vacancies-grid' : 'vacancies-list'}>
         {jobs.length === 0 ? (
-          /* CAMBIO: Quitamos bg-dark-subtle y usamos nuestra clase adaptativa */
-          <div className="w-100 text-center py-5 rounded-3 empty-state-container">
+          <div className="empty-state-container">
             <i className="bi bi-search display-4 d-block mb-3"></i>
             <p>No se encontraron vacantes con estos filtros.</p>
           </div>
@@ -97,7 +110,8 @@ export default function VacancyGrid({
                 onUpdateStatus={onUpdateJobStatus}
                 onToggleFavorite={onToggleFavorite}
                 onSmartMatch={(e) => handleSmartMatch(e, job)}
-                isMatching={isMatching && matchingJob?.id === job.id}
+                // Solo activamos el loading para la tarjeta que se está procesando
+                isMatching={isMatching && activeMatchingId === job.id}
               />
             </div>
           ))

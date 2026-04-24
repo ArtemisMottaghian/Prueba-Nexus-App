@@ -1,194 +1,137 @@
-/* --- ESTILOS COMUNES --- */
-.vacante-card-list, .vacante-card {
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-}
+/* ===================================================
+   VacancyCard.css — Diseño NexusAI Final
+   =================================================== */
 
-.btn-favorite-star {
-    background: none;
-    border: none;
-    padding: 5px;
-    font-size: 1.2rem;
-    color: #cbd5e1;
-}
-
-.badge {
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 700;
-}
-
-.badge-nueva { background-color: #f0e7ff; color: #7c3aed; }
-.badge-contactada { background-color: #e0f2fe; color: #0284c7; }
-.badge-en-proceso { background-color: #fef3c7; color: #d97706; }
-.badge-descartada { background-color: #fee2e2; color: #dc2626; }
-
-/* --- ESTILOS VISTA LISTA --- */
-.vacante-card-list {
-    background: white;
-    border: 1px solid #eef2f6;
-    border-radius: 12px;
-}
-
-.list-wrapper {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 20px;
-    width: 100%;
-}
-
-.list-main-info {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    flex: 1;
-    min-width: 0;
-}
-
-.list-text-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    overflow: hidden;
-}
-
-.list-title {
-    font-size: 1rem;
-    font-weight: 700;
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.list-separator {
-    color: #cbd5e1;
-}
-
-.list-company {
-    color: #64748b;
-    font-size: 0.9rem;
-    white-space: nowrap;
-}
-
-.list-meta-info {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-}
-
-.list-location {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #64748b;
-    font-size: 0.9rem;
-}
-
-.list-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-/* --- MÓVIL (VISTA LISTA) --- */
-@media (max-width: 768px) {
-    .list-wrapper {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 15px;
-        gap: 12px;
-    }
-
-    .list-main-info {
-        width: 100%;
-    }
-
-    .list-text-group {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 2px;
-    }
-
-    .list-separator {
-        display: none;
-    }
-
-    .list-title {
-        white-space: normal; 
-        font-size: 1.1rem;
-    }
-
-    .list-meta-info {
-        width: 100%;
-        justify-content: space-between;
-        border-top: 1px solid #f1f5f9;
-        padding-top: 10px;
-        gap: 0;
-    }
-}
-
-/* --- ESTILOS VISTA GRID (TARJETAS) --- */
 .vacante-card {
-    background: white;
-    padding: 20px;
-    border-radius: 16px;
-    border: 1px solid #f0f0f0;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+  background: #13131f; /* var(--clr-surface) */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1.25rem;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
+.vacante-card:hover {
+  border-color: #7c3aed; /* var(--clr-purple) */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transform: translateY(-4px);
+}
+
+/* Fila superior: Checkbox, Status y Acciones (IA/Estrella) */
 .card-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
 }
 
 .header-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- BOTONES SIN RECUADRO GRIS (Reset Total) --- */
+.btn-smart-match-mini,
+.btn-smart-match-icon,
+.btn-favorite-star {
+  all: unset; /* Elimina estilos por defecto del navegador */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+/* Estilo específico Botón IA ✨ */
+.btn-smart-match-mini, 
+.btn-smart-match-icon {
+  color: #00d4ff; /* var(--clr-cyan) */
+  background: rgba(0, 212, 255, 0.05);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.btn-smart-match-mini:hover,
+.btn-smart-match-icon:hover {
+  background: rgba(0, 212, 255, 0.15);
+  border-color: #00d4ff;
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.3);
+}
+
+/* Estilo específico Estrella ⭐ */
+.btn-favorite-star {
+  color: #7a7a9a;
+  font-size: 1.1rem;
+}
+
+.btn-favorite-star:hover {
+  transform: scale(1.1);
+  color: #fbbf24;
+}
+
+/* Animación de carga para la IA */
+.loading i {
+  display: inline-block;
+  animation: spin-ia 1s linear infinite;
+  color: #7c3aed;
+}
+
+@keyframes spin-ia {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Contenido de la Tarjeta */
+.vacante-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.4;
 }
 
 .vacante-details {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .detail-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: #a1a1aa;
 }
 
 .detail-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  width: 24px;
+  color: #7c3aed;
 }
 
-.icon-purple { background: rgba(111, 66, 193, 0.1); color: #6f42c1; }
-.icon-cyan { background: rgba(13, 202, 240, 0.1); color: #0dcaf0; }
-.icon-orange { background: rgba(253, 126, 20, 0.1); color: #fd7e14; }
-.icon-green { background: rgba(25, 135, 84, 0.1); color: #198754; }
-
-/* --- RESPONSIVE --- */
-@media (max-width: 768px) {
-  .list-wrapper { flex-direction: column; align-items: flex-start; gap: 10px; }
-  .list-text-group { flex-direction: column; align-items: flex-start; gap: 2px; }
-  .list-separator { display: none; }
-  .list-meta-info { 
-    width: 100%; 
-    justify-content: space-between; 
-    border-top: 1px solid var(--border-color); 
-    padding-top: 8px; 
-  }
+/* Footer y Badges */
+.vacante-footer {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
+.vacante-date {
+  font-size: 0.75rem;
+  color: #71717a;
+}

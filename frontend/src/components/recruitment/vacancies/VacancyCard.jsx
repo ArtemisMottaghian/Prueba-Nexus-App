@@ -12,30 +12,31 @@ export default function VacancyCard({
   onSmartMatch,
   isMatching,
 }) {
-  // Lógica de clases para el estado
+  // Lógica de clases para el color del badge de estado
   let badgeClass = 'badge-nueva';
   if (job.status === 'Contactada') badgeClass = 'badge-contactada';
   if (job.status === 'En proceso') badgeClass = 'badge-en-proceso';
   if (job.status === 'Descartada') badgeClass = 'badge-descartada';
 
-  // Manejadores de eventos con stopPropagation para no abrir el modal por error
+  // --- MANEJADORES DE EVENTOS ---
+  
   const handleCheckboxClick = (e) => {
-    e.stopPropagation();
+    e.stopPropagation(); // Evita abrir el modal
     onSelect(job.id);
   };
 
   const handleStatusChange = (e) => {
-    e.stopPropagation();
+    e.stopPropagation(); // Evita abrir el modal
     onUpdateStatus(job.id, e.target.value);
   };
 
   const handleFavoriteClick = (e) => {
-    e.stopPropagation();
+    e.stopPropagation(); // Evita abrir el modal
     if (onToggleFavorite) onToggleFavorite(job.id, job.isFavorite);
   };
 
   const handleSmartMatchClick = (e) => {
-    e.stopPropagation();
+    e.stopPropagation(); // Evita abrir el modal
     if (onSmartMatch) onSmartMatch(e);
   };
 
@@ -66,7 +67,7 @@ export default function VacancyCard({
           </div>
 
           <div className="list-meta-info">
-            {/* IA a la izquierda de las acciones en lista */}
+            {/* BOTÓN IA EN LISTA */}
             <button 
               className={`btn-smart-match-icon ${isMatching ? 'loading' : ''}`}
               onClick={handleSmartMatchClick}
@@ -86,13 +87,7 @@ export default function VacancyCard({
                 className="btn-favorite-star"
                 onClick={handleFavoriteClick}
               >
-                <i
-                  className={
-                    job.isFavorite
-                      ? 'bi bi-star-fill text-warning'
-                      : 'bi bi-star'
-                  }
-                ></i>
+                <i className={job.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'}></i>
               </button>
             </div>
           </div>
@@ -101,7 +96,7 @@ export default function VacancyCard({
     );
   }
 
-  // VISTA DE GRID (Tarjetas normales)
+  // --- VISTA DE GRID (Tarjetas) ---
   return (
     <div className="vacante-card" onClick={onClick}>
       <div className="card-header-row">
@@ -125,13 +120,21 @@ export default function VacancyCard({
             <option value="Descartada">Descartada</option>
           </select>
         </div>
-        <button className="btn-favorite-star" onClick={handleFavoriteClick}>
-          <i
-            className={
-              job.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'
-            }
-          ></i>
-        </button>
+
+        <div className="header-right-actions d-flex align-items-center gap-2">
+          {/* BOTÓN IA EN GRID (A la izquierda de la estrella) */}
+          <button 
+            className={`btn-smart-match-mini ${isMatching ? 'loading' : ''}`}
+            onClick={handleSmartMatchClick}
+            title="Smart Match con IA"
+          >
+            <i className="bi bi-stars"></i>
+          </button>
+
+          <button className="btn-favorite-star" onClick={handleFavoriteClick}>
+            <i className={job.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'}></i>
+          </button>
+        </div>
       </div>
 
       <h3 className="vacante-title">{job.title}</h3>
