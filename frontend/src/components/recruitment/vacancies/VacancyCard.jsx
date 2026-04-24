@@ -12,37 +12,33 @@ export default function VacancyCard({
   onSmartMatch,
   isMatching,
 }) {
-  // Lógica de clases para el color del badge de estado
   let badgeClass = 'badge-nueva';
   if (job.status === 'Contactada') badgeClass = 'badge-contactada';
   if (job.status === 'En proceso') badgeClass = 'badge-en-proceso';
   if (job.status === 'Descartada') badgeClass = 'badge-descartada';
 
-  // --- MANEJADORES DE EVENTOS ---
-  
   const handleCheckboxClick = (e) => {
-    e.stopPropagation(); // Evita abrir el modal
+    e.stopPropagation();
     onSelect(job.id);
   };
 
   const handleStatusChange = (e) => {
-    e.stopPropagation(); // Evita abrir el modal
+    e.stopPropagation();
     onUpdateStatus(job.id, e.target.value);
   };
 
   const handleFavoriteClick = (e) => {
-    e.stopPropagation(); // Evita abrir el modal
+    e.stopPropagation();
     if (onToggleFavorite) onToggleFavorite(job.id, job.isFavorite);
   };
 
   const handleSmartMatchClick = (e) => {
-    e.stopPropagation(); // Evita abrir el modal
+    e.stopPropagation();
     if (onSmartMatch) onSmartMatch(e);
   };
 
   const handleChildClick = (e) => e.stopPropagation();
 
-  // --- VISTA DE LISTA ---
   if (isListView) {
     return (
       <div className="vacante-card-list mb-2" onClick={onClick}>
@@ -67,8 +63,7 @@ export default function VacancyCard({
           </div>
 
           <div className="list-meta-info">
-            {/* BOTÓN IA EN LISTA */}
-            <button 
+            <button
               className={`btn-smart-match-icon ${isMatching ? 'loading' : ''}`}
               onClick={handleSmartMatchClick}
               title="Smart Match con IA"
@@ -80,14 +75,17 @@ export default function VacancyCard({
               <i className="bi bi-geo-alt"></i>
               <span>{job.location}</span>
             </div>
-            
+
             <div className="list-actions">
               <span className={`badge ${badgeClass}`}>{job.status}</span>
-              <button
-                className="btn-favorite-star"
-                onClick={handleFavoriteClick}
-              >
-                <i className={job.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'}></i>
+              <button className="btn-favorite-star" onClick={handleFavoriteClick}>
+                <i
+                  className={
+                    job.isFavorite
+                      ? 'bi bi-star-fill text-warning'
+                      : 'bi bi-star'
+                  }
+                ></i>
               </button>
             </div>
           </div>
@@ -96,7 +94,6 @@ export default function VacancyCard({
     );
   }
 
-  // --- VISTA DE GRID (Tarjetas) ---
   return (
     <div className="vacante-card" onClick={onClick}>
       <div className="card-header-row">
@@ -122,8 +119,7 @@ export default function VacancyCard({
         </div>
 
         <div className="header-right-actions d-flex align-items-center gap-2">
-          {/* BOTÓN IA EN GRID (A la izquierda de la estrella) */}
-          <button 
+          <button
             className={`btn-smart-match-mini ${isMatching ? 'loading' : ''}`}
             onClick={handleSmartMatchClick}
             title="Smart Match con IA"
@@ -132,7 +128,11 @@ export default function VacancyCard({
           </button>
 
           <button className="btn-favorite-star" onClick={handleFavoriteClick}>
-            <i className={job.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'}></i>
+            <i
+              className={
+                job.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'
+              }
+            ></i>
           </button>
         </div>
       </div>
