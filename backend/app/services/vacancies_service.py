@@ -10,7 +10,6 @@ from sqlalchemy import update
 from app.models.user_model import User
 from app.schemas.users_schemas import UserType
 from app.models.job_model import JobOffer, JobPortal, JobApplication
-from app.models.clients_model import Client
 from app.models.contacts_model import Contact
 from app.models.entity_model import EntityType
 from app.models.leadStatus_model import LeadStatus
