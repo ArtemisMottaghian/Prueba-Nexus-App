@@ -46,6 +46,7 @@ export default function Vacancies() {
   const [loading, setLoading] = useState(true);
   const [locationOptions, setLocationOptions] = useState([]);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [showDescartadas, setShowDescartadas] = useState(false);
   const [paginaActual, setPaginaActual] = useState(1);
 
   const dynamicIndustries = useMemo(() => {
@@ -235,6 +236,11 @@ export default function Vacancies() {
 
     const matchFavorite = !showFavoritesOnly || job.isFavorite === true;
 
+    // Ocultar descartadas por defecto — solo se muestran si el usuario lo pide explícitamente
+    const arrDiscard2 = ['descartada', 'discarded', 'rejected'];
+    const esDescartada = arrDiscard2.includes(safeStatus);
+    const matchDescartada = showDescartadas ? esDescartada : !esDescartada;
+
     let matchText = true;
     const activeSearch = filters.search || queryURL;
     if (activeSearch) {
@@ -244,12 +250,20 @@ export default function Vacancies() {
       matchText = textoCompleto.includes(lowerQuery);
     }
 
-    // Reclutador solo ve sus vacantes asignadas
+    // Reclutador solo ve sus vacantes asignadas (soporta array o objeto único)
+    const asignados = job.assignedTo
+      ? Array.isArray(job.assignedTo)
+        ? job.assignedTo
+        : [job.assignedTo]
+      : [];
     const matchAsignado =
       !isReclutador ||
-      job.assignedTo?.email === user?.email ||
-      job.assignedTo?.nombre === user?.name ||
-      job.assignedTo?.nombre === user?.username;
+      asignados.some(
+        (r) =>
+          r.email === user?.email ||
+          r.nombre === user?.name ||
+          r.nombre === user?.username
+      );
 
     return (
       matchStatus &&
@@ -258,7 +272,8 @@ export default function Vacancies() {
       matchSource &&
       matchFavorite &&
       matchText &&
-      matchAsignado
+      matchAsignado &&
+      matchDescartada
     );
   });
 
@@ -326,15 +341,35 @@ export default function Vacancies() {
             )}
           </div>
 
-          <button
-            className={`btn btn-sm ${showFavoritesOnly ? 'btn-warning' : 'btn-outline-secondary'}`}
-            onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-          >
-            <i
-              className={`bi ${showFavoritesOnly ? 'bi-star-fill' : 'bi-star'} me-2`}
-            ></i>
-            Solo Favoritos
-          </button>
+          <div className="d-flex gap-2">
+            <button
+              className={`btn btn-sm ${showDescartadas ? 'btn-danger' : 'btn-outline-secondary'}`}
+              onClick={() => {
+                setShowDescartadas(!showDescartadas);
+                setShowFavoritesOnly(false);
+                setPaginaActual(1);
+              }}
+              title="Las vacantes descartadas están ocultas por defecto"
+            >
+              <i
+                className={`bi ${showDescartadas ? 'bi-eye-fill' : 'bi-eye-slash'} me-2`}
+              ></i>
+              {showDescartadas ? 'Ocultando activas' : 'Ver descartadas'}
+            </button>
+            <button
+              className={`btn btn-sm ${showFavoritesOnly ? 'btn-warning' : 'btn-outline-secondary'}`}
+              onClick={() => {
+                setShowFavoritesOnly(!showFavoritesOnly);
+                setShowDescartadas(false);
+                setPaginaActual(1);
+              }}
+            >
+              <i
+                className={`bi ${showFavoritesOnly ? 'bi-star-fill' : 'bi-star'} me-2`}
+              ></i>
+              Solo Favoritos
+            </button>
+          </div>
         </div>
       )}
 

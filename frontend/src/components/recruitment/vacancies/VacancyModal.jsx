@@ -90,8 +90,12 @@ export default function VacancyModal({
     notas: '',
   });
 
-  // Asignación de reclutador
-  const [localAsignadoA, setLocalAsignadoA] = useState(job?.assignedTo || null);
+  // Asignación de reclutador (múltiple)
+  const [localAsignados, setLocalAsignados] = useState(() => {
+    const a = job?.assignedTo;
+    if (!a) return [];
+    return Array.isArray(a) ? a : [a];
+  });
   const [reclutadorNombre, setReclutadorNombre] = useState('');
   const [reclutadorEmail, setReclutadorEmail] = useState('');
 
@@ -100,10 +104,22 @@ export default function VacancyModal({
   const [docTipo, setDocTipo] = useState('CV');
   const [draggingOver, setDraggingOver] = useState(false);
 
-  // Contacto empresa — mensaje automático
+  // Contacto empresa — contactos manuales + mensaje + firma
+  const [contactosManuales, setContactosManuales] = useState([]);
+  const [showFormContacto, setShowFormContacto] = useState(false);
+  const [formContacto, setFormContacto] = useState({
+    nombre: '',
+    cargo: '',
+    email: '',
+    telefono: '',
+  });
   const [mensajeGenerado, setMensajeGenerado] = useState('');
   const [generandoMensaje, setGenerandoMensaje] = useState(false);
   const [mensajeCopied, setMensajeCopied] = useState(false);
+  const nombreFirma =
+    currentUser?.name || currentUser?.username || 'Equipo Nexus Talent';
+  const emailFirma = currentUser?.email || '';
+  const firmaAuto = `Un saludo,\n${nombreFirma}${emailFirma ? `\n${emailFirma}` : ''}\nNexus Talent Solutions`;
 
   // CRM de la EMPRESA asociada a la vacante (Issue #329)
   const [empresaCrm, setEmpresaCrm] = useState(null);
@@ -261,36 +277,29 @@ export default function VacancyModal({
     }
   };
 
-  const handleAsignarseAMiMismo = () => {
-    const datos = {
-      nombre:
-        currentUser?.name ||
-        currentUser?.username ||
-        currentUser?.email ||
-        'Yo',
-      email: currentUser?.email || '',
-      fecha: new Date().toLocaleDateString('es-ES'),
-    };
-    setLocalAsignadoA(datos);
-    if (onAsignarVacante) onAsignarVacante(job.id, datos);
-  };
-
   const handleAsignarReclutador = () => {
     if (!reclutadorNombre.trim() && !reclutadorEmail.trim()) return;
-    const datos = {
+    const yaExiste = localAsignados.some(
+      (r) => r.email && r.email === reclutadorEmail.trim()
+    );
+    if (yaExiste) return;
+    const nuevo = {
       nombre: reclutadorNombre.trim() || reclutadorEmail.trim(),
       email: reclutadorEmail.trim(),
       fecha: new Date().toLocaleDateString('es-ES'),
     };
-    setLocalAsignadoA(datos);
-    if (onAsignarVacante) onAsignarVacante(job.id, datos);
+    const nuevaLista = [...localAsignados, nuevo];
+    setLocalAsignados(nuevaLista);
+    if (onAsignarVacante) onAsignarVacante(job.id, nuevaLista);
     setReclutadorNombre('');
     setReclutadorEmail('');
   };
 
-  const handleDesasignar = () => {
-    setLocalAsignadoA(null);
-    if (onAsignarVacante) onAsignarVacante(job.id, null);
+  const handleDesasignarReclutador = (idx) => {
+    const nuevaLista = localAsignados.filter((_, i) => i !== idx);
+    setLocalAsignados(nuevaLista);
+    if (onAsignarVacante)
+      onAsignarVacante(job.id, nuevaLista.length ? nuevaLista : null);
   };
 
   const handleAdjuntarArchivos = (files) => {
@@ -323,15 +332,29 @@ export default function VacancyModal({
     return 'bi-file-earmark-text';
   };
 
+  const handleAnadirContactoManual = () => {
+    if (!formContacto.nombre.trim() && !formContacto.email.trim()) return;
+    setContactosManuales((prev) => [
+      ...prev,
+      { ...formContacto, manual: true },
+    ]);
+    setFormContacto({ nombre: '', cargo: '', email: '', telefono: '' });
+    setShowFormContacto(false);
+  };
+
+  const handleEliminarContactoManual = (idx) => {
+    setContactosManuales((prev) => prev.filter((_, i) => i !== idx));
+  };
+
   const handleGenerarMensaje = (contacto) => {
     setGenerandoMensaje(true);
     setMensajeGenerado('');
     const nombre = contacto?.nombre || 'Responsable de selección';
     const empresa = job.companyName || 'su empresa';
     const puesto = job.title || 'el puesto';
-    const mensaje = `Hola ${nombre},\n\nMe pongo en contacto contigo desde Nexus porque hemos identificado que ${empresa} está buscando un/a ${puesto}.\n\nContamos con candidatos/as especializados/as en este perfil que podrían encajar perfectamente en vuestra búsqueda. Estaría encantado/a de compartir algunos perfiles con vosotros sin ningún compromiso.\n\n¿Tendríais unos minutos esta semana para una breve llamada?\n\nQuedo a vuestra disposición.\n\nUn saludo,\nEquipo Nexus Talent`;
+    const cuerpo = `Hola ${nombre},\n\nMe pongo en contacto contigo porque hemos identificado que ${empresa} está buscando un/a ${puesto}.\n\nContamos con candidatos/as especializados/as en este perfil que podrían encajar perfectamente en vuestra búsqueda. Estaría encantado/a de compartir algunos perfiles sin ningún compromiso.\n\n¿Tendríais unos minutos esta semana para una breve llamada?\n\nQuedo a vuestra disposición.`;
     setTimeout(() => {
-      setMensajeGenerado(mensaje);
+      setMensajeGenerado(`${cuerpo}\n\n${firmaAuto}`);
       setGenerandoMensaje(false);
     }, 600);
   };
@@ -617,99 +640,95 @@ export default function VacancyModal({
                     {isNegocio && (
                       <div className="detail-section">
                         <h4 className="section-title">
-                          Asignación de reclutador
+                          Reclutadores asignados
+                          {localAsignados.length > 0 && (
+                            <span className="doc-count">
+                              {localAsignados.length}
+                            </span>
+                          )}
                         </h4>
 
-                        {localAsignadoA ? (
-                          <div className="asign-current">
-                            <div className="asign-avatar">
-                              {(localAsignadoA.nombre || '?')
-                                .charAt(0)
-                                .toUpperCase()}
-                            </div>
-                            <div className="asign-info">
-                              <span className="asign-nombre">
-                                {localAsignadoA.nombre}
-                              </span>
-                              {localAsignadoA.email && (
-                                <span className="asign-email">
-                                  {localAsignadoA.email}
-                                </span>
-                              )}
-                              <span className="asign-fecha">
-                                <i className="bi bi-calendar3 me-1"></i>Asignado
-                                el {localAsignadoA.fecha}
-                              </span>
-                            </div>
-                            <button
-                              className="btn-icon btn-icon-sm btn-icon-danger ms-auto"
-                              title="Quitar asignación"
-                              onClick={handleDesasignar}
-                            >
-                              <i className="bi bi-person-dash"></i>
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="asign-form">
-                            <button
-                              className="btn btn-primary-custom btn-sm asign-self-btn"
-                              onClick={handleAsignarseAMiMismo}
-                            >
-                              <i className="bi bi-person-check-fill me-2"></i>
-                              Asignarme esta vacante
-                            </button>
-                            <div className="asign-divider">
-                              <span>o asignar a un reclutador</span>
-                            </div>
-                            <div className="asign-recruiter-row">
-                              <input
-                                type="text"
-                                className="form-control input-field"
-                                placeholder="Nombre del reclutador"
-                                value={reclutadorNombre}
-                                onChange={(e) =>
-                                  setReclutadorNombre(e.target.value)
-                                }
-                              />
-                              <input
-                                type="email"
-                                className="form-control input-field"
-                                placeholder="Email del reclutador"
-                                value={reclutadorEmail}
-                                onChange={(e) =>
-                                  setReclutadorEmail(e.target.value)
-                                }
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter')
-                                    handleAsignarReclutador();
-                                }}
-                              />
-                              <button
-                                className="btn btn-secondary-custom btn-sm"
-                                onClick={handleAsignarReclutador}
-                                disabled={
-                                  !reclutadorNombre.trim() &&
-                                  !reclutadorEmail.trim()
-                                }
-                              >
-                                <i className="bi bi-person-plus-fill me-1"></i>
-                                Asignar
-                              </button>
-                            </div>
+                        {/* Lista de reclutadores asignados */}
+                        {localAsignados.length > 0 && (
+                          <div className="asign-list mb-3">
+                            {localAsignados.map((r, idx) => (
+                              <div key={idx} className="asign-current">
+                                <div className="asign-avatar">
+                                  {(r.nombre || '?').charAt(0).toUpperCase()}
+                                </div>
+                                <div className="asign-info">
+                                  <span className="asign-nombre">
+                                    {r.nombre}
+                                  </span>
+                                  {r.email && (
+                                    <span className="asign-email">
+                                      {r.email}
+                                    </span>
+                                  )}
+                                  <span className="asign-fecha">
+                                    <i className="bi bi-calendar3 me-1"></i>
+                                    Asignado el {r.fecha}
+                                  </span>
+                                </div>
+                                <button
+                                  className="btn-icon btn-icon-sm btn-icon-danger ms-auto"
+                                  title="Quitar reclutador"
+                                  onClick={() =>
+                                    handleDesasignarReclutador(idx)
+                                  }
+                                >
+                                  <i className="bi bi-person-dash"></i>
+                                </button>
+                              </div>
+                            ))}
                           </div>
                         )}
+
+                        {/* Formulario siempre visible para añadir más */}
+                        <div className="asign-recruiter-row">
+                          <input
+                            type="text"
+                            className="form-control input-field"
+                            placeholder="Nombre del reclutador"
+                            value={reclutadorNombre}
+                            onChange={(e) =>
+                              setReclutadorNombre(e.target.value)
+                            }
+                          />
+                          <input
+                            type="email"
+                            className="form-control input-field"
+                            placeholder="Email del reclutador"
+                            value={reclutadorEmail}
+                            onChange={(e) => setReclutadorEmail(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleAsignarReclutador();
+                            }}
+                          />
+                          <button
+                            className="btn btn-primary-custom btn-sm"
+                            onClick={handleAsignarReclutador}
+                            disabled={
+                              !reclutadorNombre.trim() &&
+                              !reclutadorEmail.trim()
+                            }
+                          >
+                            <i className="bi bi-person-plus-fill me-1"></i>
+                            Asignar
+                          </button>
+                        </div>
                       </div>
                     )}
 
                     {/* Vista de asignación para reclutador (solo lectura) */}
-                    {isReclutador && localAsignadoA && (
+                    {isReclutador && localAsignados.length > 0 && (
                       <div className="detail-section">
                         <h4 className="section-title">
                           Vacante asignada por negocio
                         </h4>
                         <div className="asign-readonly">
                           <i className="bi bi-building me-2"></i>
-                          Asignada el {localAsignadoA.fecha} por el equipo de
+                          Asignada el {localAsignados[0].fecha} por el equipo de
                           negocio
                         </div>
                       </div>
@@ -721,7 +740,7 @@ export default function VacancyModal({
                 {activeTab === 'contacto' &&
                   !isReclutador &&
                   (() => {
-                    const contactos = job.contactos?.length
+                    const contactosAPI = job.contactos?.length
                       ? job.contactos
                       : job.contactEmail || job.contactPhone || job.contactName
                         ? [
@@ -733,24 +752,137 @@ export default function VacancyModal({
                             },
                           ]
                         : [];
+                    const todosContactos = [
+                      ...contactosAPI,
+                      ...contactosManuales,
+                    ];
 
                     return (
                       <div className="tab-pane fade show active">
+                        {/* ── Contactos ── */}
                         <div className="detail-section">
-                          <h4 className="section-title">
-                            Contacto de la empresa
-                          </h4>
+                          <div className="contact-section-header">
+                            <h4 className="section-title mb-0">
+                              Contacto de la empresa
+                            </h4>
+                            <button
+                              className="btn btn-secondary-custom btn-sm"
+                              onClick={() =>
+                                setShowFormContacto(!showFormContacto)
+                              }
+                            >
+                              <i
+                                className={`bi ${showFormContacto ? 'bi-x' : 'bi-person-plus-fill'} me-1`}
+                              ></i>
+                              {showFormContacto
+                                ? 'Cancelar'
+                                : 'Añadir contacto'}
+                            </button>
+                          </div>
 
-                          {contactos.length > 0 ? (
-                            <div className="contact-cards-grid">
-                              {contactos.map((c, i) => (
-                                <div key={i} className="contact-card">
+                          {/* Formulario contacto manual */}
+                          {showFormContacto && (
+                            <div className="contact-manual-form">
+                              <div
+                                className="cand-form-row"
+                                style={{ gridTemplateColumns: '1fr 1fr' }}
+                              >
+                                <div className="cand-form-field">
+                                  <label className="field-label">Nombre</label>
+                                  <input
+                                    type="text"
+                                    className="form-control input-field"
+                                    placeholder="Ej: Ana Martínez"
+                                    value={formContacto.nombre}
+                                    onChange={(e) =>
+                                      setFormContacto((f) => ({
+                                        ...f,
+                                        nombre: e.target.value,
+                                      }))
+                                    }
+                                  />
+                                </div>
+                                <div className="cand-form-field">
+                                  <label className="field-label">Cargo</label>
+                                  <input
+                                    type="text"
+                                    className="form-control input-field"
+                                    placeholder="Ej: HR Manager"
+                                    value={formContacto.cargo}
+                                    onChange={(e) =>
+                                      setFormContacto((f) => ({
+                                        ...f,
+                                        cargo: e.target.value,
+                                      }))
+                                    }
+                                  />
+                                </div>
+                                <div className="cand-form-field">
+                                  <label className="field-label">Email</label>
+                                  <input
+                                    type="email"
+                                    className="form-control input-field"
+                                    placeholder="contacto@empresa.com"
+                                    value={formContacto.email}
+                                    onChange={(e) =>
+                                      setFormContacto((f) => ({
+                                        ...f,
+                                        email: e.target.value,
+                                      }))
+                                    }
+                                  />
+                                </div>
+                                <div className="cand-form-field">
+                                  <label className="field-label">
+                                    Teléfono
+                                  </label>
+                                  <input
+                                    type="tel"
+                                    className="form-control input-field"
+                                    placeholder="+34 600 000 000"
+                                    value={formContacto.telefono}
+                                    onChange={(e) =>
+                                      setFormContacto((f) => ({
+                                        ...f,
+                                        telefono: e.target.value,
+                                      }))
+                                    }
+                                  />
+                                </div>
+                              </div>
+                              <button
+                                className="btn btn-primary-custom btn-sm mt-2"
+                                onClick={handleAnadirContactoManual}
+                                disabled={
+                                  !formContacto.nombre.trim() &&
+                                  !formContacto.email.trim()
+                                }
+                              >
+                                <i className="bi bi-check2 me-1"></i>Guardar
+                                contacto
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Lista de contactos */}
+                          {todosContactos.length > 0 ? (
+                            <div className="contact-cards-grid mt-3">
+                              {todosContactos.map((c, i) => (
+                                <div
+                                  key={i}
+                                  className={`contact-card ${c.manual ? 'contact-card--manual' : ''}`}
+                                >
                                   <div className="contact-avatar">
                                     {(c.nombre || '?').charAt(0).toUpperCase()}
                                   </div>
                                   <div className="contact-info">
                                     <div className="contact-nombre">
                                       {c.nombre || '—'}
+                                      {c.manual && (
+                                        <span className="contact-manual-badge">
+                                          Manual
+                                        </span>
+                                      )}
                                     </div>
                                     {c.cargo && (
                                       <div className="contact-cargo">
@@ -778,33 +910,49 @@ export default function VacancyModal({
                                       )}
                                     </div>
                                   </div>
-                                  <button
-                                    className="btn btn-primary-custom btn-sm contact-msg-btn"
-                                    onClick={() => handleGenerarMensaje(c)}
-                                    disabled={generandoMensaje}
-                                    title="Generar mensaje de contacto automático"
-                                  >
-                                    <i className="bi bi-magic me-1"></i>
-                                    Generar mensaje
-                                  </button>
+                                  <div className="d-flex flex-column gap-1">
+                                    <button
+                                      className="btn btn-primary-custom btn-sm contact-msg-btn"
+                                      onClick={() => handleGenerarMensaje(c)}
+                                      disabled={generandoMensaje}
+                                    >
+                                      <i className="bi bi-magic me-1"></i>
+                                      Mensaje
+                                    </button>
+                                    {c.manual && (
+                                      <button
+                                        className="btn-icon btn-icon-sm btn-icon-danger"
+                                        onClick={() =>
+                                          handleEliminarContactoManual(
+                                            i - contactosAPI.length
+                                          )
+                                        }
+                                        title="Eliminar contacto"
+                                      >
+                                        <i className="bi bi-trash3"></i>
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
                               ))}
                             </div>
                           ) : (
-                            <div className="contact-empty">
+                            <div className="contact-empty mt-3">
                               <i className="bi bi-person-x"></i>
                               <p>
-                                No se han detectado contactos para esta empresa.
+                                La IA no ha detectado contactos para esta
+                                empresa.
                               </p>
                               <small>
-                                La IA mostrará aquí automáticamente los
-                                contactos cuando estén disponibles.
+                                Usa el botón{' '}
+                                <strong>&quot;Añadir contacto&quot;</strong>{' '}
+                                para introducirlos manualmente.
                               </small>
                             </div>
                           )}
                         </div>
 
-                        {/* Sección mensaje automático */}
+                        {/* ── Mensaje automático ── */}
                         <div className="detail-section">
                           <h4 className="section-title">
                             <i
@@ -819,10 +967,10 @@ export default function VacancyModal({
                               <i className="bi bi-chat-square-dots"></i>
                               <p>
                                 Selecciona un contacto y pulsa{' '}
-                                <strong>Generar mensaje</strong> para que la IA
-                                redacte un primer contacto personalizado.
+                                <strong>Mensaje</strong> para que se redacte un
+                                primer contacto personalizado con tu firma.
                               </p>
-                              {contactos.length === 0 && (
+                              {todosContactos.length === 0 && (
                                 <button
                                   className="btn btn-primary-custom btn-sm mt-2"
                                   onClick={() => handleGenerarMensaje(null)}
@@ -866,7 +1014,7 @@ export default function VacancyModal({
                               </div>
                               <textarea
                                 className="form-control msg-textarea"
-                                rows={8}
+                                rows={10}
                                 value={mensajeGenerado}
                                 onChange={(e) =>
                                   setMensajeGenerado(e.target.value)
@@ -876,7 +1024,9 @@ export default function VacancyModal({
                                 <button
                                   className="btn btn-secondary-custom btn-sm"
                                   onClick={() =>
-                                    handleGenerarMensaje(contactos[0] || null)
+                                    handleGenerarMensaje(
+                                      todosContactos[0] || null
+                                    )
                                   }
                                 >
                                   <i className="bi bi-arrow-clockwise me-1"></i>

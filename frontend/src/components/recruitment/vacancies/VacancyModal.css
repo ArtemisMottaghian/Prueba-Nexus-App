@@ -672,6 +672,51 @@
   background: var(--bg-secondary);
 }
 
+/* ── Contacto manual ─────────────────────────────────── */
+
+.contact-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.contact-manual-form {
+  background: rgba(124, 63, 255, 0.04);
+  border: 1px solid rgba(124, 63, 255, 0.15);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 4px;
+}
+
+.contact-card--manual {
+  border-color: rgba(0, 212, 255, 0.25);
+}
+
+.contact-manual-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(0, 212, 255, 0.12);
+  color: var(--color-cyan-primary);
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-left: 6px;
+}
+
+/* Firma */
+.firma-textarea {
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.6;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: 10px;
+}
+
 /* ── Tab Documentos — subida ──────────────────────────── */
 
 .doc-upload-row {
