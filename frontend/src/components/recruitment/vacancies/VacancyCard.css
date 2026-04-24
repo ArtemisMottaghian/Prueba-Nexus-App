@@ -174,13 +174,21 @@
     justify-content: center;
 }
 
-.icon-purple { background: #f5f3ff; color: #7c3aed; }
-.icon-cyan { background: #ecfeff; color: #0891b2; }
+.icon-purple { background: rgba(111, 66, 193, 0.1); color: #6f42c1; }
+.icon-cyan { background: rgba(13, 202, 240, 0.1); color: #0dcaf0; }
+.icon-orange { background: rgba(253, 126, 20, 0.1); color: #fd7e14; }
+.icon-green { background: rgba(25, 135, 84, 0.1); color: #198754; }
 
-.vacante-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 5px;
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+  .list-wrapper { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .list-text-group { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .list-separator { display: none; }
+  .list-meta-info { 
+    width: 100%; 
+    justify-content: space-between; 
+    border-top: 1px solid var(--border-color); 
+    padding-top: 8px; 
+  }
 }
 

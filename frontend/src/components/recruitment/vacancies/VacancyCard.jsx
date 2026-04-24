@@ -179,6 +179,13 @@ export default function VacancyCard({
         )}
       </div>
 
+      {job.assignedTo && (
+        <div className="vacante-assignee">
+          <i className="bi bi-person-check-fill me-1"></i>
+          {job.assignedTo.nombre}
+        </div>
+      )}
+
       <div className="vacante-footer">
         <SourceOriginBadge source={job.source} />
         <span className="vacante-date">{job.time}</span>

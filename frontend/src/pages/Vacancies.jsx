@@ -5,23 +5,31 @@ import VacancyGrid from '../components/recruitment/vacancies/VacancyGrid';
 import initialJobsData from '../data/dummyData.json';
 import { vacanciesService } from '../services/vacanciesService';
 import { useSearchParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const ITEMS_POR_PAGINA = 20;
 const LS_FAV_KEY = 'nexus_vacantes_favorites';
 const LS_STATUS_KEY = 'nexus_vacantes_status';
+const LS_ASIGN_KEY = 'nexus_vacantes_asignaciones';
 
 const applyLocalOverrides = (jobs) => {
   const savedFavs = JSON.parse(localStorage.getItem(LS_FAV_KEY) || '{}');
   const savedStatus = JSON.parse(localStorage.getItem(LS_STATUS_KEY) || '{}');
+  const savedAsign = JSON.parse(localStorage.getItem(LS_ASIGN_KEY) || '{}');
   return jobs.map((job) => ({
     ...job,
     isFavorite:
       savedFavs[job.id] !== undefined ? savedFavs[job.id] : job.isFavorite,
     status: savedStatus[job.id] || job.status,
+    assignedTo: savedAsign[job.id] || job.assignedTo || null,
   }));
 };
 
 export default function Vacancies() {
+  const { user, hasRole, hasAnyRole } = useAuth();
+  const isReclutador = hasRole('hr_manager') || hasRole('reclutador');
+  const isNegocio = hasAnyRole(['admin', 'negocio', 'company']);
+
   const [searchParams, setSearchParams] = useSearchParams();
   const queryURL = searchParams.get('q') || '';
 
@@ -160,6 +168,22 @@ export default function Vacancies() {
     }
   };
 
+  const handleAsignarVacante = (jobId, reclutadorData) => {
+    // reclutadorData: { nombre, email } | null (para desasignar)
+    setJobs((prev) =>
+      prev.map((j) =>
+        j.id === jobId ? { ...j, assignedTo: reclutadorData } : j
+      )
+    );
+    const savedAsign = JSON.parse(localStorage.getItem(LS_ASIGN_KEY) || '{}');
+    if (reclutadorData) {
+      savedAsign[jobId] = reclutadorData;
+    } else {
+      delete savedAsign[jobId];
+    }
+    localStorage.setItem(LS_ASIGN_KEY, JSON.stringify(savedAsign));
+  };
+
   const filteredJobs = jobs.filter((job) => {
     // 1. Filtro de ESTADO
     const safeStatus = (job.status || '').toLowerCase().trim();
@@ -220,13 +244,21 @@ export default function Vacancies() {
       matchText = textoCompleto.includes(lowerQuery);
     }
 
+    // Reclutador solo ve sus vacantes asignadas
+    const matchAsignado =
+      !isReclutador ||
+      job.assignedTo?.email === user?.email ||
+      job.assignedTo?.nombre === user?.name ||
+      job.assignedTo?.nombre === user?.username;
+
     return (
       matchStatus &&
       matchIndustry &&
       matchLocation &&
       matchSource &&
       matchFavorite &&
-      matchText
+      matchText &&
+      matchAsignado
     );
   });
 
@@ -306,6 +338,14 @@ export default function Vacancies() {
         </div>
       )}
 
+      {/* Aviso informativo para reclutador */}
+      {!loading && isReclutador && (
+        <div className="reclutador-info-banner">
+          <i className="bi bi-info-circle-fill me-2"></i>
+          Solo ves las vacantes que el equipo de negocio te ha asignado.
+        </div>
+      )}
+
       {loading ? (
         <div className="text-center p-5 text-muted">Cargando vacantes...</div>
       ) : (
@@ -316,6 +356,10 @@ export default function Vacancies() {
           onSelectVacancy={handleSelectVacancy}
           onUpdateJobStatus={handleUpdateJobStatus}
           onToggleFavorite={handleToggleFavorite}
+          onAsignarVacante={handleAsignarVacante}
+          currentUser={user}
+          isNegocio={isNegocio}
+          emptyStateReclutador={isReclutador}
         />
       )}
 

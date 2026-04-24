@@ -760,6 +760,118 @@
 .btn-icon-danger:hover {
   opacity: 1;
 }
+
+/* ── Asignación de reclutador ─────────────────────────── */
+
+/* Tarjeta "ya asignado" */
+.asign-current {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(124, 63, 255, 0.05);
+  border: 1px solid rgba(124, 63, 255, 0.2);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.asign-avatar {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(124, 63, 255, 0.3), rgba(0, 212, 255, 0.15));
+  border: 2px solid rgba(124, 63, 255, 0.35);
+  color: var(--color-purple-secondary);
+  font-size: 17px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.asign-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.asign-nombre {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.asign-email {
+  font-size: 12px;
+  color: var(--color-cyan-primary);
+}
+
+.asign-fecha {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Formulario de asignación */
+.asign-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.asign-self-btn {
+  align-self: flex-start;
+}
+
+.asign-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.asign-divider::before,
+.asign-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.asign-recruiter-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.asign-recruiter-row .form-control {
+  flex: 1;
+}
+
+/* Readonly para reclutador */
+.asign-readonly {
+  font-size: 13px;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+/* Banner informativo reclutador en Vacancies */
+.reclutador-info-banner {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: var(--color-purple-secondary);
+  background: rgba(124, 63, 255, 0.07);
+  border: 1px solid rgba(124, 63, 255, 0.2);
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+}
 .vacancy-description-block {
   margin-bottom: 1.25rem;
 }

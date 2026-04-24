@@ -15,6 +15,7 @@ from app.schemas.vacancies_schemas import (
     BulkActionRequest,
     MessageResponse,
     StatusRequest, 
+    CandidateMatchOut
 )
 
 
@@ -49,6 +50,16 @@ async def read_vacancies_filtered(
     )
     return vacancies
 
+# -----------------
+# Obtener candidates para una vacante
+# GET /api/vacancies/{vacancy_id}/candidates
+# -----------------
+@router.get("/{vacancy_id}/candidates", response_model=List[CandidateMatchOut])
+async def read_suitable_candidates(vacancy_id: int, db: AsyncSession = Depends(get_db)):
+    candidates = await vacancies_service.get_suitable_candidates(db, vacancy_id)
+    if candidates is None:
+        raise HTTPException(status_code=404, detail="La vacante no existe")
+    return candidates
 
 # -----------------
 # Obtener detalle de vacante

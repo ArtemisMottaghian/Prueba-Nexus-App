@@ -11,6 +11,10 @@ export default function VacancyGrid({
   onSelectVacancy,
   onUpdateJobStatus,
   onToggleFavorite,
+  onAsignarVacante,
+  currentUser,
+  isNegocio,
+  emptyStateReclutador,
 }) {
   const [viewMode, setViewMode] = useState('grid');
   const [selectedJob, setSelectedJob] = useState(null);
@@ -73,8 +77,9 @@ export default function VacancyGrid({
 
       <div className={viewMode === 'grid' ? 'vacancies-grid' : 'vacancies-list'}>
         {jobs.length === 0 ? (
-          <div className="empty-state-container">
-            <i className="bi bi-search"></i>
+          /* CAMBIO: Quitamos bg-dark-subtle y usamos nuestra clase adaptativa */
+          <div className="w-100 text-center py-5 rounded-3 empty-state-container">
+            <i className="bi bi-search display-4 d-block mb-3"></i>
             <p>No se encontraron vacantes con estos filtros.</p>
           </div>
         ) : (
@@ -106,6 +111,9 @@ export default function VacancyGrid({
           onClose={() => setSelectedJob(null)}
           onUpdateStatus={onUpdateJobStatus}
           onToggleFavorite={onToggleFavorite}
+          onAsignarVacante={onAsignarVacante}
+          currentUser={currentUser}
+          isNegocio={isNegocio}
         />
       )}
 
