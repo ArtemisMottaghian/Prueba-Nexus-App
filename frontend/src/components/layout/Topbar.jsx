@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useLayoutEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import './Topbar.css';
 
@@ -16,19 +16,32 @@ const TITLES = {
   '/users': 'Gestión de Usuarios',
 };
 
+const THEME_KEY = 'nexus-theme';
+
 export default function Topbar({ onMenuToggle }) {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    try {
+      return localStorage.getItem(THEME_KEY) === 'dark';
+    } catch {
+      return false;
+    }
+  });
 
   const location = useLocation();
 
   const pageTitle = TITLES[location.pathname] || 'Dashboard';
 
-  useEffect(() => {
-    const htmlElement = document.documentElement;
+  useLayoutEffect(() => {
+    const html = document.documentElement;
     if (isDarkMode) {
-      htmlElement.setAttribute('data-bs-theme', 'dark');
+      html.setAttribute('data-bs-theme', 'dark');
     } else {
-      htmlElement.removeAttribute('data-bs-theme');
+      html.removeAttribute('data-bs-theme');
+    }
+    try {
+      localStorage.setItem(THEME_KEY, isDarkMode ? 'dark' : 'light');
+    } catch {
+      /* ignore */
     }
   }, [isDarkMode]);
 

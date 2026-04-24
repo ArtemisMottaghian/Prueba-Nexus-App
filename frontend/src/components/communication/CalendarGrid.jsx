@@ -180,7 +180,14 @@ export default function Calendario() {
     } else {
       // Generar ID local provisional mientras esperamos la API
       const localId = `local_${Date.now()}`;
-      const newEvent = { id: localId, text: type, description, time, date: selectedDate, notified: false };
+      const newEvent = {
+        id: localId,
+        text: type,
+        description,
+        time,
+        date: selectedDate,
+        notified: false,
+      };
       updatedEvents = [...events, newEvent];
       setEvents(updatedEvents);
       saveEventsToStorage(updatedEvents);
@@ -198,7 +205,9 @@ export default function Calendario() {
             prev.map((e) => (e.id === localId ? { ...e, id: created.id } : e))
           );
           saveEventsToStorage(
-            updatedEvents.map((e) => (e.id === localId ? { ...e, id: created.id } : e))
+            updatedEvents.map((e) =>
+              e.id === localId ? { ...e, id: created.id } : e
+            )
           );
         }
       } catch {

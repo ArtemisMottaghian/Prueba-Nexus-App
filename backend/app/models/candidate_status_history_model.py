@@ -1,7 +1,7 @@
 from sqlalchemy import Column, BigInteger, DateTime, ForeignKey, Text, func
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import ENUM
-from app.db.connection import Base
+from app.db.base import Base
 from app.schemas.candidates_schemas import CandidateStatus
 
 class CandidateStatusHistory(Base):

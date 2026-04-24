@@ -74,7 +74,7 @@ export const vacanciesService = {
     }
   },
 
-  // 2. Filtrar vacantes
+  // 3. Filtrar vacantes
   getFilteredVacancies: async (params) => {
     try {
       const response = await authFetch(
@@ -89,7 +89,6 @@ export const vacanciesService = {
     }
   },
 
-  // 3. Ver detalle de una vacante
   getVacancyById: async (id) => {
     try {
       const response = await authFetch(
@@ -105,7 +104,6 @@ export const vacanciesService = {
     }
   },
 
-  // 4. Marcar/Desmarcar favorito
   toggleFavorite: async (id, isFavorite) => {
     try {
       const response = await authFetch(
@@ -125,8 +123,7 @@ export const vacanciesService = {
     }
   },
 
-  // 5. Acciones masivas
-  applyBulkActions: async (vacancyIds, actionName) => {
+  applyBulkActions: async (vacancyIds, actionName, targetUser = null) => {
     try {
       const response = await authFetch(
         ENDPOINTS.recruitment.vacantes.bulkActions,
@@ -136,6 +133,7 @@ export const vacanciesService = {
           body: JSON.stringify({
             vacancy_ids: vacancyIds,
             action: actionName,
+            target_user: targetUser,
           }),
         }
       );
@@ -148,7 +146,7 @@ export const vacanciesService = {
     }
   },
 
-  // Actualizar el estado de una vacante
+  // 7. Actualizar el estado de una vacante
   updateVacancyStatus: async (id, newStatus) => {
     const response = await authFetch(
       ENDPOINTS.recruitment.vacantes.detail(id) + '/status',
@@ -163,14 +161,17 @@ export const vacanciesService = {
     return response.json();
   },
 
-  // Actualizar datos completos de una vacante
+  // 8. Actualizar datos completos de una vacante
   updateVacancy: async (id, data) => {
     try {
-      const response = await authFetch(ENDPOINTS.recruitment.vacantes.detail(id), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+      const response = await authFetch(
+        ENDPOINTS.recruitment.vacantes.detail(id),
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        }
+      );
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       return await response.json();
     } catch (error) {
@@ -179,7 +180,7 @@ export const vacanciesService = {
     }
   },
 
-  // Añadir nota al historial de una vacante
+  // 9. Añadir nota al historial de una vacante
   addNote: async (id, texto) => {
     try {
       const response = await authFetch(
@@ -194,6 +195,49 @@ export const vacanciesService = {
       return await response.json();
     } catch (error) {
       console.error(`Error al añadir nota a vacante ${id}:`, error);
+      throw error;
+    }
+  },
+
+  // Editar una nota existente
+  updateNote: async (id, noteId, texto) => {
+    try {
+      const response = await authFetch(
+        ENDPOINTS.recruitment.vacantes.detail(id) + `/notes/${noteId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ texto }),
+        }
+      );
+      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error(
+        `Error al actualizar nota ${noteId} de vacante ${id}:`,
+        error
+      );
+      throw error;
+    }
+  },
+
+  // Eliminar una nota
+  deleteNote: async (id, noteId) => {
+    try {
+      const response = await authFetch(
+        ENDPOINTS.recruitment.vacantes.detail(id) + `/notes/${noteId}`,
+        {
+          method: 'DELETE',
+        }
+      );
+      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      // DELETE suele responder 204 sin cuerpo
+      return response.status === 204 ? null : await response.json();
+    } catch (error) {
+      console.error(
+        `Error al eliminar nota ${noteId} de vacante ${id}:`,
+        error
+      );
       throw error;
     }
   },

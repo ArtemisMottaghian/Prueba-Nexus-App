@@ -1,4 +1,9 @@
 import SourceOriginBadge from '../shared/SourceOriginBadge';
+import {
+  CANDIDATE_STATUS_SELECT_OPTIONS,
+  candidateStatusBadgeClass,
+  candidateStatusLabel,
+} from '../../../constants/candidateStatus';
 import './CandidateCard.css';
 
 export default function CandidateCard({
@@ -9,11 +14,10 @@ export default function CandidateCard({
   onSelect,
   onUpdateStatus,
   onToggleFavorite,
+  onVerify,
 }) {
-  let badgeClass = 'badge-nueva';
-  if (candidate.status === 'Contactado') badgeClass = 'badge-contactada';
-  if (candidate.status === 'En proceso') badgeClass = 'badge-en-proceso';
-  if (candidate.status === 'Descartado') badgeClass = 'badge-descartada';
+  const badgeClass = candidateStatusBadgeClass(candidate.status);
+  const statusText = candidateStatusLabel(candidate.status);
 
   const handleCheckboxClick = (e) => {
     e.stopPropagation();
@@ -27,6 +31,11 @@ export default function CandidateCard({
   const handleStatusChange = (e) => {
     e.stopPropagation();
     onUpdateStatus(candidate.id, e.target.value);
+  };
+
+  const handleVerify = (e) => {
+    e.stopPropagation();
+    if (onVerify && !candidate.verified) onVerify(candidate.id);
   };
 
   if (isListView) {
@@ -45,21 +54,42 @@ export default function CandidateCard({
               onChange={handleCheckboxClick}
               onClick={handleChildClick}
             />
-            {/* CAMBIO AQUÍ: text-white -> text-body */}
             <h5 className="mb-0 text-body vacante-title-list-sm">
               {candidate.name}
             </h5>
             <span className="text-muted small">|</span>
             <span className="detail-text">{candidate.specialty}</span>
+            <span className="text-muted small">|</span>
+            <span className="detail-text text-muted small">
+              {candidate.experience || 'Experiencia no indicada'}
+            </span>
           </div>
-          <div className="d-flex align-items-center gap-4">
+          <div className="d-flex align-items-center gap-2 flex-wrap justify-content-end">
             <span className="detail-text opacity-75">
               <i className="bi bi-geo-alt me-1"></i>
               {candidate.location}
             </span>
-            <span className={`badge ${badgeClass}`}>{candidate.status}</span>
+            {candidate.verified ? (
+              <span className="badge bg-success-subtle text-success border border-success-subtle">
+                <i className="bi bi-patch-check-fill me-1" />
+                Verificado
+              </span>
+            ) : (
+              onVerify && (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-primary py-0 px-2"
+                  onClick={handleVerify}
+                >
+                  Verificar
+                </button>
+              )
+            )}
+            <span className={`badge ${badgeClass}`}>{statusText}</span>
             <button
-              className={`btn-icon btn-icon-sm ${candidate.isFavorite ? 'text-warning' : ''}`}
+              className={`btn-icon btn-icon-sm ${
+                candidate.isFavorite ? 'text-warning' : ''
+              }`}
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleFavorite(candidate.id, candidate.isFavorite);
@@ -84,7 +114,7 @@ export default function CandidateCard({
       style={{ cursor: 'pointer' }}
     >
       <div className="card-header-row">
-        <div className="d-flex align-items-center gap-2">
+        <div className="d-flex align-items-center gap-2 flex-wrap">
           <input
             className="form-check-input mt-0 checkbox-lg"
             type="checkbox"
@@ -98,14 +128,26 @@ export default function CandidateCard({
             onChange={handleStatusChange}
             onClick={handleChildClick}
           >
-            <option value="Nuevo">Nuevo</option>
-            <option value="Contactado">Contactado</option>
-            <option value="En proceso">En proceso</option>
-            <option value="Descartado">Descartado</option>
+            {CANDIDATE_STATUS_SELECT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
           </select>
+          {onVerify && !candidate.verified && (
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-primary"
+              onClick={handleVerify}
+            >
+              Verificar
+            </button>
+          )}
         </div>
         <button
-          className={`btn-icon btn-icon-sm ${candidate.isFavorite ? 'text-warning' : ''}`}
+          className={`btn-icon btn-icon-sm ${
+            candidate.isFavorite ? 'text-warning' : ''
+          }`}
           onClick={(e) => {
             e.stopPropagation();
             onToggleFavorite(candidate.id, candidate.isFavorite);
@@ -120,6 +162,7 @@ export default function CandidateCard({
       <h3 className="vacante-title">{candidate.name}</h3>
 
       <div className="vacante-details">
+        {/* 1. Especialidad */}
         <div className="detail-item">
           <div className="detail-icon icon-purple">
             <i className="bi bi-person-badge"></i>
@@ -129,16 +172,36 @@ export default function CandidateCard({
             {candidate.isAvailable && (
               <span className="badge mt-1 badge-disponible">Disponible</span>
             )}
+            {candidate.verified && (
+              <span className="badge mt-1 bg-success-subtle text-success">
+                <i className="bi bi-patch-check-fill me-1" />
+                Verificado
+              </span>
+            )}
           </div>
         </div>
+
+        {/* 2. Ubicación */}
         <div className="detail-item">
           <div className="detail-icon icon-cyan">
             <i className="bi bi-geo-alt"></i>
           </div>
           <span className="detail-text">{candidate.location}</span>
         </div>
+
+        {/* 3. Experiencia (NUEVO) */}
         <div className="detail-item">
-          <div className="detail-icon icon-purple">
+          <div className="detail-icon icon-orange">
+            <i className="bi bi-briefcase"></i>
+          </div>
+          <span className="detail-text">
+            {candidate.experience || 'Experiencia no indicada'}
+          </span>
+        </div>
+
+        {/* 4. Email */}
+        <div className="detail-item">
+          <div className="detail-icon icon-gray">
             <i className="bi bi-envelope"></i>
           </div>
           <span className="detail-text">

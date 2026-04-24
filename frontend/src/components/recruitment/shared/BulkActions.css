@@ -1,78 +1,161 @@
+/* =========================================
+   BARRA DE ACCIONES EN BLOQUE (BASE)
+   ========================================= */
 .bulk-actions-bar {
-  /* Mantenemos el fondo púrpura suave, se ve genial y destaca en ambos modos */
-  background: rgba(124, 63, 255, 0.1); 
-  border: 1px solid var(--color-purple-secondary);
-  border-radius: 14px;
-  padding: 12px 24px;
+  background: rgba(124, 63, 255, 0.148); 
+  border: 1px solid rgba(124, 63, 255, 0.2);
+  border-radius: 8px; 
+  padding: 6px 16px; 
   display: flex;
   align-items: center;
   justify-content: space-between;
-  animation: slideDown 0.3s ease forwards;
-  box-shadow: 0 4px 15px rgba(124, 63, 255, 0.15); /* Una sombra a juego */
+  flex-wrap: wrap; 
+  gap: 12px;
+  animation: slideDown 0.2s ease forwards;
 }
 
 .bulk-count {
   font-weight: 600;
   color: var(--color-purple-secondary);
+  font-size: 0.85rem; 
 }
 
-/* El selector de asignar (se adapta al modo claro/oscuro) */
+/* =========================================
+   SELECTORES Y BOTONES
+   ========================================= */
 .bulk-select {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   border-color: var(--border-color);
   font-weight: 500;
+  font-size: 0.85rem; 
+  padding: 4px 30px 4px 12px; 
+  height: 32px; 
+  border-radius: 6px;
 }
 
 .bulk-select:focus {
   border-color: var(--color-purple-secondary);
-  box-shadow: 0 0 0 0.25rem rgba(124, 63, 255, 0.25);
+  box-shadow: 0 0 0 2px rgba(124, 63, 255, 0.15); 
+  outline: none;
 }
 
 .btn-bulk-assign {
   background: var(--color-purple-secondary);
   color: white;
   border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
+  border-radius: 6px;
+  padding: 4px 12px; 
   font-weight: 600;
+  font-size: 0.85rem;
+  height: 32px; 
+  display: inline-flex;
+  align-items: center;
   transition: all 0.2s ease;
 }
 
 .btn-bulk-assign:hover:not(:disabled) {
   background: var(--color-purple-primary);
-  transform: translateY(-1px);
 }
 
 .btn-bulk-assign:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .btn-bulk-discard {
-  background: rgba(239, 68, 68, 0.1);
+  background: transparent; 
   color: #ef4444;
   border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 8px;
-  padding: 8px 16px;
+  border-radius: 6px;
+  padding: 4px 12px;
   font-weight: 600;
+  font-size: 0.85rem;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
   transition: all 0.2s ease;
 }
 
 .btn-bulk-discard:hover {
-  background: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.1); 
   color: #dc2626;
   border-color: #ef4444;
 }
 
-/* La animación para que aparezca suavemente de arriba a abajo */
+
+.bulk-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 32px; 
+}
+
+.bulk-actions-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px; 
+}
+
+.bulk-actions-close-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bulk-divider {
+  width: 1px;
+  height: 24px; 
+  background-color: rgba(124, 63, 255, 0.3);
+  margin: 0;
+}
+
+.btn-bulk-close {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px; 
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-bulk-close:hover {
+  color: #ef4444; 
+  background: rgba(239, 68, 68, 0.1);
+}
+
 @keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================
+   MODO MÓVIL (MENOS DE 576px)
+   ========================================= */
+@media (max-width: 576px) {
+  .bulk-actions-right {
+    width: 100%; 
+    justify-content: space-between; 
+    gap: 8px; 
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  
+  .bulk-actions-controls {
+    gap: 8px; 
   }
+
+  .bulk-select {
+    width: 110px; 
+  }
+}
+.btn-bulk-assign:hover:not(:disabled) {
+  color: #ffffff !important; 
+  transform: translateY(-1px);
+}
+
+.btn-bulk-assign:hover:not(:disabled) i,
+.btn-bulk-assign:hover:not(:disabled) span {
+  color: #ffffff !important;
 }

@@ -1,93 +1,143 @@
-.vacante-card {
-  background: var(--bg-primary);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 20px;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-}
+/* ===================================================
+   ESTILOS DE CABECERA Y ESTRELLA (COMUNES)
+   =================================================== */
 
-/* Estilo para la vista de lista */
-.vacante-card-list {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  transition: all 0.2s ease;
-}
-
-.vacante-card:hover, .vacante-card-list:hover {
-  background: var(--bg-secondary);
-  border-color: var(--color-purple-secondary);
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-}
-
-.vacante-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 16px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  min-height: 2.5em;
-}
-
-.detail-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.detail-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.icon-purple {
-  background: rgba(124, 63, 255, 0.15); /* Morado suave adaptable */
-  color: var(--color-purple-secondary);
-}
-
-.icon-cyan {
-  background: rgba(0, 212, 255, 0.15);
-  color: var(--color-cyan-primary);
-}
-
-.detail-text {
-  color: var(--text-primary);
-  font-size: 14px;
-}
-
-.checkbox-lg {
-  width: 1.2rem;
-  height: 1.2rem;
-  cursor: pointer;
-}
-
-.vacante-footer {
-  margin-top: auto;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-color);
+.card-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
+  margin-bottom: 12px;
 }
 
-.vacante-date {
-  font-size: 12px;
-  color: var(--text-muted);
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
+
+.btn-favorite-star {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.btn-favorite-star i {
+  font-size: 1.25rem;
+  color: #adb5bd;
+  -webkit-text-stroke: 0px !important;
+}
+
+.btn-favorite-star .bi-star-fill {
+  color: #ffc107 !important;
+}
+
+.btn-favorite-star:hover {
+  transform: scale(1.2);
+}
+
+/* ===================================================
+   TARJETAS CON FONDO ADAPTATIVO (CLARO/OSCURO)
+   =================================================== */
+
+/* 1. Estado Base: Fondo Blanco */
+.vacante-card, 
+.vacante-card-list {
+  background: #ffffff !important; /* 🌟 Forzamos fondo blanco en modo claro */
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+/* 2. MODO OSCURO (Dark Mode) 🌙 */
+[data-theme='dark'] .vacante-card,
+[data-theme='dark'] .vacante-card-list {
+  background: var(--bg-secondary) !important; 
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* --- DISEÑO MODO LISTA RESPONSIVE --- */
+.vacante-card-list {
+  border-radius: 12px;
+  width: 100%;
+}
+
+.list-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+}
+
+.list-main-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.list-text-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.list-separator { color: var(--border-color); margin: 0 4px; }
+
+.list-meta-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* --- DISEÑO MODO GRID --- */
+.vacante-card {
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.vacante-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 10px 0 15px 0;
+  color: var(--text-primary);
+}
+
+
+.detail-item { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.detail-icon { 
+  width: 28px; 
+  height: 28px; 
+  border-radius: 6px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+}
+
+.icon-purple { background: rgba(111, 66, 193, 0.1); color: #6f42c1; }
+.icon-cyan { background: rgba(13, 202, 240, 0.1); color: #0dcaf0; }
+.icon-orange { background: rgba(253, 126, 20, 0.1); color: #fd7e14; }
+.icon-green { background: rgba(25, 135, 84, 0.1); color: #198754; }
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+  .list-wrapper { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .list-text-group { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .list-separator { display: none; }
+  .list-meta-info { 
+    width: 100%; 
+    justify-content: space-between; 
+    border-top: 1px solid var(--border-color); 
+    padding-top: 8px; 
+  }
+}
+

@@ -1,8 +1,9 @@
 from enum import Enum
-from pydantic import BaseModel, ConfigDict, EmailStr,Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, HttpUrl
 from typing import Optional
 from datetime import datetime
 from pydantic import model_validator
+
 
 class CandidateStatus(str, Enum):
     active = "active"
@@ -10,13 +11,14 @@ class CandidateStatus(str, Enum):
     hired_elsewhere = "hired_elsewhere"
     blacklisted = "blacklisted"
 
+
 # Esquema Base: Contiene los campos comunes que se repiten
 class CandidateBase(BaseModel):
     first_name: str = Field(..., min_length=2, max_length=50)
     last_name: str = Field(..., min_length=2, max_length=50)
-    email: EmailStr # valida formato de correo
-    phone: Optional[str] = Field(None, pattern=r'^\+?[\d\s\-]{7,20}$')
-    candidate_url: Optional[HttpUrl] = None # Valida que sea una URL válida
+    email: EmailStr  # valida formato de correo
+    phone: Optional[str] = Field(None, pattern=r"^\+?[\d\s\-]{7,20}$")
+    candidate_url: Optional[HttpUrl] = None  # Valida que sea una URL válida
     cv_url: Optional[HttpUrl] = None
     skills: Optional[str] = Field(None, max_length=500)
     notes: Optional[str] = Field(None, max_length=1000)
@@ -25,18 +27,22 @@ class CandidateBase(BaseModel):
     location: Optional[str] = Field(None, max_length=255)
     source: Optional[str] = Field(None, max_length=100)
     experience: Optional[str] = None
+    verified: Optional[bool] = False
 
 
 class CandidateCreate(CandidateBase):
-    pass 
+    pass
+
 
 # Actualización
 class CandidateUpdate(BaseModel):
     first_name: Optional[str] = Field(None, min_length=2, max_length=50)
     last_name: Optional[str] = Field(None, min_length=2, max_length=50)
     email: Optional[EmailStr] = None
-    phone: Optional[str] = Field(None, pattern=r'^\+?[\d\s\-]{7,20}$')  # Formato internacional de teléfono
-    candidate_url: Optional[HttpUrl] = None # Valida que sea una URL válida
+    phone: Optional[str] = Field(
+        None, pattern=r"^\+?[\d\s\-]{7,20}$"
+    )  # Formato internacional de teléfono
+    candidate_url: Optional[HttpUrl] = None  # Valida que sea una URL válida
     cv_url: Optional[HttpUrl] = None
     skills: Optional[str] = Field(None, max_length=500)
     notes: Optional[str] = Field(None, max_length=1000)
@@ -45,6 +51,7 @@ class CandidateUpdate(BaseModel):
     location: Optional[str] = Field(None, max_length=255)
     source: Optional[str] = Field(None, max_length=100)
     experience: Optional[str] = None
+
 
 # Salida (CandidateOut / CandidateResponse)
 class CandidateOut(CandidateBase):
@@ -61,11 +68,13 @@ class CandidateStatusOut(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class CandidateFrontendOut(BaseModel):
     """
     Este es el esquema 'Traductor'.
     Convierte el modelo técnico de la DB al formato visual en el Front.
     """
+
     id: int
     name: str
     specialty: str
@@ -76,12 +85,10 @@ class CandidateFrontendOut(BaseModel):
     isAvailable: bool
     time: str
     is_favorite: bool = False
+    verified: bool = False
     email: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
-
-
-
 
     @model_validator(mode="before")
     @classmethod
@@ -97,30 +104,43 @@ class CandidateFrontendOut(BaseModel):
                 # Combinamos nombre y apellido en un solo campo 'name'
                 "name": f"{data.first_name} {data.last_name}".strip(),
                 # Si skills es None, devolvemos un texto amigable
-                "specialty": getattr(data, "skills",None) or "Sin especificar",
+                "specialty": getattr(data, "skills", None) or "Sin especificar",
                 # Usamos location según lo tengamos en la base de datos
-                "location":getattr(data, "location",None) or "No indicada",
+                "location": getattr(data, "location", None) or "No indicada",
                 # Lógica de origen: Si viene del scraper tendrá un ID de origen
-                "source":getattr(data, "source", None) or "Carga Manual",
+                "source": getattr(data, "source", None) or "Carga Manual",
                 "experience": getattr(data, "experience") or "Consultar CV",
                 "email": getattr(data, "email", None),
                 # Extraemos el valor del Enum (ej: "active")
-                "status": data.status.value if hasattr(data.status, 'value') else str(data.status),
+                "status": (
+                    data.status.value
+                    if hasattr(data.status, "value")
+                    else str(data.status)
+                ),
                 # El Front usa un booleano para mostrar el check de disponibilidad
-                "isAvailable": data.status in [CandidateStatus.active, CandidateStatus.passive],
+                "isAvailable": data.status
+                in [CandidateStatus.active, CandidateStatus.passive],
                 # Formateamos la fecha a algo legible (YYYY-MM-DD)
-                "time": data.created_at.strftime("%Y-%m-%d") if getattr(data, "created_at", None) else "Reciente",
-                "is_favorite": True if getattr(data, "is_favorite", False) else False
-
+                "time": (
+                    data.created_at.strftime("%Y-%m-%d")
+                    if getattr(data, "created_at", None)
+                    else "Reciente"
+                ),
+                "is_favorite": True if getattr(data, "is_favorite", False) else False,
+                "verified": getattr(data, "verified", False),
             }
         return data
 
+
 class CandidateStatusUpdate(BaseModel):
     """Esquema específico para el endpoint PATCH"""
+
     status: CandidateStatus
+
 
 class MessageResponse(BaseModel):
     message: str
+
 
 # Schema para el status de los scrapers de candidatos
 class ScraperStatusItem(BaseModel):
@@ -129,15 +149,18 @@ class ScraperStatusItem(BaseModel):
     last_extraction: Optional[datetime] = None
     total_candidates: int = 0
 
+
 class CandidateScraperStatusOut(BaseModel):
     scrapers: list[ScraperStatusItem]
+
 
 # Schema para marcar como favorita
 class FavoriteRequest(BaseModel):
     favorite: bool
 
 
-
+class VerifyRequest(BaseModel):
+    verified: bool
 
 
 if __name__ == "__main__":
@@ -184,7 +207,7 @@ if __name__ == "__main__":
             first_name="Test",
             last_name="Error",
             email="correo-mal-formado",  # Esto debería fallar
-            candidate_url="esto-no-es-una-url"
+            candidate_url="esto-no-es-una-url",
         )
         print("❌ Error: El sistema ha dejado pasar datos inválidos.")
     except Exception as e:

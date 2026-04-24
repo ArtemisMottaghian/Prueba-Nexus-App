@@ -1,9 +1,6 @@
-/* ==========================================
-   DASHBOARD QUICK CARDS — Estilos dinámicos
-   ========================================== */
-
+/* Tarjetas resumen + enlace vacantes */
 .dashboard-quick-card {
-  background: var(--bg-primary); /* Blanco de día, oscuro de noche */
+  background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 1rem 1.1rem;
@@ -30,7 +27,6 @@
   border-left-color: var(--color-purple-primary);
 }
 
-/* --- Iconos con colores de marca adaptativos --- */
 .dashboard-quick-card__icon {
   width: 42px;
   height: 42px;
@@ -62,7 +58,6 @@
   color: #f59e0b;
 }
 
-/* Títulos y valores dinámicos */
 .dashboard-quick-card .text-muted {
   color: var(--text-muted) !important;
 }
@@ -73,9 +68,15 @@
   font-weight: 700;
 }
 
-/* ==========================================
-   SELECTOR DE PERIODO (Día / Semana / Mes)
-   ========================================== */
+/* Filtro Día / Semana / Mes */
+.dashboard-page-intro .period-segment {
+  margin-bottom: 0;
+}
+
+.dashboard-quick-cards-row {
+  align-items: stretch;
+}
+
 .period-segment {
   display: inline-flex;
   align-items: stretch;

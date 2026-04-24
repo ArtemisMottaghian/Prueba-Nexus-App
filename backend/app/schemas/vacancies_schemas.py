@@ -63,3 +63,8 @@ class MessageResponse(BaseModel):
 #Schema para cambiar estado de ofertas
 class StatusRequest(BaseModel):
     status: str
+
+# Schema para las asignaciones multiples de vacantes
+class VacancyAssignmentRequest(BaseModel):
+    hr_id: int
+    vacancy_ids: List[int]

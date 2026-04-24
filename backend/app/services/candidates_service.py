@@ -11,6 +11,7 @@ async def get_all_candidates(
     skills: Optional[str] = None,
     status: Optional[CandidateStatus] = None,
     source: Optional[str] = None,
+    verified: Optional[bool] = None,
 ) -> List[Candidate]:
     query = select(Candidate)
 
@@ -22,6 +23,8 @@ async def get_all_candidates(
         query = query.where(Candidate.status == status)
     if source:
         query = query.where(Candidate.source.ilike(f"%{source}%"))
+    if verified is not None:
+        query = query.where(Candidate.verified == verified)
 
     query = query.order_by(Candidate.created_at.desc())
     result = await db.execute(query)
@@ -87,6 +90,15 @@ async def set_favorite(db: AsyncSession, candidate_id: int, favorite: bool) -> N
         raise e
 
 
+
+async def set_verified(db: AsyncSession, candidate_id: int, verified: bool) -> None:
+    """Marca o desmarca un candidato como verificado."""
+    candidate = await get_candidate_by_id(db, candidate_id)
+    if candidate:
+        candidate.verified = verified
+        await db.commit()
+
+
 async def get_scraper_status(db: AsyncSession) -> CandidateScraperStatusOut:
     """
     Devuelve el estado de cada scraper de candidatos basándose en
@@ -145,3 +157,4 @@ async def get_scraper_status(db: AsyncSession) -> CandidateScraperStatusOut:
         ))
 
     return CandidateScraperStatusOut(scrapers=result_list)
+
