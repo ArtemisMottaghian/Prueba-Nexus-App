@@ -10,6 +10,10 @@ export default function VacancyGrid({
   onSelectVacancy,
   onUpdateJobStatus,
   onToggleFavorite,
+  onAsignarVacante,
+  currentUser,
+  isNegocio,
+  emptyStateReclutador,
 }) {
   const [viewMode, setViewMode] = useState('grid');
   const [selectedJob, setSelectedJob] = useState(null);
@@ -63,10 +67,23 @@ export default function VacancyGrid({
         className={viewMode === 'grid' ? 'vacancies-grid' : 'vacancies-list'}
       >
         {jobs.length === 0 ? (
-          /* CAMBIO: Quitamos bg-dark-subtle y usamos nuestra clase adaptativa */
           <div className="w-100 text-center py-5 rounded-3 empty-state-container">
-            <i className="bi bi-search display-4 d-block mb-3"></i>
-            <p>No se encontraron vacantes con estos filtros.</p>
+            {emptyStateReclutador ? (
+              <>
+                <i className="bi bi-inbox display-4 d-block mb-3"></i>
+                <p className="fw-semibold">
+                  No tienes vacantes asignadas todavía.
+                </p>
+                <small className="text-muted">
+                  El equipo de negocio te asignará vacantes cuando estén listas.
+                </small>
+              </>
+            ) : (
+              <>
+                <i className="bi bi-search display-4 d-block mb-3"></i>
+                <p>No se encontraron vacantes con estos filtros.</p>
+              </>
+            )}
           </div>
         ) : (
           jobs.map((job) => (
@@ -97,6 +114,9 @@ export default function VacancyGrid({
           onClose={() => setSelectedJob(null)}
           onUpdateStatus={onUpdateJobStatus}
           onToggleFavorite={onToggleFavorite}
+          onAsignarVacante={onAsignarVacante}
+          currentUser={currentUser}
+          isNegocio={isNegocio}
         />
       )}
     </>
