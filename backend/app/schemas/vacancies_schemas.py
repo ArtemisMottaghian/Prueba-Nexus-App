@@ -68,3 +68,18 @@ class StatusRequest(BaseModel):
 class VacancyAssignmentRequest(BaseModel):
     hr_id: int
     vacancy_ids: List[int]
+
+class CandidateMatchOut(BaseModel):
+    id: int
+    name: str
+    specialty: str
+    location: str
+    status: str
+    experience: Optional[str]
+    email: Optional[str]
+    is_favorite: bool
+    verifies: bool
+    match_score: int # 0-100
+    application_status: Optional[str] # None si no hay aplicacion todavia
+
+    model_config = ConfigDict(from_attributes=True)
