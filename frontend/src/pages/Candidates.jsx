@@ -30,7 +30,6 @@ export default function Candidates() {
     habilidades: 'All',
     disponibilidad: 'All',
     experiencia: 'All',
-    provincia: 'All',
     verified: 'All',
   });
 
@@ -120,7 +119,6 @@ export default function Candidates() {
       habilidades: 'All',
       disponibilidad: 'All',
       experiencia: 'All',
-      provincia: 'All',
       verified: 'All',
     });
   };
@@ -166,9 +164,6 @@ export default function Candidates() {
       [...new Set(candidates.map((c) => c.location).filter(Boolean))].sort(),
     [candidates]
   );
-  const provinciaOptions = [
-    ...new Set(candidates.map((c) => c.location).filter(Boolean)),
-  ].sort();
 
   const DISPONIBILIDAD_OPTIONS = [
     { value: 'disponible', label: 'Disponible' },
@@ -219,15 +214,11 @@ export default function Candidates() {
       return true;
     })();
 
-    const matchProvincia =
-      filters.provincia === 'All' || candidate.location === filters.provincia;
-
     return (
       matchSearch &&
       matchEspecialidad &&
       matchDisponibilidad &&
-      matchExperiencia &&
-      matchProvincia
+      matchExperiencia
     );
   });
 
@@ -288,7 +279,6 @@ export default function Candidates() {
           skillsOptions={skillsOptions}
           disponibilidadOptions={DISPONIBILIDAD_OPTIONS}
           experienciaOptions={EXPERIENCIA_OPTIONS}
-          provinciaOptions={provinciaOptions}
           showVerifiedFilter
         />
 
