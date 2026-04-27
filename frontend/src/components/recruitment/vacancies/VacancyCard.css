@@ -1,10 +1,9 @@
 /* ===================================================
-   VacancyCard.css — Diseño NexusAI Final
+   TARJETA NORMAL (CUADRÍCULA)
    =================================================== */
-
 .vacante-card {
-  background: #13131f; /* var(--clr-surface) */
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-secondary, #ffffff);
+  border: 1px solid var(--border-color, #d1d5db); 
   border-radius: 16px;
   padding: 1.25rem;
   transition: all 0.3s ease;
@@ -12,15 +11,38 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); 
 }
 
 .vacante-card:hover {
-  border-color: #7c3aed; /* var(--clr-purple) */
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border-color: var(--color-purple, #7c3aed);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); 
   transform: translateY(-4px);
 }
 
-/* Fila superior: Checkbox, Status y Acciones (IA/Estrella) */
+[data-theme='dark'] .vacante-card:hover {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* ===================================================
+   TARJETA VISTA DE LISTA
+   =================================================== */
+.vacante-card-list {
+  background: var(--bg-secondary, #ffffff);
+  border: 1px solid var(--border-color, #d1d5db);
+  border-radius: 12px;
+  padding: 1rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.vacante-card-list:hover {
+  border-color: var(--color-purple, #7c3aed);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+}
+
+/* Fila superior: Checkbox, Status y Acciones */
 .card-header-row {
   display: flex;
   justify-content: space-between;
@@ -40,11 +62,11 @@
   gap: 8px;
 }
 
-/* --- BOTONES SIN RECUADRO GRIS (Reset Total) --- */
+/* Botones de acción */
 .btn-smart-match-mini,
 .btn-smart-match-icon,
 .btn-favorite-star {
-  all: unset; /* Elimina estilos por defecto del navegador */
+  all: unset;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -55,10 +77,10 @@
   transition: all 0.2s ease;
 }
 
-/* Estilo específico Botón IA ✨ */
+/* Botón IA ✨ */
 .btn-smart-match-mini, 
 .btn-smart-match-icon {
-  color: #00d4ff; /* var(--clr-cyan) */
+  color: var(--color-cyan, #00d4ff);
   background: rgba(0, 212, 255, 0.05);
   border: 1px solid rgba(0, 212, 255, 0.2);
 }
@@ -66,13 +88,13 @@
 .btn-smart-match-mini:hover,
 .btn-smart-match-icon:hover {
   background: rgba(0, 212, 255, 0.15);
-  border-color: #00d4ff;
+  border-color: var(--color-cyan, #00d4ff);
   box-shadow: 0 0 12px rgba(0, 212, 255, 0.3);
 }
 
-/* Estilo específico Estrella ⭐ */
+/* Estrella Favoritos ⭐ */
 .btn-favorite-star {
-  color: #7a7a9a;
+  color: var(--text-muted, #9ca3af);
   font-size: 1.1rem;
 }
 
@@ -81,11 +103,11 @@
   color: #fbbf24;
 }
 
-/* Animación de carga para la IA */
+/* Animación de carga IA */
 .loading i {
   display: inline-block;
   animation: spin-ia 1s linear infinite;
-  color: #7c3aed;
+  color: var(--color-purple, #7c3aed);
 }
 
 @keyframes spin-ia {
@@ -97,7 +119,7 @@
 .vacante-title {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary, #111827);
   margin: 0;
   line-height: 1.4;
 }
@@ -113,19 +135,18 @@
   align-items: center;
   gap: 10px;
   font-size: 0.9rem;
-  color: #a1a1aa;
+  color: var(--text-secondary, #4b5563);
 }
 
 .detail-icon {
   width: 24px;
-  color: #7c3aed;
+  color: var(--color-purple, #7c3aed);
 }
 
-/* Footer y Badges */
 .vacante-footer {
   margin-top: auto;
   padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--border-color, #e5e7eb);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -133,5 +154,136 @@
 
 .vacante-date {
   font-size: 0.75rem;
-  color: #71717a;
+  color: var(--text-muted, #6b7280);
+}
+/* ===================================================
+   TARJETA VISTA DE LISTA
+   =================================================== */
+.vacante-card-list {
+  background: var(--bg-primary, #ffffff); 
+  border: 1px solid var(--border-color, #d1d5db);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.vacante-card-list:hover {
+  border-color: var(--color-purple, #7c3aed);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+}
+
+.list-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap; 
+}
+
+.list-main-info {
+  display: flex;
+  align-items: center;
+  gap: 16px; 
+  flex: 1;
+}
+
+.list-text-group {
+  display: flex;
+  align-items: center;
+  gap: 10px; 
+  flex-wrap: wrap;
+}
+
+.list-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary, #111827);
+  margin: 0;
+}
+
+.list-company {
+  font-size: 0.95rem;
+  color: var(--text-secondary, #4b5563);
+  font-weight: 500;
+}
+
+.list-separator {
+  color: var(--border-color, #d1d5db);
+  user-select: none;
+}
+
+.list-meta-info {
+  display: flex;
+  align-items: center;
+  gap: 24px; 
+}
+
+.list-location {
+  display: flex;
+  align-items: center;
+  gap: 6px; 
+  font-size: 0.9rem;
+  color: var(--text-secondary, #4b5563);
+}
+
+.list-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+/* ===================================================
+   ETIQUETAS DE ESTADO (Desplegables / Badges)
+   =================================================== */
+
+select.select-status-inline:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* 1. NUEVA ->  */
+select.badge-nueva, .badge-nueva {
+  background-color: rgba(0, 212, 255, 0.15) !important;
+  color: #0096b3 !important;
+  border: 1px solid rgba(0, 212, 255, 0.3) !important;
+}
+[data-theme='dark'] select.badge-nueva, [data-theme='dark'] .badge-nueva {
+  color: #00d4ff !important;
+}
+
+
+
+/* 2. EN PROCESO -> */
+select.badge-en-proceso, .badge-en-proceso {
+  background-color: rgba(34, 197, 94, 0.15) !important;
+  color: #16a34a !important;
+  border: 1px solid rgba(34, 197, 94, 0.3) !important;
+}
+[data-theme='dark'] select.badge-en-proceso, [data-theme='dark'] .badge-en-proceso {
+  color: #4ade80 !important;
+}
+
+/* 3. DESCARTADA -> */
+select.badge-descartada, .badge-descartada {
+  background-color: rgba(107, 114, 128, 0.15) !important;
+  color: #4b5563 !important;
+  border: 1px solid rgba(107, 114, 128, 0.3) !important;
+}
+[data-theme='dark'] select.badge-descartada, [data-theme='dark'] .badge-descartada {
+  color: #9ca3af !important;
+}
+
+/* 4. CONTACTADA -> */
+select.badge-contactada, .badge-contactada {
+  background-color: rgba(124, 58, 237, 0.15) !important;
+  color: #6d28d9 !important;
+  border: 1px solid rgba(124, 58, 237, 0.3) !important;
+}
+[data-theme='dark'] select.badge-contactada, [data-theme='dark'] .badge-contactada {
+  color: #a78bfa !important;
+}
+
+.badge {
+  box-shadow: none !important; 
 }

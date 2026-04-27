@@ -70,6 +70,7 @@ export const ENDPOINTS = {
       detail: (id) => `${BASE_URL}/api/vacancies/${id}`,
       favorite: (id) => `${BASE_URL}/api/vacancies/${id}/favorite`,
       bulkActions: `${BASE_URL}/api/vacancies/bulk-actions`,
+      updateStatus: (id) => `${BASE_URL}/api/vacancies/${id}/status`,
     },
   },
 
