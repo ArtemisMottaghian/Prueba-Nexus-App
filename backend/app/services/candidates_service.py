@@ -218,7 +218,8 @@ _INVALID_PATTERNS = re.compile(
     r'|lugo\s*@'                        # "Lugo @ A Coruña"
     r'|\w+\s*~\s*\w+'                   # "Logroño~Burgos~Pamplona"
     r'|lisbon|helsinki|tokyo'           # ciudades fuera de España
-    r'|salt\b|malmö)',
+    r'|salt\b|malmö'
+    r'|->|⊠|\.\s*spain|\.\s*españa)',   # flechas, símbolos raros
     re.IGNORECASE
 )
 
@@ -229,7 +230,7 @@ def _normalize_location(raw: str) -> str | None:
     if _INVALID_PATTERNS.search(raw):
         return None
     # Primer fragmento antes de coma, slash, guion largo, pipe
-    city = re.split(r'[,/|–]', raw)[0].strip()
+    city = re.split(r'[,/|–\-]', raw)[0].strip()
     # Eliminar sufijos tipo "(Spain)", "(GMT+1)"
     city = city.split("(")[0].strip()
     # Limpiar guion con contexto " - algo" al final
