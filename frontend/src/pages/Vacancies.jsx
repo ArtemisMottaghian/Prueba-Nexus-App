@@ -88,12 +88,15 @@ export default function Vacancies() {
     };
 
     const fetchLocations = async () => {
-      const locs = await vacanciesService.getLocations();
-      // Normalizar y deduplicar
-      const normalized = [
-        ...new Set(locs.map(normalizeLocation).filter(Boolean)),
-      ].sort();
-      setLocationOptions(normalized);
+      try {
+        const locs = await vacanciesService.getLocations();
+        const normalized = [
+          ...new Set((locs || []).map(normalizeLocation).filter(Boolean)),
+        ].sort();
+        setLocationOptions(normalized);
+      } catch {
+        // Backend offline — locationOptions queda vacío, no es crítico
+      }
     };
 
     fetchJobs();
@@ -216,7 +219,10 @@ export default function Vacancies() {
     const arrDiscard = ['descartada', 'discarded', 'rejected'];
 
     if (['all', 'todas', 'todos'].includes(filterStat)) {
-      matchStatus = true;
+      // Sin filtro de estado: ocultar descartadas por defecto, mostrarlas solo si el usuario lo pide
+      matchStatus = showDescartadas
+        ? arrDiscard.includes(safeStatus)
+        : !arrDiscard.includes(safeStatus);
     } else if (filterStat.includes('nuev') || filterStat.includes('new')) {
       matchStatus = arrNew.includes(safeStatus);
     } else if (filterStat.includes('contact')) {
@@ -256,11 +262,6 @@ export default function Vacancies() {
 
     const matchFavorite = !showFavoritesOnly || job.isFavorite === true;
 
-    // Ocultar descartadas por defecto — solo se muestran si el usuario lo pide explícitamente
-    const arrDiscard2 = ['descartada', 'discarded', 'rejected'];
-    const esDescartada = arrDiscard2.includes(safeStatus);
-    const matchDescartada = showDescartadas ? esDescartada : !esDescartada;
-
     let matchText = true;
     const activeSearch = filters.search || queryURL;
     if (activeSearch) {
@@ -292,8 +293,7 @@ export default function Vacancies() {
       matchSource &&
       matchFavorite &&
       matchText &&
-      matchAsignado &&
-      matchDescartada
+      matchAsignado
     );
   });
 
