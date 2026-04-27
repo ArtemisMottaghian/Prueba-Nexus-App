@@ -69,3 +69,9 @@ class CompanyAssignRequest(BaseModel):
     company_ids: List[int] = Field(
         ..., description="Lista de IDs de las empresas a asignar"
     )
+
+# Devuelve el manager de la empresa
+class CompanyWithManagerResponse(CompanyResponse):
+    managed_by_id: Optional[int] = None
+    manager_name: Optional[str] = None
+    manager_email: Optional[str] = None

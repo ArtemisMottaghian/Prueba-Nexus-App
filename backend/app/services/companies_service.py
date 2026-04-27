@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 from sqlalchemy import update, select, delete
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List
@@ -9,7 +10,7 @@ from app.models.contacts_model import Contact
 from app.models.job_model import JobOffer
 from app.models.user_model import User
 from app.schemas.users_schemas import UserType
-from app.schemas.companies_schemas import CompanyCreate, CompanyUpdate, CompanyResponse
+from app.schemas.companies_schemas import CompanyCreate, CompanyUpdate, CompanyResponse, CompanyWithManagerResponse
 
 
 async def _get_company_or_404(db: AsyncSession, company_id: int) -> Company:
@@ -160,3 +161,30 @@ async def assign_user_to_companies(
         await db.rollback()
         print(f"Error al asignar empresas: {e}")
         raise e
+
+
+async def get_companies_with_manager_by_user(
+    db: AsyncSession, user_id: int
+) -> List[CompanyWithManagerResponse]:
+    """Devuelve las empresas de un usuario incluyendo datos del comercial asignado."""
+    try:
+        result = await db.execute(
+            select(Company)
+            .options(joinedload(Company.manager))
+            .where(Company.managed_by_id == user_id)
+            .order_by(Company.id.asc())
+        )
+        companies = result.scalars().all()
+
+        responses = []
+        for c in companies:
+            base = CompanyWithManagerResponse.model_validate(c)
+            base.managed_by_id = c.managed_by_id
+            if c.manager:
+                base.manager_name = c.manager.name
+                base.manager_email = c.manager.email
+            responses.append(base)
+        return responses
+    except SQLAlchemyError as e:
+        print(f"Error al obtener empresas con manager del usuario {user_id}: {e}")
+        raise HTTPException(status_code=500, detail="Error retrieving companies with manager")

@@ -4,7 +4,7 @@ from typing import List
 
 from app.db.connection import get_db
 from app.services import companies_service
-from app.schemas.companies_schemas import CompanyAssignRequest, CompanyResponse, CompanyCreate, CompanyUpdate
+from app.schemas.companies_schemas import CompanyAssignRequest, CompanyResponse, CompanyCreate, CompanyUpdate, CompanyWithManagerResponse
 from app.schemas.comments_schemas import CommentCreate, CommentUpdate, CommentResponse
 from app.services import comments_service
 from app.schemas.users_schemas import MessageResponse
@@ -31,6 +31,15 @@ async def list_companies(db: AsyncSession = Depends(get_db)):
 async def get_assigned_companies(user_id: int, db: AsyncSession = Depends(get_db)):
     companies = await companies_service.get_companies_by_user(db, user_id)
     return companies
+
+
+# -----------------
+# Obtener empresas de un usuario con info del comercial responsable
+# GET /api/companies/assigned/{user_id}/with-manager
+# -----------------
+@router.get("/assigned/{user_id}/with-manager", response_model=List[CompanyWithManagerResponse])
+async def get_assigned_companies_with_manager(user_id: int, db: AsyncSession = Depends(get_db)):
+    return await companies_service.get_companies_with_manager_by_user(db, user_id)
 
 
 # -----------------
