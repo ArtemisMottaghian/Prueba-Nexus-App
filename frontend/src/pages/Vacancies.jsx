@@ -8,6 +8,22 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const ITEMS_POR_PAGINA = 20;
+
+/**
+ * Normaliza un string de ubicación a "Ciudad, País" limpio.
+ * Agrupa variantes como "Madrid (Spain)", "Madrid, Spain", "Madrid - Spain", "Madrid ES" → "Madrid"
+ */
+function normalizeLocation(loc) {
+  if (!loc) return '';
+  return loc
+    .replace(/\s*[([].*?[)\]]/g, '') // quita (Spain), [ES], etc.
+    .replace(/\s*[-/]\s*(Spain|España|ES|SP)\b/gi, '') // quita "- Spain", "/ España"
+    .replace(/,\s*(Spain|España|ES)\b/gi, '') // quita ", Spain"
+    .replace(/\s+(Spain|España)\s*$/gi, '') // quita "Spain" al final
+    .replace(/\s+ES\s*$/g, '') // quita "ES" al final
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
 const LS_FAV_KEY = 'nexus_vacantes_favorites';
 const LS_STATUS_KEY = 'nexus_vacantes_status';
 const LS_ASIGN_KEY = 'nexus_vacantes_asignaciones';
@@ -73,7 +89,11 @@ export default function Vacancies() {
 
     const fetchLocations = async () => {
       const locs = await vacanciesService.getLocations();
-      setLocationOptions(locs);
+      // Normalizar y deduplicar
+      const normalized = [
+        ...new Set(locs.map(normalizeLocation).filter(Boolean)),
+      ].sort();
+      setLocationOptions(normalized);
     };
 
     fetchJobs();
@@ -223,7 +243,7 @@ export default function Vacancies() {
     }
 
     const filterLoc = (filters.location || '').toLowerCase();
-    const safeLoc = (job.location || '').toLowerCase();
+    const safeLoc = normalizeLocation(job.location || '').toLowerCase();
     const matchLocation =
       ['all', 'todas', 'todos'].includes(filterLoc) ||
       safeLoc.includes(filterLoc) ||
