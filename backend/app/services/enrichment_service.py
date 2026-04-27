@@ -8,7 +8,7 @@ async def search_in_dropcontact(first_name: str, last_name:str, company: str, we
     url = "https://api.dropcontact.io/v1/enrich/all"
     headers = {"X-Access-Token": settings.DROPCONTACT_API_KEY, "Content-Type": "application/json"}
     payload= {
-        "daata": [{
+        "data": [{
             "firstName": first_name,
             "lastName": last_name,
             "company": company,
