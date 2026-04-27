@@ -155,4 +155,31 @@ export const candidatesService = {
       throw error;
     }
   },
+  searchCandidatesByName: async (name) => {
+    // El backend exige un mínimo de 3 caracteres
+    if (!name || name.length < 3) return [];
+
+    try {
+      const response = await authFetch(
+        ENDPOINTS.recruitment.candidatos.search(name)
+      );
+
+      // Si devuelve 404, significa que no hay resultados (según la doc de Alberto)
+      if (response.status === 404) {
+        return [];
+      }
+
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Mapeamos los datos para que el frontend los entienda con el formato correcto
+      return data.map(mapCandidateData);
+    } catch (error) {
+      console.error('Error al buscar candidatos por nombre:', error);
+      throw error;
+    }
+  },
 };
