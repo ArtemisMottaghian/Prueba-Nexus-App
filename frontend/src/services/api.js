@@ -61,6 +61,7 @@ export const ENDPOINTS = {
       bulkActions: `${BASE_URL}/api/candidates/bulk-actions`,
       search: (name) =>
         `${BASE_URL}/api/candidates/search?name=${encodeURIComponent(name)}`,
+      locations: `${BASE_URL}/api/candidates/locations`,
     },
     vacantes: {
       list: `${BASE_URL}/api/vacancies`,

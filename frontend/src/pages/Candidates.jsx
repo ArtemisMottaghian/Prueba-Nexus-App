@@ -8,7 +8,6 @@ import { CANDIDATE_STATUS_OPTIONS } from '../constants/candidateStatus';
 
 const ITEMS_POR_PAGINA = 10;
 
-/** Construye el objeto de query para GET /api/candidates (servidor). */
 function filtersToApiQuery(f) {
   const q = {};
   if (f.verified === 'yes') q.verified = true;
@@ -36,8 +35,8 @@ export default function Candidates() {
   const [selectedCandidates, setSelectedCandidates] = useState([]);
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [locationOptions, setLocationOptions] = useState([]);
 
-  // Paginación
   const [paginaActual, setPaginaActual] = useState(1);
 
   const apiListQuery = useMemo(
@@ -57,6 +56,18 @@ export default function Candidates() {
       filters.verified,
     ]
   );
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const locs = await candidatesService.getLocations();
+        setLocationOptions(locs);
+      } catch (error) {
+        console.error('Error al cargar las ubicaciones normalizadas:', error);
+      }
+    };
+    fetchLocations();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -104,7 +115,6 @@ export default function Candidates() {
     }
   };
 
-  // Manejadores de eventos
   const handleFilterChange = (filterName, value) => {
     setFilters((prevFilters) => ({ ...prevFilters, [filterName]: value }));
   };
@@ -155,15 +165,9 @@ export default function Candidates() {
     );
   };
 
-  // Opciones derivadas de los datos cargados para los filtros de candidatos
   const skillsOptions = [
     ...new Set(candidates.map((c) => c.specialty).filter(Boolean)),
   ].sort();
-  const locationOptions = useMemo(
-    () =>
-      [...new Set(candidates.map((c) => c.location).filter(Boolean))].sort(),
-    [candidates]
-  );
 
   const DISPONIBILIDAD_OPTIONS = [
     { value: 'disponible', label: 'Disponible' },
@@ -182,8 +186,6 @@ export default function Candidates() {
     return match ? parseInt(match[0], 10) : 0;
   };
 
-  // Filtro en cliente: búsqueda, sector, disponibilidad, experiencia, provincia
-  // (estado, ubicación, skills, origen, verificado van al API en getAllCandidates)
   const filteredCandidates = candidates.filter((candidate) => {
     const term = (filters.search || '').trim().toLowerCase();
     const matchSearch =
@@ -197,14 +199,12 @@ export default function Candidates() {
     const matchEspecialidad =
       filters.industry === 'All' || candidate.specialty === filters.industry;
 
-    // Disponibilidad (#108)
     const matchDisponibilidad = (() => {
       if (filters.disponibilidad === 'All') return true;
       const isAvail = candidate.isAvailable ?? candidate.is_available ?? false;
       return filters.disponibilidad === 'disponible' ? isAvail : !isAvail;
     })();
 
-    // Experiencia (#108)
     const matchExperiencia = (() => {
       if (filters.experiencia === 'All') return true;
       const anios = parseExperienciaAnios(candidate.experience);

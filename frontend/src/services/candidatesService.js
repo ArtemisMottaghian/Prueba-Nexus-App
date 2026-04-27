@@ -155,6 +155,7 @@ export const candidatesService = {
       throw error;
     }
   },
+
   searchCandidatesByName: async (name) => {
     // El backend exige un mínimo de 3 caracteres
     if (!name || name.length < 3) return [];
@@ -180,6 +181,23 @@ export const candidatesService = {
     } catch (error) {
       console.error('Error al buscar candidatos por nombre:', error);
       throw error;
+    }
+  },
+
+  getLocations: async () => {
+    try {
+      const response = await authFetch(
+        ENDPOINTS.recruitment.candidatos.locations
+      );
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error al obtener la lista de ubicaciones:', error);
+      return [];
     }
   },
 };
