@@ -4,6 +4,7 @@ from typing import List, Optional
 from app.models.candidates_model import Candidate 
 from app.schemas.candidates_schemas import CandidateStatus, CandidateCreate,CandidateUpdate,ScraperStatusItem, CandidateScraperStatusOut
 from datetime import datetime, timezone, timedelta
+import re
 
 async def get_all_candidates(
     db: AsyncSession,
@@ -176,27 +177,49 @@ async def get_scraper_status(db: AsyncSession) -> CandidateScraperStatusOut:
 _LOCATION_FIXES = {
     "a coruña": "A Coruña",
     "a coruna": "A Coruña",
+    "la coruña": "A Coruña",
     "almeria": "Almería",
     "cadiz": "Cádiz",
     "malaga": "Málaga",
+    "malága": "Málaga",
     "jaen": "Jaén",
     "cordoba": "Córdoba",
     "leon": "León",
-    "españa": "España",
-    "spain": "España",
+    "gijon": "Gijón",
+    "españa": None,
+    "spain": None,
+    "remote": None,
+    "remoto": None,
+    "ibiza": "Ibiza",
+    "palencia": "Palencia",
+    "segovia": "Segovia",
+    "oviedo": "Oviedo",
+    "sevilla": "Sevilla",
+    "cartagena": "Cartagena",
+    "valladolid": "Valladolid",
 }
 
+_INVALID_PATTERNS = re.compile(
+    r'(linkedin\.com|http|\.com|@|\d{5}|c\/|blvd|plaza|universidad|university|remot)',
+    re.IGNORECASE
+)
+
 def _normalize_location(raw: str) -> str | None:
-    """Extrae la ciudad principal y aplica correcciones ortográficas."""
     if not raw:
         return None
-    # Solo el primer fragmento antes de la coma
-    city = raw.split(",")[0].strip()
+    # Descartar entradas con URLs, emails, direcciones, códigos postales
+    if _INVALID_PATTERNS.search(raw):
+        return None
+    # Primer fragmento antes de coma, slash, guion largo, pipe, guion simple
+    city = re.split(r'[,/|–\-]', raw)[0].strip()
     # Eliminar sufijos tipo "(Spain)", "(GMT+1)"
     city = city.split("(")[0].strip()
-    if not city:
+    # Descartar si queda vacío, muy corto, o solo mayúsculas tipo "ES"
+    if not city or len(city) < 3 or (city.isupper() and len(city) <= 3):
         return None
-    return _LOCATION_FIXES.get(city.lower(), city)
+    # Aplicar correcciones del mapa (None = descartar)
+    normalized = _LOCATION_FIXES.get(city.lower(), city)
+    return normalized
 
 
 async def get_location_options(db: AsyncSession) -> List[str]:
