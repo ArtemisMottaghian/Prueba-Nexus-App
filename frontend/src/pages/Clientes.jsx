@@ -1,12 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import ClienteCard from '../components/crm/ClienteCard';
 import ClienteDetail from '../components/crm/ClienteDetail';
+import BulkActions from '../components/recruitment/shared/BulkActions';
 import {
   getClientes,
   getClienteById,
   createCliente,
   updateCliente,
   deleteCliente,
+  assignUserToCompanies,
 } from '../services/clientesService';
 
 const ITEMS_POR_PAGINA = 10;
@@ -37,6 +39,7 @@ export default function Clientes() {
   const [clientes, setClientes] = useState([]);
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedClientes, setSelectedClientes] = useState([]);
 
   // Paginación
   const [paginaActual, setPaginaActual] = useState(1);
@@ -111,7 +114,7 @@ export default function Clientes() {
   const irAPagina = (p) =>
     setPaginaActual(Math.max(1, Math.min(p, totalPaginas)));
 
-  // Páginas visibles (máx 3 centradas en la actual — no se desborda nunca)
+  // Páginas visibles
   const paginasVisibles = useMemo(() => {
     let inicio = Math.max(1, paginaSafe - 1);
     let fin = Math.min(totalPaginas, inicio + 2);
@@ -205,6 +208,10 @@ export default function Clientes() {
         setClienteSeleccionado(null);
       setModalEliminar(false);
       setClienteAEliminar(null);
+      // Limpiarlo de seleccionados si lo estaba
+      setSelectedClientes((prev) =>
+        prev.filter((id) => id !== clienteAEliminar.id)
+      );
     } catch (error) {
       console.error('Error al eliminar cliente:', error);
       alert('Error al eliminar el cliente. Por favor, intente de nuevo.');
@@ -221,13 +228,40 @@ export default function Clientes() {
       setClienteSeleccionado(actualizado);
   };
 
+  // Manejo de checkbox múltiple
+  const handleSelectCliente = (id) => {
+    setSelectedClientes((prev) => {
+      if (prev.includes(id)) return prev.filter((cid) => cid !== id);
+      return [...prev, id];
+    });
+  };
+
+  // Asignar masivamente a Comercial (Ander)
+  const handleBulkAssign = async (targetUser) => {
+    try {
+      await assignUserToCompanies(selectedClientes, targetUser);
+      setSelectedClientes([]);
+      alert(`Empresas asignadas con éxito a ${targetUser}`);
+    } catch (err) {
+      console.error(err);
+      alert('Hubo un problema asignando las empresas en el servidor.');
+    }
+  };
+
+  // Descarte masivo
+  const handleBulkDiscard = () => {
+    alert(
+      'Función de descarte masivo de clientes aún no implementada en Backend'
+    );
+  };
+
   return (
     <div className="clientes-page">
       {/* Cabecera */}
       <div className="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-2">
         <div>
           <p className="text-muted mb-0">
-            {clientes.length} clientes registrados
+            {clientes.length} empresas registradas
             {clientes.filter((c) => c.prioritario).length > 0 && (
               <span className="ms-2" style={{ color: '#f59e0b' }}>
                 · {clientes.filter((c) => c.prioritario).length} VIP
@@ -240,9 +274,22 @@ export default function Clientes() {
           onClick={abrirModalNuevo}
         >
           <i className="bi bi-plus-circle"></i>
-          <span>Nuevo cliente</span>
+          <span>Nueva empresa</span>
         </button>
       </div>
+
+      {/* Barra de Acciones Masivas si hay seleccionados */}
+      {selectedClientes.length > 0 && (
+        <div className="mb-3 animate__animated animate__fadeInDown animate__faster">
+          <BulkActions
+            selectedCount={selectedClientes.length}
+            label="empresa"
+            onDiscard={handleBulkDiscard}
+            onAssign={handleBulkAssign}
+            onClear={() => setSelectedClientes([])}
+          />
+        </div>
+      )}
 
       <div
         className={`clientes-split${clienteSeleccionado ? ' has-selected' : ''}`}
@@ -311,6 +358,8 @@ export default function Clientes() {
                   key={c.id}
                   cliente={c}
                   isSelected={clienteSeleccionado?.id === c.id}
+                  isBulkSelected={selectedClientes.includes(c.id)}
+                  onBulkSelect={handleSelectCliente}
                   onClick={seleccionarCliente}
                   onEdit={abrirModalEditar}
                   onDelete={abrirModalEliminar}
@@ -420,7 +469,7 @@ export default function Clientes() {
                       className={`bi bi-${modalAbierto === 'nuevo' ? 'plus-circle' : 'pencil'} me-2`}
                     ></i>
                     {modalAbierto === 'nuevo'
-                      ? 'Nuevo cliente'
+                      ? 'Nueva empresa'
                       : `Editar — ${clienteEditando?.nombre}`}
                   </h5>
                   <button
@@ -575,7 +624,7 @@ export default function Clientes() {
                 <div className="modal-header border-0 pb-0">
                   <h5 className="modal-title text-danger">
                     <i className="bi bi-exclamation-triangle me-2"></i>Eliminar
-                    cliente
+                    empresa
                   </h5>
                   <button
                     className="btn-close"

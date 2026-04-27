@@ -15,9 +15,9 @@ from app.schemas.vacancies_schemas import (
     BulkActionRequest,
     MessageResponse,
     StatusRequest, 
+    CandidateMatchOut
 )
-from app.schemas.clients_schemas import (ContactOut)
-from app.services.clients_service import get_contact_by_vacancy
+
 
 router = APIRouter()
 
@@ -50,6 +50,16 @@ async def read_vacancies_filtered(
     )
     return vacancies
 
+# -----------------
+# Obtener candidates para una vacante
+# GET /api/vacancies/{vacancy_id}/candidates
+# -----------------
+@router.get("/{vacancy_id}/candidates", response_model=List[CandidateMatchOut])
+async def read_suitable_candidates(vacancy_id: int, db: AsyncSession = Depends(get_db)):
+    candidates = await vacancies_service.get_suitable_candidates(db, vacancy_id)
+    if candidates is None:
+        raise HTTPException(status_code=404, detail="La vacante no existe")
+    return candidates
 
 # -----------------
 # Obtener detalle de vacante
@@ -129,10 +139,7 @@ async def assign_hr_to_vacancies(
     await vacancies_service.update_vacancy_status(db, vacancy_id, body.status)
     return {"message": f"Estado actualizado a '{body.status}'"}
 
-# Devuelve contactos del cliente vinculado
-@router.get("/{vacancy_id}/contact", response_model=List[ContactOut])
-async def get_vacancy_contact(vacancy_id: int, db: AsyncSession = Depends(get_db)):
-    return await get_contact_by_vacancy(db, vacancy_id)
+
 
 # -----------------
 # Obtener vacantes asignadas a un HR específico

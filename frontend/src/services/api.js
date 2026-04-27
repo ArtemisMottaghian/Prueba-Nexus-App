@@ -1,6 +1,8 @@
-// Base del backend (VITE_API_URL); quita /api final para no duplicar rutas.
+// ============================================
+// api.js - Configuración de Endpoints (NexusAI)
+// ============================================
 function resolveApiOrigin() {
-  const raw = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const raw = import.meta.env.VITE_API_URL || 'http://nexus.ara-tech.es:8000';
   let base = raw.trim().replace(/\/+$/, '');
   if (base.endsWith('/api')) {
     base = base.slice(0, -4);
@@ -15,31 +17,46 @@ export function authFetch(url, options = {}) {
   return fetch(url, {
     ...options,
     headers: {
+      'Content-Type': 'application/json',
       ...options.headers,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
 }
+
 export const ENDPOINTS = {
   auth: {
-    login: `${BASE_URL}/api/auth/login`,
+    login: `${BASE_URL}/api/login`,
+    googleLogin: `${BASE_URL}/api/login/google/login`,
+    googleCallback: `${BASE_URL}/api/login/google/callback`,
     register: `${BASE_URL}/api/auth/register`,
   },
-  crm: {
-    clientes: `${BASE_URL}/api/clients`,
-    clienteDetalle: (id) => `${BASE_URL}/api/clients/${id}`,
-    clienteVacantes: (id) => `${BASE_URL}/api/clients/${id}/vacants`,
+  companies: {
+    list: `${BASE_URL}/api/companies`,
+    detail: (id) => `${BASE_URL}/api/companies/${id}`,
+    create: `${BASE_URL}/api/companies`,
+    update: (id) => `${BASE_URL}/api/companies/${id}`,
+    delete: (id) => `${BASE_URL}/api/companies/${id}`,
+    assignedTo: (userId) => `${BASE_URL}/api/companies/assigned/${userId}`,
+    assignUser: `${BASE_URL}/api/companies/assign-user`,
+    comments: (id) => `${BASE_URL}/api/companies/${id}/comments`,
+    updateComment: (commentId) =>
+      `${BASE_URL}/api/companies/comments/${commentId}`,
+    vacancies: (id) => `${BASE_URL}/api/companies/${id}/vacants`,
   },
+
   recruitment: {
     candidatos: {
       list: `${BASE_URL}/api/candidates`,
+      detail: (id) => `${BASE_URL}/api/candidates/${id}`,
+      updateStatus: (id) => `${BASE_URL}/api/candidates/${id}/status`,
+      delete: (id) => `${BASE_URL}/api/candidates/${id}`,
       verify: (id) => `${BASE_URL}/api/candidates/${id}/verify`,
       scraperStatus: `${BASE_URL}/api/candidates/scraper-status`,
       filter: (params) => {
         const query = new URLSearchParams(params).toString();
         return `${BASE_URL}/api/candidates/filter/list?${query}`;
       },
-      detail: (id) => `${BASE_URL}/api/candidates/${id}`,
       favorite: (id) => `${BASE_URL}/api/candidates/${id}/favorite`,
       bulkActions: `${BASE_URL}/api/candidates/bulk-actions`,
     },
@@ -55,17 +72,21 @@ export const ENDPOINTS = {
       bulkActions: `${BASE_URL}/api/vacancies/bulk-actions`,
     },
   },
+
   metrics: {
+    general: `${BASE_URL}/api/metrics`,
     leadStats: (fromIso, toIso) =>
       `${BASE_URL}/api/metrics?from=${encodeURIComponent(fromIso)}&to=${encodeURIComponent(toIso)}`,
     scrapersStatus: `${BASE_URL}/api/metrics/scrapers/status`,
   },
+
   users: {
-    list: `${BASE_URL}/api/users/`,
-    create: `${BASE_URL}/api/users/`,
+    list: `${BASE_URL}/api/users`,
+    create: `${BASE_URL}/api/users`,
     update: (email) => `${BASE_URL}/api/users/${email}`,
     delete: (email) => `${BASE_URL}/api/users/${email}`,
   },
+
   calendar: {
     list: `${BASE_URL}/api/calendar/`,
     create: `${BASE_URL}/api/calendar/`,

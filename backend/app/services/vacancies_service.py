@@ -1,21 +1,19 @@
 from fastapi import HTTPException
 from typing import List, Optional
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import selectinload
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-import re 
-from datetime import datetime
 from sqlalchemy import update
 
-from app.db.session import AsyncSessionLocal
 from app.models.user_model import User
 from app.schemas.users_schemas import UserType
-from app.models.job_model import JobOffer, JobPortal
-from app.models.clients_model import Client
+from app.models.job_model import JobOffer, JobPortal, JobApplication
 from app.models.contacts_model import Contact
 from app.models.entity_model import EntityType
 from app.models.leadStatus_model import LeadStatus
+from app.models.candidates_model import Candidate
 
 # Funcion para obtener el listado (Dashboard y Pantalla de Vacantes)
 async def get_vacancies_list(db: AsyncSession, status: Optional[str] = None) -> List[JobOffer]:
@@ -47,134 +45,6 @@ async def get_vacancy_by_id(db: AsyncSession, vacancy_id: int) -> Optional[JobOf
     except Exception as e:
         raise e
 
-
-async def create_vacancy(job_data: dict, db: AsyncSession = None) -> JobOffer:
-    """
-    Guarda una nueva vacante, genera el Cliente prospecto si no existe,
-    y añade al Reclutador como Contacto.
-    """
-
-    async def _execute(session: AsyncSession):
-
-        # 1. Evitar duplicados por ID externo
-        query = select(JobOffer).where(JobOffer.external_id == str(job_data.get("external_id")))
-        result = await session.execute(query)
-        existing_job = result.scalar_one_or_none()
-
-        if existing_job:
-            return existing_job
-
-        # 2. Parsear el salario
-        s_min, s_max = None, None
-        salary_str = job_data.get("salary_eur", "")
-        if salary_str and isinstance(salary_str, str) and salary_str != "No especificado":
-            # Extraemos solo los números
-            nums = re.findall(r'\d+', salary_str.replace('.', ''))
-            if len(nums) >= 2:
-                s_min, s_max = int(nums[0]), int(nums[1])
-            elif len(nums) == 1:
-                s_min = int(nums[0])
-
-        # 3. Parsear la fecha de publicación
-        pub_date = None
-        date_str = job_data.get("publish_date")
-        if date_str:
-            try:
-                # LinkedIn devuelve fechas tipo ISO, las pasamos a datetime de Python
-                pub_date = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
-            except Exception:
-                pass
-
-        # 4. Obtener o crear el Portal (LinkedIn)
-        portal_query = select(JobPortal).where(JobPortal.name.ilike("%linkedin"))
-        portal_result = await session.execute(portal_query)
-        portal = portal_result.scalar_one_or_none()
-
-        if not portal:
-            portal = JobPortal(name="LinkedIn", base_url="https://linkedin.com")
-            session.add(portal)
-            await session.flush() #Obtenemos portal.id
-                
-        # 5. Crear vacante
-        new_job = JobOffer(
-            external_id=str(job_data.get("external_id", "")),
-            title=job_data.get("title", "Sin título")[:255],
-            company_name=job_data.get("company", "")[:255],
-            location=job_data.get("location", "")[:255],
-            offer_url=job_data.get("offer_url", ""),
-            job_description=job_data.get("description", ""),
-            company_description=job_data.get("company_description", ""),
-            published_at=pub_date,
-            sector=job_data.get("sector_name", "")[:255],
-            salary_min=s_min,
-            salary_max=s_max,
-            contract_type=job_data.get("contract_type", "")[:50],
-            contract_time=job_data.get("contract_time", "")[:50],
-            work_modality=job_data.get("modality", "")[:50],
-            portal_id=portal.id
-        )
-
-        # Obtenemos new_job.id para vincular al cliente
-        session.add(new_job)
-        await session.flush()
-
-        # 6. Cliente (Empresa)
-        company_name = job_data.get("company")
-        if company_name:
-            # ¿Ya existe esta empresa en nuestra BBDD?
-            client_query = select(Client).where(Client.company_name == company_name)
-            client_result = await session.execute(client_query)
-            client = client_result.scalar_one_or_none()
-
-            if not client:
-                # Si no existe, la creamos como prospecto
-                client = Client(
-                    company_name=company_name[:255],
-                    source_id=portal.id,
-                    original_offer_id=new_job.id,
-                    entity_type=EntityType.scraping_prospect,
-                    lead_status=LeadStatus.new
-                )
-                session.add(client)
-                await session.flush() # Obtenemos client.id para vincular al reclutador
-
-            # 7. Contacto (Reclutador)
-            recruiter_name = job_data.get("recruiter_name")
-            recruiter_url = job_data.get("recruiter_url", "")
-
-            if recruiter_name and recruiter_name not in ["No especificado", "Nombre no extraíble limpiamente", ""]:
-                # Comprobamos que no hayamos guardado ya a este reclutador en esta empresa
-                contact_query = select(Contact).where(
-                    Contact.client_id == client.id,
-                    Contact.full_name == recruiter_name
-                )
-                contact_result = await session.execute(contact_query)
-                existing_contact = contact_result.scalar_one_or_none()
-
-                if not existing_contact:
-                    new_contact = Contact(
-                        client_id=client.id,
-                        full_name=recruiter_name[:255],
-                        job_title="Reclutador HR",
-                        linkedin_url=recruiter_url[:255]
-                    )
-                    session.add(new_contact)
-
-        # 8. Commit solo si la sesión es interna
-        if db is None:
-            await session.commit()
-            
-        return new_job
-    try:
-        if db is not None:
-            return await _execute(db)
-        else:
-            async with AsyncSessionLocal() as session:
-                return await _execute(session)
-
-    except Exception as e:
-        print(f"Error específico en create_vacancy: {type(e).__name__} - {e}")
-        raise e
 
 async def get_vacancies_filtered(
     db: AsyncSession,
@@ -388,3 +258,63 @@ async def get_vacancies_by_hr(db: AsyncSession, hr_id: int) -> List[JobOffer]:
     except Exception as e:
         print(f"Error al obtener las vacatantes: {e}")
         raise e
+
+async def get_suitable_candidates(db: AsyncSession, vacancy_id: int) -> list[dict]:
+    # Obtener vacante
+    vacancy = await get_vacancy_by_id(db, vacancy_id)
+    if vacancy is None:
+        return None # El router lanzara 404
+
+    # Extraer keywords de la vacante
+    raw_text = f"{vacancy.sectior or ''} {vacancy.job_description or ''}"
+    vacancy_keywords = {
+        w.lower()
+        for w in re.split(r"[\s,.()\[\]]+", raw_text)
+        if len(w) >= 3
+    }
+
+    # Candidatos disponibles
+    result = await db.execute(
+        select(Candidate).where(Candidate.status.in_(["active", "passive"]))
+    )
+    candidates = result.scalars().all()
+
+    # Aplicaciones ya existentes para esta vacante (mostrar estado)
+    apps_result = await db.execute(
+        select(JobApplication).where(JobApplication.offer_id == vacancy_id)
+    )
+    apps_by_candidate = {
+        app.candidate_id: app.status.value
+        for app in apps_result.scalars().all()
+    }
+
+    # Calcular score y construir respuesta
+    output = []
+    for c in candidates:
+        candidate_skills = [
+            s.strip().lower()
+            for s in (c.skills or "").split(",")
+            if s.strip()
+        ]
+        if candidate_skills:
+            matches = sum(1 for s in candidate_skills if s in vacancy_keywords)
+            score = round(matches / len(candidate_skills) * 100)
+        else:
+            score = 0
+        
+        output.append({
+            "id": c.id,
+            "name": f"{c.first_name} {c.last_name}".strip(),
+            "speciality": c.skills or "Sin especificar",
+            "location": c.location or "No indicada",
+            "status": c.status.value if hasattr(c.status, "value") else str(c.status),
+            "experience": c.experience or "Consultar CV",
+            "email": c.email,
+            "is_favorite": bool(c.is_favorite),
+            "verified": bool(c.verified),
+            "match_score": score,
+            "application_status": apps_by_candidate.get(c.id),
+        })
+    
+    output.sort(key=lambda x: (x["match_score"], x["id"]), reverse=True)
+    return output

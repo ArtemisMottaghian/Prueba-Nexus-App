@@ -9,6 +9,8 @@ export default function VacancyCard({
   onSelect,
   onUpdateStatus,
   onToggleFavorite,
+  onSmartMatch,
+  isMatching,
 }) {
   let badgeClass = 'badge-nueva';
   if (job.status === 'Contactada') badgeClass = 'badge-contactada';
@@ -20,10 +22,6 @@ export default function VacancyCard({
     onSelect(job.id);
   };
 
-  const handleChildClick = (e) => {
-    e.stopPropagation();
-  };
-
   const handleStatusChange = (e) => {
     e.stopPropagation();
     onUpdateStatus(job.id, e.target.value);
@@ -31,12 +29,16 @@ export default function VacancyCard({
 
   const handleFavoriteClick = (e) => {
     e.stopPropagation();
-    if (onToggleFavorite) {
-      onToggleFavorite(job.id, job.isFavorite);
-    }
+    if (onToggleFavorite) onToggleFavorite(job.id, job.isFavorite);
   };
 
-  // VISTA DE LISTA (Responsive Corregido)
+  const handleSmartMatchClick = (e) => {
+    e.stopPropagation();
+    if (onSmartMatch) onSmartMatch(e);
+  };
+
+  const handleChildClick = (e) => e.stopPropagation();
+
   if (isListView) {
     return (
       <div className="vacante-card-list mb-2" onClick={onClick}>
@@ -53,14 +55,27 @@ export default function VacancyCard({
               <h5 className="list-title">{job.title}</h5>
               <span className="list-separator">|</span>
               <span className="list-company">{job.companyName}</span>
+              <span className="list-separator">|</span>
+              <span className="list-industry text-muted small">
+                {job.industry || 'Sector no especificado'}
+              </span>
             </div>
           </div>
 
           <div className="list-meta-info">
+            <button
+              className={`btn-smart-match-icon ${isMatching ? 'loading' : ''}`}
+              onClick={handleSmartMatchClick}
+              title="Smart Match con IA"
+            >
+              <i className="bi bi-stars"></i>
+            </button>
+
             <div className="list-location">
               <i className="bi bi-geo-alt"></i>
               <span>{job.location}</span>
             </div>
+
             <div className="list-actions">
               <span className={`badge ${badgeClass}`}>{job.status}</span>
               <button
@@ -82,7 +97,6 @@ export default function VacancyCard({
     );
   }
 
-  // VISTA DE GRID (Tarjetas normales)
   return (
     <div className="vacante-card" onClick={onClick}>
       <div className="card-header-row">
@@ -106,13 +120,24 @@ export default function VacancyCard({
             <option value="Descartada">Descartada</option>
           </select>
         </div>
-        <button className="btn-favorite-star" onClick={handleFavoriteClick}>
-          <i
-            className={
-              job.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'
-            }
-          ></i>
-        </button>
+
+        <div className="header-right-actions d-flex align-items-center gap-2">
+          <button
+            className={`btn-smart-match-mini ${isMatching ? 'loading' : ''}`}
+            onClick={handleSmartMatchClick}
+            title="Smart Match con IA"
+          >
+            <i className="bi bi-stars"></i>
+          </button>
+
+          <button className="btn-favorite-star" onClick={handleFavoriteClick}>
+            <i
+              className={
+                job.isFavorite ? 'bi bi-star-fill text-warning' : 'bi bi-star'
+              }
+            ></i>
+          </button>
+        </div>
       </div>
 
       <h3 className="vacante-title">{job.title}</h3>
@@ -129,13 +154,53 @@ export default function VacancyCard({
             )}
           </div>
         </div>
+
         <div className="detail-item">
           <div className="detail-icon icon-cyan">
             <i className="bi bi-geo-alt"></i>
           </div>
           <span className="detail-text">{job.location}</span>
         </div>
+
+        <div className="detail-item">
+          <div className="detail-icon icon-orange">
+            <i className="bi bi-briefcase"></i>
+          </div>
+          <span className="detail-text text-truncate" title={job.industry}>
+            {job.industry || 'Sector no especificado'}
+          </span>
+        </div>
+
+        {(job.salaryMin || job.salaryMax) && (
+          <div className="detail-item">
+            <div className="detail-icon icon-green">
+              <i className="bi bi-cash-stack"></i>
+            </div>
+            <span className="detail-text">
+              {job.salaryMin && job.salaryMax
+                ? `${job.salaryMin} - ${job.salaryMax}`
+                : `${job.salaryMin || job.salaryMax}`}
+            </span>
+          </div>
+        )}
       </div>
+
+      {job.assignedTo &&
+        (() => {
+          const lista = Array.isArray(job.assignedTo)
+            ? job.assignedTo
+            : [job.assignedTo];
+          return lista.length > 0 ? (
+            <div className="vacante-assignee-group">
+              {lista.map((r, i) => (
+                <span key={i} className="vacante-assignee">
+                  <i className="bi bi-person-check-fill me-1"></i>
+                  {r.nombre}
+                </span>
+              ))}
+            </div>
+          ) : null;
+        })()}
 
       <div className="vacante-footer">
         <SourceOriginBadge source={job.source} />
