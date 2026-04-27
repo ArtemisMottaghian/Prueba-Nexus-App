@@ -16,6 +16,16 @@ async def upsert_scraped_candidate(db: AsyncSession, data: dict):
     Devuelve False si el candidato ya existía y los datos son idénticos.
     """
     try:
+        if data.get("first_name"):
+            data["first_name"] = str(data["first_name"]).title()
+            
+        if data.get("last_name"):
+            data["last_name"] = str(data["last_name"]).title()
+            
+        if data.get("candidate_url"):
+            clean_url = str(data["candidate_url"]).replace("%20", "").strip()
+            data["candidate_url"] = clean_url.split(" | ")[0]
+            
         stmt = select(Candidate).where(Candidate.email == data.get("email"))
         result = await db.execute(stmt)
         existing_candidate = result.scalar_one_or_none()

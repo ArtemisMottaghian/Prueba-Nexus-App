@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, List,Literal
 from pydantic import BaseModel, ConfigDict,Field,field_validator,HttpUrl
-from backend.app.schemas.job_offer_schemas import OfferStatus
+from backend.app.schemas.job_offer import OfferStatus
 
 
 # Schema base para la tarjeta (Dashboard y Lista)

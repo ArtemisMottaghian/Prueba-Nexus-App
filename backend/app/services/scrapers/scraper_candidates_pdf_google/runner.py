@@ -20,12 +20,12 @@ from .browser import search_google_pdfs
 
 # INICIALIZACIÓN Y CONFIGURACIÓN
 
-# load_dotenv()
-# client = genai.Client(api_key=os.getenv("GOOGLE_AI_KEY"))
+load_dotenv()
+client = genai.Client(api_key=os.getenv("GOOGLE_AI_KEY"))
 # claude_client = anthropic.AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 LIMIT_FILE = "daily_limit.json"
-MAX_DAILY_CV = 2
+MAX_DAILY_CV = 4
 
 class AILimitReachedError(Exception):
     pass
@@ -277,9 +277,13 @@ async def extract_pdfs_google() -> list[dict]:
                         all_extracted_candidates.append(candidate_data)
                         current_count += 1
                         update_daily_limit(current_count)
-                        print(
-                            f"  -> {data.get('first_name')} añadido a la lista ({current_count}/{MAX_DAILY_CV})"
-                        )
+                        guardado = await upsert_scraped_candidate(db, candidate_data)
+                        if guardado:
+                            print(f"  -> {data.get('first_name')} guardado corrctamente")
+                        else:
+                            print(f"Error guardadon a {data.get('firs_name')} en la BD")
+                            
+                        print(f"  -> {data.get('first_name')} añadido a la lista ({current_count}/{MAX_DAILY_CV})")
 
                     await asyncio.sleep(5) # Pausa cortés
 
@@ -289,4 +293,4 @@ async def extract_pdfs_google() -> list[dict]:
         return all_extracted_candidates
 
 if __name__ == "__main__":
-    asyncio.run(extract_pdfs())
+    asyncio.run(extract_pdfs_google())

@@ -5,7 +5,7 @@ from typing import Dict, Any
 from fastapi import HTTPException
 
 from app.models.job_model import JobOffer
-from backend.app.schemas.job_offer_schemas import OfferStatus
+from backend.app.schemas.job_offer import OfferStatus
 from app.models.error_log_model import ErrorLog
 
 async def get_lead_stats(db: AsyncSession, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
