@@ -197,24 +197,44 @@ _LOCATION_FIXES = {
     "sevilla": "Sevilla",
     "cartagena": "Cartagena",
     "valladolid": "Valladolid",
+    "canarias": "Canarias",
+    "catalonia": None,
+    "cataluña": None,
+    "galicia": None,
+    "europe": None,
+    "españa": None,
 }
 
 _INVALID_PATTERNS = re.compile(
-    r'(linkedin\.com|http|\.com|@|\d{5}|c\/|blvd|plaza|universidad|university|remot)',
+    r'(linkedin\.com|http|\.com|@'
+    r'|\d{5}'                           # códigos postales
+    r'|c\/|blvd|plaza|universidad|university'
+    r'|avenida|calle|carrer|campus|edificio|coronel|ctra\.|paseo|carretera'
+    r'|\d+\s*(bajo|alto|s\/n)'          # números de portal
+    r'|^[\d\s\.\,]+$'                   # solo números/puntos/comas
+    r'|remot'                           # remote/remoto
+    r'|\/.*\/'                          # formato "A / B / C"
+    r'|between\s'                       # "Between Huelva & Granada"
+    r'|lugo\s*@'                        # "Lugo @ A Coruña"
+    r'|\w+\s*~\s*\w+'                   # "Logroño~Burgos~Pamplona"
+    r'|lisbon|helsinki|tokyo'           # ciudades fuera de España
+    r'|salt\b|malmö)',
     re.IGNORECASE
 )
 
 def _normalize_location(raw: str) -> str | None:
     if not raw:
         return None
-    # Descartar entradas con URLs, emails, direcciones, códigos postales
+    # Descartar entradas con patrones inválidos
     if _INVALID_PATTERNS.search(raw):
         return None
-    # Primer fragmento antes de coma, slash, guion largo, pipe, guion simple
-    city = re.split(r'[,/|–\-]', raw)[0].strip()
+    # Primer fragmento antes de coma, slash, guion largo, pipe
+    city = re.split(r'[,/|–]', raw)[0].strip()
     # Eliminar sufijos tipo "(Spain)", "(GMT+1)"
     city = city.split("(")[0].strip()
-    # Descartar si queda vacío, muy corto, o solo mayúsculas tipo "ES"
+    # Limpiar guion con contexto " - algo" al final
+    city = re.sub(r'\s*-\s*(spain|españa|es|galicia|cataluña|asturias)$', '', city, flags=re.IGNORECASE).strip()
+    # Descartar si queda vacío, muy corto, o sigla tipo "ES"
     if not city or len(city) < 3 or (city.isupper() and len(city) <= 3):
         return None
     # Aplicar correcciones del mapa (None = descartar)
