@@ -1,4 +1,4 @@
-import { useState, useLayoutEffect } from 'react';
+import { useState, useLayoutEffect, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import './Topbar.css';
 
@@ -27,10 +27,13 @@ export default function Topbar({ onMenuToggle }) {
     }
   });
 
-  const location = useLocation();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileMenuRef = useRef(null);
 
+  const location = useLocation();
   const pageTitle = TITLES[location.pathname] || 'Dashboard';
 
+  // Tema Claro/Oscuro
   useLayoutEffect(() => {
     const html = document.documentElement;
     if (isDarkMode) {
@@ -45,9 +48,25 @@ export default function Topbar({ onMenuToggle }) {
     }
   }, [isDarkMode]);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target)
+      ) {
+        setIsProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <header className="ara-topbar">
       <div className="topbar-content">
+        {/* Izquierda: Menú móvil y Título */}
         <div className="d-flex align-items-center gap-3">
           <button className="btn-icon d-lg-none" onClick={onMenuToggle}>
             <i className="bi bi-list"></i>
@@ -55,23 +74,74 @@ export default function Topbar({ onMenuToggle }) {
           <h1 className="topbar-title">{pageTitle}</h1>
         </div>
 
-        <div className="d-flex align-items-center gap-2 gap-md-3">
-          <button
-            className="btn-icon"
+        {/* Derecha: Switch y Perfil */}
+        <div className="d-flex align-items-center gap-4">
+          <div
+            className={`theme-selector-container ${isDarkMode ? 'is-dark' : 'is-light'}`}
             onClick={() => setIsDarkMode(!isDarkMode)}
-            title="Cambiar tema"
+            title={
+              isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
+            }
           >
-            {isDarkMode ? (
-              <i className="bi bi-moon-stars-fill text-primary"></i>
-            ) : (
-              <i className="bi bi-sun-fill text-warning"></i>
-            )}
-          </button>
-
-          <div className="topbar-avatar">
-            <div className="avatar-fallback">
-              <span>A</span>
+            <div className="theme-switch-pill">
+              <i className="bi bi-sun sun-bg"></i>
+              <i className="bi bi-moon-stars moon-bg"></i>
+              <div className="switch-knob"></div>
             </div>
+          </div>
+          <div className="profile-menu-wrapper" ref={profileMenuRef}>
+            <div
+              className="topbar-avatar"
+              onClick={() => setIsProfileOpen(!isProfileOpen)}
+              title="Cuenta de Nexus"
+            >
+              <div className="avatar-fallback">
+                <span>A</span>
+              </div>
+            </div>
+            {isProfileOpen && (
+              <div
+                className={
+                  isDarkMode ? 'profile-dropdown is-dark' : 'profile-dropdown'
+                }
+              >
+                {/* Cabecera del menú */}
+                <div className="profile-header">
+                  <div className="profile-header-avatar">A</div>
+                  <div className="profile-header-info">
+                    <span className="profile-name">Administrador</span>
+                    <span className="profile-email">admin@nexus-app.com</span>
+                    <span className="profile-role">
+                      <i className="bi bi-shield-lock-fill me-1"></i> Admin
+                    </span>
+                  </div>
+                </div>
+
+                <div className="profile-divider"></div>
+
+                {/* Opciones */}
+                <div className="profile-options">
+                  <button className="profile-btn">
+                    <i className="bi bi-person-badge"></i>
+                    Gestionar tu cuenta
+                  </button>
+                  <button className="profile-btn">
+                    <i className="bi bi-gear"></i>
+                    Configuración del sistema
+                  </button>
+                </div>
+
+                <div className="profile-divider"></div>
+
+                {/* Cerrar sesión */}
+                <div className="profile-options">
+                  <button className="profile-btn btn-logout">
+                    <i className="bi bi-box-arrow-right"></i>
+                    Cerrar sesión
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

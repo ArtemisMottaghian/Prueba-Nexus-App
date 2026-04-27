@@ -1,16 +1,22 @@
+/* ===================================================
+   ESTRUCTURA BASE
+   =================================================== */
 .ara-topbar {
   position: sticky;
   top: 0;
-  z-index: 105; 
+  z-index: 1000; 
   -webkit-backdrop-filter: blur(12px); 
-  background: var(--bg-primary); 
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-color);
-  padding: 16px 24px;
+  background: var(--bs-body-bg);
+  border-bottom: 1px solid var(--bs-border-color); 
+  padding: 16px 24px; 
+  display: flex;
+  align-items: center;
   transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .topbar-content {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -18,9 +24,9 @@
 }
 
 .topbar-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--bs-body-color); 
   margin: 0;
 }
 
@@ -88,9 +94,86 @@
   color: var(--text-muted);
 }
 
+.theme-selector-container {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.theme-switch-pill {
+  width: 68px;
+  height: 34px;
+  background-color: #e5e7eb; /* Gris claro en modo día */
+  border-radius: 50px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  transition: background-color 0.4s ease;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.is-dark .theme-switch-pill {
+  background-color: #7c3aed; /* Morado intenso */
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.sun-bg, .moon-bg {
+  position: absolute;
+  font-size: 1.1rem;
+  z-index: 1;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.sun-bg {
+  left: 10px;
+  color: #654070; 
+}
+
+.moon-bg {
+  right: 10px;
+  color: #ffffff; 
+}
+
+.switch-knob {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  z-index: 2;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+}
+
+/* --- ESTADO: MODO CLARO --- */
+.is-light .switch-knob {
+  background-color: #713aba; 
+  transform: translateX(34px); 
+}
+.is-light .sun-bg { opacity: 1; }
+.is-light .moon-bg {
+  opacity: 0; 
+  transform: translateX(10px);
+}
+
+/* --- ESTADO: MODO OSCURO --- */
+.is-dark .switch-knob {
+  background-color: #ffffff; 
+  transform: translateX(0); 
+}
+.is-dark .sun-bg {
+  opacity: 0; 
+  transform: translateX(-10px);
+}
+.is-dark .moon-bg { opacity: 1; }
+
+
+/* ===================================================
+   AVATAR 
+   =================================================== */
 .topbar-avatar {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
 }
 
 .avatar-fallback {
@@ -98,8 +181,8 @@
   height: 100%;
   background: linear-gradient(
     135deg,
-    var(--color-purple-primary),
-    var(--color-purple-secondary)
+    var(--color-purple-primary, #6c5ce7), 
+    var(--color-purple-secondary, #a855f7)
   );
   border-radius: 50%;
   display: flex;
@@ -108,4 +191,183 @@
   color: #ffffff;
   font-weight: 700;
   border: 2px solid rgba(255, 255, 255, 0.2);
+}
+/* ===================================================
+   MENÚ DESPLEGABLE DEL PERFIL 
+   =================================================== */
+.profile-menu-wrapper {
+  position: relative;
+}
+
+.topbar-avatar {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.topbar-avatar:hover {
+  transform: scale(1.05);
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: 130%;
+  right: 0;
+  width: 320px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e5e7eb;
+  padding: 8px 0;
+  z-index: 2000;
+  animation: slideDownFade 0.2s ease forwards;
+  transform-origin: top right;
+}
+
+.profile-dropdown.is-dark {
+  background-color: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  color: #f3f4f6;
+}
+
+@keyframes slideDownFade {
+  from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 20px 12px;
+  text-align: center;
+}
+
+.profile-header-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6c5ce7, #a855f7);
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 10px rgba(108, 92, 231, 0.3);
+}
+
+.profile-header-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.profile-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--bs-body-color);
+}
+
+.profile-email {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.is-dark .profile-email {
+  color: #9ca3af;
+}
+
+.profile-role {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background-color: rgba(108, 92, 231, 0.15);
+  color: #6c5ce7;
+  padding: 4px 10px;
+  border-radius: 12px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.is-dark .profile-role {
+  background-color: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+}
+
+/* Separadores */
+.profile-divider {
+  height: 1px;
+  background-color: #e5e7eb;
+  margin: 8px 0;
+}
+
+.is-dark .profile-divider {
+  background-color: #374151;
+}
+
+/* Botones de opciones */
+.profile-options {
+  display: flex;
+  flex-direction: column;
+  padding: 0 8px;
+}
+
+.profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: var(--bs-body-color);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  text-align: left;
+}
+
+.profile-btn i {
+  font-size: 1.1rem;
+  color: #6b7280;
+}
+
+.is-dark .profile-btn i {
+  color: #9ca3af;
+}
+
+.profile-btn:hover {
+  background-color: #f3f4f6;
+}
+
+.is-dark .profile-btn:hover {
+  background-color: #374151;
+}
+
+.profile-btn.btn-logout {
+  color: #dc2626; 
+}
+
+.profile-btn.btn-logout i {
+  color: #dc2626;
+}
+
+.profile-btn.btn-logout:hover {
+  background-color: rgba(220, 38, 38, 0.1);
+}
+
+.is-dark .profile-btn.btn-logout {
+  color: #f87171;
+}
+
+.is-dark .profile-btn.btn-logout i {
+  color: #f87171;
+}
+
+.is-dark .profile-btn.btn-logout:hover {
+  background-color: rgba(248, 113, 113, 0.1);
 }
