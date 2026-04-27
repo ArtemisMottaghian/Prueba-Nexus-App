@@ -35,6 +35,18 @@ async def get_candidate_by_id(db: AsyncSession, candidate_id: int) -> Optional[C
     result = await db.execute(query)
     return result.scalar_one_or_none()
 
+async def search_candidates_by_name(db: AsyncSession, name: str) -> List[Candidate]:
+    """Busca candidatos por nombre o apellido."""
+    from sqlalchemy import or_
+    query = select(Candidate).where(
+        or_(
+            Candidate.first_name.ilike(f"%{name}%"),
+            Candidate.last_name.ilike(f"%{name}%")
+        )
+    ).order_by(Candidate.created_at.desc())
+    result = await db.execute(query)
+    return result.scalars().all()
+
 async def create_candidate(db: AsyncSession, datos: CandidateCreate) -> Candidate:
     nuevo = Candidate(**datos.model_dump())
     db.add(nuevo)
