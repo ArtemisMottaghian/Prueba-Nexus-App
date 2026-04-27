@@ -146,19 +146,44 @@ export const vacanciesService = {
     }
   },
 
-  // 7. Actualizar el estado de una vacante
+  // 7. Actualizar el estado de una vacante de forma individual
   updateVacancyStatus: async (id, newStatus) => {
-    const response = await authFetch(
-      ENDPOINTS.recruitment.vacantes.detail(id) + '/status',
-      {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
+    const statusMap = {
+      nueva: 'detected',
+      contactada: 'contacted',
+      'en proceso': 'negotiating',
+      en_proceso: 'negotiating',
+      descartada: 'discarded',
+      ganada: 'won',
+    };
+    // Si viene del backend (ej: "detected"), lo pasamos tal cual.
+    // Si viene del frontend (ej: "Nueva"), lo traducimos.
+    const rawStatus = String(newStatus).toLowerCase().trim();
+    const backendStatus = statusMap[rawStatus] || rawStatus;
+
+    try {
+      const response = await authFetch(
+        ENDPOINTS.recruitment.vacantes.updateStatus(id),
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: backendStatus }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Error ${response.status}: No se pudo actualizar el estado de la vacante`
+        );
       }
-    );
-    if (!response.ok)
-      throw new Error('Error al actualizar el estado de la vacante');
-    return response.json();
+      return await response.json();
+    } catch (error) {
+      console.error(
+        'Error al actualizar el estado individual de la vacante:',
+        error
+      );
+      throw error;
+    }
   },
 
   // 8. Actualizar datos completos de una vacante
