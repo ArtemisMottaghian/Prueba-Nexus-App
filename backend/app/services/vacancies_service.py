@@ -1,8 +1,6 @@
+import re
 from fastapi import HTTPException
 from typing import List, Optional
-from sqlalchemy import select, or_
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import selectinload
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import update
@@ -10,10 +8,14 @@ from sqlalchemy import update
 from app.models.user_model import User
 from app.schemas.users_schemas import UserType
 from app.models.job_model import JobOffer, JobPortal, JobApplication
+from app.models.candidates_model import Candidate
 from app.models.contacts_model import Contact
 from app.models.entity_model import EntityType
 from app.models.leadStatus_model import LeadStatus
-from app.models.candidates_model import Candidate
+
+
+
+
 
 # Funcion para obtener el listado (Dashboard y Pantalla de Vacantes)
 async def get_vacancies_list(db: AsyncSession, status: Optional[str] = None) -> List[JobOffer]:
@@ -266,7 +268,7 @@ async def get_suitable_candidates(db: AsyncSession, vacancy_id: int) -> list[dic
         return None # El router lanzara 404
 
     # Extraer keywords de la vacante
-    raw_text = f"{vacancy.sectior or ''} {vacancy.job_description or ''}"
+    raw_text = f"{vacancy.sector or ''} {vacancy.job_description or ''}"
     vacancy_keywords = {
         w.lower()
         for w in re.split(r"[\s,.()\[\]]+", raw_text)
