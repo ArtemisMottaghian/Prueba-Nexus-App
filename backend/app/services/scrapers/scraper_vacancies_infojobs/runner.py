@@ -164,7 +164,6 @@ async def process_single_offer(offer: dict, kw: str, driver: Any, processed_ids:
         "location": location,
         "offer_url": job_url,
         "job_description": job_description,
-        "company_description": (company_description[:3000] if company_description else None),
         "published_at": datetime.now(),
         "sector": f"Keyword: {kw}",
         "salary_min": salary_min,
@@ -243,7 +242,7 @@ async def extract_infojobs() -> list[dict]:
 
                                 if "contact_first_name" not in company_data: company_data["contact_first_name"] = None
                                 if "contact_last_name" not in company_data: company_data["contact_last_name"] = None
-
+                                company_data["original_offer_id"] = job_data["external_id"]
                                 company_id = await upsert_company_sql(db_session, company_data)
 
                                 if not company_id:

@@ -42,7 +42,7 @@ class Company(Base):
     )
 
     source_id = Column(Integer, ForeignKey("job_portals.id"))
-    original_offer_id = Column(BigInteger, ForeignKey("job_offers.id"))
+    original_offer_id = Column(String, nullable=True)
 
     notes = Column(Text)
 

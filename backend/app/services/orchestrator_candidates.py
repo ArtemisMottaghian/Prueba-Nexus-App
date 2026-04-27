@@ -27,15 +27,15 @@ async def gather_raw_candidates() -> list[dict]:
     # Lista de scrapers a ejecutar
     # NOTA: Usamos lambda para pre-cargar los argumentos de LinkedIn
     scrapers = [
-        #(
-        #    "linkedin",
-        #    lambda: extract_linked(
-        #        keywords=KEYWORDS,
-        #        sectors=SECTORS,
-        #        locations=LOCATIONS,
-        #        headless=HEADLESS_MODE,
-        #    ),
-        #),
+        (
+            "linkedin",
+            lambda: extract_linked(
+                #keywords=KEYWORDS,
+                sectors=SECTORS,
+                locations=LOCATIONS,
+                headless=HEADLESS_MODE,
+            ),
+        ),
         ("github", extract_github),
         ("google_pdfs", extract_pdfs_google),
     ]

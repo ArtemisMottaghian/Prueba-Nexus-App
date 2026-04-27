@@ -10,47 +10,108 @@ def extract_salary(text_input: str | None) -> list[int] | None:
         return None
     text_clean = text_input.lower().replace("€", "").replace("euros", "")
 
-    numbers = re.findall(r'\b\d{1,3}(?:\.\d{3})*(?:,\d+)?\b', text_clean)
+    matches = re.findall(r'(\d{1,3}(?:\.\d{3})*(?:,\d+)?)\s*(?:€|euros)', text_clean)
 
     values = []
-    for n in numbers:
-        num_limpio = n.replace('.', '').split(',')[0]
+    for num_str in matches:
+        num_limpio = num_str.replace('.', '').split(',')[0]
         if num_limpio.isdigit() and len(num_limpio) >= 4:
             values.append(int(num_limpio))
 
+    if len(values) >= 2:
+        return sorted(values[:2])
     return values[:2] if values else None        
 
 
-async def upsert_company_sql(db_session, company_data: dict) -> int:
+async def upsert_company_sql(db_session, company_data: dict) -> int | None:
     """
-    Inserta la empresa extraída por la IA en la BD asíncrona y devuelve su ID.
+    Inserta la empresa en la tabla 'companies' y los datos del reclutador en 'contacts'.
+    Devuelve el ID de la empresa creada o actualizada.
     """
-    query = text("""
-        INSERT INTO companies (
-            name, cif, sector, website, linkedin_url, address, 
-            contact_first_name, contact_last_name, contact_email, contact_phone, updated_at
-        ) VALUES (
-            :name, :cif, :sector, :website, :linkedin_url, :address,
-            :contact_first_name, :contact_last_name, :contact_email, :contact_phone, CURRENT_TIMESTAMP
-        )
-        ON CONFLICT (name) 
-        DO UPDATE SET 
-            cif = COALESCE(EXCLUDED.cif, companies.cif),
-            sector = COALESCE(EXCLUDED.sector, companies.sector),
-            website = COALESCE(EXCLUDED.website, companies.website),
-            linkedin_url = COALESCE(EXCLUDED.linkedin_url, companies.linkedin_url),
-            address = COALESCE(EXCLUDED.address, companies.address),
-            contact_first_name = COALESCE(EXCLUDED.contact_first_name, companies.contact_first_name),
-            contact_last_name = COALESCE(EXCLUDED.contact_last_name, companies.contact_last_name),
-            contact_email = COALESCE(EXCLUDED.contact_email, companies.contact_email),
-            contact_phone = COALESCE(EXCLUDED.contact_phone, companies.contact_phone),
-            updated_at = CURRENT_TIMESTAMP
-        RETURNING id;
-    """)
     try:
-        result = await db_session.execute(query, company_data)
+        
+        query_company = text("""
+            INSERT INTO companies (
+                name, cif, sector, website, linkedin_url, address, original_offer_id, updated_at
+            ) VALUES (
+                :name, :cif, :sector, :website, :linkedin_url, :address, :original_offer_id, CURRENT_TIMESTAMP
+            )
+            ON CONFLICT (name) 
+            DO UPDATE SET 
+                cif = COALESCE(EXCLUDED.cif, companies.cif),
+                sector = COALESCE(EXCLUDED.sector, companies.sector),
+                website = COALESCE(EXCLUDED.website, companies.website),
+                linkedin_url = COALESCE(EXCLUDED.linkedin_url, companies.linkedin_url),
+                address = COALESCE(EXCLUDED.address, companies.address),
+                original_offer_id = COALESCE(companies.original_offer_id, EXCLUDED.original_offer_id),
+                updated_at = CURRENT_TIMESTAMP
+            RETURNING id;
+        """)
+
+        safe_company_data = {
+            "name": company_data.get("name"),
+            "cif": company_data.get("cif"),
+            "sector": company_data.get("sector"),
+            "website": company_data.get("website"),
+            "linkedin_url": company_data.get("linkedin_url"),
+            "address": company_data.get("address"),
+            "original_offer_id": company_data.get("original_offer_id")
+        }
+        
+        # Ejecutamos la inserción de empresa (solo 2 parámetros)
+        result = await db_session.execute(query_company, safe_company_data)
+        company_id = result.scalar()
+
+        # --- PASO 2: GUARDAR CONTACTO EN SU TABLA ---
+        first_name = company_data.get("contact_first_name") or company_data.get("recruiter_name") or ""
+        last_name = company_data.get("contact_last_name") or company_data.get("recruiter_lastname") or ""
+        email = company_data.get("contact_email") or company_data.get("recruiter_email")
+        phone = company_data.get("contact_phone") or company_data.get("recruiter_phone")
+
+        if company_id and (first_name or email):
+            full_name = f"{first_name} {last_name}".strip()
+            if not full_name:
+                full_name = "HR Department"
+
+            contact_data = {
+                "company_id": company_id,
+                "full_name": full_name,
+                "email": email,
+                "phone": phone
+            }
+
+            if email:
+                query_contact = text("""
+                    INSERT INTO contacts (
+                        company_id, full_name, email, phone, job_title, updated_at
+                    ) VALUES (
+                        :company_id, :full_name, :email, :phone, 'Recruiter / HR', CURRENT_TIMESTAMP
+                    )
+                    ON CONFLICT (email) 
+                    DO UPDATE SET 
+                        full_name = COALESCE(EXCLUDED.full_name, contacts.full_name),
+                        phone = COALESCE(EXCLUDED.phone, contacts.phone),
+                        updated_at = CURRENT_TIMESTAMP;
+                """)
+                # Ejecutamos contacto con email (solo 2 parámetros)
+                await db_session.execute(query_contact, contact_data)
+            else:
+                query_contact_no_email = text("""
+                    INSERT INTO contacts (
+                        company_id, full_name, email, phone, job_title, updated_at
+                    ) VALUES (
+                        :company_id, :full_name, :email, :phone, 'Recruiter / HR', CURRENT_TIMESTAMP
+                    )
+                """)
+                # Ejecutamos contacto sin email (solo 2 parámetros)
+                try:
+                    await db_session.execute(query_contact_no_email, contact_data)
+                except Exception as e_contact:
+                    logging.warning(f"No se pudo guardar contacto sin email: {e_contact}")
+
         await db_session.commit()
-        return result.scalar()
+        return company_id
+
     except Exception as e:
         await db_session.rollback()
         logging.error(f"[ERROR BBDD] Fallo al guardar empresa {company_data.get('name')}: {e}")
@@ -59,40 +120,38 @@ async def upsert_company_sql(db_session, company_data: dict) -> int:
 
 async def upsert_job_offer(db_session, job_data: dict, model_class=None) -> bool:
     """
-    Inserta una nueva oferta de empleo mediante SQL directo, ignorando el modelo ORM 
-    para evitar errores de columnas faltantes.
+    Inserta una nueva oferta de empleo mediante SQL directo.
+    Usa 'company_id' para la relación correcta en la base de datos.
     """
-    # Escudo preventivo: nos aseguramos de que los campos existan en el diccionario
-    if 'recruiter_name' not in job_data: job_data['recruiter_name'] = None
     if 'company_description' not in job_data: job_data['company_description'] = None
-    if 'company_name' not in job_data: job_data['company_name'] = None
+    
+    # Eliminamos company_name del diccionario para que no choque con el SQL
+    job_data.pop("company_name", None)
 
+    # Query usando company_id
     query = text("""
         INSERT INTO job_offers (
-            portal_id, company_id, company_name, external_id, title, location, offer_url, 
+            portal_id, company_id, external_id, title, location, offer_url, 
             job_description, company_description, published_at, sector, salary_min, salary_max, 
-            contract_type, contract_time, work_modality, recruiter_name
+            contract_type, contract_time, work_modality
         ) VALUES (
-            :portal_id, :company_id, :company_name, :external_id, :title, :location, :offer_url, 
+            :portal_id, :company_id, :external_id, :title, :location, :offer_url, 
             :job_description, :company_description, :published_at, :sector, :salary_min, :salary_max, 
-            :contract_type, :contract_time, :work_modality, :recruiter_name
+            :contract_type, :contract_time, :work_modality
         )
         ON CONFLICT (portal_id, external_id) 
         DO UPDATE SET 
             company_id = EXCLUDED.company_id,
-            company_name = EXCLUDED.company_name,
             title = EXCLUDED.title,
             location = EXCLUDED.location,
             offer_url = EXCLUDED.offer_url,
             job_description = EXCLUDED.job_description,
-            company_description = EXCLUDED.company_description,
             salary_min = EXCLUDED.salary_min,
             salary_max = EXCLUDED.salary_max,
             contract_type = EXCLUDED.contract_type,
             contract_time = EXCLUDED.contract_time,
             work_modality = EXCLUDED.work_modality,
-            sector = EXCLUDED.sector,
-            recruiter_name = EXCLUDED.recruiter_name
+            sector = EXCLUDED.sector
     """)
     try:
         await db_session.execute(query, job_data)

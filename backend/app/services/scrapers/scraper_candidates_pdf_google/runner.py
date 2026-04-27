@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 from app.db.session import AsyncSessionLocal
 from .utils import upsert_scraped_candidate
-from app.core.scraper_candidates_pdf_config import SECTORES, CIUDADES, HEADLESS_MODE
+from app.core.scraper_candidates_pdf_config import SECTORES, CIUDADES, HEADLESS_MODE, KEYWORDS
 from .browser import search_google_pdfs 
 
 
@@ -25,7 +25,7 @@ client = genai.Client(api_key=os.getenv("GOOGLE_AI_KEY"))
 # claude_client = anthropic.AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 LIMIT_FILE = "daily_limit.json"
-MAX_DAILY_CV = 4
+MAX_DAILY_CV = 6
 
 class AILimitReachedError(Exception):
     pass
@@ -173,29 +173,6 @@ async def extract_pdf_data(pdf_bytes: bytes) -> dict | None:
                     print(f"    Gemini falló por otro error. {gemini_error}")
                     break # Salimos del bucle para ir a Claude
 
-        # --- INTENTO 2: CLAUDE 3.5 HAIKU (SOLO SI GEMINI FALLA DEFINITIVAMENTE) ---
-        # print("    Activando motor de respaldo (Claude)...")
-        # try:
-        #    message = await claude_client.messages.create(
-        #        model="claude-3-5-haiku-20241022",
-        #        max_tokens=500,
-        #        messages=[{
-        #            "role": "user",
-        #            "content": prompt
-        #        }]
-        #    )
-
-        #    clean_json = message.content[0].text.replace('```json', '').replace('```', '').strip()
-        #    parsed_data = json.loads(clean_json)
-
-        #    print("    Extraído con éxito usando: CLAUDE HAIKU")
-        #    if isinstance(parsed_data, list) and len(parsed_data) > 0: return parsed_data[0]
-        #    return parsed_data if parsed_data else None
-
-        # except Exception as claude_error:
-        #    print(f"    Fallo total en Claude (Probablemente sin saldo): {claude_error}")
-        #    return None
-
         return None
 
     except Exception as e:
@@ -203,15 +180,12 @@ async def extract_pdf_data(pdf_bytes: bytes) -> dict | None:
         return None
 
 
-# 3. MOTOR PRINCIPAL
+# 3. MOTOR PRINCIPAL MODIFICADO (Solo Keywords)
 
 async def extract_pdfs_google() -> list[dict]:
     """
-    Orquesta la búsqueda de archivos PDF en Google, la extracción de datos mediante IA
-    y la recopilación de candidatos en una lista plana.
-
-    Returns:
-        list[dict]: Lista de diccionarios con los candidatos extraídos y validados por la IA.
+    Orquesta la búsqueda de archivos PDF en Google basándose únicamente 
+    en las palabras clave del archivo de configuración.
     """
 
     all_extracted_candidates = []
@@ -221,71 +195,75 @@ async def extract_pdfs_google() -> list[dict]:
         print(f"[INFO] Límite diario alcanzado ({MAX_DAILY_CV}/100) para hoy {today_str}. Vuelve mañana.")
         return
 
-    hace_un_ano = (datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d")
-
     print(f"\n--- RECOLECTOR PRO INICIADO: Llevamos {current_count}/{MAX_DAILY_CV} procesados hoy. ---")
 
     async with AsyncSessionLocal() as db:
-        for sector, palabras in SECTORES.items():
-            if current_count >= MAX_DAILY_CV: break
+        
+        # Nos aseguramos de que sea una lista (por si pones solo un string en config)
+        lista_keywords = KEYWORDS if isinstance(KEYWORDS, list) else [KEYWORDS]
 
-            for ciudad in CIUDADES:
+        for keyword in lista_keywords:
+            if current_count >= MAX_DAILY_CV: 
+                break # Rompe el bucle si alcanzamos el límite
+
+            sector = "Búsqueda por Keyword" 
+            
+            # Buscamos la palabra clave estricta, forzando que sea PDF y parezca un CV
+            query = f'filetype:pdf "{keyword}" intitle:cv'
+
+            print(f"\n[BUSCANDO] Palabra clave: {keyword}...")
+
+            # IMPORTANTE: Aquí pasamos el HEADLESS_MODE
+            pdfs_en_memoria = await search_google_pdfs(query, headless=HEADLESS_MODE) 
+
+            if not pdfs_en_memoria:
+                print(f"    No se encontraron resultados en Google para {keyword}.")
+                continue
+
+            for pdf_item in pdfs_en_memoria:
                 if current_count >= MAX_DAILY_CV: break
 
-                keyword = random.choice(palabras)
-                query = f'filetype:pdf "{keyword}" "{ciudad}" "España" after:{hace_un_ano} intitle:cv -Ecuador -Perú -Colombia -México -Argentina -Chile'
+                try:
+                    data = await extract_pdf_data(pdf_item["bytes"])
+                except AILimitReachedError:
+                    print("\n[APAGADO DE EMERGENCIA] La IA ha bloqueado el acceso 3 veces seguidas.")
+                    return 
 
-                print(f"\n[BUSCANDO] Sector: {sector} en {ciudad}...")
+                if data and isinstance(data, dict) and data.get('first_name'):
 
-                # IMPORTANTE: Aquí pasamos el HEADLESS_MODE
-                pdfs_en_memoria = await search_google_pdfs(query, headless=HEADLESS_MODE) 
+                    linkedin = await search_linkedin_url(data.get('first_name'), data.get('last_name'))
 
-                if not pdfs_en_memoria:
-                    continue
+                    f_name = str(data.get('first_name') or 'candidato').replace(' ', '').lower()
+                    l_name = str(data.get('last_name') or 'anonimo').replace(' ', '').lower()
+                    email_inventado = f"{f_name}.{l_name}@scraping.local"
 
-                for pdf_item in pdfs_en_memoria:
-                    if current_count >= MAX_DAILY_CV: break
+                    candidate_data = {
+                        "first_name": data.get('first_name'),
+                        "last_name": data.get('last_name'),
+                        "email": data.get('email') or email_inventado,
+                        "phone": data.get('phone'),
+                        "location": data.get('location'),
+                        "source": f"Google PDF - Keyword: {keyword}",
+                        "experience": str(data.get('experience')) if data.get('experience') else None,
+                        "candidate_url": linkedin,
+                        "cv_url": pdf_item['url'], 
+                        "skills": str(data.get('skills')) if data.get('skills') else None,
+                        "status": "active"
+                    }
 
-                    try:
-                        data = await extract_pdf_data(pdf_item["bytes"])
-                    except AILimitReachedError:
-                        print("\n[APAGADO DE EMERGENCIA] La IA ha bloqueado el acceso 3 veces seguidas.")
-                        return 
+                    all_extracted_candidates.append(candidate_data)
+                    current_count += 1
+                    update_daily_limit(current_count)
+                    guardado = await upsert_scraped_candidate(db, candidate_data)
+                    
+                    if guardado:
+                        print(f"  -> {data.get('first_name')} guardado correctamente")
+                    else:
+                        print(f"Error guardando a {data.get('first_name')} en la BD")
+                        
+                    print(f"  -> {data.get('first_name')} añadido a la lista ({current_count}/{MAX_DAILY_CV})")
 
-                    if data and isinstance(data, dict) and data.get('first_name'):
-
-                        linkedin = await search_linkedin_url(data.get('first_name'), data.get('last_name'))
-
-                        f_name = str(data.get('first_name') or 'candidato').replace(' ', '').lower()
-                        l_name = str(data.get('last_name') or 'anonimo').replace(' ', '').lower()
-                        email_inventado = f"{f_name}.{l_name}@scraping.local"
-
-                        candidate_data = {
-                            "first_name": data.get('first_name'),
-                            "last_name": data.get('last_name'),
-                            "email": data.get('email') or email_inventado,
-                            "phone": data.get('phone'),
-                            "location": data.get('location'),
-                            "source": f"Google PDF - {sector}",
-                            "experience": str(data.get('experience')) if data.get('experience') else None,
-                            "candidate_url": linkedin,
-                            "cv_url": pdf_item['url'], 
-                            "skills": str(data.get('skills')) if data.get('skills') else None,
-                            "status": "active"
-                        }
-
-                        all_extracted_candidates.append(candidate_data)
-                        current_count += 1
-                        update_daily_limit(current_count)
-                        guardado = await upsert_scraped_candidate(db, candidate_data)
-                        if guardado:
-                            print(f"  -> {data.get('first_name')} guardado corrctamente")
-                        else:
-                            print(f"Error guardadon a {data.get('firs_name')} en la BD")
-                            
-                        print(f"  -> {data.get('first_name')} añadido a la lista ({current_count}/{MAX_DAILY_CV})")
-
-                    await asyncio.sleep(5) # Pausa cortés
+                await asyncio.sleep(5) # Pausa cortés
 
         if current_count >= MAX_DAILY_CV:
             print("\n[FIN] Límite de currículums alcanzado por hoy. Buen trabajo.")

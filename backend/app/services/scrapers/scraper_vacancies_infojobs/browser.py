@@ -15,7 +15,8 @@ def get_webdriver() -> Any:
 
     #uc=True activa el motor anti-DatoDome/Cloudflare
     #headless= True lo hace invisible para que funcione en Google Cloud
-    return Driver(uc=True, headless2=True, no_sandbox=True)
+    return Driver(uc=True, headless2=True, 
+                  no_sandbox=True)
 
 def restart_nav(old_driver: Any) -> Any:
     """Resucita el navegador si hay captcha o colapso"""
