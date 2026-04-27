@@ -160,7 +160,9 @@ export const candidatesService = {
     if (!name || name.length < 3) return [];
 
     try {
-      const response = await authFetch(ENDPOINTS.recruitment.candidatos.search(name));
+      const response = await authFetch(
+        ENDPOINTS.recruitment.candidatos.search(name)
+      );
 
       // Si devuelve 404, significa que no hay resultados (según la doc de Alberto)
       if (response.status === 404) {
@@ -175,7 +177,6 @@ export const candidatesService = {
 
       // Mapeamos los datos para que el frontend los entienda con el formato correcto
       return data.map(mapCandidateData);
-
     } catch (error) {
       console.error('Error al buscar candidatos por nombre:', error);
       throw error;

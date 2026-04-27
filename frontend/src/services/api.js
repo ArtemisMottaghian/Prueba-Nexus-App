@@ -59,7 +59,8 @@ export const ENDPOINTS = {
       },
       favorite: (id) => `${BASE_URL}/api/candidates/${id}/favorite`,
       bulkActions: `${BASE_URL}/api/candidates/bulk-actions`,
-      search: (name) => `${BASE_URL}/api/candidates/search?name=${encodeURIComponent(name)}`,
+      search: (name) =>
+        `${BASE_URL}/api/candidates/search?name=${encodeURIComponent(name)}`,
     },
     vacantes: {
       list: `${BASE_URL}/api/vacancies`,
