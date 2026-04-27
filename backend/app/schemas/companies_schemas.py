@@ -72,6 +72,6 @@ class CompanyAssignRequest(BaseModel):
 
 # Devuelve el manager de la empresa
 class CompanyWithManagerResponse(CompanyResponse):
-    manager_by_id: Optional[int] = None
+    managed_by_id: Optional[int] = None
     manager_name: Optional[str] = None
     manager_email: Optional[str] = None
