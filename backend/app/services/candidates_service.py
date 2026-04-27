@@ -170,3 +170,85 @@ async def get_scraper_status(db: AsyncSession) -> CandidateScraperStatusOut:
 
     return CandidateScraperStatusOut(scrapers=result_list)
 
+# ------------------------------------
+# Mapa de normalización de ubicaciones
+# ------------------------------------
+_LOCATION_FIXES = {
+    "a coruña": "A Coruña",
+    "a coruna": "A Coruña",
+    "almeria": "Almería",
+    "cadiz": "Cádiz",
+    "malaga": "Málaga",
+    "jaen": "Jaén",
+    "cordoba": "Córdoba",
+    "leon": "León",
+    "españa": "España",
+    "spain": "España",
+}
+
+def _normalize_location(raw: str) -> str | None:
+    """Extrae la ciudad principal y aplica correcciones ortográficas."""
+    if not raw:
+        return None
+    # Solo el primer fragmento antes de la coma
+    city = raw.split(",")[0].strip()
+    # Eliminar sufijos tipo "(Spain)", "(GMT+1)"
+    city = city.split("(")[0].strip()
+    if not city:
+        return None
+    return _LOCATION_FIXES.get(city.lower(), city)
+
+
+async def get_location_options(db: AsyncSession) -> List[str]:
+    """Devuelve lista de ciudades únicas normalizadas para el filtro del frontend."""
+    from sqlalchemy import distinct
+    query = select(distinct(Candidate.location)).where(Candidate.location.isnot(None))
+    result = await db.execute(query)
+    raw_locations = result.scalars().all()
+
+    normalized: set[str] = set()
+    for loc in raw_locations:
+        city = _normalize_location(loc)
+        if city:
+            normalized.add(city)
+
+    return sorted(normalized)
+
+from sqlalchemy import select, distinct
+
+# Mapa de normalización para casos conocidos
+_LOCATION_FIXES = {
+    "a coruña": "A Coruña",
+    "almeria": "Almería",
+    "almería": "Almería",
+    "cadiz": "Cádiz",
+    "malaga": "Málaga",
+    "jaen": "Jaén",
+    "cordoba": "Córdoba",
+    "leon": "León",
+}
+
+def _normalize_location(raw: str) -> str:
+    """Extrae la ciudad principal y aplica correcciones ortográficas."""
+    if not raw:
+        return None
+    # Quedarnos solo con el primer fragmento antes de la coma
+    city = raw.split(",")[0].strip()
+    # Eliminar sufijos tipo "(Spain)", "(GMT+1)", etc.
+    city = city.split("(")[0].strip()
+    # Corrección ortográfica
+    return _LOCATION_FIXES.get(city.lower(), city)
+
+async def get_location_options(db: AsyncSession) -> list[str]:
+    """Devuelve lista de ubicaciones normalizadas y deduplicadas."""
+    query = select(distinct(Candidate.location)).where(Candidate.location.isnot(None))
+    result = await db.execute(query)
+    raw_locations = result.scalars().all()
+
+    normalized = set()
+    for loc in raw_locations:
+        city = _normalize_location(loc)
+        if city:
+            normalized.add(city)
+
+    return sorted(normalized)

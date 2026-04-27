@@ -63,6 +63,20 @@ async def get_scraper_status(db: AsyncSession = Depends(get_db)):
 
 
 # --------------------
+# UBICACIONES para filtro
+# GET /api/candidates/locations
+# --------------------
+
+@router.get("/locations", response_model=List[str])
+async def get_location_options(db: AsyncSession = Depends(get_db)):
+    """Lista de ciudades únicas normalizadas para el filtro del frontend."""
+    return await candidates_service.get_location_options(db)
+
+
+
+
+
+# --------------------
 # obtener candidato
 # GET /api/candidates/{candidate_id}
 # --------------------
