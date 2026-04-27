@@ -95,6 +95,26 @@ async def mark_favorite(
 
 
 # -----------------
+# Actualizar estado de una vacante
+# PATCH /api/vacancies/{vacancy_id}/status
+# -----------------
+@router.patch("/{vacancy_id}/status", response_model=MessageResponse)
+async def update_vacancy_status(
+    vacancy_id: int, body: StatusRequest, db: AsyncSession = Depends(get_db)
+):
+    vacancy = await vacancies_service.get_vacancy_by_id(db, vacancy_id)
+    if vacancy is None:
+        raise HTTPException(status_code=404, detail="La vacante no existe")
+
+    updated = await vacancies_service.update_vacancy_status(db, vacancy_id, body.status)
+    if not updated:
+        raise HTTPException(status_code=400, detail="No se pudo actualizar el estado")
+
+    return {"message": f"Estado actualizado a '{body.status}'"}
+
+
+
+# -----------------
 # Acciones masivas sobre vacantes (cambiar estado o eliminar)
 # POST /api/vacancies/bulk-actions
 # -----------------
@@ -135,11 +155,6 @@ async def assign_hr_to_vacancies(
     return {
         "message": f"Se han asignado {assgined_count} vacantes al gestor de RRHH correctamente"
     }
-
-    await vacancies_service.update_vacancy_status(db, vacancy_id, body.status)
-    return {"message": f"Estado actualizado a '{body.status}'"}
-
-
 
 # -----------------
 # Obtener vacantes asignadas a un HR específico
