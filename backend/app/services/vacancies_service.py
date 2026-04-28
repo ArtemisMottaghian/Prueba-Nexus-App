@@ -69,14 +69,14 @@ async def get_vacancies_filtered(
     except Exception as e:
         raise e
 
-async def set_favorite(db: AsyncSession, vacancy_id: int, favorite: bool) -> None:
+async def set_favourite(db: AsyncSession, vacancy_id: int, favourite: bool) -> None:
     """Marca o desmarca una vacante como favorita."""
     try:
         query = select(JobOffer).where(JobOffer.id == vacancy_id)
         result = await db.execute(query)
         vacancy = result.scalar_one_or_none()
         if vacancy:
-            vacancy.is_favorite = favorite
+            vacancy.is_favourite = favourite
             await db.commit()
     except Exception as e:
         raise e
@@ -312,7 +312,7 @@ async def get_suitable_candidates(db: AsyncSession, vacancy_id: int) -> list[dic
             "status": c.status.value if hasattr(c.status, "value") else str(c.status),
             "experience": c.experience or "Consultar CV",
             "email": c.email,
-            "is_favorite": bool(c.is_favorite),
+            "is_favourite": bool(c.is_favourite),
             "verified": bool(c.verified),
             "match_score": score,
             "application_status": apps_by_candidate.get(c.id),

@@ -57,10 +57,11 @@ export const ENDPOINTS = {
         const query = new URLSearchParams(params).toString();
         return `${BASE_URL}/api/candidates/filter/list?${query}`;
       },
-      favorite: (id) => `${BASE_URL}/api/candidates/${id}/favorite`,
+      favourite: (id) => `${BASE_URL}/api/candidates/${id}/favourite`,
       bulkActions: `${BASE_URL}/api/candidates/bulk-actions`,
       search: (name) =>
         `${BASE_URL}/api/candidates/search?name=${encodeURIComponent(name)}`,
+      locations: `${BASE_URL}/api/candidates/locations`,
     },
     vacantes: {
       list: `${BASE_URL}/api/vacancies`,
@@ -70,7 +71,7 @@ export const ENDPOINTS = {
         return `${BASE_URL}/api/vacancies/filter/list?${query}`;
       },
       detail: (id) => `${BASE_URL}/api/vacancies/${id}`,
-      favorite: (id) => `${BASE_URL}/api/vacancies/${id}/favorite`,
+      favourite: (id) => `${BASE_URL}/api/vacancies/${id}/favourite`,
       bulkActions: `${BASE_URL}/api/vacancies/bulk-actions`,
       updateStatus: (id) => `${BASE_URL}/api/vacancies/${id}/status`,
     },
