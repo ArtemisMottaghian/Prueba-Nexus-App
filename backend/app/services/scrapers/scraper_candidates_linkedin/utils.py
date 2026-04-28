@@ -1,6 +1,6 @@
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.candidates_model import Candidate
+from models.candidates_model import Candidate
 from sqlalchemy import func
 
 async def upsert_scraped_candidate(db: AsyncSession, data: dict):
@@ -23,7 +23,7 @@ async def upsert_scraped_candidate(db: AsyncSession, data: dict):
             full_name_clean = "candidato_desconocido"
             
         email = f"{full_name_clean}@scraping.local"
-        print(f"Aviso: El candidato no tenia email. Generando email estructurado: {email}")
+        print(f"Aviso: El candidato no tenía email. Generando email estructurado: {email}")
 
     try:
         print(f"Intentando guardar a {data.get('first_name', 'Desconocido')} en la BD...")
@@ -67,6 +67,5 @@ async def upsert_scraped_candidate(db: AsyncSession, data: dict):
 
     except Exception as e:
         await db.rollback()
-        print(f"Error critico al guardar en la BD para {email}: {str(e)}\n")
+        print(f"Error crítico al guardar en la BD para {email}: {str(e)}\n")
         return False
-    

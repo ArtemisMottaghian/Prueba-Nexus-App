@@ -16,45 +16,48 @@ USER_AGENTS = [
 async def get_browser_context(headless: bool = False):
     """
     Inicializa y configura una instancia del navegador utilizando Playwright.
-    Aplica configuraciones para simular un entorno humano e inyecta la cookie de sesión.
+    NUEVO: Utiliza un contexto persistente para guardar la sesión y parecer más humano.
     """
-    print("Iniciando navegador con IP directa (sin proxy configurado)")
+    print("Iniciando navegador con contexto persistente...")
 
     try:
         pw = await async_playwright().start()
+        
+        # NUEVO: Ruta local donde se guardará la sesión del navegador
+        user_data_dir = "./linkedin_profile_session"
+        selected_user_agent = random.choice(USER_AGENTS)
 
-        browser = await pw.chromium.launch(
-            headless = headless,
-            args = [
+        # NUEVO: Usamos launch_persistent_context en lugar de launch()
+        # Esto unifica el navegador y el contexto, manteniendo vivas las cookies.
+        context = await pw.chromium.launch_persistent_context(
+            user_data_dir=user_data_dir,
+            headless=headless,
+            args=[
                 "--disable-blink-features=AutomationControlled",
                 "--disable-features=IsolateOrigins,site-per-process", 
                 "--no-sandbox",
                 "--disable-dev-shm-usage"
-            ]
-        )
-
-        selected_user_agent = random.choice(USER_AGENTS)
-
-        context = await browser.new_context(
-            user_agent = selected_user_agent,
-            viewport = {"width": 1920, "height": 1080}
+            ],
+            user_agent=selected_user_agent,
+            viewport={"width": 1920, "height": 1080}
         )
 
         li_at_cookie = os.getenv("LINKEDIN_SESSION_COOKIE")
 
         if li_at_cookie and li_at_cookie != "dummy_cookie":
+            # Inyectamos la cookie. Como es persistente, las próximas veces ya estará aquí.
             await context.add_cookies([{
                 'name': 'li_at',
                 'value': li_at_cookie,
                 'domain': '.linkedin.com',
                 'path': '/'
             }])
-            print("Cookie de LinkedIn inyectada correctamente")
+            print("Cookie de LinkedIn inyectada/actualizada en la sesión persistente")
         else:
             print("El script no está encontrando tu cookie en el .env")
 
-        return pw, browser, context
+        # Al usar persistent_context, no devolvemos el objeto 'browser', solo el context
+        return pw, None, context
     except Exception as e:
         print(f"Error al inicializar el navegador: {e}")
         return None, None, None
-    

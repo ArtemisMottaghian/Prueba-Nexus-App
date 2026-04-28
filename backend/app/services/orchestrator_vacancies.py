@@ -40,9 +40,9 @@ async def gather_raw_offers() -> list[dict]:
 
     # Lista de scrapers a ejecutar (Comenta los que no quieras usar)
     scrapers = [
-        #("adzuna", extract_adzuna),
+        ("adzuna", extract_adzuna),
         ("linkedin", extract_linked),
-        #("infojobs", extract_infojobs),
+        ("infojobs", extract_infojobs),
     ]
 
     for name, scraper_func in scrapers:
