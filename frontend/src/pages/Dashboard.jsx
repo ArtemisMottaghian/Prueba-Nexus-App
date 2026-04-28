@@ -3,6 +3,7 @@ import SourceStatus from '../components/dashboard/SourceStatus';
 import CandidateScraperStatus from '../components/dashboard/CandidateScraperStatus';
 import StatsPanel from '../components/dashboard/StatsPanel';
 import DashboardQuickCards from '../components/dashboard/DashboardQuickCards';
+import CalendarWidget from '../components/dashboard/CalendarWidget';
 import { ENDPOINTS, authFetch } from '../services/api';
 import '../components/dashboard/DashboardQuickCards.css';
 
@@ -14,7 +15,7 @@ function getDateRangeForPeriod(periodType) {
   } else if (periodType === 'week') {
     start.setDate(end.getDate() - 7);
     start.setHours(0, 0, 0, 0);
-  } else {
+  } else if (periodType === 'month') {
     start.setDate(end.getDate() - 30);
     start.setHours(0, 0, 0, 0);
   }
@@ -39,40 +40,30 @@ export default function Dashboard() {
       try {
         setLoadingStats(true);
         const { from, to } = getDateRangeForPeriod(periodType);
-        const response = await authFetch(ENDPOINTS.metrics.leadStats(from, to));
-        if (!response.ok) {
-          throw new Error(`Failed to load stats (${response.status})`);
-        }
 
-        const contentType = response.headers.get('content-type') || '';
-        if (!contentType.includes('application/json')) {
-          const text = await response.text();
-          console.error(
-            'Metrics API did not return JSON. Content-Type:',
-            contentType,
-            text.slice(0, 500)
-          );
-          throw new Error('Non-JSON response from /api/metrics');
-        }
+        // Llamada a la API de métricas pasando el rango de fechas
+        const response = await authFetch(ENDPOINTS.metrics.leadStats(from, to));
+
+        if (!response.ok) throw new Error('Error al cargar estadísticas');
 
         const data = await response.json();
-        if (!isMounted) return;
 
-        setStats({
-          newLeads: { value: data.new ?? 0, change: data.newChange ?? 0 },
-          contacted: {
-            value: data.contacted ?? 0,
-            change: data.contactedChange ?? 0,
-          },
-          inProgress: {
-            value: data.inProgress ?? 0,
-            change: data.inProgressChange ?? 0,
-          },
-        });
+        if (isMounted) {
+          setStats({
+            newLeads: { value: data.new ?? 0, change: data.newChange ?? 0 },
+            contacted: {
+              value: data.contacted ?? 0,
+              change: data.contactedChange ?? 0,
+            },
+            inProgress: {
+              value: data.inProgress ?? 0,
+              change: data.inProgressChange ?? 0,
+            },
+          });
+        }
       } catch (error) {
-        console.error('Could not load dashboard stats:', error);
-        if (!isMounted) return;
-        setStats(EMPTY_STATS);
+        console.error('Error en Dashboard:', error);
+        if (isMounted) setStats(EMPTY_STATS);
       } finally {
         if (isMounted) setLoadingStats(false);
       }
@@ -85,58 +76,52 @@ export default function Dashboard() {
   }, [periodType]);
 
   return (
-    <>
+    <div
+      className="dashboard-wrapper"
+      style={{ padding: '20px', maxWidth: '1600px', margin: '0 auto' }}
+    >
+      {/* 1. Selector de Periodo (Día, Semana, Mes) */}
       <div className="mb-4 dashboard-page-intro">
         <div
           className="period-segment"
           role="group"
           aria-label="Filtro de periodo"
         >
-          <button
-            type="button"
-            className={`period-segment__btn ${
-              periodType === 'day' ? 'period-segment__btn--active' : ''
-            }`}
-            onClick={() => setPeriodType('day')}
-            disabled={loadingStats}
-            aria-pressed={periodType === 'day'}
-          >
-            Día
-          </button>
-          <button
-            type="button"
-            className={`period-segment__btn ${
-              periodType === 'week' ? 'period-segment__btn--active' : ''
-            }`}
-            onClick={() => setPeriodType('week')}
-            disabled={loadingStats}
-            aria-pressed={periodType === 'week'}
-          >
-            Semana
-          </button>
-          <button
-            type="button"
-            className={`period-segment__btn ${
-              periodType === 'month' ? 'period-segment__btn--active' : ''
-            }`}
-            onClick={() => setPeriodType('month')}
-            disabled={loadingStats}
-            aria-pressed={periodType === 'month'}
-          >
-            Mes
-          </button>
+          {['day', 'week', 'month'].map((p) => (
+            <button
+              key={p}
+              type="button"
+              className={`period-segment__btn ${periodType === p ? 'period-segment__btn--active' : ''}`}
+              onClick={() => setPeriodType(p)}
+              disabled={loadingStats}
+            >
+              {p === 'day' ? 'Día' : p === 'week' ? 'Semana' : 'Mes'}
+            </button>
+          ))}
         </div>
       </div>
 
+      {/* 2. Tarjetas de resumen rápido (KPIs) */}
       <DashboardQuickCards
         stats={stats}
         periodType={periodType}
         loading={loadingStats}
       />
 
-      <SourceStatus />
-      <CandidateScraperStatus />
-      <StatsPanel stats={stats} />
-    </>
+      {/* 3. Sistema de Rejilla Principal */}
+      <div className="dashboard-grid-system">
+        {/* Columna Izquierda: Estados de scraping y paneles detallados */}
+        <div className="dashboard-main-content">
+          <SourceStatus />
+          <CandidateScraperStatus />
+          <StatsPanel stats={stats} />
+        </div>
+
+        {/* Columna Derecha / Lateral: Widget de Calendario Híbrido */}
+        <aside className="dashboard-sidebar">
+          <CalendarWidget />
+        </aside>
+      </div>
+    </div>
   );
 }
