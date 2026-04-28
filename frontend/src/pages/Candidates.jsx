@@ -39,6 +39,10 @@ export default function Candidates() {
 
   const [paginaActual, setPaginaActual] = useState(1);
 
+  // NUEVOS ESTADOS: Para los botones de favoritos y descartados
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [showDescartadas, setShowDescartadas] = useState(false);
+
   const apiListQuery = useMemo(
     () =>
       filtersToApiQuery({
@@ -131,6 +135,8 @@ export default function Candidates() {
       experiencia: 'All',
       verified: 'All',
     });
+    setShowFavoritesOnly(false);
+    setShowDescartadas(false);
   };
 
   const handleVerify = async (candidateId) => {
@@ -186,7 +192,19 @@ export default function Candidates() {
     return match ? parseInt(match[0], 10) : 0;
   };
 
+  // --- LÓGICA DE FILTRADO PRINCIPAL ---
   const filteredCandidates = candidates.filter((candidate) => {
+    // 1. Filtro de Descartados (Oculta por defecto los descartados a menos que se pulse el botón)
+    const safeStatus = (candidate.status || '').toLowerCase().trim();
+    const arrDiscard = ['descartada', 'discarded', 'rejected', 'descartado'];
+    if (filters.status === 'All') {
+      if (!showDescartadas && arrDiscard.includes(safeStatus)) return false;
+    }
+
+    // 2. Filtro de Favoritos
+    if (showFavoritesOnly && !candidate.isFavorite) return false;
+
+    // 3. Resto de filtros...
     const term = (filters.search || '').trim().toLowerCase();
     const matchSearch =
       !term ||
@@ -225,7 +243,7 @@ export default function Candidates() {
   // Reset página al cambiar filtros
   useEffect(() => {
     setPaginaActual(1);
-  }, [filters]);
+  }, [filters, showFavoritesOnly, showDescartadas]);
 
   // Cálculo de paginación
   const totalPaginas = Math.max(
@@ -297,6 +315,34 @@ export default function Candidates() {
           <div className="text-muted small">
             Mostrando {filteredCandidates.length} candidatos de{' '}
             {candidates.length}
+          </div>
+
+          <div className="d-flex gap-2">
+            <button
+              className={`btn btn-sm ${showDescartadas ? 'btn-danger' : 'btn-outline-secondary'}`}
+              onClick={() => {
+                setShowDescartadas(!showDescartadas);
+                setShowFavoritesOnly(false);
+              }}
+              title="Los candidatos descartados están ocultos por defecto"
+            >
+              <i
+                className={`bi ${showDescartadas ? 'bi-eye-fill' : 'bi-eye-slash'} me-2`}
+              ></i>
+              {showDescartadas ? 'Ocultando activos' : 'Ver descartados'}
+            </button>
+            <button
+              className={`btn btn-sm ${showFavoritesOnly ? 'btn-warning' : 'btn-outline-secondary'}`}
+              onClick={() => {
+                setShowFavoritesOnly(!showFavoritesOnly);
+                setShowDescartadas(false);
+              }}
+            >
+              <i
+                className={`bi ${showFavoritesOnly ? 'bi-star-fill' : 'bi-star'} me-2`}
+              ></i>
+              Solo Favoritos
+            </button>
           </div>
         </div>
       )}

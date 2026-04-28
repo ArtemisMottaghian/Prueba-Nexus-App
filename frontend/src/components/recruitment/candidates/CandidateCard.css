@@ -72,3 +72,19 @@
   justify-content: space-between;
   align-items: center;
 }
+@media (max-width: 480px) {
+  .results-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .results-title {
+    font-size: 1.2rem;
+  }
+  
+  .view-toggle {
+    width: auto; 
+    align-self: flex-start;
+  }
+}

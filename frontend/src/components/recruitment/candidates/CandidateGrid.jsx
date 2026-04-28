@@ -2,6 +2,7 @@ import { useState } from 'react';
 import CandidateCard from './CandidateCard';
 import CandidateModal from './CandidateModal';
 import './CandidateGrid.css';
+
 export default function CandidateGrid({
   candidates,
   activeFilters,
@@ -36,7 +37,7 @@ export default function CandidateGrid({
     : candidates;
 
   return (
-    <>
+    <div className="candidate-grid-wrapper">
       <div className="results-header mb-4 mt-4">
         <h2 className="results-title">
           <span className="count-highlight">{filteredCandidates.length}</span>{' '}
@@ -47,12 +48,14 @@ export default function CandidateGrid({
           <button
             className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
             onClick={() => setViewMode('grid')}
+            title="Vista cuadrícula"
           >
             <i className="bi bi-grid-3x3-gap"></i>
           </button>
           <button
             className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
             onClick={() => setViewMode('list')}
+            title="Vista lista"
           >
             <i className="bi bi-list-ul"></i>
           </button>
@@ -60,10 +63,11 @@ export default function CandidateGrid({
       </div>
 
       <div
-        className={viewMode === 'grid' ? 'vacancies-grid' : 'vacancies-list'}
+        className={viewMode === 'grid' ? 'candidates-grid' : 'candidates-list'}
       >
         {filteredCandidates.length === 0 ? (
-          <div className="w-100 text-center text-muted py-5">
+          <div className="empty-state-container">
+            <i className="bi bi-search display-4 d-block mb-3"></i>
             <p>No se encontraron candidatos con estos filtros.</p>
           </div>
         ) : (
@@ -71,6 +75,7 @@ export default function CandidateGrid({
             <div
               key={candidate.id}
               onClick={() => setSelectedCandidate(candidate)}
+              className="candidate-card-wrapper"
             >
               <CandidateCard
                 candidate={candidate}
@@ -99,6 +104,6 @@ export default function CandidateGrid({
           onVerify={onVerify}
         />
       )}
-    </>
+    </div>
   );
 }
