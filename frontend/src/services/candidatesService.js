@@ -10,7 +10,7 @@ const mapCandidateData = (c) => ({
   experience: c.experience || 'N/A',
   email: c.email || null,
   isAvailable: c.is_available ?? c.isAvailable ?? false,
-  isFavorite: c.is_favorite ?? c.isFavorite ?? false,
+  isFavorite: c.is_favourite ?? c.isFavourite ?? false,
   verified: c.verified ?? false,
   time: c.created_at
     ? new Date(c.created_at).toLocaleDateString()
@@ -104,14 +104,14 @@ export const candidatesService = {
     }
   },
 
-  toggleFavorite: async (id, isFavorite) => {
+  toggleFavorite: async (id, isFavourite) => {
     try {
       const response = await authFetch(
-        ENDPOINTS.recruitment.candidatos.favorite(id),
+        ENDPOINTS.recruitment.candidatos.favourite(id),
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ favorite: isFavorite }),
+          body: JSON.stringify({ favourite: isFavourite }),
         }
       );
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);

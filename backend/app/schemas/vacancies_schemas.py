@@ -15,7 +15,7 @@ class VacancySummary(BaseModel):
     published_at: Optional[datetime] = None
     portal_id: Optional[int] = None
     status: OfferStatus
-    is_favorite: bool = False
+    is_favourite: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -48,8 +48,8 @@ class VacancyFiltered(VacancySummary):
     sector: Optional[str] = None
 
 # Schema para marcar como favorita
-class FavoriteRequest(BaseModel):
-    favorite: bool
+class FavouriteRequest(BaseModel):
+    favourite: bool
 
 # Schema para acciones masivas
 class BulkActionRequest(BaseModel):
@@ -77,7 +77,7 @@ class CandidateMatchOut(BaseModel):
     status: str
     experience: Optional[str]
     email: Optional[str]
-    is_favorite: bool
+    is_favourite: bool
     verifies: bool
     match_score: int # 0-100
     application_status: Optional[str] # None si no hay aplicacion todavia

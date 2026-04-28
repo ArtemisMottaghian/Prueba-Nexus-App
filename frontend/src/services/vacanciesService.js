@@ -34,7 +34,7 @@ const mapVacancyData = (v) => {
     location: v.location || 'No especificada',
     status: translatedStatus,
     source: getPortalName(v.portal_id),
-    isFavorite: v.is_favorite || false,
+    isFavourite: v.is_favourite || false,
     time: v.published_at
       ? new Date(v.published_at).toLocaleDateString()
       : 'Sin fecha',
@@ -104,14 +104,14 @@ export const vacanciesService = {
     }
   },
 
-  toggleFavorite: async (id, isFavorite) => {
+  toggleFavorite: async (id, isFavourite) => {
     try {
       const response = await authFetch(
-        ENDPOINTS.recruitment.vacantes.favorite(id),
+        ENDPOINTS.recruitment.vacantes.favourite(id),
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ favorite: isFavorite }),
+          body: JSON.stringify({ favourite: isFavourite }),
         }
       );
 
