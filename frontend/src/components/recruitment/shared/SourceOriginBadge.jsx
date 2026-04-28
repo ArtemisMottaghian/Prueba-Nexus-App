@@ -1,25 +1,70 @@
 import './SourceOriginBadge.css';
 
-// Minúsculas y sin tildes para reconocer bien el portal
 function normalizeSource(source) {
   return String(source ?? '')
     .trim()
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
+    .replace(/[̀-ͯ]/g, '');
 }
 
-// Por ahora solo mostramos badge para InfoJobs; el resto, nada
+const SOURCE_CONFIG = {
+  infojobs: {
+    label: 'InfoJobs',
+    icon: 'bi-briefcase',
+    className: 'origin-badge--infojobs',
+  },
+  linkedin: {
+    label: 'LinkedIn',
+    icon: 'bi-linkedin',
+    className: 'origin-badge--linkedin',
+  },
+  adzuna: {
+    label: 'Adzuna',
+    icon: 'bi-search',
+    className: 'origin-badge--adzuna',
+  },
+  'github api': {
+    label: 'GitHub',
+    icon: 'bi-github',
+    className: 'origin-badge--github',
+  },
+  github: {
+    label: 'GitHub',
+    icon: 'bi-github',
+    className: 'origin-badge--github',
+  },
+  'carga manual': {
+    label: 'Manual',
+    icon: 'bi-pencil-square',
+    className: 'origin-badge--manual',
+  },
+  manual: {
+    label: 'Manual',
+    icon: 'bi-pencil-square',
+    className: 'origin-badge--manual',
+  },
+};
+
 export default function SourceOriginBadge({ source }) {
   const key = normalizeSource(source);
-  if (key !== 'infojobs') return null;
+  const config = SOURCE_CONFIG[key];
 
-  const label = source?.trim() ? source : 'InfoJobs';
+  if (!config) {
+    // Origen desconocido pero existente — mostrar genérico
+    if (!source) return null;
+    return (
+      <div className="origin-badge origin-badge--generic">
+        <i className="bi bi-window-stack" aria-hidden />
+        <span>{source}</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="origin-badge">
-      <i className="bi bi-window-stack" aria-hidden />
-      <span>{label}</span>
+    <div className={`origin-badge ${config.className}`}>
+      <i className={`bi ${config.icon}`} aria-hidden />
+      <span>{config.label}</span>
     </div>
   );
 }
