@@ -104,8 +104,6 @@ export default function VacancyGrid({
                 onSelect={() => onSelectVacancy(job.id)}
                 onUpdateStatus={onUpdateJobStatus}
                 onToggleFavorite={onToggleFavorite}
-                onSmartMatch={(ev) => handleSmartMatch(ev, job)}
-                isMatching={isMatching && activeMatchingId === job.id}
               />
             </div>
           ))
@@ -121,6 +119,8 @@ export default function VacancyGrid({
           onAsignarVacante={onAsignarVacante}
           currentUser={currentUser}
           isNegocio={isNegocio}
+          onSmartMatch={(ev) => handleSmartMatch(ev, selectedJob)}
+          isMatching={isMatching && activeMatchingId === selectedJob.id}
         />
       )}
 

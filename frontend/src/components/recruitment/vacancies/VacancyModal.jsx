@@ -61,6 +61,8 @@ export default function VacancyModal({
   onAsignarVacante,
   currentUser,
   isNegocio,
+  onSmartMatch,
+  isMatching,
 }) {
   const { hasRole } = useAuth();
   const isReclutador = hasRole('hr_manager') || hasRole('reclutador');
@@ -451,66 +453,96 @@ export default function VacancyModal({
               </div>
 
               {/* Tabs */}
-              <ul className="nav nav-tabs mb-4">
-                <li className="nav-item">
-                  <button
-                    className={`nav-link ${activeTab === 'detalles' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('detalles')}
-                  >
-                    <i className="bi bi-info-circle me-2"></i>Detalles
-                  </button>
-                </li>
-                {!isReclutador && (
+              <div className="d-flex justify-content-between align-items-center border-bottom mb-4">
+                <ul className="nav nav-tabs border-bottom-0 mb-0">
                   <li className="nav-item">
                     <button
-                      className={`nav-link ${activeTab === 'contacto' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('contacto')}
-                      title="Contacto de la empresa para esta vacante"
+                      className={`nav-link ${activeTab === 'detalles' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('detalles')}
                     >
-                      <i className="bi bi-person-lines-fill me-2"></i>Contacto
+                      <i className="bi bi-info-circle me-2"></i>Detalles
                     </button>
                   </li>
-                )}
-                {!isReclutador && (
+                  {!isReclutador && (
+                    <li className="nav-item">
+                      <button
+                        className={`nav-link ${activeTab === 'contacto' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('contacto')}
+                        title="Contacto de la empresa para esta vacante"
+                      >
+                        <i className="bi bi-person-lines-fill me-2"></i>Contacto
+                      </button>
+                    </li>
+                  )}
+                  {!isReclutador && (
+                    <li className="nav-item">
+                      <button
+                        className={`nav-link ${activeTab === 'crm' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('crm')}
+                        title="Seguimiento comercial vinculado a la empresa"
+                      >
+                        <i className="bi bi-building-check me-2"></i>
+                        CRM Empresa
+                      </button>
+                    </li>
+                  )}
+                  {!isReclutador && (
+                    <li className="nav-item">
+                      <button
+                        className={`nav-link ${activeTab === 'seguimiento' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('seguimiento')}
+                      >
+                        <i className="bi bi-list-check me-2"></i>Actividad
+                        vacante
+                      </button>
+                    </li>
+                  )}
                   <li className="nav-item">
                     <button
-                      className={`nav-link ${activeTab === 'crm' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('crm')}
-                      title="Seguimiento comercial vinculado a la empresa"
+                      className={`nav-link ${activeTab === 'candidatos' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('candidatos')}
                     >
-                      <i className="bi bi-building-check me-2"></i>
-                      CRM Empresa
+                      <i className="bi bi-people-fill me-2"></i>Seguimiento
+                      candidato
                     </button>
                   </li>
-                )}
-                {!isReclutador && (
                   <li className="nav-item">
                     <button
-                      className={`nav-link ${activeTab === 'seguimiento' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('seguimiento')}
+                      className={`nav-link ${activeTab === 'documentos' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('documentos')}
                     >
-                      <i className="bi bi-list-check me-2"></i>Actividad vacante
+                      <i className="bi bi-file-earmark me-2"></i>Documentos
                     </button>
                   </li>
-                )}
-                <li className="nav-item">
+                </ul>
+
+                <div className="pb-2 pe-2">
                   <button
-                    className={`nav-link ${activeTab === 'candidatos' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('candidatos')}
+                    className={`btn btn-primary-custom btn-sm ${isMatching ? 'disabled' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onSmartMatch) onSmartMatch(e);
+                    }}
+                    disabled={isMatching}
+                    title="Smart Match con IA"
                   >
-                    <i className="bi bi-people-fill me-2"></i>Seguimiento
-                    candidato
+                    {isMatching ? (
+                      <>
+                        <span
+                          className="spinner-border spinner-border-sm me-2"
+                          role="status"
+                          aria-hidden="true"
+                        ></span>
+                        Buscando...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-stars me-2"></i>Smart Match IA
+                      </>
+                    )}
                   </button>
-                </li>
-                <li className="nav-item">
-                  <button
-                    className={`nav-link ${activeTab === 'documentos' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('documentos')}
-                  >
-                    <i className="bi bi-file-earmark me-2"></i>Documentos
-                  </button>
-                </li>
-              </ul>
+                </div>
+              </div>
 
               <div className="tab-content">
                 {activeTab === 'detalles' && (
