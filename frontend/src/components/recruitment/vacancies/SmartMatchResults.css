@@ -1,11 +1,12 @@
 /* ===================================================
    SmartMatchResults.css — Modal NexusAI
+   Usa variables de Bootstrap para respetar modo claro/oscuro
    =================================================== */
 
 .smart-match-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 10, 15, 0.8);
+  background: rgba(10, 10, 15, 0.7);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -18,55 +19,60 @@
   width: 100%;
   max-width: 550px;
   max-height: 85vh;
-  background: #13131f;
-  border: 1px solid rgba(124, 58, 237, 0.3);
+  background: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
   border-radius: 20px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
   animation: modalEmerger 0.3s ease-out;
 }
 
 @keyframes modalEmerger {
   from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 .smart-match-header {
   padding: 1.5rem;
-  background: rgba(124, 58, 237, 0.05);
+  background: rgba(124, 58, 237, 0.07);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--bs-border-color);
 }
 
 .header-title {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: #00d4ff;
+  color: #7c3aed;
+}
+
+.header-title i {
+  font-size: 1.3rem;
 }
 
 .header-title h3 {
   margin: 0;
   font-size: 1.1rem;
   font-weight: 700;
+  color: var(--bs-body-color);
 }
 
-/* Botón cerrar X (Sin gris) */
+/* Botón cerrar X */
 .btn-close-custom {
   all: unset;
   cursor: pointer;
-  color: #71717a;
+  color: var(--bs-secondary-color, #6b7280);
   font-size: 1.2rem;
   padding: 5px;
   transition: color 0.2s;
 }
 
 .btn-close-custom:hover {
-  color: #f87171;
+  color: #ef4444;
 }
 
 .smart-match-body {
@@ -75,15 +81,15 @@
 }
 
 .match-subtitle {
-  color: #a1a1aa;
+  color: var(--bs-secondary-color);
   font-size: 0.9rem;
   margin-bottom: 1.5rem;
 }
 
 /* Tarjeta de Candidato IA */
 .match-candidate-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--bs-tertiary-bg, rgba(0,0,0,0.03));
+  border: 1px solid var(--bs-border-color);
   border-radius: 12px;
   padding: 1rem;
   margin-bottom: 1rem;
@@ -94,7 +100,7 @@
 }
 
 .match-candidate-card:hover {
-  border-color: rgba(0, 212, 255, 0.3);
+  border-color: rgba(124, 58, 237, 0.4);
 }
 
 .candidate-info {
@@ -104,7 +110,7 @@
 }
 
 .candidate-name {
-  color: #ffffff;
+  color: var(--bs-body-color);
   font-weight: 600;
   font-size: 1rem;
 }
@@ -124,35 +130,35 @@
 .score-circle {
   width: 45px;
   height: 45px;
-  border: 2px solid #00d4ff;
+  border: 2px solid #7c3aed;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 212, 255, 0.1);
+  background: rgba(124, 58, 237, 0.1);
 }
 
 .score-value {
   font-size: 0.85rem;
   font-weight: 700;
-  color: #00d4ff;
+  color: #7c3aed;
 }
 
 .score-label {
   font-size: 0.65rem;
-  color: #71717a;
+  color: var(--bs-secondary-color);
   display: block;
   margin-top: 4px;
 }
 
-/* Botón Ver Perfil (Sin gris) */
+/* Botón Ver Perfil */
 .btn-view-profile-simple {
   all: unset;
   cursor: pointer;
   padding: 6px 12px;
   border: 1px solid rgba(124, 58, 237, 0.4);
   border-radius: 6px;
-  color: #ffffff;
+  color: var(--bs-body-color);
   font-size: 0.8rem;
   transition: all 0.2s;
 }
@@ -160,27 +166,49 @@
 .btn-view-profile-simple:hover {
   background: #7c3aed;
   border-color: #7c3aed;
+  color: #ffffff;
 }
 
 /* Estado Vacío Robot */
 .empty-match-container {
   text-align: center;
-  padding: 2rem 0;
+  padding: 2rem 1rem;
 }
 
 .empty-icon-wrapper {
   font-size: 3rem;
-  color: rgba(124, 58, 237, 0.3);
+  color: rgba(124, 58, 237, 0.4);
   margin-bottom: 1rem;
+}
+
+.empty-match-container h4 {
+  color: var(--bs-body-color);
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.empty-match-container p {
+  color: var(--bs-secondary-color);
+  font-size: 0.95rem;
+  max-width: 360px;
+  margin: 0 auto 1.5rem;
+  line-height: 1.6;
 }
 
 .btn-simple-nexus {
   all: unset;
   cursor: pointer;
-  margin-top: 1rem;
-  padding: 8px 24px;
+  display: inline-block;
+  padding: 10px 28px;
   background: #7c3aed;
-  color: white;
-  border-radius: 8px;
+  color: #ffffff;
+  border-radius: 10px;
   font-weight: 600;
+  font-size: 0.95rem;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.btn-simple-nexus:hover {
+  background: #6d28d9;
+  transform: translateY(-1px);
 }
