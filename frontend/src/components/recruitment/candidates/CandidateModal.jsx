@@ -34,11 +34,17 @@ export default function CandidateModal({
                 <h2 className="modal-title">{candidate.name}</h2>
                 <div className="d-flex align-items-center gap-2 mt-1 flex-wrap">
                   <span className="modal-subtitle">{candidate.specialty}</span>
+                  {/* FIX 1: Tag Disponible ajustado al contenido */}
                   {candidate.isAvailable && (
-                    <span className="badge badge-client-sm">Disponible</span>
+                    <span
+                      className="badge badge-client-sm d-inline-flex align-items-center"
+                      style={{ width: 'fit-content', whiteSpace: 'nowrap' }}
+                    >
+                      Disponible
+                    </span>
                   )}
                   {candidate.verified && (
-                    <span className="badge bg-success-subtle text-success">
+                    <span className="badge bg-success-subtle text-success d-inline-flex align-items-center">
                       <i className="bi bi-patch-check-fill me-1" />
                       Verificado
                     </span>
@@ -122,8 +128,9 @@ export default function CandidateModal({
                     <div className="detail-section">
                       <h4 className="section-title">Información General</h4>
                       <div className="detail-grid">
-                        <div className="detail-field">
-                          <div className="detail-icon icon-blue">
+                        {/* Campo Ubicación */}
+                        <div className="detail-field d-flex align-items-start gap-3">
+                          <div className="detail-icon icon-blue flex-shrink-0 mt-1">
                             <i className="bi bi-geo-alt"></i>
                           </div>
                           <div>
@@ -133,13 +140,18 @@ export default function CandidateModal({
                             </div>
                           </div>
                         </div>
-                        <div className="detail-field">
-                          <div className="detail-icon icon-purple">
+
+                        {/* FIX 2: Campo Experiencia con Icono protegido y texto que rompe líneas */}
+                        <div className="detail-field d-flex align-items-start gap-3">
+                          <div className="detail-icon icon-purple flex-shrink-0 mt-1">
                             <i className="bi bi-briefcase"></i>
                           </div>
-                          <div>
+                          <div className="flex-grow-1" style={{ minWidth: 0 }}>
                             <div className="field-label">Experiencia</div>
-                            <div className="field-value">
+                            <div
+                              className="field-value text-break"
+                              style={{ wordBreak: 'break-word' }}
+                            >
                               {candidate.experience || 'No especificada'}
                             </div>
                           </div>
