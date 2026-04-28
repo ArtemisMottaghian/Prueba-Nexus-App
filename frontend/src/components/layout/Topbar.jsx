@@ -1,5 +1,6 @@
 import { useState, useLayoutEffect, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import './Topbar.css';
 
 const TITLES = {
@@ -14,11 +15,22 @@ const TITLES = {
   '/scraping': 'Scraping & Fuentes',
   '/settings': 'Configuración',
   '/users': 'Gestión de Usuarios',
+  '/cuenta': 'Gestionar tu cuenta',
+};
+
+const ROLE_LABELS = {
+  admin: 'Admin',
+  hr_manager: 'Reclutador',
+  reclutador: 'Reclutador',
+  negocio: 'Negocio',
+  company: 'Empresa',
 };
 
 const THEME_KEY = 'nexus-theme';
 
 export default function Topbar({ onMenuToggle }) {
+  const { user } = useAuth();
+
   const [isDarkMode, setIsDarkMode] = useState(() => {
     try {
       return localStorage.getItem(THEME_KEY) === 'dark';
@@ -32,6 +44,15 @@ export default function Topbar({ onMenuToggle }) {
 
   const location = useLocation();
   const pageTitle = TITLES[location.pathname] || 'Dashboard';
+
+  // Datos del usuario
+  const userInitial = (user?.name ||
+    user?.username ||
+    user?.email ||
+    'U')[0].toUpperCase();
+  const userName = user?.name || user?.username || user?.email || 'Usuario';
+  const userEmail = user?.email || '';
+  const roleLabel = ROLE_LABELS[user?.role] || user?.role || 'Usuario';
 
   // Tema Claro/Oscuro
   useLayoutEffect(() => {
@@ -89,56 +110,34 @@ export default function Topbar({ onMenuToggle }) {
               <div className="switch-knob"></div>
             </div>
           </div>
+
           <div className="profile-menu-wrapper" ref={profileMenuRef}>
             <div
               className="topbar-avatar"
               onClick={() => setIsProfileOpen(!isProfileOpen)}
-              title="Cuenta de Nexus"
+              title="Ver perfil"
             >
               <div className="avatar-fallback">
-                <span>A</span>
+                <span>{userInitial}</span>
               </div>
             </div>
+
             {isProfileOpen && (
               <div
                 className={
                   isDarkMode ? 'profile-dropdown is-dark' : 'profile-dropdown'
                 }
               >
-                {/* Cabecera del menú */}
                 <div className="profile-header">
-                  <div className="profile-header-avatar">A</div>
+                  <div className="profile-header-avatar">{userInitial}</div>
                   <div className="profile-header-info">
-                    <span className="profile-name">Administrador</span>
-                    <span className="profile-email">admin@nexus-app.com</span>
+                    <span className="profile-name">{userName}</span>
+                    <span className="profile-email">{userEmail}</span>
                     <span className="profile-role">
-                      <i className="bi bi-shield-lock-fill me-1"></i> Admin
+                      <i className="bi bi-shield-lock-fill me-1"></i>
+                      {roleLabel}
                     </span>
                   </div>
-                </div>
-
-                <div className="profile-divider"></div>
-
-                {/* Opciones */}
-                <div className="profile-options">
-                  <button className="profile-btn">
-                    <i className="bi bi-person-badge"></i>
-                    Gestionar tu cuenta
-                  </button>
-                  <button className="profile-btn">
-                    <i className="bi bi-gear"></i>
-                    Configuración del sistema
-                  </button>
-                </div>
-
-                <div className="profile-divider"></div>
-
-                {/* Cerrar sesión */}
-                <div className="profile-options">
-                  <button className="profile-btn btn-logout">
-                    <i className="bi bi-box-arrow-right"></i>
-                    Cerrar sesión
-                  </button>
                 </div>
               </div>
             )}
