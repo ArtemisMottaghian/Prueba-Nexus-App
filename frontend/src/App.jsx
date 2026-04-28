@@ -13,6 +13,7 @@ import Calendario from './pages/Calendar';
 import Clientes from './pages/Clientes';
 import Candidates from './pages/Candidates';
 import UserManagement from './pages/usermanagement';
+import MiCuenta from './pages/MiCuenta';
 // --- NUEVA IMPORTACIÓN ---
 import InboxPage from './pages/Inbox';
 import './index.css';
@@ -57,6 +58,7 @@ function App() {
                         <Route path="/candidatos" element={<Candidates />} />
                         {/* --- NUEVA RUTA DEL INBOX --- */}
                         <Route path="/inbox" element={<InboxPage />} />
+                        <Route path="/cuenta" element={<MiCuenta />} />
                         <Route path="/settings" element={<UserManagement />} />
                         <Route path="*" element={<Navigate to="/" replace />} />
                       </Routes>
