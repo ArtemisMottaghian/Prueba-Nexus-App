@@ -26,6 +26,7 @@ export default function FilterBar({
   disponibilidadOptions = null,
   experienciaOptions = null,
   provinciaOptions = null,
+  modalidadOptions = null,
   showVerifiedFilter = false,
 }) {
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -35,6 +36,7 @@ export default function FilterBar({
     'experiencia',
     'disponibilidad',
     'provincia',
+    'modalidad',
     ...(showVerifiedFilter ? ['verified'] : []),
   ];
   const hasExtraFilters = extraFilterKeys.some(
@@ -143,6 +145,23 @@ export default function FilterBar({
                 ))}
               </select>
             </div>
+
+            {modalidadOptions && (
+              <div className="filter-group">
+                <label>Modalidad</label>
+                <select
+                  value={filters.modalidad || 'All'}
+                  onChange={(e) => onFilterChange('modalidad', e.target.value)}
+                >
+                  <option value="All">Todas</option>
+                  {modalidadOptions.map((opt) => (
+                    <option key={opt.value ?? opt} value={opt.value ?? opt}>
+                      {opt.label ?? opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {experienciaOptions && (
               <div className="filter-group">

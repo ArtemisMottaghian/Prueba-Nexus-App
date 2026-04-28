@@ -55,6 +55,7 @@ export default function Vacancies() {
     industry: 'All',
     location: 'All',
     source: 'All',
+    modalidad: 'All',
   });
 
   const [selectedVacancies, setSelectedVacancies] = useState([]);
@@ -71,6 +72,16 @@ export default function Vacancies() {
       .filter(Boolean);
     return [...new Set(sectors)];
   }, [jobs]);
+
+  // Complementar las ubicaciones del backend con las de los jobs cargados
+  // Así "Remote"/"Remoto" aparece en el dropdown solo si realmente existe en los datos
+  const mergedLocationOptions = useMemo(() => {
+    const fromJobs = jobs
+      .map((job) => normalizeLocation(job.location || ''))
+      .filter(Boolean);
+    const combined = [...new Set([...locationOptions, ...fromJobs])].sort();
+    return combined;
+  }, [jobs, locationOptions]);
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -114,6 +125,7 @@ export default function Vacancies() {
       industry: 'All',
       location: 'All',
       source: 'All',
+      modalidad: 'All',
     });
     setShowFavoritesOnly(false);
 
@@ -271,6 +283,23 @@ export default function Vacancies() {
       matchText = textoCompleto.includes(lowerQuery);
     }
 
+    // Filtro modalidad (Remoto / Presencial)
+    // Busca "remot" en location, título y descripción porque el backend
+    // puede indicar la modalidad en cualquiera de esos campos
+    const remoteText = [
+      job.location || '',
+      job.title || '',
+      job.description || '',
+    ]
+      .join(' ')
+      .toLowerCase();
+    const isRemote =
+      remoteText.includes('remot') || remoteText.includes('remote');
+    const matchModalidad =
+      filters.modalidad === 'All' ||
+      (filters.modalidad === 'remoto' && isRemote) ||
+      (filters.modalidad === 'presencial' && !isRemote);
+
     // Reclutador solo ve sus vacantes asignadas (soporta array o objeto único)
     const asignados = job.assignedTo
       ? Array.isArray(job.assignedTo)
@@ -293,6 +322,7 @@ export default function Vacancies() {
       matchSource &&
       matchFavorite &&
       matchText &&
+      matchModalidad &&
       matchAsignado
     );
   });
@@ -322,7 +352,7 @@ export default function Vacancies() {
           filters={filters}
           onFilterChange={handleFilterChange}
           onClearFilters={handleClearFilters}
-          locationOptions={locationOptions}
+          locationOptions={mergedLocationOptions}
           industryOptions={
             dynamicIndustries.length > 0
               ? dynamicIndustries
@@ -330,6 +360,10 @@ export default function Vacancies() {
           }
           statusOptions={['Nueva', 'Contactada', 'En proceso', 'Descartada']}
           sourceOptions={['LinkedIn', 'InfoJobs', 'Adzuna', 'Otro']}
+          modalidadOptions={[
+            { value: 'remoto', label: 'Remoto' },
+            { value: 'presencial', label: 'Presencial' },
+          ]}
         />
 
         {selectedVacancies.length > 0 && (
