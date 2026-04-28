@@ -46,7 +46,7 @@ class JobOffer(Base):
     )
 
     priority = Column(Integer, default=3)
-    is_favourite = Column(Boolean, default=False)
+    is_favourite = Column("is_favorite",Boolean, default=False)
     scraped_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(),server_default=func.now())
     portal = relationship("JobPortal", back_populates="offers")
