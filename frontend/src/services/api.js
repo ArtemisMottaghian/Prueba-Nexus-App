@@ -79,8 +79,11 @@ export const ENDPOINTS = {
 
   metrics: {
     general: `${BASE_URL}/api/metrics`,
-    leadStats: (fromIso, toIso) =>
-      `${BASE_URL}/api/metrics?from=${encodeURIComponent(fromIso)}&to=${encodeURIComponent(toIso)}`,
+    leadStats: (fromIso, toIso) => {
+      const from = encodeURIComponent(fromIso);
+      const to = encodeURIComponent(toIso);
+      return `${BASE_URL}/api/metrics?from=${from}&to=${to}&start=${from}&end=${to}`;
+    },
     scrapersStatus: `${BASE_URL}/api/metrics/scrapers/status`,
   },
 
