@@ -84,7 +84,7 @@ class CandidateFrontendOut(BaseModel):
     experience: Optional[str] = "Consultar CV"
     isAvailable: bool
     time: str
-    is_favorite: bool = False
+    is_favourite: bool = False
     verified: bool = False
     email: Optional[str] = None
 
@@ -126,7 +126,7 @@ class CandidateFrontendOut(BaseModel):
                     if getattr(data, "created_at", None)
                     else "Reciente"
                 ),
-                "is_favorite": True if getattr(data, "is_favorite", False) else False,
+                "is_favourite": True if getattr(data, "is_favourite", False) else False,
                 "verified": getattr(data, "verified", False),
             }
         return data
@@ -155,8 +155,8 @@ class CandidateScraperStatusOut(BaseModel):
 
 
 # Schema para marcar como favorita
-class FavoriteRequest(BaseModel):
-    favorite: bool
+class FavouriteRequest(BaseModel):
+    favourite: bool
 
 
 class VerifyRequest(BaseModel):

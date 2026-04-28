@@ -11,7 +11,7 @@ from app.schemas.vacancies_schemas import (
     VacancySummary,
     VacancyDetail,
     VacancyFiltered,
-    FavoriteRequest,
+    FavouriteRequest,
     BulkActionRequest,
     MessageResponse,
     StatusRequest, 
@@ -79,18 +79,18 @@ async def read_vacancy(vacancy_id: int, db: AsyncSession = Depends(get_db)):
 # Marcar vacante como favorita
 # PATCH /api/vacancies/{vacancy_id}/favorito
 # -----------------
-@router.patch("/{vacancy_id}/favorite", response_model=MessageResponse)
+@router.patch("/{vacancy_id}/favourite", response_model=MessageResponse)
 async def mark_favorite(
-    vacancy_id: int, body: FavoriteRequest, db: AsyncSession = Depends(get_db)
+    vacancy_id: int, body: FavouriteRequest, db: AsyncSession = Depends(get_db)
 ):
     vacancy = await vacancies_service.get_vacancy_by_id(db, vacancy_id)
 
     if vacancy is None:
         raise HTTPException(status_code=404, detail="La vacante no existe")
 
-    await vacancies_service.set_favorite(db, vacancy_id, body.favorite)
+    await vacancies_service.set_favourite(db, vacancy_id, body.favourite)
     return {
-        "message": f"Vacante {'marcada' if body.favorite else 'desmarcada'} como favorita"
+        "message": f"Vacante {'marcada' if body.favourite else 'desmarcada'} como favorita"
     }
 
 
