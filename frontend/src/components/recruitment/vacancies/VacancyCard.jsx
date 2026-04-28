@@ -9,8 +9,6 @@ export default function VacancyCard({
   onSelect,
   onUpdateStatus,
   onToggleFavorite,
-  onSmartMatch,
-  isMatching,
 }) {
   let badgeClass = 'badge-nueva';
   if (job.status === 'Contactada') badgeClass = 'badge-contactada';
@@ -30,11 +28,6 @@ export default function VacancyCard({
   const handleFavoriteClick = (e) => {
     e.stopPropagation();
     if (onToggleFavorite) onToggleFavorite(job.id, job.isFavorite);
-  };
-
-  const handleSmartMatchClick = (e) => {
-    e.stopPropagation();
-    if (onSmartMatch) onSmartMatch(e);
   };
 
   const handleChildClick = (e) => e.stopPropagation();
@@ -63,13 +56,6 @@ export default function VacancyCard({
           </div>
 
           <div className="list-meta-info">
-            <button
-              className={`btn-smart-match-icon ${isMatching ? 'loading' : ''}`}
-              onClick={handleSmartMatchClick}
-              title="Smart Match con IA"
-            >
-              <i className="bi bi-stars"></i>
-            </button>
 
             <div className="list-location">
               <i className="bi bi-geo-alt"></i>
@@ -122,13 +108,6 @@ export default function VacancyCard({
         </div>
 
         <div className="header-right-actions d-flex align-items-center gap-2">
-          <button
-            className={`btn-smart-match-mini ${isMatching ? 'loading' : ''}`}
-            onClick={handleSmartMatchClick}
-            title="Smart Match con IA"
-          >
-            <i className="bi bi-stars"></i>
-          </button>
 
           <button className="btn-favorite-star" onClick={handleFavoriteClick}>
             <i

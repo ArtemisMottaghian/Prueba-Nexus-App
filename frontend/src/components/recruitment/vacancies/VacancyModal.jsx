@@ -61,6 +61,8 @@ export default function VacancyModal({
   onAsignarVacante,
   currentUser,
   isNegocio,
+  onSmartMatch,
+  isMatching,
 }) {
   const { hasRole } = useAuth();
   const isReclutador = hasRole('hr_manager') || hasRole('reclutador');
@@ -226,11 +228,11 @@ export default function VacancyModal({
       prev.map((n, i) =>
         i === idx
           ? {
-              ...n,
-              texto: nuevoTexto,
-              editada: true,
-              fecha: new Date().toLocaleDateString('es-ES'),
-            }
+            ...n,
+            texto: nuevoTexto,
+            editada: true,
+            fecha: new Date().toLocaleDateString('es-ES'),
+          }
           : n
       )
     );
@@ -451,7 +453,8 @@ export default function VacancyModal({
               </div>
 
               {/* Tabs */}
-              <ul className="nav nav-tabs mb-4">
+              <div className="d-flex justify-content-between align-items-center border-bottom mb-4">
+                <ul className="nav nav-tabs border-bottom-0 mb-0">
                 <li className="nav-item">
                   <button
                     className={`nav-link ${activeTab === 'detalles' ? 'active' : ''}`}
@@ -511,6 +514,27 @@ export default function VacancyModal({
                   </button>
                 </li>
               </ul>
+
+              <div className="pb-2 pe-2">
+                <button
+                  className={`btn btn-primary-custom btn-sm ${isMatching ? 'disabled' : ''}`}
+                  onClick={(e) => { e.stopPropagation(); if (onSmartMatch) onSmartMatch(e); }}
+                  disabled={isMatching}
+                  title="Smart Match con IA"
+                >
+                  {isMatching ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      Buscando...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-stars me-2"></i>Smart Match IA
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
 
               <div className="tab-content">
                 {activeTab === 'detalles' && (
@@ -744,13 +768,13 @@ export default function VacancyModal({
                       ? job.contactos
                       : job.contactEmail || job.contactPhone || job.contactName
                         ? [
-                            {
-                              nombre: job.contactName || 'Responsable',
-                              email: job.contactEmail,
-                              telefono: job.contactPhone,
-                              cargo: job.contactRole || '',
-                            },
-                          ]
+                          {
+                            nombre: job.contactName || 'Responsable',
+                            email: job.contactEmail,
+                            telefono: job.contactPhone,
+                            cargo: job.contactRole || '',
+                          },
+                        ]
                         : [];
                     const todosContactos = [
                       ...contactosAPI,
