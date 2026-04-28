@@ -56,7 +56,6 @@ export default function VacancyCard({
           </div>
 
           <div className="list-meta-info">
-
             <div className="list-location">
               <i className="bi bi-geo-alt"></i>
               <span>{job.location}</span>
@@ -108,7 +107,6 @@ export default function VacancyCard({
         </div>
 
         <div className="header-right-actions d-flex align-items-center gap-2">
-
           <button className="btn-favorite-star" onClick={handleFavoriteClick}>
             <i
               className={

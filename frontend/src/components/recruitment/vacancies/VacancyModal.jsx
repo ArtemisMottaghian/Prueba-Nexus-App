@@ -228,11 +228,11 @@ export default function VacancyModal({
       prev.map((n, i) =>
         i === idx
           ? {
-            ...n,
-            texto: nuevoTexto,
-            editada: true,
-            fecha: new Date().toLocaleDateString('es-ES'),
-          }
+              ...n,
+              texto: nuevoTexto,
+              editada: true,
+              fecha: new Date().toLocaleDateString('es-ES'),
+            }
           : n
       )
     );
@@ -455,86 +455,94 @@ export default function VacancyModal({
               {/* Tabs */}
               <div className="d-flex justify-content-between align-items-center border-bottom mb-4">
                 <ul className="nav nav-tabs border-bottom-0 mb-0">
-                <li className="nav-item">
-                  <button
-                    className={`nav-link ${activeTab === 'detalles' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('detalles')}
-                  >
-                    <i className="bi bi-info-circle me-2"></i>Detalles
-                  </button>
-                </li>
-                {!isReclutador && (
                   <li className="nav-item">
                     <button
-                      className={`nav-link ${activeTab === 'contacto' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('contacto')}
-                      title="Contacto de la empresa para esta vacante"
+                      className={`nav-link ${activeTab === 'detalles' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('detalles')}
                     >
-                      <i className="bi bi-person-lines-fill me-2"></i>Contacto
+                      <i className="bi bi-info-circle me-2"></i>Detalles
                     </button>
                   </li>
-                )}
-                {!isReclutador && (
-                  <li className="nav-item">
-                    <button
-                      className={`nav-link ${activeTab === 'crm' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('crm')}
-                      title="Seguimiento comercial vinculado a la empresa"
-                    >
-                      <i className="bi bi-building-check me-2"></i>
-                      CRM Empresa
-                    </button>
-                  </li>
-                )}
-                {!isReclutador && (
-                  <li className="nav-item">
-                    <button
-                      className={`nav-link ${activeTab === 'seguimiento' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('seguimiento')}
-                    >
-                      <i className="bi bi-list-check me-2"></i>Actividad vacante
-                    </button>
-                  </li>
-                )}
-                <li className="nav-item">
-                  <button
-                    className={`nav-link ${activeTab === 'candidatos' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('candidatos')}
-                  >
-                    <i className="bi bi-people-fill me-2"></i>Seguimiento
-                    candidato
-                  </button>
-                </li>
-                <li className="nav-item">
-                  <button
-                    className={`nav-link ${activeTab === 'documentos' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('documentos')}
-                  >
-                    <i className="bi bi-file-earmark me-2"></i>Documentos
-                  </button>
-                </li>
-              </ul>
-
-              <div className="pb-2 pe-2">
-                <button
-                  className={`btn btn-primary-custom btn-sm ${isMatching ? 'disabled' : ''}`}
-                  onClick={(e) => { e.stopPropagation(); if (onSmartMatch) onSmartMatch(e); }}
-                  disabled={isMatching}
-                  title="Smart Match con IA"
-                >
-                  {isMatching ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                      Buscando...
-                    </>
-                  ) : (
-                    <>
-                      <i className="bi bi-stars me-2"></i>Smart Match IA
-                    </>
+                  {!isReclutador && (
+                    <li className="nav-item">
+                      <button
+                        className={`nav-link ${activeTab === 'contacto' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('contacto')}
+                        title="Contacto de la empresa para esta vacante"
+                      >
+                        <i className="bi bi-person-lines-fill me-2"></i>Contacto
+                      </button>
+                    </li>
                   )}
-                </button>
+                  {!isReclutador && (
+                    <li className="nav-item">
+                      <button
+                        className={`nav-link ${activeTab === 'crm' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('crm')}
+                        title="Seguimiento comercial vinculado a la empresa"
+                      >
+                        <i className="bi bi-building-check me-2"></i>
+                        CRM Empresa
+                      </button>
+                    </li>
+                  )}
+                  {!isReclutador && (
+                    <li className="nav-item">
+                      <button
+                        className={`nav-link ${activeTab === 'seguimiento' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('seguimiento')}
+                      >
+                        <i className="bi bi-list-check me-2"></i>Actividad
+                        vacante
+                      </button>
+                    </li>
+                  )}
+                  <li className="nav-item">
+                    <button
+                      className={`nav-link ${activeTab === 'candidatos' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('candidatos')}
+                    >
+                      <i className="bi bi-people-fill me-2"></i>Seguimiento
+                      candidato
+                    </button>
+                  </li>
+                  <li className="nav-item">
+                    <button
+                      className={`nav-link ${activeTab === 'documentos' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('documentos')}
+                    >
+                      <i className="bi bi-file-earmark me-2"></i>Documentos
+                    </button>
+                  </li>
+                </ul>
+
+                <div className="pb-2 pe-2">
+                  <button
+                    className={`btn btn-primary-custom btn-sm ${isMatching ? 'disabled' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onSmartMatch) onSmartMatch(e);
+                    }}
+                    disabled={isMatching}
+                    title="Smart Match con IA"
+                  >
+                    {isMatching ? (
+                      <>
+                        <span
+                          className="spinner-border spinner-border-sm me-2"
+                          role="status"
+                          aria-hidden="true"
+                        ></span>
+                        Buscando...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-stars me-2"></i>Smart Match IA
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
 
               <div className="tab-content">
                 {activeTab === 'detalles' && (
@@ -768,13 +776,13 @@ export default function VacancyModal({
                       ? job.contactos
                       : job.contactEmail || job.contactPhone || job.contactName
                         ? [
-                          {
-                            nombre: job.contactName || 'Responsable',
-                            email: job.contactEmail,
-                            telefono: job.contactPhone,
-                            cargo: job.contactRole || '',
-                          },
-                        ]
+                            {
+                              nombre: job.contactName || 'Responsable',
+                              email: job.contactEmail,
+                              telefono: job.contactPhone,
+                              cargo: job.contactRole || '',
+                            },
+                          ]
                         : [];
                     const todosContactos = [
                       ...contactosAPI,
