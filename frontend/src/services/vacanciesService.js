@@ -30,6 +30,7 @@ const mapVacancyData = (v) => {
     id: v.id,
     title: v.title,
     companyName: v.company_name,
+    company_id: v.company_id,
     industry: v.sector || 'N/A',
     location: v.location || 'No especificada',
     status: translatedStatus,
