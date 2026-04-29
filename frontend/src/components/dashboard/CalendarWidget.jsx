@@ -83,14 +83,14 @@ export default function CalendarWidget() {
   // Estado de carga inicial
   if (loading && events.length === 0) {
     return (
-      <div className="calendar-widget-container">
+      <div className="calendar-widget-container dashboard-quick-card h-100">
         <p className="loading-msg">Sincronizando agenda...</p>
       </div>
     );
   }
 
   return (
-    <div className="calendar-widget-container">
+    <div className="calendar-widget-container dashboard-quick-card h-100">
       <div className="widget-header">
         <h3 className="widget-title">Próximos Eventos</h3>
 
