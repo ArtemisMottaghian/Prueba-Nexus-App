@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, BigInteger, Text, ForeignKey, CheckConstraint, UniqueConstraint,DateTime, Enum as PgEnum, func,Boolean
+from sqlalchemy import Column, Integer, String, BigInteger, Table, Text, ForeignKey, CheckConstraint, UniqueConstraint,DateTime, Enum as PgEnum, func,Boolean
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import relationship
 from app.db.base import Base
@@ -7,6 +7,7 @@ from app.models.aplication_model import ApplicationStatus
 from app.models.candidates_model import Candidate
 from app.models.user_model import User
 from app.models.search_model import Search
+from app.models.assignments_model import VacancyAssignment
 #from app.models.interviews_model import Interview
 
 class JobPortal(Base):
@@ -24,7 +25,6 @@ class JobOffer(Base):
 
     id = Column(BigInteger, primary_key=True, index=True)
     portal_id = Column(Integer, ForeignKey("job_portals.id"))   
-    managed_by_id = Column(BigInteger, ForeignKey("users.id"), nullable=True)
     external_id = Column(String(255), nullable=True)
     title = Column(String(255), nullable=False)
     company_name = Column(String(255))
@@ -51,7 +51,7 @@ class JobOffer(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(),server_default=func.now())
     portal = relationship("JobPortal", back_populates="offers")
     applications = relationship("JobApplication", back_populates="offer")
-    manager = relationship("User", back_populates="managed_offers", foreign_keys=[managed_by_id])
+    managers = relationship("User", secondary=VacancyAssignment, back_populates="managed_offers")
     tracking_entries = relationship("TrackingHistory", back_populates="offer", cascade="all, delete-orphan")
     search_matches = relationship("SearchResult", back_populates="offer", cascade="all, delete-orphan")
 

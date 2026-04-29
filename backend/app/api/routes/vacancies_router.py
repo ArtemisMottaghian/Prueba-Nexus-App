@@ -17,6 +17,8 @@ from app.schemas.vacancies_schemas import (
     StatusRequest, 
     CandidateMatchOut
 )
+from app.core.jwt import get_current_user
+from app.models.user_model import User, UserRole
 
 
 router = APIRouter()
@@ -146,8 +148,15 @@ async def trigger_scraper():
 # -----------------
 @router.post("/assign-hr", response_model=MessageResponse)
 async def assign_hr_to_vacancies(
-    body: VacancyAssignmentRequest, db: AsyncSession = Depends(get_db)
+    body: VacancyAssignmentRequest, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
+    #control de permisos (admins y company)
+    if current_user.role not in [UserRole.admin, UserRole.company]:
+        raise HTTPException(
+            status_code=403, 
+            detail="No tienes permisos para asignar vacantes."
+        )
+    
     assgined_count = await vacancies_service.assign_hr_to_vacancies(
         db, body.hr_id, body.vacancy_ids
     )
@@ -166,3 +175,34 @@ async def read_vacancies_by_hr(hr_id: int, db: AsyncSession = Depends(get_db)):
     vacancies = await vacancies_service.get_vacancies_by_hr(db, hr_id)
 
     return vacancies
+
+
+# -----------------
+# Quitar asignación de HR a vacantes
+# DELETE /api/vacancies/assign-hr
+# -----------------
+@router.delete("/assign-hr", response_model=MessageResponse)
+async def unassign_hr_from_vacancies(
+    body: VacancyAssignmentRequest, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Comprobamos los roles 
+    is_admin = current_user.role == UserRole.admin
+    is_company = current_user.role == UserRole.company
+    
+    # si no es admin o company ni el perfil de hr que lleva la asignación, no puede quitarla
+    if not is_admin and not is_company and current_user.id != body.hr_id:
+        raise HTTPException(
+            status_code=403, 
+            detail="No tienes permisos para quitarle la asignación a otro compañero."
+        )
+
+    # Ejecutamos la baja
+    unassigned_count = await vacancies_service.remove_hr_assignment(
+        db, body.hr_id, body.vacancy_ids, is_admin=(is_admin or is_company)
+    )
+
+    return {
+        "message": f"Acción realizada: se han liberado {unassigned_count} vacantes."
+    }
