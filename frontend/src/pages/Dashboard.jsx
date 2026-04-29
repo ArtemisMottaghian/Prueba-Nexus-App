@@ -135,7 +135,7 @@ export default function Dashboard() {
     return () => {
       isMounted = false;
     };
-  }, [periodType, isBusiness]);
+  }, [periodType, shouldLoadStats]);
 
   useEffect(() => {
     let isMounted = true;
@@ -188,7 +188,8 @@ export default function Dashboard() {
           const avgDays =
             vacancyAges.length > 0
               ? Math.round(
-                  vacancyAges.reduce((acc, n) => acc + n, 0) / vacancyAges.length
+                  vacancyAges.reduce((acc, n) => acc + n, 0) /
+                    vacancyAges.length
                 )
               : 0;
 
@@ -209,7 +210,9 @@ export default function Dashboard() {
           let events = [];
           if (calendarResponse.ok) {
             const calendarData = await calendarResponse.json();
-            events = Array.isArray(calendarData?.events) ? calendarData.events : [];
+            events = Array.isArray(calendarData?.events)
+              ? calendarData.events
+              : [];
           }
 
           const now = new Date();
