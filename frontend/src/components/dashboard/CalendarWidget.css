@@ -20,20 +20,33 @@
 
 /* CONTENEDOR DEL WIDGET */
 .calendar-widget-container {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 14px;
- 
-  border: 2.5px solid #7c3aed; 
- 
-  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.1); 
-  margin-top: 1rem;
-  min-height: 150px;
-  transition: transform 0.3s ease;
+  margin-top: 0;
+  min-height: 0;
+  transition: none;
+  flex-direction: column;
+  /* Dejar que la tarjeta base (`dashboard-quick-card`) controle el look */
+  gap: 0;
+  align-items: stretch;
+  /* Reduce el padding para evitar mucho blanco cuando no hay eventos */
+  padding: 0.85rem 1rem !important;
+  /* Destacar un poco más respecto al resto de tarjetas */
+  border-color: rgba(124, 58, 237, 0.55) !important;
+  border-style: solid !important;
+  border-width: 3px !important;
+  box-shadow: 0 14px 40px rgba(124, 58, 237, 0.14) !important;
+  color: var(--text-primary);
+}
+
+.calendar-widget-container::before {
+  /* Quitamos la “línea interna” de dashboard-quick-card para que
+     se parezca al borde grueso del contenedor (solo contorno). */
+  height: 0 !important;
+  background: transparent !important;
+  opacity: 0 !important;
 }
 
 .calendar-widget-container:hover {
-  transform: translateY(-2px);
+  transform: none;
 }
 
 /* Cabecera */
@@ -41,16 +54,16 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.2rem;
-  border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 8px;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(124, 58, 237, 0.35);
+  padding-bottom: 6px;
 }
 
 .widget-title {
   font-size: 1.1rem;
   font-weight: 700;
   margin: 0;
-  color: #1e1b4b; 
+  color: var(--text-primary);
 }
 
 /* ELEMENTOS DE LA LISTA */
@@ -60,6 +73,25 @@
   max-height: 400px;
   overflow-y: auto;
   padding-right: 5px;
+  width: 100%;
+}
+
+.no-events {
+  margin: 0;
+  color: var(--text-primary) !important;
+  font-weight: 600;
+}
+
+.loading-msg {
+  margin: 0;
+  color: var(--text-primary) !important;
+  font-weight: 600;
+}
+
+.error-message-inline {
+  margin: 0;
+  color: #b91c1c !important;
+  font-weight: 600;
 }
 
 /* Scrollbar estilizada */

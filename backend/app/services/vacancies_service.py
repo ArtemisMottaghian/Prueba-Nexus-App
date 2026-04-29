@@ -5,13 +5,18 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import update
 
-from app.models.user_model import User
+from app.models.user_model import User, UserRole
 from app.schemas.users_schemas import UserType
 from app.models.job_model import JobOffer, JobPortal, JobApplication
 from app.models.candidates_model import Candidate
 from app.models.contacts_model import Contact
 from app.models.entity_model import EntityType
 from app.models.leadStatus_model import LeadStatus
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy import delete
+from app.models.job_model import VacancyAssignment
+from app.models.assignments_model import VacancyAssignment
+
 from datetime import datetime, timezone
 from app.db.session import AsyncSessionLocal
 
@@ -321,19 +326,3 @@ async def get_suitable_candidates(db: AsyncSession, vacancy_id: int) -> list[dic
     
     output.sort(key=lambda x: (x["match_score"], x["id"]), reverse=True)
     return output
-
-async def update_portal_last_run(portal_name: str, status: str = "ok") -> None:
-    """Actualiza la fecha y estado de la última ejecución del scraper."""
-
-    try:
-        async with AsyncSessionLocal() as session:
-            query = select(JobPortal).where(JobPortal.name.ilike(f"%{portal_name}%"))
-            result = await session.execute(query)
-            portal = result.scalar_one_or_none()
-
-            if portal:
-                portal.last_run_at = datetime.now(timezone.utc)
-                portal.last_run_status = status
-                await session.commit()
-    except Exception as e:
-        print(f"Error actualizando last_run de {portal_name}: {e}")

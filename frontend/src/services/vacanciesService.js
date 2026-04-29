@@ -84,6 +84,24 @@ export const vacanciesService = {
     }
   },
 
+  // 2b. Obtener vacantes asignadas a un reclutador
+  getAssignedVacancies: async (hrId) => {
+    try {
+      const response = await authFetch(
+        ENDPOINTS.recruitment.vacantes.assignedTo(hrId)
+      );
+      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      const data = await response.json();
+      return data.map(mapVacancyData);
+    } catch (error) {
+      console.error(
+        `Error al obtener vacantes asignadas para reclutador ${hrId}:`,
+        error
+      );
+      throw error;
+    }
+  },
+
   // 3. Filtrar vacantes
   getFilteredVacancies: async (params) => {
     try {
