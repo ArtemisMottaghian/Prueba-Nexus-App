@@ -80,13 +80,15 @@ export default function SmartMatchResults({ job, candidates, onClose }) {
               <div className="empty-icon-wrapper">
                 <i className="bi bi-robot"></i>
               </div>
-              <h4>Sin coincidencias de IA</h4>
+              <h4>Sin coincidencias por ahora</h4>
               <p>
-                El algoritmo no ha encontrado candidatos que superen el umbral
-                crítico de compatibilidad para los requisitos de esta vacante.
+                El motor de Nexus aún no ha encontrado candidatos compatibles
+                con esta vacante. Prueba a ampliar los requisitos o espera a que
+                haya más perfiles disponibles en la base de datos.
               </p>
               <button className="btn-simple-nexus" onClick={onClose}>
-                Entendido
+                <i className="bi bi-arrow-repeat me-2"></i>
+                Generar candidatos
               </button>
             </div>
           )}
