@@ -51,7 +51,7 @@ class Company(Base):
     comments = relationship("CompanyComment", back_populates="company")
     contacts = relationship("Contact", back_populates="company")
     tracking_history = relationship("TrackingHistory", back_populates="company")
-    offers = relationship("JobOffer", back_populates="company", foreign_keys="JobOffer.company_id")
+    offers = relationship("JobOffer", back_populates="company", foreign_keys="[JobOffer.company_id]")
     managed_by_id = Column(BigInteger, ForeignKey("users.id"), nullable=True)
     manager = relationship("User", foreign_keys=[managed_by_id])
 

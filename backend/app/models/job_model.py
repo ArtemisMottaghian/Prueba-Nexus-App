@@ -58,7 +58,7 @@ class JobOffer(Base):
     managers = relationship("User", secondary=VacancyAssignment.__table__, back_populates="managed_offers")
     tracking_entries = relationship("TrackingHistory", back_populates="offer", cascade="all, delete-orphan")
     search_matches = relationship("SearchResult", back_populates="offer", cascade="all, delete-orphan")
-    company = relationship("Company", back_populates="offers")
+    company = relationship("Company", back_populates="offers",foreign_keys="[JobOffer.company_id]")
 
     __table_args__ = (
         CheckConstraint('salary_min <= salary_max', name='check_salary_range'),
