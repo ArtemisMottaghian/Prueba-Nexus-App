@@ -3,7 +3,6 @@ from fastapi import HTTPException
 from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import update
 
 from app.models.user_model import User, UserRole
 from app.schemas.users_schemas import UserType
@@ -229,14 +228,9 @@ async def assign_hr_to_vacancies(db: AsyncSession, hr_id:int, vacancy_ids: List[
                 status_code=400,
                 detail=f"El usuario debe tener el rol: '{UserType.hr_manager.value}' para gestionar vacantes."
             )
-        
-        stmt = (
-            update(JobOffer)
-            .where(JobOffer.id.in_(vacancy_ids))
-            .values(managed_by_id=hr_id)
-            .execution_options(synchronize_session="fetch")
-        )
 
+        rows = [{"vacancy_id": vid, "user_id": hr_id} for vid in vacancy_ids]
+        stmt = pg_insert(VacancyAssignment).values(rows).on_conflict_do_nothing()
         result = await db.execute(stmt)
         await db.commit()
 
@@ -256,7 +250,11 @@ async def get_vacancies_by_hr(db: AsyncSession, hr_id: int) -> List[JobOffer]:
     """
 
     try:
-        query = select(JobOffer).where(JobOffer.managed_by_id == hr_id)
+        query = (
+            select(JobOffer)
+            .join(VacancyAssignment, VacancyAssignment.vacancy_id == JobOffer.id)
+            .where(VacancyAssignment.user_id == hr_id)
+        )
 
         query = query.order_by(JobOffer.published_at.desc())
 
@@ -265,6 +263,33 @@ async def get_vacancies_by_hr(db: AsyncSession, hr_id: int) -> List[JobOffer]:
     except Exception as e:
         print(f"Error al obtener las vacatantes: {e}")
         raise e
+
+
+async def remove_hr_assignment(db: AsyncSession, hr_id: int, vacancy_ids: List[int], is_admin: bool = False) -> int:
+    """
+    Elimina la asignación de un gestor de RRHH sobre un conjunto de vacantes.
+    Si is_admin=True puede quitar asignaciones de cualquier usuario.
+    """
+    if not vacancy_ids:
+        return 0
+
+    try:
+        stmt = (
+            delete(VacancyAssignment)
+            .where(VacancyAssignment.vacancy_id.in_(vacancy_ids))
+            .where(VacancyAssignment.user_id == hr_id)
+        )
+        result = await db.execute(stmt)
+        await db.commit()
+        return result.rowcount
+
+    except Exception as e:
+        await db.rollback()
+        print(f"Error al quitar asignaciones: {e}")
+        raise e
+
+
+
 
 async def get_suitable_candidates(db: AsyncSession, vacancy_id: int) -> list[dict]:
     # Obtener vacante
