@@ -35,6 +35,7 @@ class JobOffer(Base):
     offer_url = Column(Text)
     job_description = Column(Text)
     company_description = Column(Text)
+    company_id = Column(BigInteger, ForeignKey("companies.id"), nullable=True)
     published_at = Column(DateTime(timezone=True))
     sector = Column(String(255))
     salary_min = Column(Integer)
@@ -57,6 +58,7 @@ class JobOffer(Base):
     managers = relationship("User", secondary=VacancyAssignment.__table__, back_populates="managed_offers")
     tracking_entries = relationship("TrackingHistory", back_populates="offer", cascade="all, delete-orphan")
     search_matches = relationship("SearchResult", back_populates="offer", cascade="all, delete-orphan")
+    company = relationship("Company", back_populates="offers")
 
     __table_args__ = (
         CheckConstraint('salary_min <= salary_max', name='check_salary_range'),
