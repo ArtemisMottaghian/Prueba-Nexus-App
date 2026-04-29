@@ -2,39 +2,107 @@
 .dashboard-quick-card {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  padding: 1.1rem 1.2rem;
   height: 100%;
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: 0.9rem;
   transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
+  position: relative;
+  overflow: hidden;
 }
 
 .dashboard-quick-card:hover {
-  background: var(--bg-secondary);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  background: var(--bg-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(16, 24, 40, 0.12);
+}
+
+.dashboard-quick-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--color-purple-secondary) 0%,
+    var(--color-cyan-primary) 100%
+  );
+  opacity: 0.7;
 }
 
 .dashboard-quick-card--link {
   cursor: pointer;
-  border-left: 3px solid var(--color-purple-secondary);
+  /* En algunos temas se ve un acento morado en el lateral izquierdo.
+     Lo unificamos con el color de borde estándar del resto de tarjetas. */
+  border-left: 1px solid var(--border-color) !important;
 }
 
 .dashboard-quick-card--link:hover {
   transform: translateY(-3px);
-  border-left-color: var(--color-purple-primary);
+  border-left-color: var(--border-color) !important;
+}
+
+.dashboard-quick-card--events {
+  border-color: rgba(124, 58, 237, 0.8) !important;
+  box-shadow: 0 16px 46px rgba(124, 58, 237, 0.18) !important;
+}
+
+/* Empty state para "Vacantes urgentes" (rol reclutador) */
+.urgent-empty-state {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 14px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.urgent-empty-state__icon {
+  color: #f59e0b;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.urgent-empty-state__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.urgent-empty-state__title {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.urgent-empty-state__subtitle {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* Alineación del contador amarillo en "Vacantes urgentes" */
+.urgent-count-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  height: 24px;
+  padding: 0 0.65rem !important;
+  font-weight: 700 !important;
 }
 
 .dashboard-quick-card__icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   flex-shrink: 0;
 }
 
@@ -62,10 +130,15 @@
   color: var(--text-muted) !important;
 }
 
-.dashboard-quick-card h3, 
+.dashboard-quick-card h3,
+.dashboard-quick-card .h6,
 .dashboard-quick-card .fs-3 {
   color: var(--text-primary) !important;
   font-weight: 700;
+}
+
+.dashboard-quick-card ul li {
+  color: var(--text-secondary);
 }
 
 /* Filtro Día / Semana / Mes */

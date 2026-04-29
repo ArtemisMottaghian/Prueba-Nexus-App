@@ -65,6 +65,7 @@ export const ENDPOINTS = {
     },
     vacantes: {
       list: `${BASE_URL}/api/vacancies`,
+      assignedTo: (hrId) => `${BASE_URL}/api/vacancies/assigned/${hrId}`,
       locations: `${BASE_URL}/api/vacancies/locations`,
       filter: (params) => {
         const query = new URLSearchParams(params).toString();
