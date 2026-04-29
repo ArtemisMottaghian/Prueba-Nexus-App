@@ -10,6 +10,7 @@ from app.models.search_model import Search
 from app.models.assignments_model import VacancyAssignment
 #from app.models.interviews_model import Interview
 
+
 class JobPortal(Base):
     __tablename__ = "job_portals"
 
@@ -53,7 +54,7 @@ class JobOffer(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(),server_default=func.now())
     portal = relationship("JobPortal", back_populates="offers")
     applications = relationship("JobApplication", back_populates="offer")
-    managers = relationship("User", secondary=VacancyAssignment, back_populates="managed_offers")
+    managers = relationship("User", secondary=VacancyAssignment.__table__, back_populates="managed_offers")
     tracking_entries = relationship("TrackingHistory", back_populates="offer", cascade="all, delete-orphan")
     search_matches = relationship("SearchResult", back_populates="offer", cascade="all, delete-orphan")
 
