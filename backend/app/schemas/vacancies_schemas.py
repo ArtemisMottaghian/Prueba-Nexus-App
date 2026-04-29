@@ -8,7 +8,7 @@ from app.schemas.job_offer import OfferStatus
 class VacancySummary(BaseModel):
     id: int
     title: str = Field(..., min_length=3, max_length=255)  # Obligatorio, entre 3 y 255 caracteres
-    company_name: Optional[str] = Field(None, max_length=255)  # Opcional, max 255 caracteres
+    company_name: Optional[str] = None  # Opcional
     location: Optional[str] = None
     salary_min: Optional[int] = Field(None, ge=0)  # No puede ser negativo
     salary_max: Optional[int] = Field(None, ge=0)  # No puede ser negativo
@@ -33,10 +33,10 @@ class VacancySummary(BaseModel):
 # Schema extendido para el detalle
 # Hereda del resumen y le añade el resto de campos
 class VacancyDetail(VacancySummary):
+
     location: Optional[str] = Field(None, max_length=255)
     offer_url: Optional[HttpUrl] = None  # Valida que sea una URL válida con http:// o https://
     job_description: Optional[str] = Field(None, max_length=5000)
-    company_description: Optional[str] = Field(None, max_length=2000)
     contract_type: Optional[str] = Field(None, max_length=50)
     work_modality: Optional[str] = Field(None, max_length=50)
     sector: Optional[str] = Field(None, max_length=255)
@@ -47,29 +47,25 @@ class VacancyDetail(VacancySummary):
     @classmethod
     def resolve_company_fields(cls, data):
         company = getattr(data, "company", None)
-        if company:
-            # Convertimos a dict para poder modificar
-            result = {
-                "id": data.id,
-                "title": data.title,
-                "company_name": data.company_name or company.name,
-                "company_description": data.company_description or company.notes,
-                "company_id": data.company_id,
-                "location": data.location,
-                "offer_url": data.offer_url,
-                "job_description": data.job_description,
-                "contract_type": data.contract_type,
-                "work_modality": data.work_modality,
-                "sector": data.sector,
-                "portal_id": data.portal_id,
-                "salary_min": data.salary_min,
-                "salary_max": data.salary_max,
-                "published_at": data.published_at,
-                "status": data.status,
-                "is_favourite": data.is_favourite,
-            }
-            return result
-        return data
+        result = {
+            "id": data.id,
+            "title": data.title,
+            "company_name": company.name if company else None,
+            "company_id": data.company_id,
+            "location": data.location,
+            "offer_url": data.offer_url,
+            "job_description": data.job_description,
+            "contract_type": data.contract_type,
+            "work_modality": data.work_modality,
+            "sector": data.sector,
+            "portal_id": data.portal_id,
+            "salary_min": data.salary_min,
+            "salary_max": data.salary_max,
+            "published_at": data.published_at,
+            "status": data.status,
+            "is_favourite": data.is_favourite,
+        }
+        return result
 
 # Schema para vacantes filtradas
 class VacancyFiltered(VacancySummary):
