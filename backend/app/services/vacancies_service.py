@@ -12,7 +12,8 @@ from app.models.candidates_model import Candidate
 from app.models.contacts_model import Contact
 from app.models.entity_model import EntityType
 from app.models.leadStatus_model import LeadStatus
-
+from datetime import datetime, timezone
+from app.db.session import AsyncSessionLocal
 
 
 
@@ -320,3 +321,19 @@ async def get_suitable_candidates(db: AsyncSession, vacancy_id: int) -> list[dic
     
     output.sort(key=lambda x: (x["match_score"], x["id"]), reverse=True)
     return output
+
+async def update_portal_last_run(portal_name: str, status: str = "ok") -> None:
+    """Actualiza la fecha y estado de la última ejecución del scraper."""
+
+    try:
+        async with AsyncSessionLocal() as session:
+            query = select(JobPortal).where(JobPortal.name.ilike(f"%{portal_name}%"))
+            result = await session.execute(query)
+            portal = result.scalar_one_or_none()
+
+            if portal:
+                portal.last_run_at = datetime.now(timezone.utc)
+                portal.last_run_status = status
+                await session.commit()
+    except Exception as e:
+        print(f"Error actualizando last_run de {portal_name}: {e}")

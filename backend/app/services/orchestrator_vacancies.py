@@ -22,6 +22,7 @@ from app.services.enrichment_service import (
     search_with_phantombuster,
 )
 from app.services.scraper_logs_service import log_scraper_error
+from app.services.vacancies_service import update_portal_last_run
 
 SKIP_ENRICHMENT = False
 
@@ -53,9 +54,11 @@ async def gather_raw_offers() -> list[dict]:
             if isinstance(result, list):
                 raw_offers.extend(result)
                 print(f"{name.upper()} terminado. {len(result)} ofertas extraídas.")
+                await update_portal_last_run(name, status="ok")
 
         except asyncio.TimeoutError:
             print(f"TIMEOUT en {name.upper()} — saltando scraper")
+            await update_portal_last_run(name, status="timeout")
             await log_scraper_error(
                 error_code=f"SCRAPER_{name.upper()}_TIMEOUT",
                 message=f"scraper={name} | stage=gather | exc=TimeoutError after 300s",
@@ -63,6 +66,7 @@ async def gather_raw_offers() -> list[dict]:
 
         except Exception as e:
             print(f"Error crítico en {name.upper()}: {e}")
+            await update_portal_last_run(name, status="error")
             await log_scraper_error(
                 error_code=f"SCRAPER_{name.upper()}_CRITICAL",
                 message=f"scraper={name} | stage=gather | exc={e}",

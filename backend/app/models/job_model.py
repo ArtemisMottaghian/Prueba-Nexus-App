@@ -16,6 +16,8 @@ class JobPortal(Base):
     name = Column(String(100), nullable=False)
     base_url = Column(String(255))
     is_active = Column(Boolean, default=True)
+    last_run_at = Column(DateTime(timezone=True), nullable=True)
+    last_run_status = Column(String(20), nullable=True)
 
     offers = relationship("JobOffer", back_populates="portal")
 
