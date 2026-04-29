@@ -5,6 +5,7 @@ import {
   updateEstadoCuenta,
 } from '../../../services/clientesService';
 import { vacanciesService } from '../../../services/vacanciesService';
+import { usersService } from '../../../services/userManagementService';
 import { useAuth } from '../../../context/AuthContext';
 import CrmEmpresaPanel from '../../crm/CrmEmpresaPanel';
 import './VacancyModal.css';
@@ -98,8 +99,25 @@ export default function VacancyModal({
     if (!a) return [];
     return Array.isArray(a) ? a : [a];
   });
-  const [reclutadorNombre, setReclutadorNombre] = useState('');
-  const [reclutadorEmail, setReclutadorEmail] = useState('');
+  const [hrUsers, setHrUsers] = useState([]);
+  const [selectedHrId, setSelectedHrId] = useState('');
+
+  useEffect(() => {
+    if (isNegocio && activeTab === 'detalles') {
+      const fetchHrUsers = async () => {
+        try {
+          const users = await usersService.getAllUsers();
+          const hr = users.filter(
+            (u) => u.role === 'hr_manager' || u.role === 'reclutador'
+          );
+          setHrUsers(hr);
+        } catch (err) {
+          console.error('Error fetching HR users:', err);
+        }
+      };
+      fetchHrUsers();
+    }
+  }, [isNegocio, activeTab]);
 
   // Documentos locales
   const [localDocs, setLocalDocs] = useState(job?.documentos || []);
@@ -279,25 +297,48 @@ export default function VacancyModal({
     }
   };
 
-  const handleAsignarReclutador = () => {
-    if (!reclutadorNombre.trim() && !reclutadorEmail.trim()) return;
+  const handleAsignarReclutador = async () => {
+    if (!selectedHrId) return;
+    const userToAssign = hrUsers.find(
+      (u) => String(u.id) === String(selectedHrId)
+    );
+    if (!userToAssign) return;
+
     const yaExiste = localAsignados.some(
-      (r) => r.email && r.email === reclutadorEmail.trim()
+      (r) => String(r.id) === String(selectedHrId)
     );
     if (yaExiste) return;
-    const nuevo = {
-      nombre: reclutadorNombre.trim() || reclutadorEmail.trim(),
-      email: reclutadorEmail.trim(),
-      fecha: new Date().toLocaleDateString('es-ES'),
-    };
-    const nuevaLista = [...localAsignados, nuevo];
-    setLocalAsignados(nuevaLista);
-    if (onAsignarVacante) onAsignarVacante(job.id, nuevaLista);
-    setReclutadorNombre('');
-    setReclutadorEmail('');
+
+    try {
+      await vacanciesService.assignHr(userToAssign.id, [job.id]);
+
+      const nuevo = {
+        id: userToAssign.id,
+        nombre: userToAssign.name,
+        email: userToAssign.email,
+        fecha: new Date().toLocaleDateString('es-ES'),
+      };
+      const nuevaLista = [...localAsignados, nuevo];
+      setLocalAsignados(nuevaLista);
+      if (onAsignarVacante) onAsignarVacante(job.id, nuevaLista);
+      setSelectedHrId('');
+    } catch (err) {
+      console.error('Error al asignar reclutador:', err);
+      alert('Hubo un error al asignar el reclutador.');
+    }
   };
 
-  const handleDesasignarReclutador = (idx) => {
+  const handleDesasignarReclutador = async (idx) => {
+    const r = localAsignados[idx];
+    if (r.id) {
+      try {
+        await vacanciesService.unassignHr(r.id, [job.id]);
+      } catch (err) {
+        console.error('Error desasignando reclutador', err);
+        alert('Hubo un error al desasignar el reclutador.');
+        return;
+      }
+    }
     const nuevaLista = localAsignados.filter((_, i) => i !== idx);
     setLocalAsignados(nuevaLista);
     if (onAsignarVacante)
@@ -718,32 +759,24 @@ export default function VacancyModal({
 
                         {/* Formulario siempre visible para añadir más */}
                         <div className="asign-recruiter-row">
-                          <input
-                            type="text"
-                            className="form-control input-field"
-                            placeholder="Nombre del reclutador"
-                            value={reclutadorNombre}
-                            onChange={(e) =>
-                              setReclutadorNombre(e.target.value)
-                            }
-                          />
-                          <input
-                            type="email"
-                            className="form-control input-field"
-                            placeholder="Email del reclutador"
-                            value={reclutadorEmail}
-                            onChange={(e) => setReclutadorEmail(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleAsignarReclutador();
-                            }}
-                          />
+                          <select
+                            className="form-select input-field"
+                            value={selectedHrId}
+                            onChange={(e) => setSelectedHrId(e.target.value)}
+                          >
+                            <option value="">
+                              Selecciona un reclutador...
+                            </option>
+                            {hrUsers.map((user) => (
+                              <option key={user.id} value={user.id}>
+                                {user.name} ({user.email})
+                              </option>
+                            ))}
+                          </select>
                           <button
-                            className="btn btn-primary-custom btn-sm"
+                            className="btn btn-primary-custom btn-sm ms-2"
                             onClick={handleAsignarReclutador}
-                            disabled={
-                              !reclutadorNombre.trim() &&
-                              !reclutadorEmail.trim()
-                            }
+                            disabled={!selectedHrId}
                           >
                             <i className="bi bi-person-plus-fill me-1"></i>
                             Asignar

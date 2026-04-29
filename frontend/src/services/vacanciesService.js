@@ -42,6 +42,16 @@ const mapVacancyData = (v) => {
     description: v.job_description,
     salaryMin: v.salary_min,
     salaryMax: v.salary_max,
+    assignedTo: v.assigned_recruiters
+      ? v.assigned_recruiters.map((r) => ({
+          id: r.id,
+          nombre: r.name || r.nombre || r.email?.split('@')[0] || 'Usuario',
+          email: r.email,
+          fecha: r.created_at
+            ? new Date(r.created_at).toLocaleDateString('es-ES')
+            : new Date().toLocaleDateString('es-ES'),
+        }))
+      : [],
   };
 };
 
@@ -263,6 +273,42 @@ export const vacanciesService = {
         `Error al eliminar nota ${noteId} de vacante ${id}:`,
         error
       );
+      throw error;
+    }
+  },
+
+  assignHr: async (hrId, vacancyIds) => {
+    try {
+      const response = await authFetch(
+        ENDPOINTS.recruitment.vacantes.assignHr,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hr_id: hrId, vacancy_ids: vacancyIds }),
+        }
+      );
+      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error(`Error al asignar RRHH a vacantes:`, error);
+      throw error;
+    }
+  },
+
+  unassignHr: async (hrId, vacancyIds) => {
+    try {
+      const response = await authFetch(
+        ENDPOINTS.recruitment.vacantes.assignHr,
+        {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hr_id: hrId, vacancy_ids: vacancyIds }),
+        }
+      );
+      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error(`Error al desasignar RRHH de vacantes:`, error);
       throw error;
     }
   },
