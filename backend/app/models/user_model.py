@@ -31,7 +31,7 @@ class User(Base):
     # 'searches' nos permite acceder a search.user
     searches = relationship("Search", back_populates="user")
     # 'managed_offers" accede a ofertas donde este usuario es el gestor
-    managed_offers = relationship("JobOffer", secondary=VacancyAssignment, back_populates="managers")
+    managed_offers = relationship("JobOffer", secondary=VacancyAssignment.__table__, back_populates="managers")
 
     #client_profile = relationship("Client", back_populates="user", uselist=False)
 
