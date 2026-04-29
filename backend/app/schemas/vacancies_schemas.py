@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, List,Literal
-from pydantic import BaseModel, ConfigDict,Field,field_validator,HttpUrl
+from pydantic import BaseModel, ConfigDict,Field,field_validator,HttpUrl,model_validator
 from app.schemas.job_offer import OfferStatus
 
 
@@ -41,6 +41,35 @@ class VacancyDetail(VacancySummary):
     work_modality: Optional[str] = Field(None, max_length=50)
     sector: Optional[str] = Field(None, max_length=255)
     portal_id: Optional[int] = None
+    company_id: Optional[int] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def resolve_company_fields(cls, data):
+        company = getattr(data, "company", None)
+        if company:
+            # Convertimos a dict para poder modificar
+            result = {
+                "id": data.id,
+                "title": data.title,
+                "company_name": data.company_name or company.name,
+                "company_description": data.company_description or company.notes,
+                "company_id": data.company_id,
+                "location": data.location,
+                "offer_url": data.offer_url,
+                "job_description": data.job_description,
+                "contract_type": data.contract_type,
+                "work_modality": data.work_modality,
+                "sector": data.sector,
+                "portal_id": data.portal_id,
+                "salary_min": data.salary_min,
+                "salary_max": data.salary_max,
+                "published_at": data.published_at,
+                "status": data.status,
+                "is_favourite": data.is_favourite,
+            }
+            return result
+        return data
 
 # Schema para vacantes filtradas
 class VacancyFiltered(VacancySummary):

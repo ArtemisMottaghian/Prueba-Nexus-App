@@ -69,7 +69,7 @@ async def read_suitable_candidates(vacancy_id: int, db: AsyncSession = Depends(g
 # -----------------
 @router.get("/{vacancy_id}", response_model=VacancyDetail)
 async def read_vacancy(vacancy_id: int, db: AsyncSession = Depends(get_db)):
-    vacancy = await vacancies_service.get_vacancy_by_id(db, vacancy_id)
+    vacancy = await vacancies_service.get_vacancy_detail(db, vacancy_id)
 
     if vacancy is None:
         raise HTTPException(status_code=404, detail="La vacante no existe")

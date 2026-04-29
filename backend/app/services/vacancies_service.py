@@ -52,6 +52,23 @@ async def get_vacancy_by_id(db: AsyncSession, vacancy_id: int) -> Optional[JobOf
         raise e
 
 
+
+async def get_vacancy_detail(db: AsyncSession, vacancy_id: int) -> Optional[JobOffer]:
+    """Obtiene una vacante por su ID con la relación company cargada."""
+    try:
+        from sqlalchemy.orm import selectinload
+        query = (
+            select(JobOffer)
+            .options(selectinload(JobOffer.company))
+            .where(JobOffer.id == vacancy_id)
+        )
+        result = await db.execute(query)
+        return result.scalar_one_or_none()
+    except Exception as e:
+        raise e
+
+
+
 async def get_vacancies_filtered(
     db: AsyncSession,
     status: Optional[str] = None,
