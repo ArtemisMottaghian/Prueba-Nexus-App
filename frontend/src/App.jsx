@@ -12,8 +12,8 @@ import Vacancies from './pages/Vacancies';
 import Calendario from './pages/Calendar';
 import Clientes from './pages/Clientes';
 import Candidates from './pages/Candidates';
-import UserManagement from './pages/usermanagement';
-import MiCuenta from './pages/MiCuenta';
+import UserManagement from './components/settings/UserManagement';
+import MiCuenta from './components/settings/MiCuenta';
 // --- NUEVA IMPORTACIÓN ---
 import InboxPage from './pages/Inbox';
 import './index.css';
