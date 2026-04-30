@@ -18,7 +18,7 @@ const normalizarEstadoCuenta = (raw) => {
 
 const mapToFrontend = (client) => ({
   id: client.id,
-  nombre: client.company_name || client.nombre,
+  nombre: client.name || client.company_name || client.nombre || 'Desconocido',
   sector: client.sector,
   contactoPrincipal: client.primary_contact || client.contactoPrincipal,
   email: client.email,
@@ -28,7 +28,7 @@ const mapToFrontend = (client) => ({
   direccion: client.address || client.direccion || '',
   prioritario: client.prioritario || client.priority || false,
   estadoCuenta: normalizarEstadoCuenta(
-    client.account_status || client.estadoCuenta
+    client.lead_status || client.account_status || client.estadoCuenta
   ),
   responsable: client.account_owner || client.responsable || '',
   ultimoContacto: client.last_contact_at || client.ultimoContacto || null,
@@ -63,14 +63,14 @@ const mapToFrontend = (client) => ({
 });
 
 const mapToBackend = (client) => ({
-  company_name: client.nombre,
+  name: client.nombre,
   sector: client.sector,
   primary_contact: client.contactoPrincipal,
   email: client.email,
   phone: client.telefono,
   cif: client.cif,
   address: client.direccion,
-  account_status: client.estadoCuenta,
+  lead_status: client.estadoCuenta,
   account_owner: client.responsable,
 });
 
