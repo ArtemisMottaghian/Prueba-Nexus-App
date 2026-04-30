@@ -8,7 +8,7 @@ export default function CreateCandidate({ onClose, onSave }) {
     education: '',
     location: '',
     experience: '',
-    skills: '' // Lo manejamos como un texto separado por comas para que sea fácil de escribir
+    skills: '', // Lo manejamos como un texto separado por comas para que sea fácil de escribir
   });
 
   // 2. Manejador para actualizar el estado cuando el usuario escribe
@@ -16,7 +16,7 @@ export default function CreateCandidate({ onClose, onSave }) {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -36,12 +36,12 @@ export default function CreateCandidate({ onClose, onSave }) {
       education: formData.education,
       location: formData.location.trim(),
       // Nos aseguramos de que la experiencia sea un número
-      experience: formData.experience ? parseInt(formData.experience, 10) : 0, 
+      experience: formData.experience ? parseInt(formData.experience, 10) : 0,
       specialty: skillsArray.join(', '), // Opcional: para que se vea en tu lista actual
       skills: skillsArray,
       status: 'En proceso', // Estado por defecto para un nuevo candidato
       isFavorite: false,
-      verified: false
+      verified: false,
     };
 
     onSave(newCandidateData);
@@ -51,18 +51,21 @@ export default function CreateCandidate({ onClose, onSave }) {
     <>
       {/* Fondo oscuro del modal */}
       <div className="modal-backdrop fade show"></div>
-      
+
       {/* Contenedor principal del modal */}
       {/* 2. Añadimos la clase 'custom-create-modal' para que aplique nuestro CSS */}
-      <div className="modal fade show d-block custom-create-modal" tabIndex="-1" role="dialog">
+      <div
+        className="modal fade show d-block custom-create-modal"
+        tabIndex="-1"
+        role="dialog"
+      >
         <div className="modal-dialog modal-dialog-centered modal-lg">
           <div className="modal-content">
-            
             <div className="modal-header">
               <h4 className="modal-title fw-bold">Añadir Nuevo Candidato</h4>
-              <button 
-                type="button" 
-                className="btn-close" 
+              <button
+                type="button"
+                className="btn-close"
                 onClick={onClose}
                 aria-label="Cerrar"
               ></button>
@@ -71,7 +74,6 @@ export default function CreateCandidate({ onClose, onSave }) {
             {/* Usamos la etiqueta <form> para que funcione el 'Enter' y las validaciones de HTML5 */}
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
-                
                 {/* Nombre */}
                 <div className="mb-3">
                   <label htmlFor="name" className="form-label fw-semibold">
@@ -92,7 +94,10 @@ export default function CreateCandidate({ onClose, onSave }) {
                 <div className="row">
                   {/* Formación / Titulación */}
                   <div className="col-md-6 mb-3">
-                    <label htmlFor="education" className="form-label fw-semibold">
+                    <label
+                      htmlFor="education"
+                      className="form-label fw-semibold"
+                    >
                       Formación / Titulación
                     </label>
                     <select
@@ -105,8 +110,12 @@ export default function CreateCandidate({ onClose, onSave }) {
                       <option value="">Selecciona una opción...</option>
                       <option value="Bootcamp">Bootcamp</option>
                       <option value="FP Grado Medio">FP Grado Medio</option>
-                      <option value="FP Grado Superior">FP Grado Superior</option>
-                      <option value="Grado Universitario">Grado Universitario</option>
+                      <option value="FP Grado Superior">
+                        FP Grado Superior
+                      </option>
+                      <option value="Grado Universitario">
+                        Grado Universitario
+                      </option>
                       <option value="Máster">Máster</option>
                       <option value="Autodidacta">Autodidacta</option>
                     </select>
@@ -114,7 +123,10 @@ export default function CreateCandidate({ onClose, onSave }) {
 
                   {/* Años de Experiencia */}
                   <div className="col-md-6 mb-3">
-                    <label htmlFor="experience" className="form-label fw-semibold">
+                    <label
+                      htmlFor="experience"
+                      className="form-label fw-semibold"
+                    >
                       Años de experiencia
                     </label>
                     <div className="input-group">
@@ -167,29 +179,26 @@ export default function CreateCandidate({ onClose, onSave }) {
                     Escribe las tecnologías o habilidades separadas por comas.
                   </div>
                 </div>
-
               </div>
 
-
               <div className="modal-footer">
-                <button 
-                  type="button" 
-                  className="btn btn-outline-secondary" 
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
                   onClick={onClose}
                 >
                   Cancelar
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="btn btn-primary"
                   // Deshabilitar el botón si no hay nombre
-                  disabled={!formData.name.trim()} 
+                  disabled={!formData.name.trim()}
                 >
                   Guardar Candidato
                 </button>
               </div>
             </form>
-
           </div>
         </div>
       </div>

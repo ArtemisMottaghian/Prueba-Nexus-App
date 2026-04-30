@@ -106,11 +106,11 @@ export default function Candidates() {
       // Aquí conectaremos con tu candidatesService más adelante
       // const createdCandidate = await candidatesService.createCandidate(newCandidateData);
       // setCandidates((prev) => [createdCandidate, ...prev]);
-      
-      console.log("Candidato listo para guardar:", newCandidateData);
+
+      console.log('Candidato listo para guardar:', newCandidateData);
       setIsCreateModalOpen(false); // Cerramos tras guardar
     } catch (error) {
-      console.error("Error al crear el candidato", error);
+      console.error('Error al crear el candidato', error);
     }
   };
 
@@ -338,7 +338,7 @@ export default function Candidates() {
               <i className="bi bi-person-plus-fill me-2"></i>
               Añadir Candidato
             </button>
-            
+
             <button
               className={`btn btn-sm ${showDescartadas ? 'btn-danger' : 'btn-outline-secondary'}`}
               onClick={() => {
