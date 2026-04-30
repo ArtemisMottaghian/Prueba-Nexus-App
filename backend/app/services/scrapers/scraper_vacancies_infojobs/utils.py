@@ -32,12 +32,13 @@ async def upsert_company_sql(db_session, company_data: dict) -> int | None:
         
         query_company = text("""
             INSERT INTO companies (
-                name, cif, sector, website, linkedin_url, address, original_offer_id, updated_at
+                name, company_description,cif, sector, website, linkedin_url, address, original_offer_id, updated_at
             ) VALUES (
-                :name, :cif, :sector, :website, :linkedin_url, :address, :original_offer_id, CURRENT_TIMESTAMP
+                :name, :company_description, :cif, :sector, :website, :linkedin_url, :address, :original_offer_id, CURRENT_TIMESTAMP
             )
             ON CONFLICT (name) 
             DO UPDATE SET 
+                company_description = COALESCE(EXCLUDED.company_description, companies.company_description),
                 cif = COALESCE(EXCLUDED.cif, companies.cif),
                 sector = COALESCE(EXCLUDED.sector, companies.sector),
                 website = COALESCE(EXCLUDED.website, companies.website),
@@ -50,6 +51,7 @@ async def upsert_company_sql(db_session, company_data: dict) -> int | None:
 
         safe_company_data = {
             "name": company_data.get("name"),
+            "company_description": company_data.get("company_description"),
             "cif": company_data.get("cif"),
             "sector": company_data.get("sector"),
             "website": company_data.get("website"),
@@ -83,7 +85,7 @@ async def upsert_company_sql(db_session, company_data: dict) -> int | None:
             if email:
                 query_contact = text("""
                     INSERT INTO contacts (
-                        company_id, full_name, email, phone, job_title, updated_at
+                        company_id, full_name, email, phone, job_title, last_interaction
                     ) VALUES (
                         :company_id, :full_name, :email, :phone, 'Recruiter / HR', CURRENT_TIMESTAMP
                     )
@@ -91,14 +93,14 @@ async def upsert_company_sql(db_session, company_data: dict) -> int | None:
                     DO UPDATE SET 
                         full_name = COALESCE(EXCLUDED.full_name, contacts.full_name),
                         phone = COALESCE(EXCLUDED.phone, contacts.phone),
-                        updated_at = CURRENT_TIMESTAMP;
+                        last_interaction = CURRENT_TIMESTAMP;
                 """)
                 # Ejecutamos contacto con email (solo 2 parámetros)
                 await db_session.execute(query_contact, contact_data)
             else:
                 query_contact_no_email = text("""
                     INSERT INTO contacts (
-                        company_id, full_name, email, phone, job_title, updated_at
+                        company_id, full_name, email, phone, job_title, last_interaction
                     ) VALUES (
                         :company_id, :full_name, :email, :phone, 'Recruiter / HR', CURRENT_TIMESTAMP
                     )
@@ -122,21 +124,20 @@ async def upsert_job_offer(db_session, job_data: dict, model_class=None) -> bool
     """
     Inserta una nueva oferta de empleo mediante SQL directo.
     Usa 'company_id' para la relación correcta en la base de datos.
-    """
-    if 'company_description' not in job_data: job_data['company_description'] = None
-    
+    """    
     # Eliminamos company_name del diccionario para que no choque con el SQL
     job_data.pop("company_name", None)
+    job_data.pop("company_description", None)
 
     # Query usando company_id
     query = text("""
         INSERT INTO job_offers (
             portal_id, company_id, external_id, title, location, offer_url, 
-            job_description, company_description, published_at, sector, salary_min, salary_max, 
+            job_description, published_at, sector, salary_min, salary_max, 
             contract_type, contract_time, work_modality
         ) VALUES (
             :portal_id, :company_id, :external_id, :title, :location, :offer_url, 
-            :job_description, :company_description, :published_at, :sector, :salary_min, :salary_max, 
+            :job_description, :published_at, :sector, :salary_min, :salary_max, 
             :contract_type, :contract_time, :work_modality
         )
         ON CONFLICT (portal_id, external_id) 

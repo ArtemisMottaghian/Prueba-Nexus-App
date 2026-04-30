@@ -29,7 +29,7 @@ class Company(Base):
     __tablename__ = "companies"
 
     id = Column(BigInteger, primary_key=True, index=True)
-    name = Column(String(255), nullable=False)
+    name = Column(String(255), unique=True, nullable=False)
     company_description = Column(Text)
     cif = Column(String(50))
     sector = Column(String(255))

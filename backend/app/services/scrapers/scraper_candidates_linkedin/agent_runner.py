@@ -1,128 +1,169 @@
-from core.scraper_candidates_linkedin_config import HEADLESS_MODE, KEYWORDS_PER_SECTOR
 import os
-import aiohttp # Se usará si usamos la opción de pago
-from random import randint as py_randint
+import io
+import asyncio
 from typing import Optional
 from dotenv import load_dotenv
-from langchain_google_genai import ChatGoogleGenerativeAI
+from pypdf import PdfReader
 from playwright.async_api import async_playwright
-from schemas.candidates_schemas import CandidateCreate as CandidateSchema
+from langchain_google_genai import ChatGoogleGenerativeAI
+# Si no usas la BD todavía, puedes comentar la siguiente línea
+# from app.schemas.candidates_schemas import CandidateCreate as CandidateSchema
 
+# 1. Configuración Inicial
 load_dotenv()
 
-#Extracción con Firecwawl + IA
+# Rutas para persistencia de sesión
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+COOKIES_PATH = os.path.join(CURRENT_DIR, "cookies.json")
 
-async def extract_with_agent(url: str, location_fallback: str) -> Optional[dict]:
-    print(f"Analizando perfil: {url}")
+# Instancia de Gemini
+api_key = os.getenv("GOOGLE_AI_KEY")
+if not api_key:
+    print("  ERROR CRÍTICO: ¡Python no encuentra la llave! El valor de api_key es 'None'.")
+    print("  Revisa que el .env esté en la carpeta 'backend' y la variable se llame GOOGLE_API_KEY.")
+    import sys
+    sys.exit(1)
+llm = ChatGoogleGenerativeAI(
+    model="gemini-1.5-flash", 
+    google_api_key=api_key, 
+    temperature=0
+)
+
+async def login_to_linkedin(page):
+    """
+    Realiza el login automático si las cookies no existen o han caducado.
+    """
+    email = os.getenv("LINKEDIN_EMAIL")
+    password = os.getenv("LINKEDIN_PASSWORD")
+
+    if not email or not password:
+        print("  Error: Credenciales de LinkedIn no encontradas en el .env")
+        return False
+
     try:
-        page_content = ""
-
-        #----------------------------
-        # OPCION DE PAGO (Proxycurl)
-        #----------------------------
-        """
-        try:
-            api_key = os.getenvv("PROXYCURL_API_KEY")
-            headers = {'Authorization': f'Bearer {api_key}'}
-            endpoint = 'https://nubela.co/proxycurl/api/v2/linkedin'
-
-            async with aiohttp.ClientSession() as session:
-                async with aiohttp.get(endpoint, params={'url': url}, headers=headers) as response:
-                    if response.status == 200:
-                        profile_json = await response.json()
-                        # Se convierte el JSON en texto para que Gemini lo lea ifual
-                        page_content = str(profile_json)
-                    else:
-                        print(f"Error en API Proxycurl: {response.status}")
-                        return None
+        print("  Intentando login automático en LinkedIn...")
+        await page.goto("https://www.linkedin.com/login", wait_until="domcontentloaded")
         
-        except Exception as e:
-            print(f"Error con la API: {e}")
-            return None
-        """
-
-        #--------------------------
-        # OPCION GRATUITA (li_at)
-        #--------------------------
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(
-                headless=HEADLESS_MODE,
-                args=["--diable-blink-features=AutomationControlled"]
-                )
-
-            context = await browser.new_context(
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            )
-            li_at_cookie = os.getenv("LINKEDIN_LI_AT")
-            if li_at_cookie:
-                await context.add_cookies([
-                    {'name': 'li_at', 'value': li_at_cookie, 'domain': 'linkedin.com', 'path': '/'}
-                ])
-            
-            page = await context.new_page()
-
-            try:
-                await page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-            
-                await page.goto(url, wait_until="domcontentloaded", timeout=15000)
-                await page.wait_for_timeout(py_randint(15000, 30000))
-                await page.mouse.wheel(0, 800)
-                await page.wait_for_timeout(py_randint(15000, 30000))
-
-                page_content = await page.inner_text("body")
-            except Exception as e:
-                print(f"Tiempo de espera agotado en Playwright: {e}")
-            finally:
-                await browser.close()
-
-# Validación y Gemini
-
-        if not page_content or"authwall" in page_content.lower() or "Únete a LinkedIn" in page_content:
-            print("LinkedIn bloqueó la petición. Saltando")
-            return None
-
-        llm = ChatGoogleGenerativeAI(
-            model = "gemini-2.5-flash",
-            temperature = 0,
-            google_api_key = os.getenv("GOOGLE_AI_KEY")
-        )
-        llm_with_tools = llm.with_structured_output(CandidateSchema)
-
-        prompt = f"""
-        Eres un reclutador experto. Extrae la información del siguiente texto sacado de un perfil de LinkedIn.
-        REGLA CRÍTICA: Si el email no es visible, genera uno siguiendo exactamente este formato: nombre_apellido@scraping.local
+        # AÑADIDO .first PARA EVITAR STRICT MODE VIOLATION
+        await page.locator("input[name='session_key']").first.fill(email)
+        await page.locator("input[name='session_password']").first.fill(password)
+        await page.locator("button[type='submit']").first.click()
         
-        Contenido del perfil:
-        {page_content[:15000]}
-        """
-
-        extracted_data = await llm_with_tools.ainvoke(prompt)
-
-        if not extracted_data.is_open_to_work:
-            print("Descartado no esta en busqueda activa o no se pudo verificar")
-            return None
-
-        # Limpieza de datos
-        candidate_dict = extracted_data.dict()
-        if not candidate_dict.get("email"):
-            fn = candidate_dict["first_name"].replace(" ", "").lower()
-            ln = candidate_dict["last_name"].replace(" ", "").lower()
-            candidate_dict["email"] = f"{fn}{ln}@sccraping.local"
-            print(f"Email generado: {candidate_dict['email']}")
-
-        candidate_dict["candidate_url"] = url
-        candidate_dict["source"] = "LinkedIn"
-        candidate_dict["status"] = "active"
-        if not candidate_dict["location"]:
-            candidate_dict["location"] = location_fallback
-
-        return candidate_dict
-
-    except Exception as e: 
-        print(f"Error procesando {url}: {e}")
-        return None 
-
-
-
+        # Esperamos a ver la barra de navegación que confirma que estamos dentro
+        await page.wait_for_selector(".global-nav", timeout=15000)
         
+        # Guardamos el estado
+        await page.context.storage_state(path=COOKIES_PATH)
+        print("  Login exitoso y cookies.json generado.")
+        return True
+    except Exception as e:
+        print(f"  Fallo en el login automático: {str(e)}")
+        return False
+
+
+async def download_and_read_pdf(page):
+    """
+    Interactúa con el perfil para bajar el PDF y extraer el texto.
+    """
+    try:
+        # Clic en el botón de los tres puntos (...)
+        more_btn = page.locator("button[aria-label*='Más'], button[aria-label*='More'], .pvs-profile-actions__action button").first
+        await more_btn.wait_for(state="visible", timeout=10000)
+        await more_btn.click()
+        await asyncio.sleep(1) # Pausa para renderizado del menú
+
+        # Clic en 'Guardar en PDF'
+        async with page.expect_download() as download_info:
+            await page.get_by_text("Guardar en PDF").click()
+        
+        download = await download_info.value
+        pdf_bytes = await download.read_as_bytes()
+        
+        # Leer el PDF desde memoria usando pypdf
+        reader = PdfReader(io.BytesIO(pdf_bytes))
+        text = ""
+        for pdf_page in reader.pages:
+            content = pdf_page.extract_text()
+            if content:
+                text += content + "\n"
+        
+        return text
+    except Exception as e:
+        print(f"  Error al procesar el PDF: {e}")
+        return None
+
+
+async def parse_with_gemini(text_content: str):
+    """
+    Usa Gemini para convertir el texto sucio del PDF en un JSON limpio.
+    """
+    print("  Procesando perfil con Gemini...")
+    prompt = (
+        "Analiza el siguiente texto extraído de un perfil de LinkedIn y devuelve un JSON estricto "
+        "con los campos: 'full_name', 'education' (lista de objetos con 'degree', 'institution', 'dates') "
+        "y 'experience'. No añadas texto extra, solo el JSON.\n\n"
+        f"CONTENIDO DEL PDF:\n{text_content}"
+    )
     
+    try:
+        response = await llm.ainvoke(prompt)
+        return response.content
+    except Exception as e:
+        print(f"  Error en Gemini: {e}")
+        return None
+
+
+async def extract_with_agent(profile_url: str, location: str, headless: bool = False):
+    """
+    Función principal llamada por el orquestador.
+    """
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=headless)
+        
+        if os.path.exists(COOKIES_PATH):
+            context = await browser.new_context(storage_state=COOKIES_PATH)
+        else:
+            context = await browser.new_context()
+
+        page = await context.new_page()
+
+        try:
+            print(f" 🔍 Accediendo a: {profile_url}")
+            await page.goto(profile_url, wait_until="domcontentloaded")
+            await asyncio.sleep(2) # Pausa para que el DOM se asiente
+
+            # COMPROBACIÓN ROBUSTA: ¿Existe la barra de navegación?
+            is_logged_in = await page.locator(".global-nav").first.is_visible()
+
+            if not is_logged_in:
+                print(" 🛑 LinkedIn detectó que no estamos logueados.")
+                if not await login_to_linkedin(page):
+                    await browser.close()
+                    return None
+                
+                print(" ⏳ Login completado. Reiniciando entorno para evitar el bloqueo del feed...")
+                # EL TRUCO: Cerramos el contexto atascado
+                await context.close() 
+                
+                # Abrimos un contexto nuevo usando el archivo cookies.json recién creado
+                context = await browser.new_context(storage_state=COOKIES_PATH)
+                page = await context.new_page()
+                
+                print(f" 🔄 Cargando el perfil en una pestaña limpia: {profile_url}")
+                await page.goto(profile_url, wait_until="domcontentloaded")
+                await asyncio.sleep(3)
+
+            # 1. Obtener texto del PDF
+            raw_text = await download_and_read_pdf(page)
+            
+            if not raw_text:
+                return None
+
+            # 2. IA procesa el texto
+            structured_data = await parse_with_gemini(raw_text)
+            
+            print(f" ✅ Candidato extraído correctamente.")
+            return structured_data
+
+        finally:
+            await browser.close()

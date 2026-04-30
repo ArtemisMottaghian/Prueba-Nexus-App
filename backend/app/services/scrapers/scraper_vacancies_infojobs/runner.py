@@ -161,6 +161,7 @@ async def process_single_offer(offer: dict, kw: str, driver: Any, processed_ids:
         "external_id": f"IJ-{job_id}",
         "title": title,
         "company_name": company_name if company_name else "Empresa Confidencial",
+        "company_description": company_description,
         "location": location,
         "offer_url": job_url,
         "job_description": job_description,
@@ -240,6 +241,7 @@ async def extract_infojobs() -> list[dict]:
                                     job_data['company_name']
                                 )
 
+                                company_data["company_description"] = job_data.get("company_description")
                                 if "contact_first_name" not in company_data: company_data["contact_first_name"] = None
                                 if "contact_last_name" not in company_data: company_data["contact_last_name"] = None
                                 company_data["original_offer_id"] = job_data["external_id"]

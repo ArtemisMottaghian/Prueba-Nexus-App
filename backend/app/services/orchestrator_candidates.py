@@ -36,8 +36,8 @@ async def gather_raw_candidates() -> list[dict]:
                 headless=HEADLESS_MODE,
             ),
         ),
-        ("github", extract_github),
-        ("google_pdfs", extract_pdfs_google),
+        #("github", extract_github),
+        #("google_pdfs", extract_pdfs_google),
     ]
 
     for name, scraper_func in scrapers:

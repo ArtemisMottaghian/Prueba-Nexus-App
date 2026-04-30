@@ -251,6 +251,13 @@ async def extract_linked() -> list[dict]:
                         all_offers_extracted.append(job_data)
                         new_in_block += 1
 
+                        print(f"Intentado guardar la oferta de LinkedIn: {job_data.get('title')}")
+                        exito_guardando = await process_scraped_job(job_data)
+                        if exito_guardando:
+                            print(f"Guardado correctamente")
+                        else:
+                            print(f"Error al guardar en BBDD")
+                            
                         if offer_count >= getattr(
                             config, "MAX_OFFERS", 10
                         ):
@@ -284,20 +291,5 @@ async def extract_linked() -> list[dict]:
 
 
 if __name__ == "__main__":
-    # Importamos la nueva funcion orquestadora (Ajusta la ruta segun tu proyecto)
-    
-    # 1. Lanzamos el scraper web de LinkedIn
-    resultados = asyncio.run(extract_linked())
-    print(f"\n[OK] Se han extraido {len(resultados)} ofertas de la web de LinkedIn.")
-    
-    ofertas_guardadas = 0
-    
-    # 2. Procesamos cada oferta extraida pasandole el diccionario COMPLETO
-    for resultado in resultados:
-        # Pasamos toda la data (incluyendo salary_min, modality, location...)
-        exito = process_scraped_job(resultado)
-        
-        if exito:
-            ofertas_guardadas += 1
-            
-    print(f"\n[INFO] PROCESO FINALIZADO. Se guardaron {ofertas_guardadas} nuevas ofertas enriquecidas con IA.")
+    results = asyncio.run(extract_linked)
+    print(f"Se han extraido y procesado {len(results)} ofertas de LinkedIn")

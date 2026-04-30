@@ -13,7 +13,7 @@ SECTORES = {
     
 }
 
-KEYWORDS = "Suasor"
+KEYWORDS = ["Suasor", "python", "desarrollador", "backend"]
 
 CIUDADES = [
     #"Madrid",

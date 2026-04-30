@@ -4,7 +4,7 @@ import asyncio
 from typing import List, Dict, Any
 from dotenv import load_dotenv
 from firecrawl import FirecrawlApp
-from agent_runner import extract_with_agent
+from .agent_runner import extract_with_agent
 from app.core.scraper_candidates_linkedin_config import KEYWORDS_PER_SECTOR
 
 load_dotenv()
