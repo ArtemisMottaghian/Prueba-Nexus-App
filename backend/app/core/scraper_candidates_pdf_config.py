@@ -1,5 +1,5 @@
 # Configuramos si vemos el navegador o no para cambiarlo solo teenemos que poner en lugar de False True
-HEADLESS_MODE = False
+HEADLESS_MODE = True
 MAX_PROFILES_PER_SEARCH = 10
 
 SECTORES = {
