@@ -2,7 +2,9 @@ import enum
 from sqlalchemy import Column, String, Boolean, DateTime, BigInteger, Enum as PgEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from app.db.connection import Base
+from app.db.base import Base
+from app.models.assignments_model import VacancyAssignment
+
 
 class UserRole(str, enum.Enum):
     admin = "admin"
@@ -29,8 +31,8 @@ class User(Base):
     # 'searches' nos permite acceder a search.user
     searches = relationship("Search", back_populates="user")
     # 'managed_offers" accede a ofertas donde este usuario es el gestor
-    managed_offers = relationship("JobOffer", back_populates="manager")
+    managed_offers = relationship("JobOffer", secondary=VacancyAssignment.__table__, back_populates="managers")
 
-    client_profile = relationship("Client", back_populates="user", uselist=False)
+    #client_profile = relationship("Client", back_populates="user", uselist=False)
 
 

@@ -7,6 +7,8 @@ from fastapi import HTTPException
 from app.models.job_model import JobOffer
 from app.schemas.job_offer import OfferStatus
 from app.models.error_log_model import ErrorLog
+from datetime import timezone
+from app.models.job_model import JobPortal
 
 async def get_lead_stats(db: AsyncSession, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
     try:
@@ -64,18 +66,28 @@ PORTAL_IDS = {
 }
 
 async def get_scrapers_status(db: AsyncSession) -> dict:
-    from datetime import timezone
+
+
     today = datetime.now(timezone.utc).date()
     result = {}
 
     for scraper, portal_id in PORTAL_IDS.items():
+
+        # Última ejecución del scraper (nuevo campo)
+        portal_query = select(JobPortal.last_run_at, JobPortal.last_run_status).where(
+            JobPortal.id == portal_id
+        )
+        portal_res = await db.execute(portal_query)
+        portal_row = portal_res.first()
+        last_run_at = portal_row.last_run_at if portal_row else None
+        last_run_status = portal_row.last_run_status if portal_row else None
 
         # Última oferta insertada por este portal
         last_offer_query = select(JobOffer.scraped_at).where(
             JobOffer.portal_id == portal_id
         ).order_by(JobOffer.scraped_at.desc()).limit(1)
         last_offer_res = await db.execute(last_offer_query)
-        last_extraction = last_offer_res.scalar_one_or_none()
+        last_insertion = last_offer_res.scalar_one_or_none()
 
         # Ofertas de hoy
         offers_today_query = select(func.count(JobOffer.id)).where(
@@ -94,21 +106,22 @@ async def get_scrapers_status(db: AsyncSession) -> dict:
         last_error = error_res.first()
 
         # Determinar status
-        if last_error and last_extraction:
-            if last_error.occurred_at > last_extraction:
-                status = "warning"
-            else:
-                status = "online"
-        elif last_error and not last_extraction:
+        if last_run_status == "error" or last_run_status == "timeout":
             status = "error"
-        elif last_extraction:
+        elif last_error and last_run_at and last_error.occurred_at > last_run_at:
+            status = "warning"
+        elif last_run_at:
+            status = "online"
+        elif last_insertion:
             status = "online"
         else:
             status = "unknown"
 
         result[scraper] = {
             "status": status,
-            "last_extraction": last_extraction,
+            "last_run_at": last_run_at,           # cuándo corrió el scraper
+            "last_run_status": last_run_status,   # ok / error / timeout
+            "last_insertion": last_insertion,      # cuándo se insertó la última oferta
             "offers_today": offers_today,
             "error": last_error.message if last_error else None
         }

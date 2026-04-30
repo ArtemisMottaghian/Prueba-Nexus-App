@@ -3,45 +3,70 @@ import './ClienteCard.css';
 export default function ClienteCard({
   cliente,
   isSelected,
+  isBulkSelected,
+  onBulkSelect,
   onClick,
   onEdit,
   onDelete,
   onTogglePrioritario,
 }) {
+  const initial = (cliente.nombre || '?').charAt(0).toUpperCase();
+
   return (
     <div
       className={`cliente-card ${isSelected ? 'active' : ''} ${cliente.prioritario ? 'prioritario' : ''}`}
       onClick={() => onClick(cliente)}
     >
-      <div className="d-flex justify-content-between align-items-start">
-        <div className="flex-grow-1 me-2" style={{ minWidth: 0 }}>
-          <div className="d-flex align-items-center gap-2 mb-1">
-            <h6 className="cliente-nombre mb-0 text-truncate">
-              {cliente.nombre}
-            </h6>
+      {/* ── Fila superior: checkbox + avatar + info + acciones ── */}
+      <div className="cc-top">
+        {onBulkSelect && (
+          <input
+            type="checkbox"
+            className="cc-checkbox"
+            checked={isBulkSelected || false}
+            onChange={(e) => {
+              e.stopPropagation();
+              onBulkSelect(cliente.id);
+            }}
+            onClick={(e) => e.stopPropagation()}
+          />
+        )}
+
+        {/* Avatar con inicial */}
+        <div
+          className={`cc-avatar ${cliente.prioritario ? 'cc-avatar--vip' : ''}`}
+        >
+          {initial}
+        </div>
+
+        {/* Nombre + sector */}
+        <div className="cc-info">
+          <div className="cc-name-row">
+            <span className="cc-nombre">{cliente.nombre}</span>
             {cliente.prioritario && (
-              <i className="bi bi-star-fill cliente-vip-icon flex-shrink-0"></i>
+              <i className="bi bi-star-fill cc-vip-icon" title="VIP"></i>
             )}
           </div>
-          <span className="cliente-sector">{cliente.sector}</span>
+          <span className="cc-sector-tag">{cliente.sector}</span>
         </div>
-        <div className="d-flex align-items-center gap-1 flex-shrink-0">
-          <span className="cliente-vacantes-badge me-1">
-            {cliente.vacantesAbiertas}{' '}
-            {cliente.vacantesAbiertas !== 1 ? 'vacantes' : 'vacante'}
-          </span>
+
+        {/* Acciones: se muestran al hacer hover */}
+        <div className="cc-actions">
           <button
-            className={`btn-icon btn-icon-sm ${cliente.prioritario ? 'text-warning' : ''}`}
+            className={`cc-btn ${cliente.prioritario ? 'cc-btn--star-on' : ''}`}
             title={cliente.prioritario ? 'Quitar VIP' : 'Marcar como VIP'}
-            onClick={(e) => onTogglePrioritario(e, cliente)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onTogglePrioritario(e, cliente);
+            }}
           >
             <i
               className={`bi bi-star${cliente.prioritario ? '-fill' : ''}`}
             ></i>
           </button>
           <button
-            className="btn-icon btn-icon-sm"
-            title="Editar cliente"
+            className="cc-btn"
+            title="Editar"
             onClick={(e) => {
               e.stopPropagation();
               onEdit(e, cliente);
@@ -50,8 +75,8 @@ export default function ClienteCard({
             <i className="bi bi-pencil"></i>
           </button>
           <button
-            className="btn-icon btn-icon-sm text-danger"
-            title="Eliminar cliente"
+            className="cc-btn cc-btn--danger"
+            title="Eliminar"
             onClick={(e) => {
               e.stopPropagation();
               onDelete(e, cliente);
@@ -61,9 +86,18 @@ export default function ClienteCard({
           </button>
         </div>
       </div>
-      <div className="cliente-contacto mt-2">
-        <i className="bi bi-person me-1"></i>
-        {cliente.contactoPrincipal}
+
+      {/* ── Fila inferior: vacantes + contacto ── */}
+      <div className="cc-bottom">
+        <span className="cc-vacantes-badge">
+          <i className="bi bi-briefcase me-1"></i>
+          {cliente.vacantesAbiertas}{' '}
+          {cliente.vacantesAbiertas !== 1 ? 'vacantes' : 'vacante'}
+        </span>
+        <span className="cc-contacto">
+          <i className="bi bi-person me-1"></i>
+          {cliente.contactoPrincipal}
+        </span>
       </div>
     </div>
   );

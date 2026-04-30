@@ -15,7 +15,9 @@ class LeadMetrics(BaseModel):
 
 class ScraperStatus(BaseModel):
     status: str  # "online" | "warning" | "error" | "unknown"
-    last_extraction: Optional[datetime] = None
+    last_run_at: Optional[datetime] = None        # cuándo corrió el scraper
+    last_run_status: Optional[str] = None         # ok / error / timeout
+    last_insertion: Optional[datetime] = None     # cuándo se insertó la última oferta
     offers_today: int = 0
     error: Optional[str] = None
 

@@ -94,6 +94,11 @@ export default function Sidebar({ isOpen, onClose }) {
           </nav>
 
           <div className="sidebar-footer pb-3">
+            <NavLink to="/cuenta" className="sidebar-item" onClick={onClose}>
+              <i className="bi bi-person-gear"></i>
+              <span className="sidebar-text">Gestionar tu cuenta</span>
+            </NavLink>
+
             {hasRole('admin') && (
               <NavLink
                 to="/settings"
@@ -101,7 +106,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 onClick={onClose}
               >
                 <i className="bi bi-gear"></i>
-                <span className="sidebar-text">Configuración</span>
+                <span className="sidebar-text">Configuración del sistema</span>
               </NavLink>
             )}
 

@@ -1,16 +1,17 @@
 import asyncio
 from dotenv import load_dotenv
+from sqlalchemy import select
 load_dotenv()
 from datetime import datetime, timedelta, timezone
 from typing import Any
 from sqlalchemy.dialects.postgresql import insert
-
 from app.db.session import AsyncSessionLocal
-from app.db.connection import Base
 
+
+from app.models.user_model import User
 from app.models.job_model import JobOffer
-from app.models.clients_model import Client
 from app.models.contacts_model import Contact
+from app.models.companies_model import Company 
 
 from app.schemas.job_offer import ScrapedJobOffer
 from app.services.scrapers.scraper_vacancies_linkedin.runner import extract_linked
@@ -21,6 +22,7 @@ from app.services.enrichment_service import (
     search_with_phantombuster,
 )
 from app.services.scraper_logs_service import log_scraper_error
+from app.services.vacancies_service import update_portal_last_run
 
 SKIP_ENRICHMENT = False
 
@@ -52,9 +54,11 @@ async def gather_raw_offers() -> list[dict]:
             if isinstance(result, list):
                 raw_offers.extend(result)
                 print(f"{name.upper()} terminado. {len(result)} ofertas extraídas.")
+                await update_portal_last_run(name, status="ok")
 
         except asyncio.TimeoutError:
             print(f"TIMEOUT en {name.upper()} — saltando scraper")
+            await update_portal_last_run(name, status="timeout")
             await log_scraper_error(
                 error_code=f"SCRAPER_{name.upper()}_TIMEOUT",
                 message=f"scraper={name} | stage=gather | exc=TimeoutError after 300s",
@@ -62,6 +66,7 @@ async def gather_raw_offers() -> list[dict]:
 
         except Exception as e:
             print(f"Error crítico en {name.upper()}: {e}")
+            await update_portal_last_run(name, status="error")
             await log_scraper_error(
                 error_code=f"SCRAPER_{name.upper()}_CRITICAL",
                 message=f"scraper={name} | stage=gather | exc={e}",
@@ -166,7 +171,7 @@ async def enrich_single_offer(offer: ScrapedJobOffer) -> dict[str, Any]:
 async def save_to_database(enriched_data_list: list[dict | Exception]) -> None:
     """
     Guarda las ofertas enriquecidas en la base de datos de forma transaccional.
-    Si la oferta es nueva, crea automáticamente los registros de Cliente y Contacto.
+    Si la oferta es nueva, crea automáticamente los registros de Empresa y Contacto. Comprobando si ya existen para evitar duplicados
 
     Args:
         enriched_data_list (list[dict | Exception]): Resultados del enriquecimiento.
@@ -194,6 +199,8 @@ async def save_to_database(enriched_data_list: list[dict | Exception]) -> None:
                 offer_data.pop("recruiter_email", None)
                 offer_data.pop("fingerprint", None)
 
+                offer_data.pop("company_id", None)
+
                 stmt_offer = insert(JobOffer).values(**offer_data)
                 stmt_offer = stmt_offer.on_conflict_do_nothing(
                     constraint="unique_offer_per_portal"
@@ -204,30 +211,37 @@ async def save_to_database(enriched_data_list: list[dict | Exception]) -> None:
 
                 if new_offer_id:
                     company_name = offer_data.get("company_name")
+                    
+                    company_id = None
 
-                    # Insertamos Cliente
-                    stmt_client = (
-                        insert(Client)
-                        .values(
-                            original_offer_id=new_offer_id,
-                            company_name=company_name,
-                            entity_type="scraping_prospect",
-                            lead_status="new",
+                    # comprobamos si la empresa no existe
+                    if company_name:
+                        result_company = await session.execute(
+                            select(Company.id).where(Company.name == company_name)
                         )
-                        .returning(Client.id)
-                    )
+                        company_id = result_company.scalar_one_or_none()
 
-                    result_client = await session.execute(stmt_client)
-                    new_client_id = result_client.scalar_one()
+                        # si no existe la creamos y obtenemos id
+                        if not company_id:
+                            stmt_new_company = (
+                                insert(Company)
+                                .values(name=company_name)
+                                .returning(Company.id)
+                            )
+                            result_new_company = await session.execute(stmt_new_company)
+                            company_id = result_new_company.scalar_one()
 
-                    # Insertamos Contacto
-                    stmt_contact = insert(Contact).values(
-                        client_id=new_client_id,
-                        full_name=recruiter_name or "HR Department",
-                        email=recruiter_email,
-                        job_title="HR / Recruiter",
-                    )
-                    await session.execute(stmt_contact)
+                    
+                    # Insertamos Contacto si existe
+                    if recruiter_name or recruiter_email:
+                        stmt_contact = insert(Contact).values(
+                            company_id=company_id,
+                            full_name=recruiter_name or "HR Department",
+                            email=recruiter_email,
+                            job_title="HR / Recruiter",
+                        )
+                        stmt_contact = stmt_contact.on_conflict_do_nothing()
+                        await session.execute(stmt_contact)
 
             await session.commit()
 

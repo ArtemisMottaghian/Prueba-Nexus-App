@@ -1,9 +1,10 @@
-from sqlalchemy import select,func,case
+from sqlalchemy import select,func,case,distinct
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from app.models.candidates_model import Candidate 
 from app.schemas.candidates_schemas import CandidateStatus, CandidateCreate,CandidateUpdate,ScraperStatusItem, CandidateScraperStatusOut
 from datetime import datetime, timezone, timedelta
+import re
 
 async def get_all_candidates(
     db: AsyncSession,
@@ -34,6 +35,18 @@ async def get_candidate_by_id(db: AsyncSession, candidate_id: int) -> Optional[C
     query = select(Candidate).where(Candidate.id == candidate_id)
     result = await db.execute(query)
     return result.scalar_one_or_none()
+
+async def search_candidates_by_name(db: AsyncSession, name: str) -> List[Candidate]:
+    """Busca candidatos por nombre o apellido."""
+    from sqlalchemy import or_
+    query = select(Candidate).where(
+        or_(
+            Candidate.first_name.ilike(f"%{name}%"),
+            Candidate.last_name.ilike(f"%{name}%")
+        )
+    ).order_by(Candidate.created_at.desc())
+    result = await db.execute(query)
+    return result.scalars().all()
 
 async def create_candidate(db: AsyncSession, datos: CandidateCreate) -> Candidate:
     nuevo = Candidate(**datos.model_dump())
@@ -76,7 +89,7 @@ async def delete_candidate(db: AsyncSession, candidate_id: int) -> bool:
     return True
 
 
-async def set_favorite(db: AsyncSession, candidate_id: int, favorite: bool) -> None:
+async def set_favourite(db: AsyncSession, candidate_id: int, favourite: bool) -> None:
     """Marca o desmarca un candidato como favorito."""
     try:
         query = select(Candidate).where(Candidate.id == candidate_id)
@@ -84,7 +97,7 @@ async def set_favorite(db: AsyncSession, candidate_id: int, favorite: bool) -> N
         candidate = result.scalar_one_or_none()
 
         if candidate:
-            candidate.is_favorite = favorite
+            candidate.is_favourite = favourite
             await db.commit()
     except Exception as e:
         raise e
@@ -157,4 +170,91 @@ async def get_scraper_status(db: AsyncSession) -> CandidateScraperStatusOut:
         ))
 
     return CandidateScraperStatusOut(scrapers=result_list)
+
+# ------------------------------------
+# Mapa de normalización de ubicaciones
+# ------------------------------------
+_LOCATION_FIXES = {
+    "a coruña": "A Coruña",
+    "a coruna": "A Coruña",
+    "la coruña": "A Coruña",
+    "almeria": "Almería",
+    "cadiz": "Cádiz",
+    "malaga": "Málaga",
+    "malága": "Málaga",
+    "jaen": "Jaén",
+    "cordoba": "Córdoba",
+    "leon": "León",
+    "gijon": "Gijón",
+    "españa": None,
+    "spain": None,
+    "remote": None,
+    "remoto": None,
+    "ibiza": "Ibiza",
+    "palencia": "Palencia",
+    "segovia": "Segovia",
+    "oviedo": "Oviedo",
+    "sevilla": "Sevilla",
+    "cartagena": "Cartagena",
+    "valladolid": "Valladolid",
+    "canarias": "Canarias",
+    "catalonia": None,
+    "cataluña": None,
+    "galicia": None,
+    "europe": None,
+    "españa": None,
+}
+
+_INVALID_PATTERNS = re.compile(
+    r'(linkedin\.com|http|\.com|@'
+    r'|\d{5}'                           # códigos postales
+    r'|c\/|blvd|plaza|universidad|university'
+    r'|avenida|calle|carrer|campus|edificio|coronel|ctra\.|paseo|carretera'
+    r'|\d+\s*(bajo|alto|s\/n)'          # números de portal
+    r'|^[\d\s\.\,]+$'                   # solo números/puntos/comas
+    r'|remot'                           # remote/remoto
+    r'|\/.*\/'                          # formato "A / B / C"
+    r'|between\s'                       # "Between Huelva & Granada"
+    r'|lugo\s*@'                        # "Lugo @ A Coruña"
+    r'|\w+\s*~\s*\w+'                   # "Logroño~Burgos~Pamplona"
+    r'|lisbon|helsinki|tokyo'           # ciudades fuera de España
+    r'|salt\b|malmö'
+    r'|->|⊠|\.\s*spain|\.\s*españa)',   # flechas, símbolos raros
+    re.IGNORECASE
+)
+
+def _normalize_location(raw: str) -> str | None:
+    if not raw:
+        return None
+    # Descartar entradas con patrones inválidos
+    if _INVALID_PATTERNS.search(raw):
+        return None
+    # Primer fragmento antes de coma, slash, guion largo, pipe
+    city = re.split(r'[,/|–\-]', raw)[0].strip()
+    # Eliminar sufijos tipo "(Spain)", "(GMT+1)"
+    city = city.split("(")[0].strip()
+    # Limpiar guion con contexto " - algo" al final
+    city = re.sub(r'\s*-\s*(spain|españa|es|galicia|cataluña|asturias)$', '', city, flags=re.IGNORECASE).strip()
+    # Descartar si queda vacío, muy corto, o sigla tipo "ES"
+    if not city or len(city) < 3 or (city.isupper() and len(city) <= 3):
+        return None
+    # Aplicar correcciones del mapa (None = descartar)
+    normalized = _LOCATION_FIXES.get(city.lower(), city)
+    return normalized
+
+
+async def get_location_options(db: AsyncSession) -> List[str]:
+    """Devuelve lista de ciudades únicas normalizadas para el filtro del frontend."""
+    from sqlalchemy import distinct
+    query = select(distinct(Candidate.location)).where(Candidate.location.isnot(None))
+    result = await db.execute(query)
+    raw_locations = result.scalars().all()
+
+    normalized: set[str] = set()
+    for loc in raw_locations:
+        city = _normalize_location(loc)
+        if city:
+            normalized.add(city)
+
+    return sorted(normalized)
 

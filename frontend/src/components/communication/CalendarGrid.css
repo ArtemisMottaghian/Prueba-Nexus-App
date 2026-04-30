@@ -5,7 +5,6 @@
 /* ── CONTENEDOR PRINCIPAL ──────────────────────── */
 .calendar-container {
   min-height: 100vh;
-  background: var(--bg-secondary);
   color: var(--text-primary);
   padding: 2rem;
   display: flex;

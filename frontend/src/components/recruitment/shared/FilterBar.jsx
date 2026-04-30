@@ -6,6 +6,11 @@ export default function FilterBar({
   onFilterChange,
   onClearFilters,
   locationOptions = [],
+  industryOptions = [
+    { value: 'Technology', label: 'Tecnología' },
+    { value: 'Finance', label: 'Finanzas' },
+    { value: 'Healthcare', label: 'Salud' },
+  ],
   statusOptions = [
     { value: 'New', label: 'Nuevas' },
     { value: 'Contacted', label: 'Contactados' },
@@ -21,6 +26,8 @@ export default function FilterBar({
   disponibilidadOptions = null,
   experienciaOptions = null,
   provinciaOptions = null,
+  modalidadOptions = null,
+  showVerifiedFilter = false,
 }) {
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -29,6 +36,8 @@ export default function FilterBar({
     'experiencia',
     'disponibilidad',
     'provincia',
+    'modalidad',
+    ...(showVerifiedFilter ? ['verified'] : []),
   ];
   const hasExtraFilters = extraFilterKeys.some(
     (k) => filters[k] && filters[k] !== 'All'
@@ -40,7 +49,8 @@ export default function FilterBar({
     filters.location !== 'All' ||
     filters.industry !== 'All' ||
     filters.source !== 'All' ||
-    hasExtraFilters;
+    hasExtraFilters ||
+    (showVerifiedFilter && filters.verified && filters.verified !== 'All');
 
   return (
     <div className="linkedin-filter-container">
@@ -113,9 +123,11 @@ export default function FilterBar({
                 onChange={(e) => onFilterChange('industry', e.target.value)}
               >
                 <option value="All">Todas</option>
-                <option value="Technology">Tecnología</option>
-                <option value="Finance">Finanzas</option>
-                <option value="Healthcare">Salud</option>
+                {industryOptions.map((opt) => (
+                  <option key={opt.value ?? opt} value={opt.value ?? opt}>
+                    {opt.label ?? opt}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -133,6 +145,23 @@ export default function FilterBar({
                 ))}
               </select>
             </div>
+
+            {modalidadOptions && (
+              <div className="filter-group">
+                <label>Modalidad</label>
+                <select
+                  value={filters.modalidad || 'All'}
+                  onChange={(e) => onFilterChange('modalidad', e.target.value)}
+                >
+                  <option value="All">Todas</option>
+                  {modalidadOptions.map((opt) => (
+                    <option key={opt.value ?? opt} value={opt.value ?? opt}>
+                      {opt.label ?? opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {experienciaOptions && (
               <div className="filter-group">
@@ -204,6 +233,20 @@ export default function FilterBar({
                       {opt.label ?? opt}
                     </option>
                   ))}
+                </select>
+              </div>
+            )}
+
+            {showVerifiedFilter && (
+              <div className="filter-group">
+                <label>Verificado</label>
+                <select
+                  value={filters.verified || 'All'}
+                  onChange={(e) => onFilterChange('verified', e.target.value)}
+                >
+                  <option value="All">Todos</option>
+                  <option value="yes">Sí</option>
+                  <option value="no">No</option>
                 </select>
               </div>
             )}

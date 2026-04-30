@@ -1,0 +1,225 @@
+/*  ESTRUCTURA DEL DASHBOARD */
+.dashboard-grid-system {
+  display: grid;
+  grid-template-columns: 1fr 320px; 
+  gap: 25px;
+  align-items: start;
+  width: 100%;
+}
+
+.dashboard-main-content {
+  min-width: 0; 
+}
+
+.dashboard-sidebar {
+  position: sticky;
+  top: 20px;
+  align-self: start;
+  height: fit-content;
+}
+
+/* CONTENEDOR DEL WIDGET */
+.calendar-widget-container {
+  margin-top: 0;
+  min-height: 0;
+  transition: none;
+  flex-direction: column;
+  /* Dejar que la tarjeta base (`dashboard-quick-card`) controle el look */
+  gap: 0;
+  align-items: stretch;
+  /* Reduce el padding para evitar mucho blanco cuando no hay eventos */
+  padding: 0.85rem 1rem !important;
+  /* Destacar un poco más respecto al resto de tarjetas */
+  border-color: rgba(124, 58, 237, 0.55) !important;
+  border-style: solid !important;
+  border-width: 3px !important;
+  box-shadow: 0 14px 40px rgba(124, 58, 237, 0.14) !important;
+  color: var(--text-primary);
+}
+
+.calendar-widget-container::before {
+  /* Quitamos la “línea interna” de dashboard-quick-card para que
+     se parezca al borde grueso del contenedor (solo contorno). */
+  height: 0 !important;
+  background: transparent !important;
+  opacity: 0 !important;
+}
+
+.calendar-widget-container:hover {
+  transform: none;
+}
+
+/* Cabecera */
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(124, 58, 237, 0.35);
+  padding-bottom: 6px;
+}
+
+.widget-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+/* ELEMENTOS DE LA LISTA */
+.events-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 5px;
+  width: 100%;
+}
+
+.no-events {
+  margin: 0;
+  color: var(--text-primary) !important;
+  font-weight: 600;
+}
+
+.loading-msg {
+  margin: 0;
+  color: var(--text-primary) !important;
+  font-weight: 600;
+}
+
+.error-message-inline {
+  margin: 0;
+  color: #b91c1c !important;
+  font-weight: 600;
+}
+
+/* Scrollbar estilizada */
+.events-list::-webkit-scrollbar {
+  width: 5px;
+}
+.events-list::-webkit-scrollbar-thumb {
+  background: #ddd6fe;
+  border-radius: 10px;
+}
+
+.event-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  background: #fcfaff; /* Fondo muy suave morado */
+  border-left: 5px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.event-item:hover {
+  background: #f5f3ff;
+}
+
+/* Diferenciación de origen */
+.event-local { border-left-color: #10b981; }
+.event-google { border-left-color: #4285F4; }
+
+.event-date {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  min-width: 50px;
+  text-align: center;
+  padding: 5px 2px;
+}
+
+.event-date .day {
+  display: block;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #111827;
+}
+
+.event-date .month {
+  display: block;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: #7c3aed; 
+  font-weight: 600;
+}
+
+.event-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.event-name {
+  font-weight: 600;
+  margin: 0;
+  color: #1f2937;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-time {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/*  BOTÓN RECONECTAR Y MENSAJES */
+.mini-reconnect-btn {
+  background: #f5f3ff;
+  border: 1.5px solid #ddd6fe;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse-purple 2s infinite;
+}
+
+@keyframes pulse-purple {
+  0% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(124, 58, 237, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+}
+
+.google-status-msg {
+  font-size: 0.75rem;
+  text-align: center;
+  margin-top: 15px;
+  color: #6b7280;
+}
+
+.google-status-msg span {
+  color: #7c3aed;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/*  RESPONSIVE  */
+@media (max-width: 1024px) {
+  .dashboard-grid-system {
+    grid-template-columns: 1fr; 
+  }
+
+  .dashboard-sidebar {
+    position: static; 
+    order: -1; 
+    width: 100%;
+  }
+
+  .calendar-widget-container {
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-width: 2px; 
+  }
+
+  .event-name {
+    white-space: normal; 
+  }
+}

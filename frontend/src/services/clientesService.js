@@ -27,7 +27,6 @@ const mapToFrontend = (client) => ({
   cif: client.cif || '',
   direccion: client.address || client.direccion || '',
   prioritario: client.prioritario || client.priority || false,
-  // === Seguimiento comercial a nivel EMPRESA (Issue #329) ===
   estadoCuenta: normalizarEstadoCuenta(
     client.account_status || client.estadoCuenta
   ),
@@ -75,12 +74,11 @@ const mapToBackend = (client) => ({
   account_owner: client.responsable,
 });
 
-// Fallback local si el backend está offline
 const getClientesDummy = () => clientesDummy.map(mapToFrontend);
 
 export const getClientes = async () => {
   try {
-    const response = await authFetch(ENDPOINTS.crm.clientes);
+    const response = await authFetch(ENDPOINTS.companies.list);
     if (!response.ok) throw new Error('Error al obtener clientes');
     const data = await response.json();
     return data.map(mapToFrontend);
@@ -92,7 +90,7 @@ export const getClientes = async () => {
 
 export const getClienteById = async (id) => {
   try {
-    const response = await authFetch(ENDPOINTS.crm.clienteDetalle(id));
+    const response = await authFetch(ENDPOINTS.companies.detail(id));
     if (!response.ok) throw new Error('Error al obtener detalle del cliente');
     const data = await response.json();
     return mapToFrontend(data);
@@ -103,10 +101,6 @@ export const getClienteById = async (id) => {
   }
 };
 
-/**
- * Busca un cliente (empresa) por nombre exacto o coincidencia case-insensitive.
- * Se usa desde VacancyModal para cargar el CRM asociado a la empresa de la vacante.
- */
 export const getClienteByNombre = async (nombre) => {
   if (!nombre) return null;
   const target = String(nombre).toLowerCase().trim();
@@ -126,7 +120,7 @@ export const getClienteByNombre = async (nombre) => {
 };
 
 export const createCliente = async (cliente) => {
-  const response = await authFetch(ENDPOINTS.crm.clientes, {
+  const response = await authFetch(ENDPOINTS.companies.create, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(mapToBackend(cliente)),
@@ -137,25 +131,20 @@ export const createCliente = async (cliente) => {
 };
 
 export const updateCliente = async (id, cliente) => {
-  const response = await authFetch(ENDPOINTS.crm.clienteDetalle(id), {
-    method: 'PUT',
+  const response = await authFetch(ENDPOINTS.companies.update(id), {
+    method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(mapToBackend(cliente)),
   });
   if (!response.ok) throw new Error('Error al actualizar cliente');
   const data = await response.json();
-  return mapToFrontend({ ...data, id }); // Añadimos ID si el backend solo devuelve los campos actualizados
+  return mapToFrontend({ ...data, id });
 };
 
-/**
- * Actualiza SÓLO el estado comercial de la cuenta (lead / contactada / en_negociacion / cliente).
- * Al convertirse en 'cliente' (firma), el estado se propaga en todo el sistema (todas las vacantes
- * de esa empresa leerán el nuevo estado en la siguiente carga).
- */
 export const updateEstadoCuenta = async (id, nuevoEstado) => {
   const estado = normalizarEstadoCuenta(nuevoEstado);
   try {
-    const response = await authFetch(ENDPOINTS.crm.clienteDetalle(id), {
+    const response = await authFetch(ENDPOINTS.companies.update(id), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ account_status: estado }),
@@ -172,21 +161,27 @@ export const updateEstadoCuenta = async (id, nuevoEstado) => {
 };
 
 export const deleteCliente = async (id) => {
-  const response = await authFetch(ENDPOINTS.crm.clienteDetalle(id), {
+  const response = await authFetch(ENDPOINTS.companies.delete(id), {
     method: 'DELETE',
   });
   if (!response.ok) throw new Error('Error al eliminar cliente');
   return await response.json();
 };
 
-export const getClienteVacantes = async (id) => {
-  const response = await authFetch(ENDPOINTS.crm.clienteVacantes(id));
-  if (!response.ok) throw new Error('Error al obtener vacantes del cliente');
-  const data = await response.json();
-  return data.map((p) => ({
-    id: p.id,
-    titulo: p.title,
-    estado: p.status,
-    fecha: p.date,
-  }));
+export const assignUserToCompanies = async (companyIds, userId) => {
+  try {
+    const response = await authFetch(ENDPOINTS.companies.assignUser, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        company_ids: companyIds,
+        user_id: userId,
+      }),
+    });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error('Error al asignar empresas masivamente:', error);
+    throw error;
+  }
 };

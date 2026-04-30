@@ -1,13 +1,15 @@
-from sqlalchemy import Column, Integer, String, BigInteger, Text, ForeignKey, CheckConstraint, UniqueConstraint,DateTime, Enum as PgEnum, func,Boolean
+from sqlalchemy import Column, Integer, String, BigInteger, Table, Text, ForeignKey, CheckConstraint, UniqueConstraint,DateTime, Enum as PgEnum, func,Boolean
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import relationship
-from app.db.connection import Base
+from app.db.base import Base
 from app.schemas.job_offer import OfferStatus
 from app.models.aplication_model import ApplicationStatus
 from app.models.candidates_model import Candidate
 from app.models.user_model import User
 from app.models.search_model import Search
+from app.models.assignments_model import VacancyAssignment
 #from app.models.interviews_model import Interview
+
 
 class JobPortal(Base):
     __tablename__ = "job_portals"
@@ -16,23 +18,22 @@ class JobPortal(Base):
     name = Column(String(100), nullable=False)
     base_url = Column(String(255))
     is_active = Column(Boolean, default=True)
+    last_run_at = Column(DateTime(timezone=True), nullable=True)
+    last_run_status = Column(String(20), nullable=True)
 
     offers = relationship("JobOffer", back_populates="portal")
-    clients = relationship("Client", back_populates="source_portal")
 
 class JobOffer(Base):
     __tablename__ = "job_offers"
 
     id = Column(BigInteger, primary_key=True, index=True)
     portal_id = Column(Integer, ForeignKey("job_portals.id"))   
-    managed_by_id = Column(BigInteger, ForeignKey("users.id"), nullable=True)
     external_id = Column(String(255), nullable=True)
     title = Column(String(255), nullable=False)
-    company_name = Column(String(255))
     location = Column(String(255))
     offer_url = Column(Text)
     job_description = Column(Text)
-    company_description = Column(Text)
+    company_id = Column(BigInteger, ForeignKey("companies.id"), nullable=True)
     published_at = Column(DateTime(timezone=True))
     sector = Column(String(255))
     salary_min = Column(Integer)
@@ -47,15 +48,15 @@ class JobOffer(Base):
     )
 
     priority = Column(Integer, default=3)
-    is_favorite = Column(Boolean, default=False)
+    is_favourite = Column("is_favorite",Boolean, default=False)
     scraped_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(),server_default=func.now())
     portal = relationship("JobPortal", back_populates="offers")
     applications = relationship("JobApplication", back_populates="offer")
-    related_client = relationship("Client", back_populates="original_offer", uselist=False)
-    manager = relationship("User", back_populates="managed_offers", foreign_keys=[managed_by_id])
+    managers = relationship("User", secondary=VacancyAssignment.__table__, back_populates="managed_offers")
     tracking_entries = relationship("TrackingHistory", back_populates="offer", cascade="all, delete-orphan")
     search_matches = relationship("SearchResult", back_populates="offer", cascade="all, delete-orphan")
+    company = relationship("Company", back_populates="offers",foreign_keys="[JobOffer.company_id]")
 
     __table_args__ = (
         CheckConstraint('salary_min <= salary_max', name='check_salary_range'),

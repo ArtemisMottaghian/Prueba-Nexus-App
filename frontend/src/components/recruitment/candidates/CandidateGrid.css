@@ -1,5 +1,5 @@
 /* ── Grid de tarjetas ───────────────────────────── */
-.vacancies-grid {
+.candidates-grid {
   display: grid;
   gap: 20px;
   /* Móvil: 1 columna */
@@ -7,36 +7,36 @@
 }
 
 @media (min-width: 576px) {
-  .vacancies-grid {
+  .candidates-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (min-width: 992px) {
-  .vacancies-grid {
+  .candidates-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
 @media (min-width: 1400px) {
-  .vacancies-grid {
+  .candidates-grid {
     grid-template-columns: repeat(4, 1fr);
   }
 }
 
 @media (min-width: 1700px) {
-  .vacancies-grid {
+  .candidates-grid {
     grid-template-columns: repeat(5, 1fr);
   }
 }
 
 /* Cada celda del grid estira la tarjeta al alto completo */
-.vacancies-grid > div {
+.candidates-grid > div {
   display: flex;
 }
 
 /* Vista de lista */
-.vacancies-list {
+.candidates-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -80,4 +80,33 @@
 .view-btn:hover:not(.active) {
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
+}
+
+/* --- Wrapper de la tarjeta (Efecto Hover) --- */
+.candidate-card-wrapper {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  width: 100%;
+}
+
+.candidate-card-wrapper:hover {
+  transform: translateY(-4px);
+}
+
+/* --- Estado Vacío (Sin resultados) --- */
+.empty-state-container {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 5rem 1rem;
+  background: var(--bg-secondary, #13131f);
+  border: 1px dashed rgba(124, 58, 237, 0.3);
+  border-radius: 20px;
+  color: var(--text-muted, #7a7a9a);
+}
+
+.empty-state-container i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  display: block;
+  opacity: 0.5;
 }

@@ -1,12 +1,57 @@
 .origin-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: var(--text-muted, #6c757d);
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid transparent;
 }
 
 .origin-badge .bi {
-  font-size: 1rem;
+  font-size: 0.85rem;
   line-height: 1;
+}
+
+/* InfoJobs — naranja */
+.origin-badge--infojobs {
+  color: #d4500a;
+  background-color: #fff3ed;
+  border-color: #ffd4b8;
+}
+
+/* LinkedIn — azul corporativo */
+.origin-badge--linkedin {
+  color: #0a66c2;
+  background-color: #e8f1fb;
+  border-color: #b3d1f5;
+}
+
+/* Adzuna — verde */
+.origin-badge--adzuna {
+  color: #1a7a4a;
+  background-color: #e6f7ee;
+  border-color: #a8dfc0;
+}
+
+/* GitHub — gris oscuro */
+.origin-badge--github {
+  color: #24292f;
+  background-color: #f0f0f0;
+  border-color: #d0d7de;
+}
+
+/* Carga Manual — morado */
+.origin-badge--manual {
+  color: #6f42c1;
+  background-color: #f3eeff;
+  border-color: #d4bbf5;
+}
+
+/* Genérico — gris neutro */
+.origin-badge--generic {
+  color: #6c757d;
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
 }

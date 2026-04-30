@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { CANDIDATE_STATUS_SELECT_OPTIONS } from '../../../constants/candidateStatus';
 import './CandidateModal.css';
 
 export default function CandidateModal({
@@ -6,15 +7,20 @@ export default function CandidateModal({
   onClose,
   onUpdateStatus,
   onToggleFavorite,
+  onVerify,
 }) {
   const [activeTab, setActiveTab] = useState('detalles');
-  const [localStatus, setLocalStatus] = useState(candidate?.status || '');
+  const [localStatus, setLocalStatus] = useState(() => candidate?.status || '');
 
   if (!candidate) return null;
 
   const handleSave = () => {
     onUpdateStatus(candidate.id, localStatus);
     onClose();
+  };
+
+  const handleVerify = () => {
+    if (onVerify && !candidate.verified) onVerify(candidate.id);
   };
 
   return (
@@ -26,14 +32,25 @@ export default function CandidateModal({
             <div className="modal-header">
               <div className="flex-grow-1">
                 <h2 className="modal-title">{candidate.name}</h2>
-                <div className="d-flex align-items-center gap-2 mt-1">
+                <div className="d-flex align-items-center gap-2 mt-1 flex-wrap">
                   <span className="modal-subtitle">{candidate.specialty}</span>
+                  {/* FIX 1: Tag Disponible ajustado al contenido */}
                   {candidate.isAvailable && (
-                    <span className="badge badge-client-sm">Disponible</span>
+                    <span
+                      className="badge badge-client-sm d-inline-flex align-items-center"
+                      style={{ width: 'fit-content', whiteSpace: 'nowrap' }}
+                    >
+                      Disponible
+                    </span>
+                  )}
+                  {candidate.verified && (
+                    <span className="badge bg-success-subtle text-success d-inline-flex align-items-center">
+                      <i className="bi bi-patch-check-fill me-1" />
+                      Verificado
+                    </span>
                   )}
                 </div>
               </div>
-              {/* CAMBIO AQUÍ: Quitamos btn-close-white */}
               <button
                 type="button"
                 className="btn-close"
@@ -42,17 +59,28 @@ export default function CandidateModal({
             </div>
 
             <div className="modal-body">
-              <div className="d-flex align-items-center gap-3 mb-4">
+              <div className="d-flex align-items-center gap-3 mb-4 flex-wrap">
                 <select
                   className="form-select select-status-inline"
                   value={localStatus}
                   onChange={(e) => setLocalStatus(e.target.value)}
                 >
-                  <option value="Nuevo">Nuevo</option>
-                  <option value="Contactado">Contactado</option>
-                  <option value="En proceso">En proceso</option>
-                  <option value="Descartado">Descartado</option>
+                  {CANDIDATE_STATUS_SELECT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
                 </select>
+                {onVerify && !candidate.verified && (
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={handleVerify}
+                  >
+                    <i className="bi bi-patch-check me-1" />
+                    Verificar candidato
+                  </button>
+                )}
                 <button
                   className={`btn-icon ${candidate.isFavorite ? 'text-warning' : ''}`}
                   onClick={() =>
@@ -100,8 +128,9 @@ export default function CandidateModal({
                     <div className="detail-section">
                       <h4 className="section-title">Información General</h4>
                       <div className="detail-grid">
-                        <div className="detail-field">
-                          <div className="detail-icon icon-blue">
+                        {/* Campo Ubicación */}
+                        <div className="detail-field d-flex align-items-start gap-3">
+                          <div className="detail-icon icon-blue flex-shrink-0 mt-1">
                             <i className="bi bi-geo-alt"></i>
                           </div>
                           <div>
@@ -111,13 +140,18 @@ export default function CandidateModal({
                             </div>
                           </div>
                         </div>
-                        <div className="detail-field">
-                          <div className="detail-icon icon-purple">
+
+                        {/* FIX 2: Campo Experiencia con Icono protegido y texto que rompe líneas */}
+                        <div className="detail-field d-flex align-items-start gap-3">
+                          <div className="detail-icon icon-purple flex-shrink-0 mt-1">
                             <i className="bi bi-briefcase"></i>
                           </div>
-                          <div>
+                          <div className="flex-grow-1" style={{ minWidth: 0 }}>
                             <div className="field-label">Experiencia</div>
-                            <div className="field-value">
+                            <div
+                              className="field-value text-break"
+                              style={{ wordBreak: 'break-word' }}
+                            >
                               {candidate.experience || 'No especificada'}
                             </div>
                           </div>

@@ -5,10 +5,10 @@
 // ============================================
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { usersService } from '../services/userManagementService';
-import './usermanagement.css';
+import { usersService } from '../../services/userManagementService';
+import './UserManagement.css';
 
 // ── Datos de respaldo (Fallback) por si el backend está offline ──
 const FALLBACK_USERS = [
@@ -105,7 +105,6 @@ export default function UserManagement() {
       }
     }
 
-    // Si creamos, pass obligatoria. Si editamos, opcional.
     if (!editingUser && !form.password) {
       errors.password = 'La contraseña es obligatoria';
     } else if (form.password && form.password.length < 6) {
@@ -158,7 +157,6 @@ export default function UserManagement() {
 
     try {
       if (editingUser) {
-        // MODO EDICIÓN
         const updatedUser = await usersService.updateUser(
           editingUser.email,
           payload
@@ -167,7 +165,6 @@ export default function UserManagement() {
           prev.map((u) => (u.id === editingUser.id ? updatedUser : u))
         );
       } else {
-        // MODO CREACIÓN
         const newUser = await usersService.createUser(payload);
         setUsers((prev) => [...prev, newUser]);
       }
@@ -179,17 +176,11 @@ export default function UserManagement() {
   };
 
   // ── Funciones de Borrado ────────────────────────────────────────────────────
-  const requestDeleteUser = (user) => {
-    setUserToDelete(user);
-  };
-
-  const cancelDeleteUser = () => {
-    setUserToDelete(null);
-  };
+  const requestDeleteUser = (user) => setUserToDelete(user);
+  const cancelDeleteUser = () => setUserToDelete(null);
 
   const confirmDeleteUser = async () => {
     if (!userToDelete) return;
-
     try {
       await usersService.deleteUser(userToDelete.email);
       setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
@@ -226,7 +217,6 @@ export default function UserManagement() {
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="um-page">
-      {/* Cabecera */}
       <div className="um-header">
         <div className="um-header__title">
           <h2>Configuración</h2>
@@ -242,14 +232,12 @@ export default function UserManagement() {
         <div className="text-center p-5 text-muted">Cargando usuarios...</div>
       ) : (
         <>
-          {/* Contador */}
           <div className="um-meta">
             <span className="um-meta__count">
               {users.length} {users.length === 1 ? 'usuario' : 'usuarios'}
             </span>
           </div>
 
-          {/* Tabla */}
           <div className="um-table-wrapper">
             <table className="um-table">
               <thead>
@@ -298,7 +286,6 @@ export default function UserManagement() {
                     </td>
                   </tr>
                 ))}
-
                 {users.length === 0 && (
                   <tr>
                     <td colSpan={5} className="um-table__empty">
@@ -313,7 +300,7 @@ export default function UserManagement() {
         </>
       )}
 
-      {/* ── Modal: Añadir/Editar empleado ──────────────────────────────────────── */}
+      {/* Modal: Añadir/Editar */}
       {showModal && (
         <div className="um-modal-overlay" onClick={handleCloseModal}>
           <div
@@ -337,78 +324,59 @@ export default function UserManagement() {
                 <i className="bi bi-x-lg"></i>
               </button>
             </div>
-
             <div className="um-modal__body">
-              <div className="um-field">
-                <label className="um-field__label" htmlFor="um-name">
-                  Nombre completo
-                </label>
-                <input
-                  id="um-name"
-                  type="text"
-                  className={`um-field__input ${formErrors.name ? 'um-field__input--error' : ''}`}
-                  placeholder="Ej. María García"
-                  value={form.name}
-                  onChange={(e) => handleFieldChange('name', e.target.value)}
-                />
-                {formErrors.name && (
-                  <p className="um-field__error">
-                    <i className="bi bi-exclamation-circle me-1"></i>
-                    {formErrors.name}
-                  </p>
-                )}
-              </div>
-
-              <div className="um-field">
-                <label className="um-field__label" htmlFor="um-email">
-                  Email
-                </label>
-                <input
-                  id="um-email"
-                  type="email"
-                  className={`um-field__input ${formErrors.email ? 'um-field__input--error' : ''}`}
-                  placeholder="maria@nexusai.com"
-                  value={form.email}
-                  disabled={!!editingUser} // 🔒 Evitamos cambiar el email en edición (suele dar problemas en BD)
-                  style={
-                    editingUser ? { opacity: 0.6, cursor: 'not-allowed' } : {}
-                  }
-                  onChange={(e) => handleFieldChange('email', e.target.value)}
-                />
-                {formErrors.email && (
-                  <p className="um-field__error">
-                    <i className="bi bi-exclamation-circle me-1"></i>
-                    {formErrors.email}
-                  </p>
-                )}
-              </div>
-
-              <div className="um-field">
-                <label className="um-field__label" htmlFor="um-password">
-                  {editingUser ? 'Nueva Contraseña (Opcional)' : 'Contraseña'}
-                </label>
-                <input
-                  id="um-password"
-                  type="password"
-                  className={`um-field__input ${formErrors.password ? 'um-field__input--error' : ''}`}
-                  placeholder={
-                    editingUser
-                      ? 'Déjalo vacío para no cambiarla'
-                      : 'Mínimo 6 caracteres'
-                  }
-                  value={form.password}
-                  onChange={(e) =>
-                    handleFieldChange('password', e.target.value)
-                  }
-                />
-                {formErrors.password && (
-                  <p className="um-field__error">
-                    <i className="bi bi-exclamation-circle me-1"></i>
-                    {formErrors.password}
-                  </p>
-                )}
-              </div>
-
+              {[
+                {
+                  id: 'um-name',
+                  field: 'name',
+                  label: 'Nombre completo',
+                  type: 'text',
+                  placeholder: 'Ej. María García',
+                },
+                {
+                  id: 'um-email',
+                  field: 'email',
+                  label: 'Email',
+                  type: 'email',
+                  placeholder: 'maria@nexusai.com',
+                  disabled: !!editingUser,
+                },
+                {
+                  id: 'um-password',
+                  field: 'password',
+                  label: editingUser
+                    ? 'Nueva Contraseña (Opcional)'
+                    : 'Contraseña',
+                  type: 'password',
+                  placeholder: editingUser
+                    ? 'Déjalo vacío para no cambiarla'
+                    : 'Mínimo 6 caracteres',
+                },
+              ].map(({ id, field, label, type, placeholder, disabled }) => (
+                <div className="um-field" key={field}>
+                  <label className="um-field__label" htmlFor={id}>
+                    {label}
+                  </label>
+                  <input
+                    id={id}
+                    type={type}
+                    className={`um-field__input ${formErrors[field] ? 'um-field__input--error' : ''}`}
+                    placeholder={placeholder}
+                    value={form[field]}
+                    disabled={disabled}
+                    style={
+                      disabled ? { opacity: 0.6, cursor: 'not-allowed' } : {}
+                    }
+                    onChange={(e) => handleFieldChange(field, e.target.value)}
+                  />
+                  {formErrors[field] && (
+                    <p className="um-field__error">
+                      <i className="bi bi-exclamation-circle me-1"></i>
+                      {formErrors[field]}
+                    </p>
+                  )}
+                </div>
+              ))}
               <div className="um-field">
                 <label className="um-field__label" htmlFor="um-role">
                   Rol
@@ -433,7 +401,6 @@ export default function UserManagement() {
                 )}
               </div>
             </div>
-
             <div className="um-modal__footer">
               <button className="um-btn-cancel" onClick={handleCloseModal}>
                 Cancelar
@@ -447,7 +414,7 @@ export default function UserManagement() {
         </div>
       )}
 
-      {/* ── Modal: Confirmar Eliminación ──────────────────────────────────────── */}
+      {/* Modal: Confirmar Eliminación */}
       {userToDelete && (
         <div className="um-modal-overlay" onClick={cancelDeleteUser}>
           <div
@@ -469,10 +436,9 @@ export default function UserManagement() {
                 <i className="bi bi-x-lg"></i>
               </button>
             </div>
-
             <div className="um-modal__body">
               <p className="um-confirm__text">
-                ¿Estás seguro de que deseas eliminar permanentemente al usuario{' '}
+                ¿Estás seguro de que deseas eliminar permanentemente a{' '}
                 <strong>
                   {userToDelete.name} ({userToDelete.email})
                 </strong>
@@ -483,7 +449,6 @@ export default function UserManagement() {
                 a la plataforma.
               </p>
             </div>
-
             <div className="um-modal__footer">
               <button className="um-btn-cancel" onClick={cancelDeleteUser}>
                 Cancelar
@@ -492,8 +457,7 @@ export default function UserManagement() {
                 className="um-btn-delete-confirm"
                 onClick={confirmDeleteUser}
               >
-                <i className="bi bi-trash3 me-1"></i>
-                Sí, eliminar
+                <i className="bi bi-trash3 me-1"></i>Sí, eliminar
               </button>
             </div>
           </div>

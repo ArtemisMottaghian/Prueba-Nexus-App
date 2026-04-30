@@ -13,7 +13,7 @@ from app.schemas.candidates_schemas import (
     CandidateUpdate,
     CandidateOut,
     MessageResponse,
-    FavoriteRequest,
+    FavouriteRequest,
     CandidateScraperStatusOut,
     VerifyRequest,
 )
@@ -60,6 +60,20 @@ async def search_candidates(
 async def get_scraper_status(db: AsyncSession = Depends(get_db)):
     """Devuelve el estado de cada scraper de candidatos."""
     return await candidates_service.get_scraper_status(db)
+
+
+# --------------------
+# UBICACIONES para filtro
+# GET /api/candidates/locations
+# --------------------
+
+@router.get("/locations", response_model=List[str])
+async def get_location_options(db: AsyncSession = Depends(get_db)):
+    """Lista de ciudades únicas normalizadas para el filtro del frontend."""
+    return await candidates_service.get_location_options(db)
+
+
+
 
 
 # --------------------
@@ -141,20 +155,20 @@ async def delete_candidate(candidate_id: int, db: AsyncSession = Depends(get_db)
 
 # -----------------
 # Marcar candidato como favorito
-# PATCH /api/candidates/{candidate_id}/favorite
+# PATCH /api/candidates/{candidate_id}/favourite
 # -----------------
-@router.patch("/{candidate_id}/favorite", response_model=MessageResponse)
-async def mark_favorite(
-    candidate_id: int, body: FavoriteRequest, db: AsyncSession = Depends(get_db)
+@router.patch("/{candidate_id}/favourite", response_model=MessageResponse)
+async def mark_u(
+    candidate_id: int, body: FavouriteRequest, db: AsyncSession = Depends(get_db)
 ):
     candidate = await candidates_service.get_candidate_by_id(db, candidate_id)
 
     if candidate is None:
         raise HTTPException(status_code=404, detail="El candidato no existe")
 
-    await candidates_service.set_favorite(db, candidate_id, body.favorite)
+    await candidates_service.set_favourite(db, candidate_id, body.favourite)
     return {
-        "message": f"Candidato {'marcado' if body.favorite else 'desmarcado'} como favorito"
+        "message": f"Candidato {'marcado' if body.favourite else 'desmarcado'} como favorito"
     }
 
 # -----------------

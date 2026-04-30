@@ -496,3 +496,477 @@
   display: inline-flex;
   align-items: center;
 }
+
+/* ── Tab Contacto ──────────────────────────────────────── */
+
+/* Grid de tarjetas de contacto (varios contactos detectados por IA) */
+.contact-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.contact-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 16px 18px;
+  transition: border-color 0.2s ease;
+}
+
+.contact-card:hover {
+  border-color: var(--color-purple-secondary);
+}
+
+/* Avatar contacto */
+.contact-avatar {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(124, 63, 255, 0.15));
+  border: 2px solid rgba(0, 212, 255, 0.3);
+  color: var(--color-cyan-primary);
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.contact-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.contact-nombre {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.contact-cargo {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.contact-data-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--color-cyan-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+
+.contact-link:hover {
+  opacity: 0.75;
+  text-decoration: underline;
+}
+
+.contact-msg-btn {
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+/* Empty state contacto */
+.contact-empty {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  border: 1px dashed var(--border-color);
+  border-radius: 12px;
+}
+
+.contact-empty i {
+  font-size: 36px;
+  display: block;
+  margin-bottom: 8px;
+  color: var(--color-purple-secondary);
+  opacity: 0.5;
+}
+
+/* Sección mensaje generado */
+.msg-placeholder {
+  text-align: center;
+  padding: 20px 16px;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  border: 1px dashed var(--border-color);
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.msg-placeholder i {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 10px;
+  color: var(--color-purple-secondary);
+  opacity: 0.6;
+}
+
+.msg-generated {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(124, 63, 255, 0.25);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.msg-generated-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(124, 63, 255, 0.06);
+  border-bottom: 1px solid rgba(124, 63, 255, 0.15);
+}
+
+.msg-generated-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.msg-textarea {
+  border: none;
+  border-radius: 0;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.6;
+  resize: vertical;
+  padding: 14px 16px;
+}
+
+.msg-textarea:focus {
+  box-shadow: none;
+  outline: none;
+}
+
+.msg-generated-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+/* ── Contacto manual ─────────────────────────────────── */
+
+.contact-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.contact-manual-form {
+  background: rgba(124, 63, 255, 0.04);
+  border: 1px solid rgba(124, 63, 255, 0.15);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 4px;
+}
+
+.contact-card--manual {
+  border-color: rgba(0, 212, 255, 0.25);
+}
+
+.contact-manual-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(0, 212, 255, 0.12);
+  color: var(--color-cyan-primary);
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-left: 6px;
+}
+
+/* Firma */
+.firma-textarea {
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.6;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: 10px;
+}
+
+/* ── Tab Documentos — subida ──────────────────────────── */
+
+.doc-upload-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.doc-tipo-select {
+  width: 200px;
+}
+
+.doc-dropzone {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 2px dashed var(--border-color);
+  border-radius: 12px;
+  padding: 28px 16px;
+  cursor: pointer;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  background: var(--bg-secondary);
+}
+
+.doc-dropzone:hover,
+.doc-dropzone--active {
+  border-color: var(--color-purple-secondary);
+  background: rgba(124, 63, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.doc-dropzone i {
+  font-size: 26px;
+  color: var(--color-purple-secondary);
+  opacity: 0.7;
+}
+
+.doc-dropzone small {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.doc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.doc-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(124, 63, 255, 0.15);
+  color: var(--color-purple-secondary);
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 8px;
+  margin-left: 8px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.doc-tipo-badge {
+  display: inline-flex;
+  background: rgba(124, 63, 255, 0.1);
+  color: var(--color-purple-secondary);
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 7px;
+  text-transform: uppercase;
+}
+
+.btn-icon-danger {
+  color: #ef4444 !important;
+  opacity: 0.7;
+}
+
+.btn-icon-danger:hover {
+  opacity: 1;
+}
+
+/* ── Asignación de reclutador ─────────────────────────── */
+
+/* Tarjeta "ya asignado" */
+.asign-current {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(124, 63, 255, 0.05);
+  border: 1px solid rgba(124, 63, 255, 0.2);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.asign-avatar {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(124, 63, 255, 0.3), rgba(0, 212, 255, 0.15));
+  border: 2px solid rgba(124, 63, 255, 0.35);
+  color: var(--color-purple-secondary);
+  font-size: 17px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.asign-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.asign-nombre {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.asign-email {
+  font-size: 12px;
+  color: var(--color-cyan-primary);
+}
+
+.asign-fecha {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Formulario de asignación */
+.asign-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.asign-self-btn {
+  align-self: flex-start;
+}
+
+.asign-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.asign-divider::before,
+.asign-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.asign-recruiter-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.asign-recruiter-row .form-control {
+  flex: 1;
+}
+
+/* Readonly para reclutador */
+.asign-readonly {
+  font-size: 13px;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+/* Banner informativo reclutador en Vacancies */
+.reclutador-info-banner {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: var(--color-purple-secondary);
+  background: rgba(124, 63, 255, 0.07);
+  border: 1px solid rgba(124, 63, 255, 0.2);
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+}
+.vacancy-description-block {
+  margin-bottom: 1.25rem;
+}
+.vacancy-description-block:last-child {
+  margin-bottom: 0;
+}
+
+.vacancy-description-subtitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-purple-secondary, #6b4eff);
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.vacancy-description p {
+  line-height: 1.65;
+  margin-bottom: 0.5rem;
+  text-align: justify;
+  hyphens: auto;
+}
+
+.vacancy-description-list {
+  padding-left: 1.25rem;
+  margin: 0.5rem 0;
+}
+
+.vacancy-description-list li {
+  line-height: 1.6;
+  margin-bottom: 0.35rem;
+  padding-left: 0.25rem;
+}
+
+.vacancy-description-list li::marker {
+  color: var(--color-purple-secondary, #6b4eff);
+}
+.seguimiento-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.seguimiento-card-header .btn-icon {
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+}
+
+.seguimiento-card:hover .seguimiento-card-header .btn-icon {
+  opacity: 1;
+}

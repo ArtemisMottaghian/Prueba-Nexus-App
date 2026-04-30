@@ -4,11 +4,24 @@ import CandidateGrid from '../components/recruitment/candidates/CandidateGrid';
 import BulkActions from '../components/recruitment/shared/BulkActions';
 import initialCandidatesData from '../data/candidatesData.json';
 import { candidatesService } from '../services/candidatesService';
+import { CANDIDATE_STATUS_OPTIONS } from '../constants/candidateStatus';
 
 const ITEMS_POR_PAGINA = 10;
 
+function filtersToApiQuery(f) {
+  const q = {};
+  if (f.verified === 'yes') q.verified = true;
+  if (f.verified === 'no') q.verified = false;
+  if (f.location && f.location !== 'All') q.location = f.location;
+  if (f.habilidades && f.habilidades !== 'All') q.skills = f.habilidades;
+  if (f.status && f.status !== 'All') q.status = f.status;
+  if (f.source && f.source !== 'All') q.source = f.source;
+  return q;
+}
+
 export default function Candidates() {
   const [filters, setFilters] = useState({
+    search: '',
     status: 'All',
     industry: 'All',
     location: 'All',
@@ -16,32 +29,71 @@ export default function Candidates() {
     habilidades: 'All',
     disponibilidad: 'All',
     experiencia: 'All',
-    provincia: 'All',
+    verified: 'All',
   });
 
   const [selectedCandidates, setSelectedCandidates] = useState([]);
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [locationOptions, setLocationOptions] = useState([]);
 
-  // Paginación
   const [paginaActual, setPaginaActual] = useState(1);
 
-  // Carga inicial de datos
+  // NUEVOS ESTADOS: Para los botones de favoritos y descartados
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [showDescartadas, setShowDescartadas] = useState(false);
+
+  const apiListQuery = useMemo(
+    () =>
+      filtersToApiQuery({
+        location: filters.location,
+        habilidades: filters.habilidades,
+        status: filters.status,
+        source: filters.source,
+        verified: filters.verified,
+      }),
+    [
+      filters.location,
+      filters.habilidades,
+      filters.status,
+      filters.source,
+      filters.verified,
+    ]
+  );
+
   useEffect(() => {
-    const fetchCandidates = async () => {
+    const fetchLocations = async () => {
       try {
-        const data = await candidatesService.getAllCandidates();
-        setCandidates(data);
-      } catch {
-        console.log('Backend offline. Using candidatesData.json...');
-        setCandidates(initialCandidatesData);
-      } finally {
-        setLoading(false);
+        const locs = await candidatesService.getLocations();
+        setLocationOptions(locs);
+      } catch (error) {
+        console.error('Error al cargar las ubicaciones normalizadas:', error);
       }
     };
-
-    fetchCandidates();
+    fetchLocations();
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const data = await candidatesService.getAllCandidates(apiListQuery);
+        if (!cancelled) setCandidates(data);
+      } catch {
+        if (!cancelled) {
+          console.log('Backend offline. Using candidatesData.json...');
+          setCandidates(initialCandidatesData);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [apiListQuery]);
 
   const handleToggleFavorite = async (candidateId, currentIsFavorite) => {
     const newFavoriteStatus = !currentIsFavorite;
@@ -67,13 +119,13 @@ export default function Candidates() {
     }
   };
 
-  // Manejadores de eventos
   const handleFilterChange = (filterName, value) => {
     setFilters((prevFilters) => ({ ...prevFilters, [filterName]: value }));
   };
 
   const handleClearFilters = () => {
     setFilters({
+      search: '',
       status: 'All',
       industry: 'All',
       location: 'All',
@@ -81,8 +133,24 @@ export default function Candidates() {
       habilidades: 'All',
       disponibilidad: 'All',
       experiencia: 'All',
-      provincia: 'All',
+      verified: 'All',
     });
+    setShowFavoritesOnly(false);
+    setShowDescartadas(false);
+  };
+
+  const handleVerify = async (candidateId) => {
+    setCandidates((prev) =>
+      prev.map((c) => (c.id === candidateId ? { ...c, verified: true } : c))
+    );
+    try {
+      await candidatesService.verifyCandidate(candidateId, true);
+    } catch (e) {
+      console.error('No se pudo verificar el candidato', e);
+      setCandidates((prev) =>
+        prev.map((c) => (c.id === candidateId ? { ...c, verified: false } : c))
+      );
+    }
   };
 
   const handleSelectCandidate = (id) => {
@@ -103,12 +171,8 @@ export default function Candidates() {
     );
   };
 
-  // Opciones derivadas de los datos cargados para los filtros de candidatos
   const skillsOptions = [
     ...new Set(candidates.map((c) => c.specialty).filter(Boolean)),
-  ].sort();
-  const provinciaOptions = [
-    ...new Set(candidates.map((c) => c.location).filter(Boolean)),
   ].sort();
 
   const DISPONIBILIDAD_OPTIONS = [
@@ -128,30 +192,37 @@ export default function Candidates() {
     return match ? parseInt(match[0], 10) : 0;
   };
 
-  // Lógica de filtrado
+  // --- LÓGICA DE FILTRADO PRINCIPAL ---
   const filteredCandidates = candidates.filter((candidate) => {
-    const matchEstado =
-      filters.status === 'All' || candidate.status === filters.status;
+    // 1. Filtro de Descartados (Oculta por defecto los descartados a menos que se pulse el botón)
+    const safeStatus = (candidate.status || '').toLowerCase().trim();
+    const arrDiscard = ['descartada', 'discarded', 'rejected', 'descartado'];
+    if (filters.status === 'All') {
+      if (!showDescartadas && arrDiscard.includes(safeStatus)) return false;
+    }
+
+    // 2. Filtro de Favoritos
+    if (showFavoritesOnly && !candidate.isFavorite) return false;
+
+    // 3. Resto de filtros...
+    const term = (filters.search || '').trim().toLowerCase();
+    const matchSearch =
+      !term ||
+      candidate.name?.toLowerCase().includes(term) ||
+      (candidate.email && candidate.email.toLowerCase().includes(term)) ||
+      String(candidate.specialty || '')
+        .toLowerCase()
+        .includes(term);
+
     const matchEspecialidad =
       filters.industry === 'All' || candidate.specialty === filters.industry;
-    const matchUbicacion =
-      filters.location === 'All' || candidate.location === filters.location;
-    const matchOrigen =
-      filters.source === 'All' || candidate.source === filters.source;
 
-    // Habilidades (#108)
-    const matchHabilidades =
-      filters.habilidades === 'All' ||
-      candidate.specialty === filters.habilidades;
-
-    // Disponibilidad (#108)
     const matchDisponibilidad = (() => {
       if (filters.disponibilidad === 'All') return true;
       const isAvail = candidate.isAvailable ?? candidate.is_available ?? false;
       return filters.disponibilidad === 'disponible' ? isAvail : !isAvail;
     })();
 
-    // Experiencia (#108)
     const matchExperiencia = (() => {
       if (filters.experiencia === 'All') return true;
       const anios = parseExperienciaAnios(candidate.experience);
@@ -161,26 +232,18 @@ export default function Candidates() {
       return true;
     })();
 
-    // Provincia (#108)
-    const matchProvincia =
-      filters.provincia === 'All' || candidate.location === filters.provincia;
-
     return (
-      matchEstado &&
+      matchSearch &&
       matchEspecialidad &&
-      matchUbicacion &&
-      matchOrigen &&
-      matchHabilidades &&
       matchDisponibilidad &&
-      matchExperiencia &&
-      matchProvincia
+      matchExperiencia
     );
   });
 
   // Reset página al cambiar filtros
   useEffect(() => {
     setPaginaActual(1);
-  }, [filters]);
+  }, [filters, showFavoritesOnly, showDescartadas]);
 
   // Cálculo de paginación
   const totalPaginas = Math.max(
@@ -223,22 +286,18 @@ export default function Candidates() {
           filters={filters}
           onFilterChange={handleFilterChange}
           onClearFilters={handleClearFilters}
-          statusOptions={[
-            { value: 'Nuevo', label: 'Nuevo' },
-            { value: 'Contactado', label: 'Contactado' },
-            { value: 'En proceso', label: 'En proceso' },
-            { value: 'Descartado', label: 'Descartado' },
-          ]}
+          statusOptions={CANDIDATE_STATUS_OPTIONS}
           sourceOptions={[
             { value: 'LinkedIn', label: 'LinkedIn' },
             { value: 'InfoJobs', label: 'InfoJobs' },
             { value: 'Carga Manual', label: 'Carga Manual' },
             { value: 'GitHub API', label: 'GitHub API' },
           ]}
+          locationOptions={locationOptions}
           skillsOptions={skillsOptions}
           disponibilidadOptions={DISPONIBILIDAD_OPTIONS}
           experienciaOptions={EXPERIENCIA_OPTIONS}
-          provinciaOptions={provinciaOptions}
+          showVerifiedFilter
         />
 
         {selectedCandidates.length > 0 && (
@@ -257,6 +316,34 @@ export default function Candidates() {
             Mostrando {filteredCandidates.length} candidatos de{' '}
             {candidates.length}
           </div>
+
+          <div className="d-flex gap-2">
+            <button
+              className={`btn btn-sm ${showDescartadas ? 'btn-danger' : 'btn-outline-secondary'}`}
+              onClick={() => {
+                setShowDescartadas(!showDescartadas);
+                setShowFavoritesOnly(false);
+              }}
+              title="Los candidatos descartados están ocultos por defecto"
+            >
+              <i
+                className={`bi ${showDescartadas ? 'bi-eye-fill' : 'bi-eye-slash'} me-2`}
+              ></i>
+              {showDescartadas ? 'Ocultando activos' : 'Ver descartados'}
+            </button>
+            <button
+              className={`btn btn-sm ${showFavoritesOnly ? 'btn-warning' : 'btn-outline-secondary'}`}
+              onClick={() => {
+                setShowFavoritesOnly(!showFavoritesOnly);
+                setShowDescartadas(false);
+              }}
+            >
+              <i
+                className={`bi ${showFavoritesOnly ? 'bi-star-fill' : 'bi-star'} me-2`}
+              ></i>
+              Solo Favoritos
+            </button>
+          </div>
         </div>
       )}
 
@@ -270,6 +357,7 @@ export default function Candidates() {
           onSelectCandidate={handleSelectCandidate}
           onUpdateCandidateStatus={handleUpdateCandidateStatus}
           onToggleFavorite={handleToggleFavorite}
+          onVerify={handleVerify}
         />
       )}
       {!loading && totalPaginas > 1 && (

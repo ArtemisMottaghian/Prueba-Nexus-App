@@ -11,13 +11,15 @@ from app.schemas.vacancies_schemas import (
     VacancySummary,
     VacancyDetail,
     VacancyFiltered,
-    FavoriteRequest,
+    FavouriteRequest,
     BulkActionRequest,
     MessageResponse,
     StatusRequest, 
+    CandidateMatchOut
 )
-from app.schemas.clients_schemas import (ContactOut)
-from app.services.clients_service import get_contact_by_vacancy
+from app.core.jwt import get_current_user
+from app.models.user_model import User, UserRole
+
 
 router = APIRouter()
 
@@ -50,6 +52,16 @@ async def read_vacancies_filtered(
     )
     return vacancies
 
+# -----------------
+# Obtener candidates para una vacante
+# GET /api/vacancies/{vacancy_id}/candidates
+# -----------------
+@router.get("/{vacancy_id}/candidates", response_model=List[CandidateMatchOut])
+async def read_suitable_candidates(vacancy_id: int, db: AsyncSession = Depends(get_db)):
+    candidates = await vacancies_service.get_suitable_candidates(db, vacancy_id)
+    if candidates is None:
+        raise HTTPException(status_code=404, detail="La vacante no existe")
+    return candidates
 
 # -----------------
 # Obtener detalle de vacante
@@ -57,7 +69,7 @@ async def read_vacancies_filtered(
 # -----------------
 @router.get("/{vacancy_id}", response_model=VacancyDetail)
 async def read_vacancy(vacancy_id: int, db: AsyncSession = Depends(get_db)):
-    vacancy = await vacancies_service.get_vacancy_by_id(db, vacancy_id)
+    vacancy = await vacancies_service.get_vacancy_detail(db, vacancy_id)
 
     if vacancy is None:
         raise HTTPException(status_code=404, detail="La vacante no existe")
@@ -69,19 +81,39 @@ async def read_vacancy(vacancy_id: int, db: AsyncSession = Depends(get_db)):
 # Marcar vacante como favorita
 # PATCH /api/vacancies/{vacancy_id}/favorito
 # -----------------
-@router.patch("/{vacancy_id}/favorite", response_model=MessageResponse)
+@router.patch("/{vacancy_id}/favourite", response_model=MessageResponse)
 async def mark_favorite(
-    vacancy_id: int, body: FavoriteRequest, db: AsyncSession = Depends(get_db)
+    vacancy_id: int, body: FavouriteRequest, db: AsyncSession = Depends(get_db)
 ):
     vacancy = await vacancies_service.get_vacancy_by_id(db, vacancy_id)
 
     if vacancy is None:
         raise HTTPException(status_code=404, detail="La vacante no existe")
 
-    await vacancies_service.set_favorite(db, vacancy_id, body.favorite)
+    await vacancies_service.set_favourite(db, vacancy_id, body.favourite)
     return {
-        "message": f"Vacante {'marcada' if body.favorite else 'desmarcada'} como favorita"
+        "message": f"Vacante {'marcada' if body.favourite else 'desmarcada'} como favorita"
     }
+
+
+# -----------------
+# Actualizar estado de una vacante
+# PATCH /api/vacancies/{vacancy_id}/status
+# -----------------
+@router.patch("/{vacancy_id}/status", response_model=MessageResponse)
+async def update_vacancy_status(
+    vacancy_id: int, body: StatusRequest, db: AsyncSession = Depends(get_db)
+):
+    vacancy = await vacancies_service.get_vacancy_by_id(db, vacancy_id)
+    if vacancy is None:
+        raise HTTPException(status_code=404, detail="La vacante no existe")
+
+    updated = await vacancies_service.update_vacancy_status(db, vacancy_id, body.status)
+    if not updated:
+        raise HTTPException(status_code=400, detail="No se pudo actualizar el estado")
+
+    return {"message": f"Estado actualizado a '{body.status}'"}
+
 
 
 # -----------------
@@ -116,8 +148,15 @@ async def trigger_scraper():
 # -----------------
 @router.post("/assign-hr", response_model=MessageResponse)
 async def assign_hr_to_vacancies(
-    body: VacancyAssignmentRequest, db: AsyncSession = Depends(get_db)
+    body: VacancyAssignmentRequest, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
+    #control de permisos (admins y company)
+    if current_user.role not in [UserRole.admin, UserRole.company]:
+        raise HTTPException(
+            status_code=403, 
+            detail="No tienes permisos para asignar vacantes."
+        )
+    
     assgined_count = await vacancies_service.assign_hr_to_vacancies(
         db, body.hr_id, body.vacancy_ids
     )
@@ -125,14 +164,6 @@ async def assign_hr_to_vacancies(
     return {
         "message": f"Se han asignado {assgined_count} vacantes al gestor de RRHH correctamente"
     }
-
-    await vacancies_service.update_vacancy_status(db, vacancy_id, body.status)
-    return {"message": f"Estado actualizado a '{body.status}'"}
-
-# Devuelve contactos del cliente vinculado
-@router.get("/{vacancy_id}/contact", response_model=List[ContactOut])
-async def get_vacancy_contact(vacancy_id: int, db: AsyncSession = Depends(get_db)):
-    return await get_contact_by_vacancy(db, vacancy_id)
 
 # -----------------
 # Obtener vacantes asignadas a un HR específico
@@ -144,3 +175,34 @@ async def read_vacancies_by_hr(hr_id: int, db: AsyncSession = Depends(get_db)):
     vacancies = await vacancies_service.get_vacancies_by_hr(db, hr_id)
 
     return vacancies
+
+
+# -----------------
+# Quitar asignación de HR a vacantes
+# DELETE /api/vacancies/assign-hr
+# -----------------
+@router.delete("/assign-hr", response_model=MessageResponse)
+async def unassign_hr_from_vacancies(
+    body: VacancyAssignmentRequest, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Comprobamos los roles 
+    is_admin = current_user.role == UserRole.admin
+    is_company = current_user.role == UserRole.company
+    
+    # si no es admin o company ni el perfil de hr que lleva la asignación, no puede quitarla
+    if not is_admin and not is_company and current_user.id != body.hr_id:
+        raise HTTPException(
+            status_code=403, 
+            detail="No tienes permisos para quitarle la asignación a otro compañero."
+        )
+
+    # Ejecutamos la baja
+    unassigned_count = await vacancies_service.remove_hr_assignment(
+        db, body.hr_id, body.vacancy_ids, is_admin=(is_admin or is_company)
+    )
+
+    return {
+        "message": f"Acción realizada: se han liberado {unassigned_count} vacantes."
+    }
