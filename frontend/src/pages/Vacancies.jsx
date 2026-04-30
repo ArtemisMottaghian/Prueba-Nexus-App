@@ -8,12 +8,13 @@ import { usersService } from '../services/userManagementService';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+// NUEVO: 1. Importamos el futuro modal de creación de vacantes
+import CreateVacancy from '../components/recruitment/vacancies/CreateVacancies';
+
 const ITEMS_POR_PAGINA = 20;
 
 /**
- * Normaliza un string de ubicación a "Ciudad, País" limpio.
- * Agrupa variantes como "Madrid (Spain)", "Madrid, Spain", "Madrid - Spain", "Madrid ES" → "Madrid"
- */
+ * Normaliza un string de ubicación a "Ciudad, País" limpio. */
 function normalizeLocation(loc) {
   if (!loc) return '';
   return loc
@@ -67,6 +68,9 @@ export default function Vacancies() {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showDescartadas, setShowDescartadas] = useState(false);
   const [paginaActual, setPaginaActual] = useState(1);
+
+  // NUEVO: 2. Estado para controlar la apertura del modal de creación de vacante
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const dynamicIndustries = useMemo(() => {
     const sectors = jobs
@@ -129,6 +133,13 @@ export default function Vacancies() {
     fetchLocations();
     fetchHrUsers();
   }, [isNegocio]);
+
+  // NUEVO: 3. Función para procesar el guardado de la nueva vacante
+  const handleSaveNewVacancy = async (newVacancyData) => {
+    console.log("Nueva vacante lista para enviar a la API:", newVacancyData);
+    // Aquí implementaremos la llamada a vacanciesService más adelante
+    setIsCreateModalOpen(false); 
+  };
 
   const handleFilterChange = (filterName, value) => {
     setFilters((prev) => ({ ...prev, [filterName]: value }));
@@ -433,6 +444,17 @@ export default function Vacancies() {
           </div>
 
           <div className="d-flex gap-2">
+            {/* NUEVO: 4. Botón para añadir vacante, visible SOLO para el rol de Negocio */}
+            {isNegocio && (
+               <button
+                 className="btn btn-sm btn-primary"
+                 onClick={() => setIsCreateModalOpen(true)}
+               >
+                 <i className="bi bi-plus-lg me-2"></i>
+                 Añadir Vacante
+               </button>
+            )}
+
             <button
               className={`btn btn-sm ${showDescartadas ? 'btn-danger' : 'btn-outline-secondary'}`}
               onClick={() => {
@@ -517,6 +539,14 @@ export default function Vacancies() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* NUEVO: 5. Renderizamos el modal si el estado es true */}
+      {isCreateModalOpen && (
+        <CreateVacancy
+          onClose={() => setIsCreateModalOpen(false)}
+          onSave={handleSaveNewVacancy}
+        />
       )}
     </>
   );
