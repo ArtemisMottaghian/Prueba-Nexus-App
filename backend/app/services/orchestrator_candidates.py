@@ -2,7 +2,6 @@ import asyncio
 from typing import Any
 
 from app.core.scraper_candidates_linkedin_config import (
-    KEYWORDS,
     SECTORS,
     LOCATIONS,
     HEADLESS_MODE,
@@ -16,7 +15,7 @@ from app.models.candidates_model import Candidate
 from app.schemas.candidates_schemas import CandidateCreate
 
 from app.db.connection import AsyncSessionLocal
-
+from app.services.scrapers.scraper_candidates_github.utils import upsert_scraped_candidate 
 
 async def gather_raw_candidates() -> list[dict]:
     """
@@ -31,14 +30,14 @@ async def gather_raw_candidates() -> list[dict]:
         (
             "linkedin",
             lambda: extract_linked(
-                keywords=KEYWORDS,
+                #keywords=KEYWORDS,
                 sectors=SECTORS,
                 locations=LOCATIONS,
                 headless=HEADLESS_MODE,
             ),
         ),
-        # ("github", extract_github),
-        # ("google_pdfs", extract_pdfs_google),
+        #("github", extract_github),
+        #("google_pdfs", extract_pdfs_google),
     ]
 
     for name, scraper_func in scrapers:
@@ -92,7 +91,8 @@ async def save_candidates_to_db(valid_candidates: list[CandidateCreate] ) -> Non
     Returns:
         None
     """
-
+    cambios_count = 0
+    
     if not valid_candidates:
         print("\nNo hay candidatos válidos para guardar en la base de datos.")
         return
@@ -100,35 +100,22 @@ async def save_candidates_to_db(valid_candidates: list[CandidateCreate] ) -> Non
     new_count = 0
 
     async with AsyncSessionLocal() as session:
-        try:
-            for candidate in valid_candidates:
-                data = candidate.model_dump()
+        
+        for candidate in valid_candidates:
+            data = candidate.model_dump()
 
-                if data.get("candidate_url"):
-                    data["candidate_url"] = str(data["candidate_url"])
+            if data.get("candidate_url"):
+                data["candidate_url"] = str(data["candidate_url"])
 
-                if data.get("cv_url"):
-                    data["cv_url"] = str(data["cv_url"])
+            if data.get("cv_url"):
+                data["cv_url"] = str(data["cv_url"])
 
-                stmt = insert(Candidate).values(**data)
-                stmt = stmt.on_conflict_do_nothing(
-                    index_elements=[
-                        "email"
-                    ]
-                ).returning(Candidate.id)
-
-                result = await session.execute(stmt)
-                new_id = result.scalar_one_or_none()
-
-                if new_id:
-                    new_count += 1
-
-            await session.commit()
-
-        except Exception as e:
-            await session.rollback()
-
-    print(f"\n✅ Operación finalizada: {new_count} candidatos nuevos guardados en DB.")
+            guardado = await upsert_scraped_candidate(session, data)
+            
+            if guardado:
+                cambios_count +=1
+                    
+    print(f"\n Operación finalizada: {cambios_count} candidatos nuevos o actualizados en DB.")
 
 async def run_candidate_scrapers():
     """

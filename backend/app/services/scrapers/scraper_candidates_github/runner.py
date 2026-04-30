@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 # IMPORTACIONES DE TU PROYECTO
 from app.core.scraper_candidates_github_config import LENGUAJES_IT, LOCATIONS_GITHUB
 from .browser import search_linkedin_with_browser
-
+from app.db.session import AsyncSessionLocal
+from .utils import upsert_scraped_candidate, candidate_exists
 
 # CONFIGURACIÓN INICIAL
 
@@ -21,7 +22,7 @@ HEADERS = {
     "X-GitHub-Api-Version": "2022-11-28"
 }
 
-MAX_CANDIDATES = 100
+MAX_CANDIDATES = 10
 
 
 # FUNCIONES DE VALIDACIÓN Y LIMPIEZA
@@ -151,6 +152,7 @@ async def extract_github_profile(session: aiohttp.ClientSession, username: str) 
             contact_urls = []
             if linkedin_url: contact_urls.append(linkedin_url)
             if portfolio_url: contact_urls.append(portfolio_url)
+            contact_urls.append(github_url)
             final_urls_string = " | ".join(contact_urls) if contact_urls else None
 
             skills = await get_user_skills(session, user_data.get("repos_url"))
@@ -163,7 +165,7 @@ async def extract_github_profile(session: aiohttp.ClientSession, username: str) 
                 "location": location,
                 "source": "GitHub API",
                 "experience": user_data.get("bio") or f"Desarrollador en GitHub",
-                "candidate_url": github_url,
+                "candidate_url": final_urls_string,
                 "cv_url": None,
                 "skills": skills,
                 "status": "active"
@@ -188,45 +190,55 @@ async def extract_github() -> list[dict]:
         print(
             " AVISO: No hay GITHUB_TOKEN. Límite muy estricto de peticiones (60/hora)."
         )
+    async with AsyncSessionLocal() as db:
+        async with aiohttp.ClientSession() as session:
+            for lang in LENGUAJES_IT:
+                for loc in LOCATIONS_GITHUB:
+                    # Comprobación general antes de la petición a la API
+                    if len(all_extracted_candidates) >= MAX_CANDIDATES:
+                        return all_extracted_candidates
 
-    async with aiohttp.ClientSession() as session:
-        for lang in LENGUAJES_IT:
-            for loc in LOCATIONS_GITHUB:
-                # Comprobación general antes de la petición a la API
-                if len(all_extracted_candidates) >= MAX_CANDIDATES:
-                    return all_extracted_candidates
+                    query = f"language:{lang} location:{loc}"
+                    search_url = f"https://api.github.com/search/users?q={urllib.parse.quote_plus(query)}&per_page=30"
 
-                query = f"language:{lang} location:{loc}"
-                search_url = f"https://api.github.com/search/users?q={urllib.parse.quote_plus(query)}&per_page=30"
+                    try:
+                        async with session.get(search_url, headers=HEADERS) as resp:
+                            if resp.status == 403:
+                                return all_extracted_candidates
 
-                try:
-                    async with session.get(search_url, headers=HEADERS) as resp:
-                        if resp.status == 403:
-                                                        return all_extracted_candidates
+                            elif resp.status == 200:
+                                data = await resp.json()
+                                items = data.get("items", [])
 
-                        elif resp.status == 200:
-                            data = await resp.json()
-                            items = data.get("items", [])
+                                if not items:
+                                    continue
 
-                            if not items:
-                                continue
+                                for item in items:
+                                    # Comprobación de límite por cada item procesado
+                                    if len(all_extracted_candidates) >= MAX_CANDIDATES:
+                                        return all_extracted_candidates
 
-                            for item in items:
-                                # Comprobación de límite por cada item procesado
-                                if len(all_extracted_candidates) >= MAX_CANDIDATES:
-                                    return all_extracted_candidates
-
-                                candidate = await extract_github_profile(
-                                    session, item["login"]
-                                )
-
-                                if candidate:
-                                    all_extracted_candidates.append(candidate)
+                                    false_email = f"{item['login'].lower()}@scraping.local"
+                                    exists = await candidate_exists(db, false_email)
+                                    if exists:
+                                        print(f"-> Saltando a {item['login']}: Ya se encuentra en la bd")
+                                        continue
                                     
-                                await asyncio.sleep(1)
+                                    candidate = await extract_github_profile(session, item["login"])
 
-                except Exception as e:
-                    print(f" Error en la búsqueda principal: {e}")
+                                    if candidate:
+                                        all_extracted_candidates.append(candidate)
+                                        
+                                        guardado = await upsert_scraped_candidate(db, candidate)
+                                        if guardado:
+                                            print(f"Guardado {candidate.get('first_name')} en la BD")
+                                        else:
+                                            print(f"Ya existia o hubo cambios en {candidate.get('first_name')}")
+                                        
+                                    await asyncio.sleep(1)
+
+                    except Exception as e:
+                        print(f" Error en la búsqueda principal: {e}")
 
     return all_extracted_candidates
 

@@ -15,7 +15,8 @@ def get_webdriver() -> Any:
 
     #uc=True activa el motor anti-DatoDome/Cloudflare
     #headless= True lo hace invisible para que funcione en Google Cloud
-    return Driver(uc=True, headless=True, no_sandbox=True)
+    return Driver(uc=True, headless2=True, 
+                  no_sandbox=True)
 
 def restart_nav(old_driver: Any) -> Any:
     """Resucita el navegador si hay captcha o colapso"""
@@ -55,6 +56,8 @@ async def fetch_infojobs_details(driver: Any, job_url: str, company_url: str) ->
                 _ = driver.window_handles
             except: 
                 driver = restart_nav(driver)
+                
+            driver.set_page_load_timeout(15)
 
             await asyncio.sleep(random.uniform(3.0, 4.5))
             driver.get(job_url)

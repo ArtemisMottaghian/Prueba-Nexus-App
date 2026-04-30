@@ -3,6 +3,26 @@ import asyncio
 from typing import Optional
 from app.core.config import settings
 
+async def enrich_company(company_name: str, raw_text: str = "") -> dict:
+    """
+    Usa la lógica de scraper_companies.py para investigar la empresa.
+    """
+    try:
+        from app.services.scrapers.scraper_companies.scraper_companies import extract_company_data
+        
+        print(f"   -> [MOTOR] Investigando {company_name} en un hilo separado")
+        # Ejecutamos la función original (es síncrona, así que no lleva await)
+        data = await asyncio.to_thread(extract_company_data, raw_text, company_name)
+        return data
+    except Exception as e:
+        print(f"[Error] No se pudo importar o ejecutar extract_company_data: {e}")
+        return {"name": company_name, 
+            "sector": None, 
+            "cif": None, 
+            "website": None, 
+            "address": None,
+            "linkedin_url": None}
+        
 #busqueda en dropcontact
 async def search_in_dropcontact(first_name: str, last_name:str, company: str, website: Optional[str]) -> dict | None:
     url = "https://api.dropcontact.io/v1/enrich/all"

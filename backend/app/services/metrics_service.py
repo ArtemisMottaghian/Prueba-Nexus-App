@@ -5,7 +5,7 @@ from typing import Dict, Any
 from fastapi import HTTPException
 
 from app.models.job_model import JobOffer
-from app.schemas.job_offer import OfferStatus
+from backend.app.schemas.job_offer import OfferStatus
 from app.models.error_log_model import ErrorLog
 from datetime import timezone
 from app.models.job_model import JobPortal

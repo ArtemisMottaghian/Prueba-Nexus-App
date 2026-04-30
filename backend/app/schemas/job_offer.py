@@ -26,9 +26,6 @@ class JobOfferBase(BaseModel):
     job_description: Optional[str] = Field(
         default=None, description="Responsabilidades y requisitos"
     )
-    company_description: Optional[str] = Field(
-        default=None, description="Sobre la empresa contratante"
-    )
 
     published_at: Optional[datetime] = Field(
         default=None, description="Fecha original de publicación"

@@ -35,6 +35,7 @@ __pycache__/
 downloaded_files/
 *.lock
 .venv/
+*.json
 
 # Debug y logs del servidor
 backend/debug_bing.png
