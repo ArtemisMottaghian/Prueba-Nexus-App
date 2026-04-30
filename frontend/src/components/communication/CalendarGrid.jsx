@@ -47,20 +47,20 @@ export default function Calendario() {
 
   // Carga de Emojis para los tipos de evento
   const getEmoji = (opt) => {
-    switch(opt){
+    switch (opt) {
       case 'Reunión':
-        return '📅'
+        return '📅';
       case 'Enviar correo':
-        return '✉️'
+        return '✉️';
       case 'Conferencia':
-        return '🎤'
+        return '🎤';
       case 'Llamada urgente':
-        return '📲'
+        return '📲';
       case 'Seguimiento':
-        return '🔍'
+        return '🔍';
     }
-  }
-  
+  };
+
   // Cargar eventos desde Google Calendar al montar; fallback a localStorage
   useEffect(() => {
     authFetch(ENDPOINTS.calendar.list)
