@@ -1,0 +1,134 @@
+
+
+/* --- CONTENEDOR PRINCIPAL DEL MODAL --- */
+.custom-create-modal .modal-content {
+  background: var(--bg-secondary, #ffffff);
+  border: 1px solid var(--border-color, #d1d5db);
+  border-radius: 16px; /* Misma curvatura que tus tarjetas */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  color: var(--text-primary, #111827);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+/* Sombra más profunda en modo oscuro, igual que tus tarjetas */
+[data-theme='dark'] .custom-create-modal .modal-content {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  background: var(--bg-secondary, #1f2937);
+}
+
+/* --- CABECERA Y PIE DE PÁGINA --- */
+.custom-create-modal .modal-header {
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  padding: 1.25rem;
+}
+
+.custom-create-modal .modal-footer {
+  border-top: 1px solid var(--border-color, #e5e7eb);
+  background: var(--bg-secondary, #ffffff);
+  padding: 1rem 1.25rem;
+}
+
+[data-theme='dark'] .custom-create-modal .modal-footer {
+  background: var(--bg-secondary, #1f2937);
+}
+
+.custom-create-modal .modal-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary, #111827);
+  margin: 0;
+}
+
+/* --- ESTILOS DE LOS CAMPOS (INPUTS Y SELECTS) --- */
+.custom-create-modal .form-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+  margin-bottom: 8px;
+}
+
+.custom-create-modal .form-control,
+.custom-create-modal .form-select,
+.custom-create-modal .input-group-text {
+  background: var(--bg-primary, #f9fafb); 
+  border: 1px solid var(--border-color, #d1d5db);
+  color: var(--text-primary, #111827);
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+}
+
+/* Fondo de inputs en modo oscuro */
+[data-theme='dark'] .custom-create-modal .form-control,
+[data-theme='dark'] .custom-create-modal .form-select,
+[data-theme='dark'] .custom-create-modal .input-group-text {
+  background: var(--bg-primary, #111827);
+  color: var(--text-primary, #f9fafb);
+}
+
+/* --- INTERACCIONES (HOVER Y FOCUS) --- */
+.custom-create-modal .form-control:hover,
+.custom-create-modal .form-select:hover {
+  border-color: var(--color-purple, #7c3aed);
+}
+
+.custom-create-modal .form-control:focus,
+.custom-create-modal .form-select:focus {
+  border-color: var(--color-purple, #7c3aed);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15); /* Halo basado en tu shadow de hover */
+  outline: none;
+}
+
+.custom-create-modal .form-text {
+  color: var(--text-secondary, #4b5563);
+  font-size: 0.8rem;
+  margin-top: 6px;
+}
+
+[data-theme='dark'] .custom-create-modal .form-text {
+  color: var(--text-secondary, #9ca3af);
+}
+
+/* --- BOTONES DE ACCIÓN --- */
+.custom-create-modal .btn-primary {
+  background-color: var(--color-purple, #7c3aed);
+  border-color: var(--color-purple, #7c3aed);
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.custom-create-modal .btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+  background-color: #6d28d9;
+  border-color: #6d28d9;
+}
+
+.custom-create-modal .btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.custom-create-modal .btn-outline-secondary {
+  border-color: var(--border-color, #d1d5db);
+  color: var(--text-secondary, #4b5563);
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  transition: all 0.2s ease;
+  background: transparent;
+}
+
+.custom-create-modal .btn-outline-secondary:hover {
+  border-color: var(--color-purple, #7c3aed);
+  color: var(--color-purple, #7c3aed);
+  background: rgba(124, 58, 237, 0.05);
+}
+
+[data-theme='dark'] .custom-create-modal .btn-outline-secondary {
+  color: var(--text-secondary, #d1d5db);
+}
