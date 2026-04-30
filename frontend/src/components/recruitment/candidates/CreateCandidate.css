@@ -1,0 +1,105 @@
+/* CreateCandidate.css */
+
+/* --- CONTENEDOR DEL MODAL --- */
+.custom-create-modal .modal-content {
+  background: var(--bg-primary);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15); /* Sombra un poco más profunda para que "flote" */
+  color: var(--text-primary);
+  overflow: hidden; /* Para que las esquinas del header/footer respeten el radius */
+}
+
+/* --- HEADER Y FOOTER --- */
+.custom-create-modal .modal-header {
+  border-bottom: 1px solid var(--border-color);
+  padding: 20px 24px;
+}
+
+.custom-create-modal .modal-footer {
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-primary); /* Quitamos el bg-light de Bootstrap */
+  padding: 16px 24px;
+}
+
+.custom-create-modal .modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* --- ESTILOS DE LOS INPUTS Y SELECTS --- */
+.custom-create-modal .form-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.custom-create-modal .form-control,
+.custom-create-modal .form-select,
+.custom-create-modal .input-group-text {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 10px; /* Misma curvatura que tus detail-icon */
+  padding: 10px 14px;
+  transition: all 0.3s ease;
+}
+
+/* Texto de ayuda debajo de los inputs */
+.custom-create-modal .form-text {
+  color: var(--text-primary);
+  opacity: 0.7;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+/* --- ESTADOS INTERACTIVOS (HOVER Y FOCUS) --- */
+.custom-create-modal .form-control:hover,
+.custom-create-modal .form-select:hover {
+  background: var(--bg-primary);
+}
+
+/* Replicamos el brillo morado que tienen tus tarjetas al hacer hover */
+.custom-create-modal .form-control:focus,
+.custom-create-modal .form-select:focus {
+  background: var(--bg-primary);
+  border-color: var(--color-purple-primary);
+  box-shadow: 0 0 0 4px rgba(91, 63, 255, 0.15); /* Halo morado suave */
+  outline: none;
+}
+
+/* --- ESTILIZACIÓN DEL SELECT CUANDO ESTÁ ABIERTO --- */
+.custom-create-modal select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* --- BOTONES DEL FOOTER --- */
+.custom-create-modal .btn-primary {
+  background-color: var(--color-purple-primary, #5B3FFF);
+  border-color: var(--color-purple-primary, #5B3FFF);
+  border-radius: 10px;
+  padding: 8px 20px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.custom-create-modal .btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(91, 63, 255, 0.3);
+}
+
+.custom-create-modal .btn-outline-secondary {
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  border-radius: 10px;
+}
+
+.custom-create-modal .btn-outline-secondary:hover {
+  background: var(--bg-secondary);
+  border-color: var(--color-purple-primary);
+  color: var(--color-purple-primary);
+}

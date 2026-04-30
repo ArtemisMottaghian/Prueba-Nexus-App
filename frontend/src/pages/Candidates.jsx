@@ -6,6 +6,9 @@ import initialCandidatesData from '../data/candidatesData.json';
 import { candidatesService } from '../services/candidatesService';
 import { CANDIDATE_STATUS_OPTIONS } from '../constants/candidateStatus';
 
+// NUEVO: Importamos el componente con el nombre y ruta correctos
+import CreateCandidate from '../components/recruitment/candidates/CreateCandidate';
+
 const ITEMS_POR_PAGINA = 10;
 
 function filtersToApiQuery(f) {
@@ -39,9 +42,11 @@ export default function Candidates() {
 
   const [paginaActual, setPaginaActual] = useState(1);
 
-  // NUEVOS ESTADOS: Para los botones de favoritos y descartados
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showDescartadas, setShowDescartadas] = useState(false);
+
+  // NUEVO: Estado para controlar si CreateCandidate está abierto o cerrado
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const apiListQuery = useMemo(
     () =>
@@ -94,6 +99,20 @@ export default function Candidates() {
       cancelled = true;
     };
   }, [apiListQuery]);
+
+  // NUEVO: Función para manejar el guardado del nuevo candidato
+  const handleSaveNewCandidate = async (newCandidateData) => {
+    try {
+      // Aquí conectaremos con tu candidatesService más adelante
+      // const createdCandidate = await candidatesService.createCandidate(newCandidateData);
+      // setCandidates((prev) => [createdCandidate, ...prev]);
+      
+      console.log("Candidato listo para guardar:", newCandidateData);
+      setIsCreateModalOpen(false); // Cerramos tras guardar
+    } catch (error) {
+      console.error("Error al crear el candidato", error);
+    }
+  };
 
   const handleToggleFavorite = async (candidateId, currentIsFavorite) => {
     const newFavoriteStatus = !currentIsFavorite;
@@ -192,19 +211,15 @@ export default function Candidates() {
     return match ? parseInt(match[0], 10) : 0;
   };
 
-  // --- LÓGICA DE FILTRADO PRINCIPAL ---
   const filteredCandidates = candidates.filter((candidate) => {
-    // 1. Filtro de Descartados (Oculta por defecto los descartados a menos que se pulse el botón)
     const safeStatus = (candidate.status || '').toLowerCase().trim();
     const arrDiscard = ['descartada', 'discarded', 'rejected', 'descartado'];
     if (filters.status === 'All') {
       if (!showDescartadas && arrDiscard.includes(safeStatus)) return false;
     }
 
-    // 2. Filtro de Favoritos
     if (showFavoritesOnly && !candidate.isFavorite) return false;
 
-    // 3. Resto de filtros...
     const term = (filters.search || '').trim().toLowerCase();
     const matchSearch =
       !term ||
@@ -240,12 +255,10 @@ export default function Candidates() {
     );
   });
 
-  // Reset página al cambiar filtros
   useEffect(() => {
     setPaginaActual(1);
   }, [filters, showFavoritesOnly, showDescartadas]);
 
-  // Cálculo de paginación
   const totalPaginas = Math.max(
     1,
     Math.ceil(filteredCandidates.length / ITEMS_POR_PAGINA)
@@ -260,7 +273,6 @@ export default function Candidates() {
   const irAPagina = (p) =>
     setPaginaActual(Math.max(1, Math.min(p, totalPaginas)));
 
-  // Páginas visibles (máx 3 centradas en la actual)
   const paginasVisibles = useMemo(() => {
     let inicio = Math.max(1, paginaSafe - 1);
     let fin = Math.min(totalPaginas, inicio + 2);
@@ -318,6 +330,15 @@ export default function Candidates() {
           </div>
 
           <div className="d-flex gap-2">
+            {/* NUEVO: Botón principal para abrir CreateCandidate */}
+            <button
+              className="btn btn-sm btn-primary"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              <i className="bi bi-person-plus-fill me-2"></i>
+              Añadir Candidato
+            </button>
+            
             <button
               className={`btn btn-sm ${showDescartadas ? 'btn-danger' : 'btn-outline-secondary'}`}
               onClick={() => {
@@ -424,6 +445,14 @@ export default function Candidates() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* NUEVO: Renderizamos el componente CreateCandidate si el estado es true */}
+      {isCreateModalOpen && (
+        <CreateCandidate
+          onClose={() => setIsCreateModalOpen(false)}
+          onSave={handleSaveNewCandidate}
+        />
       )}
     </>
   );
