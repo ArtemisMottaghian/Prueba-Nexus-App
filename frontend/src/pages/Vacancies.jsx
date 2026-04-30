@@ -4,6 +4,7 @@ import BulkActions from '../components/recruitment/shared/BulkActions';
 import VacancyGrid from '../components/recruitment/vacancies/VacancyGrid';
 import initialJobsData from '../data/dummyData.json';
 import { vacanciesService } from '../services/vacanciesService';
+import { usersService } from '../services/userManagementService';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -61,6 +62,7 @@ export default function Vacancies() {
   const [selectedVacancies, setSelectedVacancies] = useState([]);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hrUsers, setHrUsers] = useState([]);
   const [locationOptions, setLocationOptions] = useState([]);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showDescartadas, setShowDescartadas] = useState(false);
@@ -110,9 +112,23 @@ export default function Vacancies() {
       }
     };
 
+    const fetchHrUsers = async () => {
+      if (!isNegocio) return;
+      try {
+        const users = await usersService.getAllUsers();
+        const hr = users.filter(
+          (u) => u.role === 'hr_manager' || u.role === 'reclutador'
+        );
+        setHrUsers(hr);
+      } catch (err) {
+        console.error('Error fetching HR users:', err);
+      }
+    };
+
     fetchJobs();
     fetchLocations();
-  }, []);
+    fetchHrUsers();
+  }, [isNegocio]);
 
   const handleFilterChange = (filterName, value) => {
     setFilters((prev) => ({ ...prev, [filterName]: value }));
@@ -181,20 +197,40 @@ export default function Vacancies() {
     }
   };
 
-  const handleBulkAssign = async (targetUser) => {
+  const handleBulkAssign = async (targetUserId) => {
     try {
-      await vacanciesService.applyBulkActions(
-        selectedVacancies,
-        'assign',
-        targetUser
+      await vacanciesService.assignHr(targetUserId, selectedVacancies);
+
+      const userToAssign = hrUsers.find(
+        (u) => String(u.id) === String(targetUserId)
       );
 
+      let nuevo = null;
+      if (userToAssign) {
+        nuevo = {
+          id: userToAssign.id,
+          nombre: userToAssign.name,
+          email: userToAssign.email,
+          fecha: new Date().toLocaleDateString('es-ES'),
+        };
+      }
+
       setJobs((prev) =>
-        prev.map((j) =>
-          selectedVacancies.includes(j.id)
-            ? { ...j, assignedTo: targetUser }
-            : j
-        )
+        prev.map((j) => {
+          if (selectedVacancies.includes(j.id) && nuevo) {
+            const currentAssigned = Array.isArray(j.assignedTo)
+              ? j.assignedTo
+              : j.assignedTo
+                ? [j.assignedTo]
+                : [];
+            const yaExiste = currentAssigned.some(
+              (r) => String(r.id) === String(targetUserId)
+            );
+            if (yaExiste) return j;
+            return { ...j, assignedTo: [...currentAssigned, nuevo] };
+          }
+          return j;
+        })
       );
 
       setSelectedVacancies([]);
@@ -374,6 +410,7 @@ export default function Vacancies() {
               onDiscard={handleBulkDiscard}
               onAssign={handleBulkAssign}
               onClear={() => setSelectedVacancies([])}
+              hrUsers={hrUsers}
             />
           </div>
         )}
