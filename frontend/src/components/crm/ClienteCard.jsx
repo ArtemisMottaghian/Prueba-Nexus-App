@@ -10,7 +10,10 @@ export default function ClienteCard({
   onDelete,
   onTogglePrioritario,
 }) {
-  const initial = (cliente.nombre || '?').charAt(0).toUpperCase();
+  // Calculamos la inicial usando company_name o nombre
+  const nombreParaMostrar =
+    cliente.name || cliente.company_name || cliente.nombre || 'Desconocido';
+  const initial = nombreParaMostrar.charAt(0).toUpperCase();
 
   return (
     <div
@@ -42,12 +45,14 @@ export default function ClienteCard({
         {/* Nombre + sector */}
         <div className="cc-info">
           <div className="cc-name-row">
-            <span className="cc-nombre">{cliente.nombre}</span>
+            <span className="cc-nombre">{nombreParaMostrar}</span>
             {cliente.prioritario && (
               <i className="bi bi-star-fill cc-vip-icon" title="VIP"></i>
             )}
           </div>
-          <span className="cc-sector-tag">{cliente.sector}</span>
+          <span className="cc-sector-tag">
+            {cliente.sector || 'Sin sector'}
+          </span>
         </div>
 
         {/* Acciones: se muestran al hacer hover */}
@@ -91,12 +96,12 @@ export default function ClienteCard({
       <div className="cc-bottom">
         <span className="cc-vacantes-badge">
           <i className="bi bi-briefcase me-1"></i>
-          {cliente.vacantesAbiertas}{' '}
+          {cliente.vacantesAbiertas || 0}{' '}
           {cliente.vacantesAbiertas !== 1 ? 'vacantes' : 'vacante'}
         </span>
         <span className="cc-contacto">
           <i className="bi bi-person me-1"></i>
-          {cliente.contactoPrincipal}
+          {cliente.contactoPrincipal || 'Sin contacto'}
         </span>
       </div>
     </div>

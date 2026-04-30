@@ -10,7 +10,7 @@ import './CrmEmpresaPanel.css';
  *
  * Props:
  *  - empresa: objeto cliente con { nombre, estadoCuenta, responsable, ultimoContacto,
- *             acuerdos, historialComercial, documentosComerciales, vacantes }
+ *                 acuerdos, historialComercial, documentosComerciales, vacantes }
  *  - compact: bool — layout más compacto (modal de vacante)
  *  - onUpdateEstadoCuenta: (nuevoEstado) => void — se invoca al cambiar de estado.
  *    Al convertir a 'cliente' (firma), el consumidor debe propagar el cambio en todo el sistema.
@@ -35,6 +35,10 @@ export default function CrmEmpresaPanel({
       </div>
     );
   }
+
+  // PROTECCIÓN: Calculamos el nombre seguro a mostrar
+  const nombreParaMostrar =
+    empresa.company_name || empresa.nombre || 'Empresa desconocida';
 
   const estadoActual = empresa.estadoCuenta || 'lead';
 
@@ -88,7 +92,8 @@ export default function CrmEmpresaPanel({
         <div className="crm-head-main">
           <div className="crm-head-titulo">
             <i className="bi bi-building me-2"></i>
-            <span>{empresa.nombre}</span>
+            {/* PROTECCIÓN APLICADA AQUÍ */}
+            <span>{nombreParaMostrar}</span>
           </div>
           <div className="crm-head-meta">
             <span
@@ -276,7 +281,7 @@ export default function CrmEmpresaPanel({
                 </div>
                 <div className="modal-body pt-2">
                   <p className="mb-1">
-                    ¿Confirmas que <strong>{empresa.nombre}</strong> firma el
+                    ¿Confirmas que <strong>{nombreParaMostrar}</strong> firma el
                     contrato y pasa a ser cliente?
                   </p>
                   <p className="text-muted small mb-0">

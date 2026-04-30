@@ -83,11 +83,15 @@ export default function Clientes() {
 
   const sectores = ['Todos', ...new Set(clientes.map((c) => c.sector))];
 
+  // FILTRO CORREGIDO CON PROTECCIÓN DE UNDEFINED Y COMPANY_NAME
   const clientesFiltrados = clientes.filter((c) => {
+    const searchLower = (busqueda || '').toLowerCase();
+
     const coincideNombre =
-      c.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-      c.contactoPrincipal.toLowerCase().includes(busqueda.toLowerCase()) ||
-      c.email.toLowerCase().includes(busqueda.toLowerCase());
+      (c.company_name || c.nombre || '').toLowerCase().includes(searchLower) ||
+      (c.contactoPrincipal || '').toLowerCase().includes(searchLower) ||
+      (c.email || '').toLowerCase().includes(searchLower);
+
     const coincideSector =
       filtroSector === 'Todos' || c.sector === filtroSector;
     const coincidePrioritario = !filtroPrioritario || c.prioritario === true;
@@ -140,14 +144,15 @@ export default function Clientes() {
     setModalAbierto('nuevo');
   };
 
+  // MODAL DE EDICIÓN CORREGIDO (Protegemos todo si viene nulo)
   const abrirModalEditar = (e, cliente) => {
     e.stopPropagation();
     setForm({
-      nombre: cliente.nombre,
-      sector: cliente.sector,
-      contactoPrincipal: cliente.contactoPrincipal,
-      email: cliente.email,
-      telefono: cliente.telefono,
+      nombre: cliente.company_name || cliente.nombre || '',
+      sector: cliente.sector || '',
+      contactoPrincipal: cliente.contactoPrincipal || '',
+      email: cliente.email || '',
+      telefono: cliente.telefono || '',
       cif: cliente.cif || '',
       direccion: cliente.direccion || '',
       prioritario: cliente.prioritario || false,
@@ -470,7 +475,7 @@ export default function Clientes() {
                     ></i>
                     {modalAbierto === 'nuevo'
                       ? 'Nueva empresa'
-                      : `Editar — ${clienteEditando?.nombre}`}
+                      : `Editar — ${clienteEditando?.company_name || clienteEditando?.nombre}`}
                   </h5>
                   <button
                     className="btn-close"
@@ -634,7 +639,9 @@ export default function Clientes() {
                 <div className="modal-body pt-2">
                   <p className="mb-1">Estas seguro de que quieres eliminar a</p>
                   <p className="fw-semibold mb-3">
-                    &quot;{clienteAEliminar?.nombre}&quot;?
+                    &quot;
+                    {clienteAEliminar?.company_name || clienteAEliminar?.nombre}
+                    &quot;?
                   </p>
                   <p className="text-muted small mb-0">
                     <i className="bi bi-info-circle me-1"></i>

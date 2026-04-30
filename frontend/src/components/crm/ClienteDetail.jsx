@@ -17,8 +17,9 @@ const getBadgeEstado = (estado) => {
 const adaptarVacante = (vacante, cliente) => ({
   id: vacante.id,
   title: vacante.titulo,
-  companyName: cliente.nombre,
-  location: cliente.direccion || 'No especificada',
+  companyName:
+    cliente.name || cliente.company_name || cliente.nombre || 'Desconocido',
+  location: cliente.address || cliente.direccion || 'No especificada',
   status: vacante.estado,
   source: 'Nexus',
   time: vacante.fecha,
@@ -30,7 +31,6 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
   const [notaTexto, setNotaTexto] = useState('');
   const [notas, setNotas] = useState([]);
   const [activeTab, setActiveTab] = useState('info');
-  // Estado local del seguimiento comercial para reflejo inmediato al cambiar el estado de cuenta
   const [empresaCrm, setEmpresaCrm] = useState(cliente);
 
   useEffect(() => {
@@ -86,6 +86,9 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
   }
 
   const esPrioritario = cliente.prioritario || false;
+  // PROTECCIÓN 2: Variable segura para el nombre en todo el detalle (Añadido cliente.name)
+  const nombreParaMostrar =
+    cliente.name || cliente.company_name || cliente.nombre || 'Desconocido';
 
   return (
     <>
@@ -93,11 +96,15 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
       <div className="cliente-profile-header mb-4">
         <div className="d-flex justify-content-between align-items-start flex-wrap gap-2">
           <div className="d-flex align-items-start gap-3">
-            <div className="cliente-avatar">{cliente.nombre.charAt(0)}</div>
+            {/* PROTECCIÓN 3: Avatar seguro */}
+            <div className="cliente-avatar">
+              {nombreParaMostrar.charAt(0).toUpperCase()}
+            </div>
             <div>
               <div className="d-flex align-items-center gap-2 flex-wrap">
                 <h3 className="cliente-profile-nombre mb-0">
-                  {cliente.nombre}
+                  {/* PROTECCIÓN 4: Título seguro */}
+                  {nombreParaMostrar}
                 </h3>
                 {esPrioritario && (
                   <span className="badge-prioritario">
@@ -121,7 +128,7 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
                 )}
               </div>
               <span className="cliente-sector">
-                {cliente.sector}
+                {cliente.sector || 'Sin sector'}
                 {empresaCrm?.responsable && (
                   <>
                     {' · '}
@@ -134,7 +141,7 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
           </div>
           <div className="d-flex align-items-center gap-2 flex-wrap">
             <span className="cliente-vacantes-badge grande">
-              {cliente.vacantesAbiertas} vacantes abiertas
+              {cliente.vacantesAbiertas || 0} vacantes abiertas
             </span>
             <button
               className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
@@ -157,7 +164,7 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
         <div className="cliente-stats-row mt-3">
           <div className="cliente-stat">
             <span className="stat-value stat-purple">
-              {cliente.vacantesAbiertas}
+              {cliente.vacantesAbiertas || 0}
             </span>
             <span className="stat-label">Vacantes activas</span>
           </div>
@@ -245,7 +252,7 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
                 <div className="info-item">
                   <span className="info-label">Contacto principal</span>
                   <span className="info-value">
-                    {cliente.contactoPrincipal}
+                    {cliente.contactoPrincipal || '—'}
                   </span>
                 </div>
                 <div className="info-item">
@@ -255,7 +262,7 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
                     className="info-value text-decoration-none info-link"
                   >
                     <i className="bi bi-envelope me-1"></i>
-                    {cliente.email}
+                    {cliente.email || '—'}
                   </a>
                 </div>
                 <div className="info-item">
@@ -265,23 +272,27 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
                     className="info-value text-decoration-none info-link"
                   >
                     <i className="bi bi-telephone me-1"></i>
-                    {cliente.telefono}
+                    {cliente.telefono || '—'}
                   </a>
                 </div>
               </div>
               <div className="d-flex gap-2 mt-3">
-                <a
-                  href={`mailto:${cliente.email}`}
-                  className="btn btn-sm btn-contact"
-                >
-                  <i className="bi bi-envelope me-1"></i>Email
-                </a>
-                <a
-                  href={`tel:${cliente.telefono}`}
-                  className="btn btn-sm btn-contact"
-                >
-                  <i className="bi bi-telephone me-1"></i>Llamar
-                </a>
+                {cliente.email && (
+                  <a
+                    href={`mailto:${cliente.email}`}
+                    className="btn btn-sm btn-contact"
+                  >
+                    <i className="bi bi-envelope me-1"></i>Email
+                  </a>
+                )}
+                {cliente.telefono && (
+                  <a
+                    href={`tel:${cliente.telefono}`}
+                    className="btn btn-sm btn-contact"
+                  >
+                    <i className="bi bi-telephone me-1"></i>Llamar
+                  </a>
+                )}
               </div>
             </div>
           </div>
@@ -298,11 +309,14 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
                 </div>
                 <div className="info-item">
                   <span className="info-label">Dirección</span>
-                  <span className="info-value">{cliente.direccion || '—'}</span>
+                  {/* PROTECCIÓN: Añadido cliente.address */}
+                  <span className="info-value">
+                    {cliente.address || cliente.direccion || '—'}
+                  </span>
                 </div>
                 <div className="info-item">
                   <span className="info-label">Sector</span>
-                  <span className="info-value">{cliente.sector}</span>
+                  <span className="info-value">{cliente.sector || '—'}</span>
                 </div>
               </div>
             </div>
