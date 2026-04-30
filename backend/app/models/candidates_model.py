@@ -44,6 +44,7 @@ class Candidate(Base):
     )
 
     applications = relationship("JobApplication", back_populates="candidate")
+    comments = relationship("CandidateComment", backref="candidate", cascade="all, delete-orphan")
 
 class CandidateComment(Base):
     __tablename__ = 'candidate_comments'
