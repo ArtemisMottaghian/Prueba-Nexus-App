@@ -8,6 +8,7 @@ export default function BulkActions({
   onClear,
   label = 'candidato',
   hrUsers = [],
+  showAssign = false,
 }) {
   const [assignTarget, setAssignTarget] = useState('');
 
@@ -26,28 +27,32 @@ export default function BulkActions({
 
       <div className="bulk-actions-right">
         <div className="bulk-actions-controls">
-          <select
-            className="form-select form-select-sm bulk-select"
-            value={assignTarget}
-            onChange={(e) => setAssignTarget(e.target.value)}
-          >
-            <option value="">Asignar a...</option>
-            {hrUsers.map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.name}
-              </option>
-            ))}
-          </select>
+          {showAssign && (
+            <>
+              <select
+                className="form-select form-select-sm bulk-select"
+                value={assignTarget}
+                onChange={(e) => setAssignTarget(e.target.value)}
+              >
+                <option value="">Asignar a...</option>
+                {hrUsers.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
+                  </option>
+                ))}
+              </select>
 
-          <button
-            className="btn btn-sm btn-bulk-assign"
-            onClick={() => onAssign?.(assignTarget)}
-            disabled={!assignTarget}
-            title="Asignar"
-          >
-            <i className="bi bi-person-check"></i>
-            <span className="d-none d-sm-inline ms-1">Asignar</span>
-          </button>
+              <button
+                className="btn btn-sm btn-bulk-assign"
+                onClick={() => onAssign?.(assignTarget)}
+                disabled={!assignTarget}
+                title="Asignar"
+              >
+                <i className="bi bi-person-check"></i>
+                <span className="d-none d-sm-inline ms-1">Asignar</span>
+              </button>
+            </>
+          )}
 
           <button
             className="btn btn-sm btn-bulk-discard"
