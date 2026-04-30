@@ -7,6 +7,7 @@ export default function BulkActions({
   onAssign,
   onClear,
   label = 'candidato',
+  hrUsers = [],
 }) {
   const [assignTarget, setAssignTarget] = useState('');
 
@@ -31,9 +32,11 @@ export default function BulkActions({
             onChange={(e) => setAssignTarget(e.target.value)}
           >
             <option value="">Asignar a...</option>
-            <option value="diego">Diego Santos</option>
-            <option value="maria">María García</option>
-            <option value="carlos">Carlos López</option>
+            {hrUsers.map((user) => (
+              <option key={user.id} value={user.id}>
+                {user.name}
+              </option>
+            ))}
           </select>
 
           <button

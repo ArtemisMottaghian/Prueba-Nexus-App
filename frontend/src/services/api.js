@@ -79,6 +79,11 @@ export const ENDPOINTS = {
     },
   },
 
+  ai: {
+    matchVacancy: (vacancyId) =>
+      `${BASE_URL}/api/ai/match-vacancy/${vacancyId}`,
+  },
+
   metrics: {
     general: `${BASE_URL}/api/metrics`,
     leadStats: (fromIso, toIso) => {
