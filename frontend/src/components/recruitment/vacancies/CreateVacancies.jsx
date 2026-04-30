@@ -1,16 +1,16 @@
 import { useState } from 'react';
-import './CreateVacancies.css'; 
+import './CreateVacancies.css';
 
 export default function CreateVacancy({ onClose, onSave }) {
   // 1. Estado inicial del formulario con todos los campos solicitados
   const [formData, setFormData] = useState({
-    title: '',              // Nombre de la vacante
-    location: '',           // Ubicación
-    sector: '',             // Sector / Industria
-    source: '',             // Fuente de origen
-    salaryRange: '',        // Rango salarial
-    activeVacancies: 1,     // Vacantes activas con esta empresa (por defecto 1)
-    publishedAgo: ''        // Hace cuánto ha sido publicada
+    title: '', // Nombre de la vacante
+    location: '', // Ubicación
+    sector: '', // Sector / Industria
+    source: '', // Fuente de origen
+    salaryRange: '', // Rango salarial
+    activeVacancies: 1, // Vacantes activas con esta empresa (por defecto 1)
+    publishedAgo: '', // Hace cuánto ha sido publicada
   });
 
   // 2. Manejador genérico para todos los inputs y selects
@@ -18,7 +18,7 @@ export default function CreateVacancy({ onClose, onSave }) {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -36,9 +36,9 @@ export default function CreateVacancy({ onClose, onSave }) {
       companyActiveJobs: parseInt(formData.activeVacancies, 10) || 1,
       publishedAgo: formData.publishedAgo,
       // Campos automáticos por defecto para una nueva vacante
-      status: 'Nueva', 
+      status: 'Nueva',
       isFavorite: false,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
     onSave(newVacancyData);
@@ -47,17 +47,20 @@ export default function CreateVacancy({ onClose, onSave }) {
   return (
     <>
       <div className="modal-backdrop fade show"></div>
-      
+
       {/* Aplicamos la clase custom-create-modal para el efecto Glassmorphism */}
-      <div className="modal fade show d-block custom-create-modal" tabIndex="-1" role="dialog">
+      <div
+        className="modal fade show d-block custom-create-modal"
+        tabIndex="-1"
+        role="dialog"
+      >
         <div className="modal-dialog modal-dialog-centered modal-lg">
           <div className="modal-content">
-            
             <div className="modal-header">
               <h4 className="modal-title fw-bold">Añadir Nueva Vacante</h4>
-              <button 
-                type="button" 
-                className="btn-close" 
+              <button
+                type="button"
+                className="btn-close"
                 onClick={onClose}
                 aria-label="Cerrar"
               ></button>
@@ -65,7 +68,6 @@ export default function CreateVacancy({ onClose, onSave }) {
 
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
-                
                 {/* 1. Nombre de la Vacante (Title) */}
                 <div className="mb-4">
                   <label htmlFor="title" className="form-label fw-semibold">
@@ -86,7 +88,10 @@ export default function CreateVacancy({ onClose, onSave }) {
                 <div className="row">
                   {/* 2. Ubicación */}
                   <div className="col-md-6 mb-3">
-                    <label htmlFor="location" className="form-label fw-semibold">
+                    <label
+                      htmlFor="location"
+                      className="form-label fw-semibold"
+                    >
                       Ubicación
                     </label>
                     <input
@@ -142,7 +147,10 @@ export default function CreateVacancy({ onClose, onSave }) {
 
                   {/* 5. Rango Salarial */}
                   <div className="col-md-6 mb-3">
-                    <label htmlFor="salaryRange" className="form-label fw-semibold">
+                    <label
+                      htmlFor="salaryRange"
+                      className="form-label fw-semibold"
+                    >
                       Rango Salarial
                     </label>
                     <input
@@ -160,7 +168,10 @@ export default function CreateVacancy({ onClose, onSave }) {
                 <div className="row">
                   {/* 6. Vacantes activas con esta empresa */}
                   <div className="col-md-6 mb-3">
-                    <label htmlFor="activeVacancies" className="form-label fw-semibold">
+                    <label
+                      htmlFor="activeVacancies"
+                      className="form-label fw-semibold"
+                    >
                       Vacantes activas con esta empresa
                     </label>
                     <input
@@ -177,7 +188,10 @@ export default function CreateVacancy({ onClose, onSave }) {
 
                   {/* 7. Hace cuánto ha sido publicada */}
                   <div className="col-md-6 mb-3">
-                    <label htmlFor="publishedAgo" className="form-label fw-semibold">
+                    <label
+                      htmlFor="publishedAgo"
+                      className="form-label fw-semibold"
+                    >
                       Publicada hace...
                     </label>
                     <select
@@ -196,27 +210,25 @@ export default function CreateVacancy({ onClose, onSave }) {
                     </select>
                   </div>
                 </div>
-
               </div>
 
               <div className="modal-footer">
-                <button 
-                  type="button" 
-                  className="btn btn-outline-secondary" 
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
                   onClick={onClose}
                 >
                   Cancelar
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="btn btn-primary"
-                  disabled={!formData.title.trim()} 
+                  disabled={!formData.title.trim()}
                 >
                   Guardar Vacante
                 </button>
               </div>
             </form>
-
           </div>
         </div>
       </div>

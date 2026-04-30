@@ -136,9 +136,9 @@ export default function Vacancies() {
 
   // NUEVO: 3. Función para procesar el guardado de la nueva vacante
   const handleSaveNewVacancy = async (newVacancyData) => {
-    console.log("Nueva vacante lista para enviar a la API:", newVacancyData);
+    console.log('Nueva vacante lista para enviar a la API:', newVacancyData);
     // Aquí implementaremos la llamada a vacanciesService más adelante
-    setIsCreateModalOpen(false); 
+    setIsCreateModalOpen(false);
   };
 
   const handleFilterChange = (filterName, value) => {
@@ -446,13 +446,13 @@ export default function Vacancies() {
           <div className="d-flex gap-2">
             {/* NUEVO: 4. Botón para añadir vacante, visible SOLO para el rol de Negocio */}
             {isNegocio && (
-               <button
-                 className="btn btn-sm btn-primary"
-                 onClick={() => setIsCreateModalOpen(true)}
-               >
-                 <i className="bi bi-plus-lg me-2"></i>
-                 Añadir Vacante
-               </button>
+              <button
+                className="btn btn-sm btn-primary"
+                onClick={() => setIsCreateModalOpen(true)}
+              >
+                <i className="bi bi-plus-lg me-2"></i>
+                Añadir Vacante
+              </button>
             )}
 
             <button
