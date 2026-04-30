@@ -557,32 +557,34 @@ export default function VacancyModal({
                   </li>
                 </ul>
 
-                <div className="pb-2 pe-2">
-                  <button
-                    className={`btn btn-primary-custom btn-sm ${isMatching ? 'disabled' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (onSmartMatch) onSmartMatch(e);
-                    }}
-                    disabled={isMatching}
-                    title="Smart Match con IA"
-                  >
-                    {isMatching ? (
-                      <>
-                        <span
-                          className="spinner-border spinner-border-sm me-2"
-                          role="status"
-                          aria-hidden="true"
-                        ></span>
-                        Buscando...
-                      </>
-                    ) : (
-                      <>
-                        <i className="bi bi-stars me-2"></i>Smart Match IA
-                      </>
-                    )}
-                  </button>
-                </div>
+                {isNegocio && (
+                  <div className="pb-2 pe-2">
+                    <button
+                      className={`btn btn-primary-custom btn-sm ${isMatching ? 'disabled' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onSmartMatch) onSmartMatch(e);
+                      }}
+                      disabled={isMatching}
+                      title="Smart Match con IA"
+                    >
+                      {isMatching ? (
+                        <>
+                          <span
+                            className="spinner-border spinner-border-sm me-2"
+                            role="status"
+                            aria-hidden="true"
+                          ></span>
+                          Buscando...
+                        </>
+                      ) : (
+                        <>
+                          <i className="bi bi-stars me-2"></i>Smart Match IA
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="tab-content">

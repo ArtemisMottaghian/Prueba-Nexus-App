@@ -411,6 +411,7 @@ export default function Vacancies() {
               onAssign={handleBulkAssign}
               onClear={() => setSelectedVacancies([])}
               hrUsers={hrUsers}
+              showAssign={isNegocio}
             />
           </div>
         )}
