@@ -59,6 +59,7 @@ async def search_google_pdfs(query: str, headless: bool = True) -> list[dict]:
                 if ".pdf" in href.lower() or "filetype:pdf" in query.lower():
                     urls_to_download.append(href)
 
+            urls_to_download = [href for href in all_hrefs if href.startswith('http') and 'google.com' not in href]
             urls_to_download = list(set(urls_to_download))[:2] 
 
             # LA MAGIA: Leer en RAM (Sin guardar archivos)
