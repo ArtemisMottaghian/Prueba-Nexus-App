@@ -240,10 +240,10 @@ async def assign_hr_to_vacancies(db: AsyncSession, hr_id:int, vacancy_ids: List[
         if not user:
             raise HTTPException(status_code=404, detail="El usuario de destino no existe.")
 
-        if user.role != UserType.hr_manager:
+        if user.role not in [UserType.hr_manager, UserType.company, UserType.admin]:
             raise HTTPException(
                 status_code=400,
-                detail=f"El usuario debe tener el rol: '{UserType.hr_manager.value}' para gestionar vacantes."
+                detail=f"El usuario no tiene un rol válido para gestionar o asignarse vacantes."
             )
 
         rows = [{"vacancy_id": vid, "user_id": hr_id} for vid in vacancy_ids]

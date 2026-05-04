@@ -116,22 +116,22 @@ export default function Vacancies() {
       }
     };
 
-    const fetchHrUsers = async () => {
+    const fetchBusinessUsers = async () => {
       if (!isNegocio) return;
       try {
         const users = await usersService.getAllUsers();
-        const hr = users.filter(
-          (u) => u.role === 'hr_manager' || u.role === 'reclutador'
+        const business = users.filter(
+          (u) => u.role === 'negocio' || u.role === 'admin' || u.role === 'company'
         );
-        setHrUsers(hr);
+        setHrUsers(business);
       } catch (err) {
-        console.error('Error fetching HR users:', err);
+        console.error('Error fetching business users:', err);
       }
     };
 
     fetchJobs();
     fetchLocations();
-    fetchHrUsers();
+    fetchBusinessUsers();
   }, [isNegocio]);
 
   // NUEVO: 3. Función para procesar el guardado de la nueva vacante
