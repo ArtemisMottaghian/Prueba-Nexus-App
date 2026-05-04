@@ -326,7 +326,7 @@ export default function Vacancies() {
     if (activeSearch) {
       const lowerQuery = activeSearch.toLowerCase();
       const textoCompleto =
-        `${job.title} ${job.companyName} ${job.location} ${job.description}`.toLowerCase();
+        `${job.title || ''} ${job.companyName || ''} ${job.location || ''} ${job.description || ''}`.toLowerCase();
       matchText = textoCompleto.includes(lowerQuery);
     }
 

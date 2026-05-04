@@ -60,7 +60,7 @@ export default function FilterBar({
           <input
             type="text"
             className="search-control"
-            placeholder="Buscar por nombre, correo o palabra clave..."
+            placeholder="Buscar por título, empresa o cliente..."
             value={filters.search || ''}
             onChange={(e) => onFilterChange('search', e.target.value)}
           />
