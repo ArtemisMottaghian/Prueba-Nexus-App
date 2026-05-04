@@ -1,6 +1,6 @@
 import asyncio
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from app.services.orchestrator_vacancies import run_scrapers
@@ -206,3 +206,15 @@ async def unassign_hr_from_vacancies(
     return {
         "message": f"Acción realizada: se han liberado {unassigned_count} vacantes."
     }
+
+# -----------------
+# URL pública de vacante (sin login, sin indexación de buscadores)
+# GET /api/vacancies/public/{vacancy_id}
+# -----------------
+@router.get("/public/{vacancy_id}", response_model=VacancyDetail)
+async def read_vacancy_public(vacancy_id: int, db: AsyncSession = Depends(get_db), response: Response = None):
+    vacancy = await vacancies_service.get_vacancy_detail(db, vacancy_id)
+    if vacancy is None:
+        raise HTTPException(status_code=404, detail="La vacante no existe")
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    return vacancy
