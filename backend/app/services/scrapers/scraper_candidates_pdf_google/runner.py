@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 # Nuevos imports para Playwright y Stealth
 from playwright.async_api import async_playwright
-from playwright_stealth import stealth_async
+from playwright_stealth import Stealth
 
 from app.db.session import AsyncSessionLocal
 from .utils import upsert_scraped_candidate
@@ -78,7 +78,7 @@ async def search_linkedin_url(first_name: str, last_name: str) -> str | None:
             page = await context.new_page()
             
             # APLICAMOS STEALTH
-            await stealth_async(page)
+            await Stealth().apply_stealth_async(page)
 
             await page.goto(url, wait_until="domcontentloaded", timeout=12000)
             await asyncio.sleep(2) 
