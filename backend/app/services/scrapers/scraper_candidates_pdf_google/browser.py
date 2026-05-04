@@ -2,7 +2,7 @@ import asyncio
 import aiohttp
 import urllib.parse
 from playwright.async_api import async_playwright
-from playwright_stealth import stealth_async  # <--- NUESTRA CAPA DE INVISIBILIDAD
+from playwright_stealth import Stealth
 
 async def search_google_pdfs(query: str, headless: bool = True) -> list[dict]:
     """Busca PDFs en Google y los lee en memoria RAM."""
@@ -27,14 +27,11 @@ async def search_google_pdfs(query: str, headless: bool = True) -> list[dict]:
             extra_http_headers={"Accept-Language": "es-ES,es;q=0.9"},
             java_script_enabled=True
         )
-        
+
         page = await context.new_page()
-        
-        # APLICAMOS EL MODO STEALTH
-        await stealth_async(page)
 
         try:
-            await page.goto("https://www.google.com/ncr", wait_until="domcontentloaded", timeout=15000)
+            await Stealth().apply_stealth_async(page)
             
             try:
                 accept_button = page.locator('button#L2AGLb, button:has-text("Aceptar todo"), button:has-text("Acepto")')
@@ -119,11 +116,10 @@ async def search_bing_pdfs(query: str, headless: bool = True) -> list[dict]:
             extra_http_headers={"Accept-Language": "es-ES,es;q=0.9"}
         )
         page = await context.new_page()
-        
-        # APLICAMOS EL MODO STEALTH
-        await stealth_async(page)
 
         try:
+            await Stealth().apply_stealth_async(page)
+
             query_encoded = urllib.parse.quote_plus(query)
             search_url = f"https://www.bing.com/search?q={query_encoded}"
             
