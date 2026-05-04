@@ -298,15 +298,31 @@ export const vacanciesService = {
 
   assignHr: async (hrId, vacancyIds) => {
     try {
+      const currentToken = localStorage.getItem('token');
+
+      const cleanHrId = parseInt(hrId, 10);
+
+      const cleanVacancyIds = Array.isArray(vacancyIds)
+        ? vacancyIds.map((id) => parseInt(id, 10))
+        : [parseInt(vacancyIds, 10)];
+
       const response = await authFetch(
         ENDPOINTS.recruitment.vacantes.assignHr,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ hr_id: hrId, vacancy_ids: vacancyIds }),
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${currentToken}`,
+          },
+          body: JSON.stringify({
+            hr_id: cleanHrId,
+            vacancy_ids: cleanVacancyIds,
+          }),
         }
       );
-      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
       return await response.json();
     } catch (error) {
       console.error(`Error al asignar RRHH a vacantes:`, error);
@@ -316,11 +332,16 @@ export const vacanciesService = {
 
   unassignHr: async (hrId, vacancyIds) => {
     try {
+      const currentToken = localStorage.getItem('token');
+
       const response = await authFetch(
         ENDPOINTS.recruitment.vacantes.assignHr,
         {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${currentToken}`,
+          },
           body: JSON.stringify({ hr_id: hrId, vacancy_ids: vacancyIds }),
         }
       );
