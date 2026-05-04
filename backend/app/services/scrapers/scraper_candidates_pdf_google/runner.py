@@ -14,8 +14,8 @@ from dotenv import load_dotenv
 
 from app.db.session import AsyncSessionLocal
 from .utils import upsert_scraped_candidate
-from app.core.scraper_candidates_pdf_config import SECTORES, CIUDADES, HEADLESS_MODE, KEYWORDS
-from .browser import search_google_pdfs 
+from app.core.scraper_candidates_pdf_config import SECTORES, CIUDADES, HEADLESS_MODE, KEYWORDS, MAX_PROFILES_PER_SEARCH
+from .browser import search_google_pdfs, search_bing_pdfs
 
 
 # INICIALIZACIÓN Y CONFIGURACIÓN
@@ -25,7 +25,7 @@ client = genai.Client(api_key=os.getenv("GOOGLE_AI_KEY"))
 # claude_client = anthropic.AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 LIMIT_FILE = "daily_limit.json"
-MAX_DAILY_CV = 6
+
 
 class AILimitReachedError(Exception):
     pass
@@ -85,40 +85,61 @@ async def search_linkedin_url(first_name: str, last_name: str) -> str | None:
     if not first_name or len(first_name) < 2: 
         return None
 
-    print(f"    Buscando LinkedIn en DuckDuckGo para: {first_name} {last_name}...")
+    print(f"    Buscando LinkedIn para: {first_name} {last_name}...")
 
     # Preparamos la búsqueda para DuckDuckGo
     query = urllib.parse.quote_plus(f'"{first_name} {last_name}" España site:linkedin.com/in/')
-    url = f"https://html.duckduckgo.com/html/?q={query}"
 
     # Cabeceras premium para que DuckDuckGo nos trate como a un usuario normal
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
         "Accept-Language": "es-ES,es;q=0.9",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-        "Referer": "https://duckduckgo.com/"
     }
+    
+    regex_linkedin = r'(?:https?://)?(?:[a-z]{2,3}\.|www\.)?linkedin\.com/in/[a-zA-Z0-9%_.-]+'
 
+    # Intento con DuckduckGo
+    url_ddg = f"https://html.duckduckgo.com/html/?q={query}"
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers, timeout=8) as resp:
+            async with session.get(url_ddg, headers=headers, timeout=8) as resp:
                 if resp.status == 200:
                     html = urllib.parse.unquote(await resp.text())
-
-                    # Buscamos la URL de LinkedIn dentro del código fuente
-                    match = re.search(r'(https?://(?:[a-z]{2,3}\.|www\.)?linkedin\.com/in/[a-zA-Z0-9%_.-]+)', html, re.IGNORECASE)
+                    match = re.search(regex_linkedin, html, re.IGNORECASE)
 
                     if match: 
-                        link = match.group(1)
-                        print(f"    ¡LinkedIn encontrado!: {link}")
+                        link = match.group(0)
+                        print(f"LinkedIn encontrado desde duckduckgo: {link}")
                         return link
-                    else:
-                        print("    DuckDuckGo no devolvió ningún perfil.")
                 else:
                     print(f"    DuckDuckGo bloqueó la búsqueda (Error {resp.status})")
     except Exception as e: 
         print(f"    Error de conexión con DuckDuckGo: {e}")
 
+    # Intento con Yahoo
+    print(f"Intentando con Yahoo para: {first_name} {last_name}")
+    url_yahoo = f"https://es.search.yahoo.com/search?p={query}"
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url_yahoo, headers=headers, timeout=8) as resp:
+                if resp.status == 200:
+                    html = urllib.parse.unquote(await resp.text())
+                    match = re.search(regex_linkedin, html, re.IGNORECASE)
+                    
+                    if match:
+                        link = match.group(0)
+                        if not link.startswith('http'): f"https://{link}"
+                        print(f"LinkedIn encontrado en yahoo: {link}")
+                        return link
+                    else:
+                        print("Yahoo no devolvio ningún perfil")
+                else:
+                    print(f"Yahoo bloqueo la búsqueda: {resp.status}")
+    except Exception as e:
+        print(f"Error de conexión: {e}")
+    
     return None
 
 
@@ -148,7 +169,7 @@ async def extract_pdf_data(pdf_bytes: bytes) -> dict | None:
         Analiza este CV. 
         REGLA DE ORO: Solo nos interesan candidatos cuya residencia actual sea en España. Si el currículum indica que vive en otro país (ej: Ecuador, Colombia, Perú, etc.), devuelve exactamente esto y nada más: {{}}
         
-        Si reside en España, devuelve SOLO un JSON estricto con: first_name, last_name, email, phone, location, sector, experience, skills. 
+        Si reside en España, devuelve SOLO un JSON estricto con: first_name, last_name, email, phone, location, sector, experience, education, skills. 
         Texto: {text[:6000]}
         """
 
@@ -191,11 +212,11 @@ async def extract_pdfs_google() -> list[dict]:
     all_extracted_candidates = []
     current_count, today_str = check_daily_limit()
 
-    if current_count >= MAX_DAILY_CV:
-        print(f"[INFO] Límite diario alcanzado ({MAX_DAILY_CV}/100) para hoy {today_str}. Vuelve mañana.")
+    if current_count >= MAX_PROFILES_PER_SEARCH:
+        print(f"[INFO] Límite diario alcanzado ({MAX_PROFILES_PER_SEARCH}/100) para hoy {today_str}. Vuelve mañana.")
         return
 
-    print(f"\n--- RECOLECTOR PRO INICIADO: Llevamos {current_count}/{MAX_DAILY_CV} procesados hoy. ---")
+    print(f"\n--- RECOLECTOR PRO INICIADO: Llevamos {current_count}/{MAX_PROFILES_PER_SEARCH} procesados hoy. ---")
 
     async with AsyncSessionLocal() as db:
         
@@ -203,25 +224,28 @@ async def extract_pdfs_google() -> list[dict]:
         lista_keywords = KEYWORDS if isinstance(KEYWORDS, list) else [KEYWORDS]
 
         for keyword in lista_keywords:
-            if current_count >= MAX_DAILY_CV: 
-                break # Rompe el bucle si alcanzamos el límite
-
+            if current_count >= MAX_PROFILES_PER_SEARCH: 
+                break 
             sector = "Búsqueda por Keyword" 
             
             # Buscamos la palabra clave estricta, forzando que sea PDF y parezca un CV
-            query = f'filetype:pdf "{keyword}" intitle:cv'
+            query = f'filetype:pdf "{keyword}" (cv OR "curriculum vitae") España -oferta -empleo -requisitos'
 
-            print(f"\n[BUSCANDO] Palabra clave: {keyword}...")
+            print(f"\n[BUSCANDO] Palabra clave: {query}...")
 
             # IMPORTANTE: Aquí pasamos el HEADLESS_MODE
             pdfs_en_memoria = await search_google_pdfs(query, headless=HEADLESS_MODE) 
 
             if not pdfs_en_memoria:
-                print(f"    No se encontraron resultados en Google para {keyword}.")
+                print(f"    No se encontraron resultados en Google para {keyword}. Intentando con Bing")
+                pdfs_en_memoria = await search_bing_pdfs(query, headless=HEADLESS_MODE)
+                
+            if not pdfs_en_memoria:
+                print(f"Ni Google ni Bing encontraron resultados para: {keyword}")
                 continue
 
             for pdf_item in pdfs_en_memoria:
-                if current_count >= MAX_DAILY_CV: break
+                if current_count >= MAX_PROFILES_PER_SEARCH: break
 
                 try:
                     data = await extract_pdf_data(pdf_item["bytes"])
@@ -245,6 +269,7 @@ async def extract_pdfs_google() -> list[dict]:
                         "location": data.get('location'),
                         "source": f"Google PDF - Keyword: {keyword}",
                         "experience": str(data.get('experience')) if data.get('experience') else None,
+                        "education": str(data.get('education')) if data.get('education') else None,
                         "candidate_url": linkedin,
                         "cv_url": pdf_item['url'], 
                         "skills": str(data.get('skills')) if data.get('skills') else None,
@@ -261,11 +286,11 @@ async def extract_pdfs_google() -> list[dict]:
                     else:
                         print(f"Error guardando a {data.get('first_name')} en la BD")
                         
-                    print(f"  -> {data.get('first_name')} añadido a la lista ({current_count}/{MAX_DAILY_CV})")
+                    print(f"  -> {data.get('first_name')} añadido a la lista ({current_count}/{MAX_PROFILES_PER_SEARCH})")
 
                 await asyncio.sleep(5) # Pausa cortés
 
-        if current_count >= MAX_DAILY_CV:
+        if current_count >= MAX_PROFILES_PER_SEARCH:
             print("\n[FIN] Límite de currículums alcanzado por hoy. Buen trabajo.")
 
         return all_extracted_candidates
