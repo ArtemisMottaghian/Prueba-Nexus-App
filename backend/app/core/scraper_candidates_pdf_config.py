@@ -13,10 +13,15 @@ SECTORES = {
     
 }
 
-KEYWORDS = ["Suasor", "python", "desarrollador", "backend"]
+KEYWORDS = ["ingeniero software",
+    "desarrollador web",
+    "data analyst",
+    "full stack developer",
+    "DevOps engineer",
+]
 
 CIUDADES = [
-    #"Madrid",
+    "Madrid",
     "Barcelona",
     #"Valencia", "Sevilla", "Malaga", 
     #"Bilbao", "Zaragoza", "Alicante", "Murcia"
