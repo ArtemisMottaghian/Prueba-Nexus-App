@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 from app.db.session import AsyncSessionLocal
 from .utils import upsert_scraped_candidate
 from app.core.scraper_candidates_pdf_config import SECTORES, CIUDADES, HEADLESS_MODE, KEYWORDS, MAX_PROFILES_PER_SEARCH
-from .browser import search_google_pdfs, search_bing_pdfs
+from .browser import search_google_pdfs, search_bing_pdfs,search_duckduckgo_pdfs
 
 
 # INICIALIZACIÓN Y CONFIGURACIÓN
@@ -242,6 +242,9 @@ async def extract_pdfs_google() -> list[dict]:
                 
             if not pdfs_en_memoria:
                 print(f"Ni Google ni Bing encontraron resultados para: {keyword}")
+
+            if not pdfs_en_memoria:
+                print(f"Google, Bing y DuckDuckGo sin resultados para: {keyword}")
                 continue
 
             for pdf_item in pdfs_en_memoria:
