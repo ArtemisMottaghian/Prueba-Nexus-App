@@ -121,8 +121,7 @@ export default function Vacancies() {
       try {
         const users = await usersService.getAllUsers();
         const business = users.filter(
-          (u) =>
-            u.role === 'negocio' || u.role === 'admin' || u.role === 'company'
+          (u) => u.role === 'negocio' || u.role === 'company'
         );
         setHrUsers(business);
       } catch (err) {
