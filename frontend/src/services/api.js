@@ -72,7 +72,7 @@ export const ENDPOINTS = {
         return `${BASE_URL}/api/vacancies/filter/list?${query}`;
       },
       detail: (id) => `${BASE_URL}/api/vacancies/${id}`,
-      public: (id) => `${BASE_URL}/api/vacancies/${id}/public`,
+      public: (id) => `${BASE_URL}/api/vacancies/public/${id}`,
       favourite: (id) => `${BASE_URL}/api/vacancies/${id}/favourite`,
       bulkActions: `${BASE_URL}/api/vacancies/bulk-actions`,
       updateStatus: (id) => `${BASE_URL}/api/vacancies/${id}/status`,
