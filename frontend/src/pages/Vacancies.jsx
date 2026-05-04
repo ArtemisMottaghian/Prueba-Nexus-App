@@ -120,12 +120,14 @@ export default function Vacancies() {
       if (!isNegocio) return;
       try {
         const users = await usersService.getAllUsers();
-        const business = users.filter(
-          (u) => u.role === 'negocio' || u.role === 'company'
+        // Filtramos reclutadores/HR managers para el dropdown de asignación,
+        // igual que hace VacancyModal — no usuarios de negocio
+        const hrUsers = users.filter(
+          (u) => u.role === 'hr_manager' || u.role === 'reclutador'
         );
-        setHrUsers(business);
+        setHrUsers(hrUsers);
       } catch (err) {
-        console.error('Error fetching business users:', err);
+        console.error('Error fetching HR users:', err);
       }
     };
 
