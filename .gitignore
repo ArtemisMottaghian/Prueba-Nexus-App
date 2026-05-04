@@ -40,3 +40,5 @@ downloaded_files/
 # Debug y logs del servidor
 backend/debug_bing.png
 backend/nohup.out
+
+.env

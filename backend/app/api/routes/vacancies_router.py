@@ -148,10 +148,12 @@ async def trigger_scraper():
 # -----------------
 @router.post("/assign-hr", response_model=MessageResponse)
 async def assign_hr_to_vacancies(
-    body: VacancyAssignmentRequest, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)
+    body: VacancyAssignmentRequest, db: AsyncSession = Depends(get_db), current_user: dict = Depends(get_current_user)
 ):
     #control de permisos (admins y company)
-    if current_user.role not in [UserRole.admin, UserRole.company]:
+    user_role = current_user.get("role")
+    
+    if user_role not in [UserRole.admin.value, UserRole.company.value]:
         raise HTTPException(
             status_code=403, 
             detail="No tienes permisos para asignar vacantes."

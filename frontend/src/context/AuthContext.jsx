@@ -46,9 +46,12 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
+      const isValid = authService.isTokenValidFromToken(token);
       const currentUser = authService.getCurrentUserFromToken(token);
 
-      if (currentUser && authService.isTokenValidFromToken(token)) {
+      console.log('¿Token válido según el frontend?:', isValid);
+
+      if (currentUser && isValid) {
         setUser(currentUser);
       } else {
         // Token inválido o expirado
@@ -71,7 +74,7 @@ export const AuthProvider = ({ children }) => {
       const data = await authService.login(email, password);
 
       // Guardar token en el storage adecuado
-      clearStoredToken();
+
       if (rememberMe) {
         localStorage.setItem('token', data.access_token);
       } else {
