@@ -323,7 +323,8 @@ export const vacanciesService = {
       if (!response.ok) {
         throw new Error(`Error HTTP: ${response.status}`);
       }
-      return await response.json();
+      // El backend puede responder 204 sin cuerpo — igual que unassignHr
+      return response.status === 204 ? null : await response.json();
     } catch (error) {
       console.error(`Error al asignar RRHH a vacantes:`, error);
       throw error;
