@@ -14,8 +14,9 @@ import Clientes from './pages/Clientes';
 import Candidates from './pages/Candidates';
 import UserManagement from './components/settings/UserManagement';
 import MiCuenta from './components/settings/MiCuenta';
-// --- NUEVA IMPORTACIÓN ---
 import InboxPage from './pages/Inbox';
+// Issue #452 — URL pública de vacante (sin login)
+import VacancyPublicDetail from './components/recruitment/vacancies/VacancyPublicDetail';
 import './index.css';
 function App() {
   const [sidebarAbierto, setSidebarAbierto] = useState(false);
@@ -23,8 +24,10 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* 1. RUTA PÚBLICA: Pantalla completa para el login */}
+        {/* 1. RUTAS PÚBLICAS: Sin autenticación requerida */}
         <Route path="/login" element={<LoginForm />} />
+        {/* Issue #452 — Detalle de vacante para candidatos externos (noindex) */}
+        <Route path="/vacante/:id" element={<VacancyPublicDetail />} />
         {/* 2. RUTAS PRIVADAS: Todo lo que requiere estar logueado */}
         <Route element={<ProtectedRoute />}>
           <Route

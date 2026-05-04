@@ -50,6 +50,8 @@ export const login = async (email, password) => {
       throw new Error(data.detail || 'Error al iniciar sesión');
     }
 
+    localStorage.setItem('token', data.access_token);
+
     return data;
   } catch (error) {
     console.error('Error en authService.login:', error);
@@ -71,6 +73,8 @@ export const loginWithGoogle = () => {
  * @returns {{sub: string, role: string, id: number} | null}
  */
 export const decodeToken = (token) => {
+  if (!token || typeof token !== 'string') return null;
+
   try {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -149,13 +153,21 @@ export const getCurrentUserFromToken = (token) => {
  */
 export const isTokenValidFromToken = (token) => {
   if (!token) return false;
-  const decoded = decodeToken(token);
-  if (!decoded) return false;
-  if (decoded.exp) {
-    const now = Date.now() / 1000;
-    return decoded.exp > now;
+
+  try {
+    const decoded = decodeToken(token);
+    if (!decoded) return false;
+
+    // Si el token no tiene campo de expiración, asumimos que es válido
+    if (!decoded.exp) return true;
+
+    const now = Math.floor(Date.now() / 1000);
+    // Damos un margen de 60 segundos por si el servidor y el cliente no van al unísono
+    return decoded.exp > now - 60;
+  } catch (error) {
+    console.error('Error al verificar token:', error);
+    return false;
   }
-  return true;
 };
 
 /**

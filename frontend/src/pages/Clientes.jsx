@@ -81,7 +81,10 @@ export default function Clientes() {
   const [errores, setErrores] = useState({});
   const [clienteEditando, setClienteEditando] = useState(null);
 
-  const sectores = ['Todos', ...new Set(clientes.map((c) => c.sector))];
+  const sectores = [
+    'Todos',
+    ...new Set(clientes.map((c) => c.sector).filter(Boolean)),
+  ];
 
   // FILTRO CORREGIDO CON PROTECCIÓN DE UNDEFINED Y COMPANY_NAME
   const clientesFiltrados = clientes.filter((c) => {
@@ -91,7 +94,6 @@ export default function Clientes() {
       (c.company_name || c.nombre || '').toLowerCase().includes(searchLower) ||
       (c.contactoPrincipal || '').toLowerCase().includes(searchLower) ||
       (c.email || '').toLowerCase().includes(searchLower);
-
     const coincideSector =
       filtroSector === 'Todos' || c.sector === filtroSector;
     const coincidePrioritario = !filtroPrioritario || c.prioritario === true;
