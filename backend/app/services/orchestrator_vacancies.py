@@ -43,7 +43,7 @@ async def gather_raw_offers() -> list[dict]:
     scrapers = [
         ("adzuna", extract_adzuna),
         ("linkedin", extract_linked),
-        #("infojobs", extract_infojobs),
+        ("infojobs", extract_infojobs),
     ]
 
     for name, scraper_func in scrapers:
