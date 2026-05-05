@@ -11,12 +11,19 @@ const STATUS_CONFIG = {
     textCls: 'text-success',
     label: 'Sistema Online',
   },
-  error: {
+  slow: {
+    cls: 'status-warning',
+    iconCls: 'bg-warning-soft',
+    icon: 'bi-exclamation-triangle-fill',
+    textCls: 'text-warning',
+    label: 'Lentitud detectada',
+  },
+  offline: {
     cls: 'status-danger',
     iconCls: 'bg-danger-soft',
-    icon: 'bi-x-circle-fill',
+    icon: 'bi-wifi-off',
     textCls: 'text-danger',
-    label: 'Ultima ejecucion con error',
+    label: 'Sin actividad reciente',
   },
   unknown: {
     cls: 'status-secondary',
@@ -50,7 +57,9 @@ export default function CandidateScraperStatus() {
       try {
         setLoading(true);
         setError(null);
-        const res = await authFetch(ENDPOINTS.metrics.candidatesStatus);
+        const res = await authFetch(
+          ENDPOINTS.recruitment.candidatos.scraperStatus
+        );
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
         }
@@ -98,11 +107,8 @@ export default function CandidateScraperStatus() {
 
   const scrapers = Array.isArray(data?.scrapers)
     ? data.scrapers
-    : data && typeof data === 'object'
-      ? Object.entries(data).map(([key, item]) => ({
-          name: item?.name || key,
-          ...item,
-        }))
+    : data?.scrapers && typeof data.scrapers === 'object'
+      ? Object.values(data.scrapers)
       : [];
   if (scrapers.length === 0) {
     return (
@@ -126,8 +132,8 @@ export default function CandidateScraperStatus() {
         {scrapers.map((item) => {
           const statusKey = String(item.status || '').toLowerCase();
           const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.unknown;
-          const fecha = formatDate(item.last_insertion || item.last_extraction);
-          const total = item.candidates_today ?? item.total_candidates;
+          const fecha = formatDate(item.last_extraction || item.last_insertion);
+          const total = item.total_candidates;
 
           return (
             <div className="col-12 col-md-4" key={item.name}>
@@ -149,7 +155,7 @@ export default function CandidateScraperStatus() {
                         : 'Sin inserciones registradas'}
                     </div>
                     <div className="text-muted candidate-scraper-status__meta">
-                      Candidatos hoy: {formatCount(total)}
+                      Candidatos: {formatCount(total)}
                     </div>
                   </div>
                 </div>

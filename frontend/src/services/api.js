@@ -87,7 +87,6 @@ export const ENDPOINTS = {
 
   metrics: {
     general: `${BASE_URL}/api/metrics`,
-    candidatesStatus: `${BASE_URL}/api/metrics/candidates/status`,
     leadStats: (fromIso, toIso) => {
       const from = encodeURIComponent(fromIso);
       const to = encodeURIComponent(toIso);
