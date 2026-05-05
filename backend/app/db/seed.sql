@@ -42,7 +42,9 @@ CREATE TABLE users (
     role          user_role NOT NULL,
     is_active     BOOLEAN DEFAULT TRUE,
     created_at    TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at    TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    updated_at    TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    google_access_token  CHARACTER VARYING,
+    google_refresh_token CHARACTER VARYING
 );
 COMMENT ON TABLE users IS 'Almacena las credenciales y roles de acceso al sistema';
 
@@ -129,6 +131,13 @@ CREATE TABLE search_results (
     id        BIGSERIAL PRIMARY KEY,
     search_id BIGINT REFERENCES searches(id) ON DELETE CASCADE,
     offer_id  BIGINT REFERENCES job_offers(id) ON DELETE CASCADE
+);
+
+-- Asignaciones de vacantes a gestores de RRHH
+CREATE TABLE vacancy_assignments (
+    vacancy_id BIGINT NOT NULL REFERENCES job_offers(id) ON DELETE CASCADE,
+    user_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (vacancy_id, user_id)
 );
 
 
