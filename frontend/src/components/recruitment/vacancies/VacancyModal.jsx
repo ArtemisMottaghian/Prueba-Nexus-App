@@ -317,6 +317,7 @@ export default function VacancyModal({
         id: userToAssign.id,
         nombre: userToAssign.name,
         email: userToAssign.email,
+        role: userToAssign.role,
         fecha: new Date().toLocaleDateString('es-ES'),
       };
       const nuevaLista = [...localAsignados, nuevo];
@@ -736,46 +737,63 @@ export default function VacancyModal({
                       <div className="detail-section">
                         <h4 className="section-title">
                           Reclutadores asignados
-                          {localAsignados.length > 0 && (
+                          {localAsignados.filter(
+                            (r) =>
+                              r.role === 'hr_manager' ||
+                              r.role === 'reclutador' ||
+                              (r.role !== 'negocio' && r.role !== 'company')
+                          ).length > 0 && (
                             <span className="doc-count">
-                              {localAsignados.length}
+                              {
+                                localAsignados.filter(
+                                  (r) =>
+                                    r.role === 'hr_manager' ||
+                                    r.role === 'reclutador' ||
+                                    (r.role !== 'negocio' &&
+                                      r.role !== 'company')
+                                ).length
+                              }
                             </span>
                           )}
                         </h4>
 
-                        {/* Lista de reclutadores asignados */}
+                        {/* Lista de reclutadores asignados — excluye usuarios de negocio/company */}
                         {localAsignados.length > 0 && (
                           <div className="asign-list mb-3">
-                            {localAsignados.map((r, idx) => (
-                              <div key={idx} className="asign-current">
-                                <div className="asign-avatar">
-                                  {(r.nombre || '?').charAt(0).toUpperCase()}
-                                </div>
-                                <div className="asign-info">
-                                  <span className="asign-nombre">
-                                    {r.nombre}
-                                  </span>
-                                  {r.email && (
-                                    <span className="asign-email">
-                                      {r.email}
+                            {localAsignados.map((r, idx) => {
+                              if (r.role === 'negocio' || r.role === 'company')
+                                return null;
+                              return (
+                                <div key={idx} className="asign-current">
+                                  <div className="asign-avatar">
+                                    {(r.nombre || '?').charAt(0).toUpperCase()}
+                                  </div>
+                                  <div className="asign-info">
+                                    <span className="asign-nombre">
+                                      {r.nombre}
                                     </span>
-                                  )}
-                                  <span className="asign-fecha">
-                                    <i className="bi bi-calendar3 me-1"></i>
-                                    Asignado el {r.fecha}
-                                  </span>
+                                    {r.email && (
+                                      <span className="asign-email">
+                                        {r.email}
+                                      </span>
+                                    )}
+                                    <span className="asign-fecha">
+                                      <i className="bi bi-calendar3 me-1"></i>
+                                      Asignado el {r.fecha}
+                                    </span>
+                                  </div>
+                                  <button
+                                    className="btn-icon btn-icon-sm btn-icon-danger ms-auto"
+                                    title="Quitar reclutador"
+                                    onClick={() =>
+                                      handleDesasignarReclutador(idx)
+                                    }
+                                  >
+                                    <i className="bi bi-person-dash"></i>
+                                  </button>
                                 </div>
-                                <button
-                                  className="btn-icon btn-icon-sm btn-icon-danger ms-auto"
-                                  title="Quitar reclutador"
-                                  onClick={() =>
-                                    handleDesasignarReclutador(idx)
-                                  }
-                                >
-                                  <i className="bi bi-person-dash"></i>
-                                </button>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
 
