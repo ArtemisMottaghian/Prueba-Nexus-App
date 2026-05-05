@@ -16,6 +16,20 @@ const STATUS_CONFIG = {
     textCls: 'text-success',
     label: 'Sistema Online',
   },
+  slow: {
+    cls: 'status-warning',
+    iconCls: 'bg-warning-soft',
+    icon: 'bi-exclamation-triangle-fill',
+    textCls: 'text-warning',
+    label: 'Lentitud detectada',
+  },
+  offline: {
+    cls: 'status-danger',
+    iconCls: 'bg-danger-soft',
+    icon: 'bi-wifi-off',
+    textCls: 'text-danger',
+    label: 'Sin actividad reciente',
+  },
   warning: {
     cls: 'status-warning',
     iconCls: 'bg-warning-soft',
@@ -46,9 +60,20 @@ function formatDate(isoString) {
 }
 
 function VacancyScraperCard({ scraperKey, data }) {
-  const cfg = STATUS_CONFIG[data.status] || STATUS_CONFIG.unknown;
+  const statusKey = String(data?.status || '').toLowerCase();
+  const runStatusKey = String(data?.last_run_status || '').toLowerCase();
+  const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.unknown;
   const label = SCRAPER_LABELS[scraperKey] || scraperKey;
-  const fecha = formatDate(data.last_extraction);
+  const lastRunAt = formatDate(data.last_run_at);
+  const lastInsertion = formatDate(data.last_insertion || data.last_extraction);
+  const runStatusLabel =
+    runStatusKey === 'ok'
+      ? 'OK'
+      : runStatusKey === 'error'
+        ? 'Error'
+        : runStatusKey === 'timeout'
+          ? 'Timeout'
+          : null;
 
   return (
     <div className="col-12 col-md-4">
@@ -63,11 +88,23 @@ function VacancyScraperCard({ scraperKey, data }) {
               {cfg.label}
             </span>
             <div className="text-muted" style={{ fontSize: '0.7rem' }}>
-              {fecha ? `Extracción: ${fecha}` : 'Sin extracciones'}
+              {lastRunAt
+                ? `Última ejecución: ${lastRunAt}`
+                : 'Sin ejecución reciente'}
             </div>
+            <div className="text-muted" style={{ fontSize: '0.7rem' }}>
+              {lastInsertion
+                ? `Última inserción: ${lastInsertion}`
+                : 'Sin inserciones registradas'}
+            </div>
+            {runStatusLabel && (
+              <div className="text-muted" style={{ fontSize: '0.7rem' }}>
+                Estado ejecución: {runStatusLabel}
+              </div>
+            )}
           </div>
         </div>
-        {data.status === 'error' && (
+        {(statusKey === 'error' || statusKey === 'offline') && (
           <button className="btn-icon btn-icon-sm" title="Reiniciar Bot">
             <i className="bi bi-arrow-clockwise text-danger"></i>
           </button>
