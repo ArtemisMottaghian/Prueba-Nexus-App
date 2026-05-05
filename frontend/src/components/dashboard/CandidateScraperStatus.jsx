@@ -105,8 +105,12 @@ export default function CandidateScraperStatus() {
     );
   }
 
-  const scrapers = data?.scrapers;
-  if (!Array.isArray(scrapers) || scrapers.length === 0) {
+  const scrapers = Array.isArray(data?.scrapers)
+    ? data.scrapers
+    : data?.scrapers && typeof data.scrapers === 'object'
+      ? Object.values(data.scrapers)
+      : [];
+  if (scrapers.length === 0) {
     return (
       <section className="candidate-scraper-status mb-4">
         <h3 className="candidate-scraper-status__title h6 fw-semibold mb-3">
@@ -126,8 +130,9 @@ export default function CandidateScraperStatus() {
       </h3>
       <div className="row g-3">
         {scrapers.map((item) => {
-          const cfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.unknown;
-          const fecha = formatDate(item.last_extraction);
+          const statusKey = String(item.status || '').toLowerCase();
+          const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.unknown;
+          const fecha = formatDate(item.last_extraction || item.last_insertion);
           const total = item.total_candidates;
 
           return (
@@ -146,8 +151,8 @@ export default function CandidateScraperStatus() {
                     </span>
                     <div className="text-muted candidate-scraper-status__meta">
                       {fecha
-                        ? `Extracción: ${fecha}`
-                        : 'Sin extracciones registradas'}
+                        ? `Inserción: ${fecha}`
+                        : 'Sin inserciones registradas'}
                     </div>
                     <div className="text-muted candidate-scraper-status__meta">
                       Candidatos: {formatCount(total)}
