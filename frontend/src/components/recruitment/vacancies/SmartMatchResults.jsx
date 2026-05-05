@@ -33,42 +33,63 @@ export default function SmartMatchResults({ job, candidates, onClose }) {
               </p>
 
               {candidates.map((candidate) => (
-                <div key={candidate.id} className="match-candidate-card">
-                  <div className="candidate-info">
-                    <span className="candidate-name">
-                      {candidate.name}
-                      {candidate.verified && (
-                        <i
-                          className="bi bi-patch-check-fill text-info ms-2"
-                          title="Verificado"
-                        ></i>
+                <div key={candidate.candidate_id} className="match-candidate-card">
+                  <div className="match-candidate-header">
+                    <div className="candidate-info">
+                      <span className="candidate-name">
+                        {candidate.name}
+                        {candidate.verified && (
+                          <i
+                            className="bi bi-patch-check-fill text-info ms-2"
+                            title="Verificado"
+                          ></i>
+                        )}
+                      </span>
+                      <span className="candidate-role">
+                        {candidate.speciality || 'Especialista'}
+                      </span>
+                      {candidate.location && (
+                        <span className="candidate-location small text-muted">
+                          <i className="bi bi-geo-alt me-1"></i>
+                          {candidate.location}
+                        </span>
                       )}
-                    </span>
-                    <span className="candidate-role">
-                      {candidate.speciality || 'Especialista'}
-                    </span>
-                    <span className="candidate-location small text-muted">
-                      <i className="bi bi-geo-alt me-1"></i>
-                      {candidate.location}
-                    </span>
+                    </div>
+
+                    <div className="match-score-wrapper">
+                      <div className="score-header">
+                        <span className="score-label">Afinidad</span>
+                        <span className="score-value">{candidate.affinity_percentage}%</span>
+                      </div>
+                      <div className="progress-bar-bg">
+                        <div 
+                          className="progress-bar-fill" 
+                          style={{ width: `${candidate.affinity_percentage}%` }}
+                        ></div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="match-score-wrapper">
-                    <div className="score-circle">
-                      <span className="score-value">
-                        {candidate.match_score}%
-                      </span>
+                  {candidate.reason && (
+                    <div className="ai-explanation-card">
+                      <div className="ai-explanation-header">
+                        <i className="bi bi-magic ai-icon"></i>
+                        <span>Motivo de compatibilidad (IA)</span>
+                      </div>
+                      <p className="ai-explanation-text">
+                        {candidate.reason}
+                      </p>
                     </div>
-                    <span className="score-label">Match</span>
-                  </div>
+                  )}
 
                   <div className="candidate-actions">
                     <button
                       className="btn-view-profile-simple"
                       onClick={() =>
-                        window.open(`/candidates/${candidate.id}`, '_blank')
+                        window.open(`/candidates/${candidate.candidate_id}`, '_blank')
                       }
                     >
+                      <i className="bi bi-person-badge me-2"></i>
                       Ver Perfil
                     </button>
                   </div>
@@ -88,7 +109,7 @@ export default function SmartMatchResults({ job, candidates, onClose }) {
               </p>
               <button className="btn-simple-nexus" onClick={onClose}>
                 <i className="bi bi-arrow-repeat me-2"></i>
-                Generar candidatos
+                Cerrar
               </button>
             </div>
           )}
