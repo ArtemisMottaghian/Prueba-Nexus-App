@@ -73,6 +73,7 @@ export default function VacancyModal({
   const [localIsFavorite, setLocalIsFavorite] = useState(
     job?.isFavorite || false
   );
+  const [urlCopied, setUrlCopied] = useState(false);
   const [localSeguimiento, setLocalSeguimiento] = useState(
     job?.seguimiento || []
   );
@@ -488,6 +489,25 @@ export default function VacancyModal({
                       localIsFavorite
                         ? 'bi bi-star-fill text-warning'
                         : 'bi bi-star'
+                    }
+                  ></i>
+                </button>
+                <button
+                  className="btn-icon"
+                  title="Copiar URL pública de la vacante"
+                  onClick={() => {
+                    const url = `${window.location.origin}/vacante/${job.id}`;
+                    navigator.clipboard.writeText(url).then(() => {
+                      setUrlCopied(true);
+                      setTimeout(() => setUrlCopied(false), 2000);
+                    });
+                  }}
+                >
+                  <i
+                    className={
+                      urlCopied
+                        ? 'bi bi-check2 text-success'
+                        : 'bi bi-link-45deg'
                     }
                   ></i>
                 </button>
