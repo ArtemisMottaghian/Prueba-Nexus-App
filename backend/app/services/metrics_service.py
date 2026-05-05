@@ -9,6 +9,8 @@ from app.schemas.job_offer import OfferStatus
 from app.models.error_log_model import ErrorLog
 from datetime import timezone
 from app.models.job_model import JobPortal
+from app.models.candidate_portal_model import CandidatePortal
+from app.models.candidates_model import Candidate
 
 async def get_lead_stats(db: AsyncSession, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
     try:
@@ -124,6 +126,55 @@ async def get_scrapers_status(db: AsyncSession) -> dict:
             "last_insertion": last_insertion,      # cuándo se insertó la última oferta
             "offers_today": offers_today,
             "error": last_error.message if last_error else None
+        }
+
+    return result
+
+CANDIDATE_PORTAL_IDS = {
+    "github": 1,
+    "google_pdf": 2,
+    "linkedin": 3,
+}
+
+async def get_candidate_scrapers_status(db: AsyncSession) -> dict:
+    today = datetime.now(timezone.utc).date()
+    result = {}
+
+    for scraper, portal_id in CANDIDATE_PORTAL_IDS.items():
+        portal_query = select(CandidatePortal.last_run_at, CandidatePortal.last_run_status).where(
+            CandidatePortal.id == portal_id
+        )
+        portal_res = await db.execute(portal_query)
+        portal_row = portal_res.first()
+        last_run_at = portal_row.last_run_at if portal_row else None
+        last_run_status = portal_row.last_run_status if portal_row else None
+
+        last_candidate_query = select(Candidate.created_at).where(
+            Candidate.source.ilike(f"%{scraper}%")
+        ).order_by(Candidate.created_at.desc()).limit(1)
+        last_candidate_res = await db.execute(last_candidate_query)
+        last_insertion = last_candidate_res.scalar_one_or_none()
+
+        candidates_today_query = select(func.count(Candidate.id)).where(
+            Candidate.source.ilike(f"%{scraper}%"),
+            func.date(Candidate.created_at) == today
+        )
+        candidates_today_res = await db.execute(candidates_today_query)
+        candidates_today = candidates_today_res.scalar() or 0
+
+        if last_run_status == "error" or last_run_status == "timeout":
+            status = "error"
+        elif last_run_at:
+            status = "online"
+        else:
+            status = "unknown"
+
+        result[scraper] = {
+            "status": status,
+            "last_run_at": last_run_at,
+            "last_run_status": last_run_status,
+            "last_insertion": last_insertion,
+            "candidates_today": candidates_today,
         }
 
     return result
