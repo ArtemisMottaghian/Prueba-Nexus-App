@@ -19,7 +19,10 @@ const LS_ASIGN_KEY = 'nexus_vacantes_asignaciones';
 // Helper: Limpia las ubicaciones (ej: "Madrid, Spain" -> "Madrid")
 function normalizeLocation(loc) {
   if (!loc) return '';
-  return loc.replace(/\s*[([].*?[)\]]/g, '').split(',')[0].trim();
+  return loc
+    .replace(/\s*[([].*?[)\]]/g, '')
+    .split(',')[0]
+    .trim();
 }
 
 // Helper: Aplica los guardados locales por encima de los datos de la API
@@ -29,7 +32,8 @@ const applyLocalOverrides = (jobs) => {
   const savedAsign = JSON.parse(localStorage.getItem(LS_ASIGN_KEY) || '{}');
   return jobs.map((job) => ({
     ...job,
-    isFavorite: savedFavs[job.id] !== undefined ? savedFavs[job.id] : job.isFavorite,
+    isFavorite:
+      savedFavs[job.id] !== undefined ? savedFavs[job.id] : job.isFavorite,
     status: savedStatus[job.id] || job.status,
     assignedTo: savedAsign[job.id] || job.assignedTo || null,
   }));
@@ -58,26 +62,40 @@ export default function Vacancies() {
   const [selectedVacancies, setSelectedVacancies] = useState([]);
   const [hrUsers, setHrUsers] = useState([]);
   const [locationOptions, setLocationOptions] = useState([]);
-  
+
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showDescartadas, setShowDescartadas] = useState(false);
-  const [showMyVacanciesOnly, setShowMyVacanciesOnly] = useState(false); 
-  
+  const [showMyVacanciesOnly, setShowMyVacanciesOnly] = useState(false);
+
   const [paginaActual, setPaginaActual] = useState(1);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // --- 2. OPCIONES DINÁMICAS (Para el FilterBar) ---
   const mergedIndustryOptions = useMemo(() => {
-    const fromJobs = jobs.map((j) => (j.industry || j.sector || '').trim()).filter(Boolean);
+    const fromJobs = jobs
+      .map((j) => (j.industry || j.sector || '').trim())
+      .filter(Boolean);
     const defaultSectors = [
-      'Tecnología / IT', 'Recursos Humanos', 'Ventas', 'Marketing', 'Finanzas', 
-      'Salud', 'Ingeniería', 'Legal', 'Retail', 'Logística', 'Construcción', 'Educación'
+      'Tecnología / IT',
+      'Recursos Humanos',
+      'Ventas',
+      'Marketing',
+      'Finanzas',
+      'Salud',
+      'Ingeniería',
+      'Legal',
+      'Retail',
+      'Logística',
+      'Construcción',
+      'Educación',
     ];
     return [...new Set([...defaultSectors, ...fromJobs])].sort();
   }, [jobs]);
 
   const mergedLocationOptions = useMemo(() => {
-    const fromJobs = jobs.map((j) => normalizeLocation(j.location || '')).filter(Boolean);
+    const fromJobs = jobs
+      .map((j) => normalizeLocation(j.location || ''))
+      .filter(Boolean);
     return [...new Set([...locationOptions, ...fromJobs])].sort();
   }, [jobs, locationOptions]);
 
@@ -88,29 +106,45 @@ export default function Vacancies() {
         setLoading(true);
         const [dataJobs, dataLocs] = await Promise.all([
           vacanciesService.getAllVacancies(),
-          vacanciesService.getLocations()
+          vacanciesService.getLocations(),
         ]);
         setJobs(applyLocalOverrides(dataJobs));
         setLocationOptions(dataLocs.map(normalizeLocation));
       } catch (error) {
-        console.log("Error de API, cargando datos locales de prueba...");
-        setJobs(applyLocalOverrides(initialJobsData.vacantes || initialJobsData));
+        console.log('Error de API, cargando datos locales de prueba...');
+        setJobs(
+          applyLocalOverrides(initialJobsData.vacantes || initialJobsData)
+        );
       } finally {
         setLoading(false);
       }
     };
     loadData();
-    
+
     if (isNegocio) {
-      usersService.getAllUsers().then(users => {
-        setHrUsers(users.filter(u => u.role === 'hr_manager' || u.role === 'reclutador'));
-      }).catch(err => console.error("Error al cargar usuarios", err));
+      usersService
+        .getAllUsers()
+        .then((users) => {
+          setHrUsers(
+            users.filter(
+              (u) => u.role === 'hr_manager' || u.role === 'reclutador'
+            )
+          );
+        })
+        .catch((err) => console.error('Error al cargar usuarios', err));
     }
   }, [isNegocio]);
 
   // --- 4. HANDLERS (Acciones del usuario) ---
   const handleClearFilters = () => {
-    setFilters({ search: '', status: 'All', industry: 'All', location: 'All', source: 'All', modalidad: 'All' });
+    setFilters({
+      search: '',
+      status: 'All',
+      industry: 'All',
+      location: 'All',
+      source: 'All',
+      modalidad: 'All',
+    });
     setShowFavoritesOnly(false);
     setShowMyVacanciesOnly(false);
     if (searchParams.has('q')) {
@@ -120,7 +154,9 @@ export default function Vacancies() {
   };
 
   const handleUpdateJobStatus = (jobId, newStatus) => {
-    setJobs((prev) => prev.map((j) => (j.id === jobId ? { ...j, status: newStatus } : j)));
+    setJobs((prev) =>
+      prev.map((j) => (j.id === jobId ? { ...j, status: newStatus } : j))
+    );
     const saved = JSON.parse(localStorage.getItem(LS_STATUS_KEY) || '{}');
     saved[jobId] = newStatus;
     localStorage.setItem(LS_STATUS_KEY, JSON.stringify(saved));
@@ -128,64 +164,109 @@ export default function Vacancies() {
 
   const handleToggleFavorite = (jobId, currentFav) => {
     const newStatus = !currentFav;
-    setJobs((prev) => prev.map((j) => (j.id === jobId ? { ...j, isFavorite: newStatus } : j)));
+    setJobs((prev) =>
+      prev.map((j) => (j.id === jobId ? { ...j, isFavorite: newStatus } : j))
+    );
     const saved = JSON.parse(localStorage.getItem(LS_FAV_KEY) || '{}');
     saved[jobId] = newStatus;
     localStorage.setItem(LS_FAV_KEY, JSON.stringify(saved));
   };
 
   const handleAsignarVacante = (jobId, data) => {
-    setJobs((prev) => prev.map((j) => (j.id === jobId ? { ...j, assignedTo: data } : j)));
+    setJobs((prev) =>
+      prev.map((j) => (j.id === jobId ? { ...j, assignedTo: data } : j))
+    );
     const saved = JSON.parse(localStorage.getItem(LS_ASIGN_KEY) || '{}');
-    if (data) saved[jobId] = data; else delete saved[jobId];
+    if (data) saved[jobId] = data;
+    else delete saved[jobId];
     localStorage.setItem(LS_ASIGN_KEY, JSON.stringify(saved));
   };
 
   // --- 5. LÓGICA DE FILTRADO ---
   const filteredJobs = jobs.filter((job) => {
     const term = (filters.search || '').toLowerCase();
-    const matchText = !term || `${job.title} ${job.companyName} ${job.location}`.toLowerCase().includes(term);
+    const matchText =
+      !term ||
+      `${job.title} ${job.companyName} ${job.location}`
+        .toLowerCase()
+        .includes(term);
 
     const safeStatus = (job.status || '').toLowerCase();
-    const isDiscarded = ['descartada', 'discarded', 'rejected'].includes(safeStatus);
-    let matchStatus = filters.status === 'All' 
-      ? (showDescartadas ? isDiscarded : !isDiscarded)
-      : safeStatus.includes(filters.status.toLowerCase());
+    const isDiscarded = ['descartada', 'discarded', 'rejected'].includes(
+      safeStatus
+    );
+    let matchStatus =
+      filters.status === 'All'
+        ? showDescartadas
+          ? isDiscarded
+          : !isDiscarded
+        : safeStatus.includes(filters.status.toLowerCase());
 
-    const matchIndustry = filters.industry === 'All' || job.industry === filters.industry || job.sector === filters.industry;
-    const matchLocation = filters.location === 'All' || normalizeLocation(job.location).includes(filters.location);
-    const matchSource = filters.source === 'All' || job.source === filters.source;
+    const matchIndustry =
+      filters.industry === 'All' ||
+      job.industry === filters.industry ||
+      job.sector === filters.industry;
+    const matchLocation =
+      filters.location === 'All' ||
+      normalizeLocation(job.location).includes(filters.location);
+    const matchSource =
+      filters.source === 'All' || job.source === filters.source;
 
     // Modalidad Híbrida / Remota
-    const remoteText = `${job.location} ${job.title} ${job.description} ${job.modalidad || ''}`.toLowerCase();
+    const remoteText =
+      `${job.location} ${job.title} ${job.description} ${job.modalidad || ''}`.toLowerCase();
     const isRem = remoteText.includes('remot');
-    const isHib = remoteText.includes('híbrid') || remoteText.includes('hibrid') || remoteText.includes('hybrid');
+    const isHib =
+      remoteText.includes('híbrid') ||
+      remoteText.includes('hibrid') ||
+      remoteText.includes('hybrid');
     let matchModalidad = true;
     if (filters.modalidad === 'remoto') matchModalidad = isRem;
     else if (filters.modalidad === 'hibrido') matchModalidad = isHib;
-    else if (filters.modalidad === 'presencial') matchModalidad = !isRem && !isHib;
+    else if (filters.modalidad === 'presencial')
+      matchModalidad = !isRem && !isHib;
 
     const matchFavorite = !showFavoritesOnly || job.isFavorite;
 
     // Filtro: Mis Vacantes
-    const asignados = Array.isArray(job.assignedTo) ? job.assignedTo : (job.assignedTo ? [job.assignedTo] : []);
-    const isAssignedToMe = asignados.some(r => 
-      r.email === user?.email || r.nombre === user?.name || String(r.id) === String(user?.id)
+    const asignados = Array.isArray(job.assignedTo)
+      ? job.assignedTo
+      : job.assignedTo
+        ? [job.assignedTo]
+        : [];
+    const isAssignedToMe = asignados.some(
+      (r) =>
+        r.email === user?.email ||
+        r.nombre === user?.name ||
+        String(r.id) === String(user?.id)
     );
     const matchAssignedToMe = !showMyVacanciesOnly || isAssignedToMe;
 
-    return matchText && matchStatus && matchIndustry && matchLocation && matchSource && matchModalidad && matchFavorite && matchAssignedToMe;
+    return (
+      matchText &&
+      matchStatus &&
+      matchIndustry &&
+      matchLocation &&
+      matchSource &&
+      matchModalidad &&
+      matchFavorite &&
+      matchAssignedToMe
+    );
   });
 
   // --- 6. PAGINACIÓN ---
-  const totalPaginas = Math.max(1, Math.ceil(filteredJobs.length / ITEMS_POR_PAGINA));
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(filteredJobs.length / ITEMS_POR_PAGINA)
+  );
   const paginaSafe = Math.min(paginaActual, totalPaginas);
   const jobsPaginados = useMemo(() => {
     const inicio = (paginaSafe - 1) * ITEMS_POR_PAGINA;
     return filteredJobs.slice(inicio, inicio + ITEMS_POR_PAGINA);
   }, [filteredJobs, paginaSafe]);
-  
-  const desde = filteredJobs.length === 0 ? 0 : (paginaSafe - 1) * ITEMS_POR_PAGINA + 1;
+
+  const desde =
+    filteredJobs.length === 0 ? 0 : (paginaSafe - 1) * ITEMS_POR_PAGINA + 1;
   const hasta = Math.min(paginaSafe * ITEMS_POR_PAGINA, filteredJobs.length);
 
   // --- 7. RENDER ---
@@ -195,13 +276,17 @@ export default function Vacancies() {
         {/* Barra de Filtros */}
         <FilterBar
           filters={filters}
-          onFilterChange={(name, val) => setFilters(prev => ({ ...prev, [name]: val }))}
+          onFilterChange={(name, val) =>
+            setFilters((prev) => ({ ...prev, [name]: val }))
+          }
           onClearFilters={handleClearFilters}
           industryOptions={mergedIndustryOptions}
           locationOptions={mergedLocationOptions}
-          showMyVacanciesToggle={true} 
+          showMyVacanciesToggle={true}
           myVacanciesActive={showMyVacanciesOnly}
-          onToggleMyVacancies={() => setShowMyVacanciesOnly(!showMyVacanciesOnly)}
+          onToggleMyVacancies={() =>
+            setShowMyVacanciesOnly(!showMyVacanciesOnly)
+          }
         />
 
         {/* Acciones en Bloque (Aparece si hay checkboxes marcados) */}
@@ -211,14 +296,39 @@ export default function Vacancies() {
               selectedCount={selectedVacancies.length}
               label="vacante"
               onDiscard={async () => {
-                setJobs(prev => prev.filter(j => !selectedVacancies.includes(j.id)));
+                setJobs((prev) =>
+                  prev.filter((j) => !selectedVacancies.includes(j.id))
+                );
                 setSelectedVacancies([]);
               }}
               onAssign={async (targetUserId) => {
-                const userToAssign = hrUsers.find(u => String(u.id) === String(targetUserId));
+                const userToAssign = hrUsers.find(
+                  (u) => String(u.id) === String(targetUserId)
+                );
                 if (userToAssign) {
-                  const nuevo = { id: userToAssign.id, nombre: userToAssign.name, email: userToAssign.email, fecha: new Date().toLocaleDateString('es-ES') };
-                  setJobs(prev => prev.map(j => selectedVacancies.includes(j.id) ? { ...j, assignedTo: [...(Array.isArray(j.assignedTo) ? j.assignedTo : (j.assignedTo ? [j.assignedTo] : [])), nuevo] } : j));
+                  const nuevo = {
+                    id: userToAssign.id,
+                    nombre: userToAssign.name,
+                    email: userToAssign.email,
+                    fecha: new Date().toLocaleDateString('es-ES'),
+                  };
+                  setJobs((prev) =>
+                    prev.map((j) =>
+                      selectedVacancies.includes(j.id)
+                        ? {
+                            ...j,
+                            assignedTo: [
+                              ...(Array.isArray(j.assignedTo)
+                                ? j.assignedTo
+                                : j.assignedTo
+                                  ? [j.assignedTo]
+                                  : []),
+                              nuevo,
+                            ],
+                          }
+                        : j
+                    )
+                  );
                 }
                 setSelectedVacancies([]);
               }}
@@ -238,24 +348,38 @@ export default function Vacancies() {
 
         <div className="d-flex gap-2">
           {isNegocio && (
-            <button className="btn btn-sm btn-primary" onClick={() => setIsCreateModalOpen(true)}>
+            <button
+              className="btn btn-sm btn-primary"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
               <i className="bi bi-plus-lg me-2"></i> Añadir Vacante
             </button>
           )}
 
           <button
             className={`btn btn-sm ${showDescartadas ? 'btn-danger' : 'btn-outline-secondary'}`}
-            onClick={() => { setShowDescartadas(!showDescartadas); setShowMyVacanciesOnly(false); setPaginaActual(1); }}
+            onClick={() => {
+              setShowDescartadas(!showDescartadas);
+              setShowMyVacanciesOnly(false);
+              setPaginaActual(1);
+            }}
           >
-            <i className={`bi ${showDescartadas ? 'bi-eye-fill' : 'bi-eye-slash'} me-2`}></i>
+            <i
+              className={`bi ${showDescartadas ? 'bi-eye-fill' : 'bi-eye-slash'} me-2`}
+            ></i>
             {showDescartadas ? 'Ver Activas' : 'Ver Descartadas'}
           </button>
 
           <button
             className={`btn btn-sm ${showFavoritesOnly ? 'btn-warning' : 'btn-outline-secondary'}`}
-            onClick={() => { setShowFavoritesOnly(!showFavoritesOnly); setPaginaActual(1); }}
+            onClick={() => {
+              setShowFavoritesOnly(!showFavoritesOnly);
+              setPaginaActual(1);
+            }}
           >
-            <i className={`bi ${showFavoritesOnly ? 'bi-star-fill' : 'bi-star'} me-2`}></i>
+            <i
+              className={`bi ${showFavoritesOnly ? 'bi-star-fill' : 'bi-star'} me-2`}
+            ></i>
             Favoritos
           </button>
         </div>
@@ -263,12 +387,20 @@ export default function Vacancies() {
 
       {/* Grid de Vacantes */}
       {loading ? (
-        <div className="text-center p-5 text-muted">Cargando panel de vacantes...</div>
+        <div className="text-center p-5 text-muted">
+          Cargando panel de vacantes...
+        </div>
       ) : (
         <VacancyGrid
           jobs={jobsPaginados}
           selectedVacancies={selectedVacancies}
-          onSelectVacancy={(id) => setSelectedVacancies(prev => prev.includes(id) ? prev.filter(vId => vId !== id) : [...prev, id])}
+          onSelectVacancy={(id) =>
+            setSelectedVacancies((prev) =>
+              prev.includes(id)
+                ? prev.filter((vId) => vId !== id)
+                : [...prev, id]
+            )
+          }
           currentUser={user}
           isNegocio={isNegocio}
           onUpdateJobStatus={handleUpdateJobStatus}
@@ -280,21 +412,43 @@ export default function Vacancies() {
       {/* Paginación */}
       {!loading && totalPaginas > 1 && (
         <div className="clientes-pagination mt-3">
-          <span className="clientes-pagination__info">{desde}–{hasta} de {filteredJobs.length}</span>
+          <span className="clientes-pagination__info">
+            {desde}–{hasta} de {filteredJobs.length}
+          </span>
           <div className="clientes-pagination__controls">
-            <button className="clientes-pagination__btn" onClick={() => setPaginaActual(paginaSafe - 1)} disabled={paginaSafe === 1}><i className="bi bi-chevron-left"></i></button>
-            <button className="clientes-pagination__btn active">{paginaSafe}</button>
-            <button className="clientes-pagination__btn" onClick={() => setPaginaActual(paginaSafe + 1)} disabled={paginaSafe === totalPaginas}><i className="bi bi-chevron-right"></i></button>
+            <button
+              className="clientes-pagination__btn"
+              onClick={() => setPaginaActual(paginaSafe - 1)}
+              disabled={paginaSafe === 1}
+            >
+              <i className="bi bi-chevron-left"></i>
+            </button>
+            <button className="clientes-pagination__btn active">
+              {paginaSafe}
+            </button>
+            <button
+              className="clientes-pagination__btn"
+              onClick={() => setPaginaActual(paginaSafe + 1)}
+              disabled={paginaSafe === totalPaginas}
+            >
+              <i className="bi bi-chevron-right"></i>
+            </button>
           </div>
         </div>
       )}
 
       {/* Modal de Creación */}
       {isCreateModalOpen && (
-        <CreateVacancy onClose={() => setIsCreateModalOpen(false)} onSave={(data) => {
-          setJobs(prev => [{...data, id: Date.now().toString()}, ...prev]);
-          setIsCreateModalOpen(false);
-        }} />
+        <CreateVacancy
+          onClose={() => setIsCreateModalOpen(false)}
+          onSave={(data) => {
+            setJobs((prev) => [
+              { ...data, id: Date.now().toString() },
+              ...prev,
+            ]);
+            setIsCreateModalOpen(false);
+          }}
+        />
       )}
     </>
   );

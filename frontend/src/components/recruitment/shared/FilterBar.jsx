@@ -2,12 +2,12 @@ import { useState } from 'react';
 import './FilterBar.css';
 
 /**
- * Función auxiliar para renderizar opciones de forma segura y 
+ * Función auxiliar para renderizar opciones de forma segura y
  * evitar el error "Objects are not valid as a React child".
  */
 const renderSafeOption = (opt, index, prefix) => {
   if (!opt) return null;
-  
+
   const value = typeof opt === 'object' ? opt.value : opt;
   const label = typeof opt === 'object' ? opt.label : opt;
 
@@ -22,7 +22,7 @@ export default function FilterBar({
   filters,
   onFilterChange,
   onClearFilters,
-  
+
   // Opciones de selects
   locationOptions = [],
   industryOptions = [],
@@ -31,7 +31,7 @@ export default function FilterBar({
   modalidadOptions = [
     { value: 'remoto', label: 'Remoto' },
     { value: 'hibrido', label: 'Híbrido' },
-    { value: 'presencial', label: 'Presencial' }
+    { value: 'presencial', label: 'Presencial' },
   ],
   skillsOptions = null,
   disponibilidadOptions = null,
@@ -45,11 +45,11 @@ export default function FilterBar({
 }) {
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  const hasActiveFilters = 
-    filters.search || 
-    filters.status !== 'All' || 
-    filters.location !== 'All' || 
-    filters.industry !== 'All' || 
+  const hasActiveFilters =
+    filters.search ||
+    filters.status !== 'All' ||
+    filters.location !== 'All' ||
+    filters.industry !== 'All' ||
     filters.source !== 'All' ||
     (filters.modalidad && filters.modalidad !== 'All') ||
     myVacanciesActive; // Sumamos el estado de "Mis Vacantes" al detector de filtros activos
@@ -99,7 +99,9 @@ export default function FilterBar({
               onClick={onToggleMyVacancies}
               title="Filtrar solo las vacantes donde estoy asignado"
             >
-              <i className={`bi ${myVacanciesActive ? 'bi-person-check-fill' : 'bi-person'} me-2`}></i>
+              <i
+                className={`bi ${myVacanciesActive ? 'bi-person-check-fill' : 'bi-person'} me-2`}
+              ></i>
               Mis Vacantes
             </button>
           )}
@@ -124,7 +126,6 @@ export default function FilterBar({
       {showAdvanced && (
         <div className="filter-advanced-row animate__animated animate__fadeIn">
           <div className="advanced-grid">
-            
             <div className="filter-group">
               <label>Sector</label>
               <select
@@ -132,7 +133,9 @@ export default function FilterBar({
                 onChange={(e) => onFilterChange('industry', e.target.value)}
               >
                 <option value="All">Todos los sectores</option>
-                {industryOptions.map((opt, i) => renderSafeOption(opt, i, 'ind'))}
+                {industryOptions.map((opt, i) =>
+                  renderSafeOption(opt, i, 'ind')
+                )}
               </select>
             </div>
 
@@ -154,7 +157,9 @@ export default function FilterBar({
                 onChange={(e) => onFilterChange('modalidad', e.target.value)}
               >
                 <option value="All">Todas</option>
-                {modalidadOptions.map((opt, i) => renderSafeOption(opt, i, 'mod'))}
+                {modalidadOptions.map((opt, i) =>
+                  renderSafeOption(opt, i, 'mod')
+                )}
               </select>
             </div>
 
