@@ -430,7 +430,7 @@ async def process_scraped_job(job_data: dict) -> bool:
     if desc_del_portal:
         company_data["company_description"] = desc_del_portal
     
-    company_data["original_offer_id"] = job_data.get("external_id")
+    company_data["original_offer_id"] = int(job_data.get("external_id")) if job_data.get("external_id") else None
     
     reclutador = job_data.get("recruiter_name")
     if reclutador:
