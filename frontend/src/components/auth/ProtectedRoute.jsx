@@ -48,11 +48,13 @@ const ProtectedRoute = ({ allowedRoles = [] }) => {
 const getDefaultRouteForRole = (role) => {
   switch (role) {
     case 'admin':
-      return '/dashboard'; // Administradores van al dashboard completo
+      return '/';
     case 'hr_manager':
-      return '/candidates'; // Reclutadores van al módulo de candidatos
+      return '/';
+    case 'negocio':
+      return '/';
     case 'company':
-      return '/clientes'; // Empresas van al módulo de clientes
+      return '/';
     default:
       return '/';
   }
