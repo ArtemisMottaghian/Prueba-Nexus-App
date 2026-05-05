@@ -441,3 +441,13 @@ SELECT
 FROM companies c
 LEFT JOIN job_offers jo ON jo.company_id = c.id
 GROUP BY c.id;
+
+-- Plantillas de email
+CREATE TABLE IF NOT EXISTS email_templates (
+    id SERIAL PRIMARY KEY,
+    key VARCHAR(100) UNIQUE NOT NULL,
+    subject VARCHAR(255),
+    body TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
