@@ -359,7 +359,7 @@ export const vacanciesService = {
       const response = await authFetch(ENDPOINTS.ai.matchVacancy(vacancyId));
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       const data = await response.json();
-      return data.candidates || []; // Adjust based on your actual response structure
+      return data.top_candidates || []; // Adjusted for Gemini AI schema
     } catch (error) {
       console.error(
         `Error al obtener Smart Match para vacante ${vacancyId}:`,
