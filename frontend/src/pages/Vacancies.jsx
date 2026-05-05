@@ -78,13 +78,37 @@ export default function Vacancies() {
         setLoading(false);
       }
     };
-    loadData();
-    
-    if (isNegocio) {
-      usersService.getAllUsers().then(users => {
-        setHrUsers(users.filter(u => u.role === 'hr_manager' || u.role === 'reclutador'));
-      });
-    }
+
+    const fetchLocations = async () => {
+      try {
+        const locs = await vacanciesService.getLocations();
+        const normalized = [
+          ...new Set((locs || []).map(normalizeLocation).filter(Boolean)),
+        ].sort();
+        setLocationOptions(normalized);
+      } catch {
+        // Backend offline — locationOptions queda vacío, no es crítico
+      }
+    };
+
+    const fetchBusinessUsers = async () => {
+      if (!isNegocio) return;
+      try {
+        const users = await usersService.getAllUsers();
+        // Filtramos reclutadores/HR managers para el dropdown de asignación,
+        // igual que hace VacancyModal — no usuarios de negocio
+        const hrUsers = users.filter(
+          (u) => u.role === 'hr_manager' || u.role === 'reclutador'
+        );
+        setHrUsers(hrUsers);
+      } catch (err) {
+        console.error('Error fetching HR users:', err);
+      }
+    };
+
+    fetchJobs();
+    fetchLocations();
+    fetchBusinessUsers();
   }, [isNegocio]);
 
   // Limpiar TODO (incluyendo el nuevo toggle)

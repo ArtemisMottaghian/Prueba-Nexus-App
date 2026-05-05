@@ -48,6 +48,7 @@ const mapVacancyData = (v) => {
           id: r.id,
           nombre: r.name || r.nombre || r.email?.split('@')[0] || 'Usuario',
           email: r.email,
+          role: r.role || null,
           fecha: r.created_at
             ? new Date(r.created_at).toLocaleDateString('es-ES')
             : new Date().toLocaleDateString('es-ES'),
@@ -347,7 +348,7 @@ export const vacanciesService = {
         }
       );
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-      return await response.json();
+      return response.status === 204 ? null : await response.json();
     } catch (error) {
       console.error(`Error al desasignar RRHH de vacantes:`, error);
       throw error;
@@ -359,7 +360,7 @@ export const vacanciesService = {
       const response = await authFetch(ENDPOINTS.ai.matchVacancy(vacancyId));
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       const data = await response.json();
-      return data.candidates || []; // Adjust based on your actual response structure
+      return data.top_candidates || []; // Adjusted for Gemini AI schema
     } catch (error) {
       console.error(
         `Error al obtener Smart Match para vacante ${vacancyId}:`,

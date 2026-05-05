@@ -25,3 +25,6 @@ async def read_metrics(
 async def get_scrapers_status(db: AsyncSession = Depends(get_db)):
     return await metrics_service.get_scrapers_status(db)
 
+@router.get("/candidates/status")
+async def get_candidate_scrapers_status(db: AsyncSession = Depends(get_db)):
+    return await metrics_service.get_candidate_scrapers_status(db)

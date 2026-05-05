@@ -42,7 +42,9 @@ CREATE TABLE users (
     role          user_role NOT NULL,
     is_active     BOOLEAN DEFAULT TRUE,
     created_at    TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at    TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    updated_at    TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    google_access_token  CHARACTER VARYING,
+    google_refresh_token CHARACTER VARYING
 );
 COMMENT ON TABLE users IS 'Almacena las credenciales y roles de acceso al sistema';
 
@@ -51,7 +53,9 @@ CREATE TABLE job_portals (
     id         SERIAL PRIMARY KEY,
     name       VARCHAR(100) NOT NULL, -- Ej: Linkedin, Infojobs
     base_url   VARCHAR(255),
-    is_active  BOOLEAN DEFAULT TRUE
+    is_active  BOOLEAN DEFAULT TRUE,
+    last_run_at     TIMESTAMPTZ,
+    last_run_status VARCHAR(20)
 );
 COMMENT ON TABLE job_portals IS 'Listado de portales donde se realiza el scraping';
 
@@ -129,23 +133,16 @@ CREATE TABLE search_results (
     offer_id  BIGINT REFERENCES job_offers(id) ON DELETE CASCADE
 );
 
-
-CREATE TABLE clients (
-    id           BIGSERIAL PRIMARY KEY,
-    user_id      BIGINT REFERENCES users(id) UNIQUE, -- Cuenta vinculada si la empresa tiene acceso
-    company_id   BIGINT REFERENCES companies(id),    -- Empresa prospecto de la que proviene
-    company_name VARCHAR(255) NOT NULL,
-    sector       VARCHAR(255),
-    cif          VARCHAR(255),
-    direccion    VARCHAR(500),
-    updated_at   TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+-- Asignaciones de vacantes a gestores de RRHH
+CREATE TABLE vacancy_assignments (
+    vacancy_id BIGINT NOT NULL REFERENCES job_offers(id) ON DELETE CASCADE,
+    user_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (vacancy_id, user_id)
 );
-COMMENT ON TABLE clients IS 'Clientes reales de Aratech. Solo empresas que han firmado contrato.';
 
 
 CREATE TABLE contacts (
     id               BIGSERIAL PRIMARY KEY,
-    client_id        BIGINT REFERENCES clients(id) ON DELETE CASCADE,
     company_id       BIGINT REFERENCES companies(id) ON DELETE CASCADE,
     full_name        VARCHAR(255) NOT NULL,
     email            VARCHAR(255),
@@ -153,17 +150,11 @@ CREATE TABLE contacts (
     job_title        VARCHAR(100), -- Cargo del contacto (CEO, RRHH, etc.)
     last_interaction TIMESTAMPTZ,
 
-    -- Un contacto pertenece a un cliente real O a un prospecto, nunca a ambos
-    CONSTRAINT chk_contact_single_owner CHECK (
-        (client_id IS NOT NULL AND company_id IS NULL) OR
-        (client_id IS NULL     AND company_id IS NOT NULL)
-    )
 );
 
 
 CREATE TABLE tracking_history (
     id              BIGSERIAL PRIMARY KEY,
-    client_id       BIGINT REFERENCES clients(id) ON DELETE CASCADE,
     company_id      BIGINT REFERENCES companies(id) ON DELETE CASCADE,
     offer_id        BIGINT REFERENCES job_offers(id),
     action_type     VARCHAR(255),  -- Ej: Llamada, Reunión, Email enviado
@@ -184,14 +175,32 @@ CREATE TABLE candidates (
     location     VARCHAR(255),
     source       VARCHAR(100),
     experience   VARCHAR(100),
-    linkedin_url VARCHAR(255),
+    education    TEXT,
+    candidate_url TEXT,
     cv_url       TEXT,   -- Link al archivo (S3, Cloudinary...)
     skills       TEXT,
+    is_favorite BOOLEAN DEFAULT FALSE,
+    verified BOOLEAN DEFAULT FALSE NOT NULL,
     status       candidate_status DEFAULT 'active',
     notes        TEXT,
     created_at   TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at   TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+
+
 );
+
+
+-- Portales y scrapers de candidatos con estado de última ejecución
+CREATE TABLE candidate_portals (
+    id               SERIAL PRIMARY KEY,
+    name             VARCHAR(100) NOT NULL,
+    last_run_at      TIMESTAMPTZ,
+    last_run_status  VARCHAR(20),
+    is_active        BOOLEAN DEFAULT TRUE
+);
+
+INSERT INTO candidate_portals (name) VALUES ('GitHub'), ('Google PDF'), ('LinkedIn');
+
 
 
 -- Registro de cada cambio de estado de los candidatos
@@ -244,18 +253,6 @@ CREATE TABLE error_logs (
 COMMENT ON TABLE error_logs IS 'Registro de errores del sistema';
 
 
--- Comentarios sobre clientes reales
-CREATE TABLE client_comments (
-    id         BIGSERIAL PRIMARY KEY,
-    client_id  BIGINT REFERENCES clients(id) ON DELETE CASCADE,
-    user_id    BIGINT REFERENCES users(id),
-    comment    TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-COMMENT ON TABLE client_comments IS 'Comentarios y notas sobre clientes reales';
-
-
 -- Comentarios sobre candidatos
 CREATE TABLE candidate_comments (
     id           BIGSERIAL PRIMARY KEY,
@@ -302,25 +299,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Registra cambios de lead_status de clients en tracking_history
-CREATE OR REPLACE FUNCTION log_client_lead_status_change()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NEW.lead_status IS DISTINCT FROM OLD.lead_status THEN
-        INSERT INTO tracking_history (client_id, company_id, offer_id, action_type, previous_status, new_status, comments, recorded_at)
-        VALUES (OLD.id, NULL, NULL, 'Cambio de estado automático', OLD.lead_status, NEW.lead_status, NULL, CURRENT_TIMESTAMP);
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
 -- Registra cambios de lead_status de companies en tracking_history
 CREATE OR REPLACE FUNCTION log_company_lead_status_change()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.lead_status IS DISTINCT FROM OLD.lead_status THEN
-        INSERT INTO tracking_history (company_id, client_id, offer_id, action_type, previous_status, new_status, comments, recorded_at)
-        VALUES (OLD.id, NULL, NULL, 'Cambio de estado automático', OLD.lead_status, NEW.lead_status, NULL, CURRENT_TIMESTAMP);
+        INSERT INTO tracking_history (company_id, offer_id, action_type, previous_status, new_status, comments, recorded_at)
+        VALUES (OLD.id, NULL, 'Cambio de estado automático', OLD.lead_status, NEW.lead_status, NULL, CURRENT_TIMESTAMP);
     END IF;
     RETURN NEW;
 END;
@@ -336,9 +321,6 @@ CREATE TRIGGER update_job_offers_modtime
     BEFORE UPDATE ON job_offers
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_clients_modtime
-    BEFORE UPDATE ON clients
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_candidates_modtime
     BEFORE UPDATE ON candidates
@@ -352,9 +334,6 @@ CREATE TRIGGER update_companies_modtime
     BEFORE UPDATE ON companies
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_client_comments_modtime
-    BEFORE UPDATE ON client_comments
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_candidate_comments_modtime
     BEFORE UPDATE ON candidate_comments
@@ -365,9 +344,6 @@ CREATE TRIGGER trg_log_candidate_status_change
     AFTER UPDATE OF status ON candidates
     FOR EACH ROW EXECUTE FUNCTION log_candidate_status_change();
 
-CREATE TRIGGER trg_log_client_lead_status_change
-    AFTER UPDATE OF lead_status ON clients
-    FOR EACH ROW EXECUTE FUNCTION log_client_lead_status_change();
 
 CREATE TRIGGER trg_log_company_lead_status_change
     AFTER UPDATE OF lead_status ON companies
@@ -385,16 +361,11 @@ CREATE INDEX idx_job_offers_company_id        ON job_offers(company_id);
 CREATE INDEX idx_job_offers_managed_by        ON job_offers(managed_by_id);
 CREATE INDEX idx_search_results_search_id     ON search_results(search_id);
 CREATE INDEX idx_search_results_offer_id      ON search_results(offer_id);
-CREATE INDEX idx_clients_company_id           ON clients(company_id);
-CREATE INDEX idx_contacts_client_id           ON contacts(client_id);
 CREATE INDEX idx_contacts_company_id          ON contacts(company_id);
-CREATE INDEX idx_tracking_history_client_id   ON tracking_history(client_id);
 CREATE INDEX idx_tracking_history_company_id  ON tracking_history(company_id);
 CREATE INDEX idx_tracking_history_offer_id    ON tracking_history(offer_id);
 CREATE INDEX idx_job_applications_candidate   ON job_applications(candidate_id);
 CREATE INDEX idx_job_applications_offer       ON job_applications(offer_id);
-CREATE INDEX idx_client_comments_client_id    ON client_comments(client_id);
-CREATE INDEX idx_client_comments_user_id      ON client_comments(user_id);
 CREATE INDEX idx_candidate_comments_cand_id   ON candidate_comments(candidate_id);
 CREATE INDEX idx_candidate_comments_user_id   ON candidate_comments(user_id);
 
@@ -402,7 +373,6 @@ CREATE INDEX idx_candidate_comments_user_id   ON candidate_comments(user_id);
 CREATE INDEX idx_users_email               ON users(email);
 CREATE INDEX idx_job_offers_status         ON job_offers(status);
 CREATE INDEX idx_searches_status           ON searches(status);
-CREATE INDEX idx_clients_lead_status       ON clients(lead_status);
 CREATE INDEX idx_candidates_status         ON candidates(status);
 CREATE INDEX idx_job_applications_status   ON job_applications(status);
 CREATE INDEX idx_companies_lead_status     ON companies(lead_status);
@@ -415,7 +385,6 @@ CREATE INDEX idx_tracking_history_recorded_at ON tracking_history(recorded_at DE
 -- Texto simple (acelerar LIKE %texto%)
 CREATE INDEX idx_job_offers_title    ON job_offers(title);
 CREATE INDEX idx_job_offers_company  ON job_offers(company_name);
-CREATE INDEX idx_clients_company     ON clients(company_name);
 CREATE INDEX idx_companies_name      ON companies(name);
 CREATE INDEX idx_companies_cif       ON companies(cif);
 CREATE INDEX idx_candidates_skills   ON candidates(skills);
@@ -472,3 +441,14 @@ SELECT
 FROM companies c
 LEFT JOIN job_offers jo ON jo.company_id = c.id
 GROUP BY c.id;
+
+-- Plantillas de email
+CREATE TABLE IF NOT EXISTS email_templates (
+    id SERIAL PRIMARY KEY,
+    slug VARCHAR UNIQUE NOT NULL,
+    name VARCHAR NOT NULL,
+    subject VARCHAR(255),
+    body TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
