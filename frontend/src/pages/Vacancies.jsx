@@ -120,10 +120,8 @@ export default function Vacancies() {
       if (!isNegocio) return;
       try {
         const users = await usersService.getAllUsers();
-        // Filtramos reclutadores/HR managers para el dropdown de asignación,
-        // igual que hace VacancyModal — no usuarios de negocio
         const hrUsers = users.filter(
-          (u) => u.role === 'hr_manager' || u.role === 'reclutador'
+          (u) => u.role === 'negocio' || u.role === 'company'
         );
         setHrUsers(hrUsers);
       } catch (err) {
