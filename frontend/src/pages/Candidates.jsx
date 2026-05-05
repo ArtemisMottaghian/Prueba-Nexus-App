@@ -5,6 +5,7 @@ import BulkActions from '../components/recruitment/shared/BulkActions';
 import initialCandidatesData from '../data/candidatesData.json';
 import { candidatesService } from '../services/candidatesService';
 import { CANDIDATE_STATUS_OPTIONS } from '../constants/candidateStatus';
+import { useAuth } from '../context/AuthContext';
 
 // NUEVO: Importamos el componente con el nombre y ruta correctos
 import CreateCandidate from '../components/recruitment/candidates/CreateCandidate';
@@ -23,6 +24,8 @@ function filtersToApiQuery(f) {
 }
 
 export default function Candidates() {
+  const { user } = useAuth();
+  const canVerifyCandidates = user?.role === 'admin';
   const [filters, setFilters] = useState({
     search: '',
     status: 'All',
@@ -378,7 +381,7 @@ export default function Candidates() {
           onSelectCandidate={handleSelectCandidate}
           onUpdateCandidateStatus={handleUpdateCandidateStatus}
           onToggleFavorite={handleToggleFavorite}
-          onVerify={handleVerify}
+          onVerify={canVerifyCandidates ? handleVerify : undefined}
         />
       )}
       {!loading && totalPaginas > 1 && (
