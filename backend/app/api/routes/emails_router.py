@@ -27,7 +27,7 @@ async def send_manual_prospect_template(
         job_title=data.job_title,
     )
 
-    if success:
-        return {"status": "accepted"}
-    else:
-        return {"status": "error"}
+    return {
+        "status": "accepted",
+        "message": f"Tarea encolada para {data.company_email}",
+    }
