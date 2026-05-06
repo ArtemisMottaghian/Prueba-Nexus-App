@@ -335,6 +335,10 @@ export const vacanciesService = {
   unassignHr: async (hrId, vacancyIds) => {
     try {
       const currentToken = localStorage.getItem('token');
+      const cleanHrId = parseInt(hrId, 10);
+      const cleanVacancyIds = Array.isArray(vacancyIds)
+        ? vacancyIds.map((id) => parseInt(id, 10))
+        : [parseInt(vacancyIds, 10)];
 
       const response = await authFetch(
         ENDPOINTS.recruitment.vacantes.assignHr,
@@ -344,7 +348,10 @@ export const vacanciesService = {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${currentToken}`,
           },
-          body: JSON.stringify({ hr_id: hrId, vacancy_ids: vacancyIds }),
+          body: JSON.stringify({
+            hr_id: cleanHrId,
+            vacancy_ids: cleanVacancyIds,
+          }),
         }
       );
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
