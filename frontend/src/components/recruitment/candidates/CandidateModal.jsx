@@ -20,7 +20,7 @@ export default function CandidateModal({
   };
 
   const handleVerify = () => {
-    if (onVerify && !candidate.verified) onVerify(candidate.id);
+    if (onVerify) onVerify(candidate.id, !candidate.verified);
   };
 
   return (
@@ -71,18 +71,18 @@ export default function CandidateModal({
                     </option>
                   ))}
                 </select>
-                {onVerify && !candidate.verified && (
+                {onVerify && (
                   <button
                     type="button"
-                    className="btn btn-outline-primary btn-sm"
+                    className={`btn btn-sm ${
+                      candidate.verified
+                        ? 'btn-outline-danger'
+                        : 'btn-outline-primary'
+                    }`}
                     onClick={handleVerify}
                   >
                     <i className="bi bi-patch-check me-1" />
-<<<<<<< HEAD
-                    Verificar candidato
-=======
                     {candidate.verified ? 'Quitar' : 'Verificar candidato'}
->>>>>>> 78b3f22 (fix(candidatos): corregir formato en botón de verificación)
                   </button>
                 )}
                 <button
