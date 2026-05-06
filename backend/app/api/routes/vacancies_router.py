@@ -7,6 +7,7 @@ from app.services.orchestrator_vacancies import run_scrapers
 from app.db.connection import get_db
 from app.services import vacancies_service
 from app.schemas.vacancies_schemas import (
+    CandidateTrackingOut,
     VacancyAssignmentRequest,
     VacancySummary,
     VacancyDetail,
@@ -228,3 +229,16 @@ async def read_vacancy_public(vacancy_id: int, db: AsyncSession = Depends(get_db
         raise HTTPException(status_code=404, detail="La vacante no existe")
     response.headers["X-Robots-Tag"] = "noindex, nofollow"
     return vacancy
+
+# -----------------
+# OBTENER SEGUIMIENTO DE CANDIDATOS POR VACANTE
+# GET /api/vacancies/{id}/candidate-tracking
+# -----------------
+@router.get("/{id}/candidate-tracking", response_model=List[CandidateTrackingOut])
+async def read_vacancy_candidate_tracking(id: int, db: AsyncSession = Depends(get_db)):
+    tracking_data = await vacancies_service.get_candidate_tracking(db, id)
+    
+    if tracking_data is None:
+        raise HTTPException(status_code=404, detail="No se ha encontrado seguimiento para esta vacante")
+        
+    return tracking_data

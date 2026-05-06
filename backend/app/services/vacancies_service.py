@@ -382,3 +382,42 @@ async def update_portal_last_run(portal_name: str, status: str = "ok") -> None:
                 await session.commit()
     except Exception as e:
         print(f"Error actualizando last_run de {portal_name}: {e}")
+
+async def get_candidate_tracking(db: AsyncSession, vacancy_id: int) -> list[dict]:
+    apps_result = await db.execute(
+        select(JobApplication).where(JobApplication.offer_id == vacancy_id)
+    )
+    applications = apps_result.scalars().all()
+
+    if not applications:
+        return []
+    
+    candidate_ids = [app.candidate_id for app in applications]
+
+    candidates_result = await db.execute(
+        select(Candidate).where(Candidate.id.in_(candidate_ids))
+    )
+    #  diccionario para buscar al candidato rápido por su ID 
+    candidates_dict = {
+        c.id: c for c in candidates_result.scalars().all()
+    }
+
+    output = []
+    for app in applications:
+        c = candidates_dict.get(app.candidate_id)
+        if not c:
+            continue  
+            
+        output.append({
+            "id": app.id, 
+            "name": f"{c.first_name} {c.last_name}".strip(),
+            "phase": app.status.value if hasattr(app.status, "value") else str(app.status),
+            "result": None, 
+            "notes": getattr(app, "notes", ""), 
+            "date": app.created_at
+        })
+
+    # orden por fecha
+    output.sort(key=lambda x: x["date"], reverse=True)
+    
+    return output
