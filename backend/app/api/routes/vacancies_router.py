@@ -7,6 +7,7 @@ from app.services.orchestrator_vacancies import run_scrapers
 from app.db.connection import get_db
 from app.services import vacancies_service
 from app.schemas.vacancies_schemas import (
+    CandidateTrackingCreate,
     CandidateTrackingOut,
     VacancyAssignmentRequest,
     VacancyNoteCreate,
@@ -274,3 +275,23 @@ async def create_vacancy_note(
 
     new_note = await vacancies_service.create_vacancy_note(db, id, note_data, user_id)
     return {"message": "Nota guardada correctamente", "note_id": new_note.id}
+
+# -----------------------------------------------------------
+# GUARDAR SEGUIMIENTO DE CANDIDATO POR VACANTE
+# POST /api/vacancies/{id}/candidate-tracking
+# -----------------------------------------------------------
+@router.post("/{id}/candidate-tracking")
+async def create_candidate_tracking(
+    id: int,
+    tracking_data: CandidateTrackingCreate,
+    db: AsyncSession = Depends(get_db)
+):
+    success = await vacancies_service.update_candidate_tracking(db, id, tracking_data)
+    
+    if not success:
+        raise HTTPException(
+            status_code=404, 
+            detail=f"No se ha encontrado al candidato '{tracking_data.nombre}' en esta vacante."
+        )
+        
+    return {"message": "Seguimiento del candidato actualizado correctamente"}

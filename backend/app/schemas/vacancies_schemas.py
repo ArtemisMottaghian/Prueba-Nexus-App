@@ -133,3 +133,9 @@ class VacancyNoteCreate(BaseModel):
     phase: str
     result: Optional[str] = None
     notes: str
+
+class CandidateTrackingCreate(BaseModel):
+    name: str
+    phase: str
+    result: Optional[str] = None
+    notes: Optional[str] = ""

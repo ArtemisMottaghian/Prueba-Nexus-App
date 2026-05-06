@@ -19,6 +19,7 @@ from app.models.assignments_model import VacancyAssignment
 from datetime import datetime, timezone
 from app.db.session import AsyncSessionLocal
 from app.models.trakingHistory_model import TrackingHistory
+from app.schemas.vacancies_schemas import CandidateTrackingCreate
 
 
 
@@ -415,8 +416,8 @@ async def get_candidate_tracking(db: AsyncSession, vacancy_id: int) -> list[dict
             "name": f"{c.first_name} {c.last_name}".strip(),
             "phase": app.status.value if hasattr(app.status, "value") else str(app.status),
             "result": None, 
-            "notes": getattr(app, "notes", ""), 
-            "date": app.created_at
+            "notes": app.feedback or "", 
+            "date": app.updated_at or app.created_at
         })
 
     # orden por fecha
@@ -450,7 +451,7 @@ async def get_vacancy_notes(db: AsyncSession, vacancy_id: int) -> list[dict]:
 
         nombre_usuario = "System"
         if entry.user:
-            
+
             if entry.user.name:
                     nombre_usuario = entry.user.name
 
@@ -486,3 +487,43 @@ async def create_vacancy_note(
     await db.refresh(nueva_nota)
     
     return nueva_nota
+
+async def update_candidate_tracking(
+    db: AsyncSession, 
+    vacancy_id: int, 
+    data: CandidateTrackingCreate,
+) -> bool:
+    
+    apps_result = await db.execute(
+        select(JobApplication).where(JobApplication.offer_id == vacancy_id)
+    )
+    applications = apps_result.scalars().all()
+
+    if not applications:
+        return False
+
+    app_to_update = None
+    
+    for app in applications:
+        cand_result = await db.execute(
+            select(Candidate).where(Candidate.id == app.candidate_id)
+        )
+        candidate = cand_result.scalar_one_or_none()
+        
+        if candidate:
+            full_name = f"{candidate.first_name} {candidate.last_name}".strip()
+            if full_name.lower() == data.name.lower(): 
+                app_to_update = app
+                break
+                
+    if not app_to_update:
+        return False
+
+    app_to_update.status = data.phase
+    app_to_update.feedback = data.notes
+    
+    
+    db.add(app_to_update)
+    await db.commit()
+    
+    return True
