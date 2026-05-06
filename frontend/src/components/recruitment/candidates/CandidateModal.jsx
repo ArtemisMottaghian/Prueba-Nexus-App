@@ -78,7 +78,11 @@ export default function CandidateModal({
                     onClick={handleVerify}
                   >
                     <i className="bi bi-patch-check me-1" />
+<<<<<<< HEAD
                     Verificar candidato
+=======
+                    {candidate.verified ? 'Quitar' : 'Verificar candidato'}
+>>>>>>> 78b3f22 (fix(candidatos): corregir formato en botón de verificación)
                   </button>
                 )}
                 <button
