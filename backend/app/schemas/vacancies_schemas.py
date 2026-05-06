@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, List,Literal
-from pydantic import BaseModel, ConfigDict,Field,field_validator,HttpUrl,model_validator
+from pydantic import BaseModel, ConfigDict,Field,field_validator,model_validator
 from app.schemas.job_offer import OfferStatus
 
 
@@ -35,7 +35,7 @@ class VacancySummary(BaseModel):
 class VacancyDetail(VacancySummary):
 
     location: Optional[str] = Field(None, max_length=255)
-    offer_url: Optional[HttpUrl] = None  # Valida que sea una URL válida con http:// o https://
+    offer_url: Optional[str] = None
     job_description: Optional[str] = Field(None, max_length=5000)
     contract_type: Optional[str] = Field(None, max_length=50)
     work_modality: Optional[str] = Field(None, max_length=50)
