@@ -33,9 +33,6 @@ export default function FilterBar({
     { value: 'hibrido', label: 'Híbrido' },
     { value: 'presencial', label: 'Presencial' },
   ],
-  skillsOptions = null,
-  disponibilidadOptions = null,
-  experienciaOptions = null,
   showVerifiedFilter = false,
 
   // NUEVAS PROPS: Para el botón de "Mis Vacantes"
