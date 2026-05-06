@@ -3,6 +3,7 @@ from fastapi import HTTPException
 from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from app.models.user_model import User, UserRole
 from app.schemas.users_schemas import UserType
@@ -17,6 +18,7 @@ from app.models.assignments_model import VacancyAssignment
 
 from datetime import datetime, timezone
 from app.db.session import AsyncSessionLocal
+from app.models.trakingHistory_model import TrackingHistory
 
 
 
@@ -421,3 +423,66 @@ async def get_candidate_tracking(db: AsyncSession, vacancy_id: int) -> list[dict
     output.sort(key=lambda x: x["date"], reverse=True)
     
     return output
+
+async def get_vacancy_notes(db: AsyncSession, vacancy_id: int) -> list[dict]:
+    
+    result = await db.execute(
+        select(TrackingHistory)
+        .options(joinedload(TrackingHistory.user)) 
+        .where(TrackingHistory.offer_id == vacancy_id)
+        .order_by(TrackingHistory.recorded_at.desc())
+    )
+    history_entries = result.scalars().all()
+
+    if not history_entries:
+        return []
+
+    output = []
+    for entry in history_entries:
+        if entry.previous_status and entry.new_status:
+            prev = entry.previous_status.value if hasattr(entry.previous_status, "value") else str(entry.previous_status)
+            curr = entry.new_status.value if hasattr(entry.new_status, "value") else str(entry.new_status)
+            resultado_texto = f"{prev} -> {curr}"
+        elif entry.new_status:
+            resultado_texto = entry.new_status.value if hasattr(entry.new_status, "value") else str(entry.new_status)
+        else:
+            resultado_texto = "Sin cambio"
+
+        nombre_usuario = "System"
+        if entry.user:
+            
+            if entry.user.name:
+                    nombre_usuario = entry.user.name
+
+            elif entry.user:
+                nombre_usuario = entry.user.email.split("@")[0]
+
+        output.append({
+            "id": entry.id,
+            "name": nombre_usuario, 
+            "phase": entry.action_type or "Actualización",
+            "result": resultado_texto,
+            "notes": entry.comments or "",
+            "date": entry.recorded_at
+        })
+
+    return output
+
+async def create_vacancy_note(
+    db: AsyncSession, 
+    vacancy_id: int, 
+    note_data: dict, 
+    user_id: int
+):
+    nueva_nota = TrackingHistory(
+        offer_id=vacancy_id,
+        user_id=user_id, 
+        action_type=note_data.phase,
+        comments=note_data.notes,
+    )
+    
+    db.add(nueva_nota)
+    await db.commit()
+    await db.refresh(nueva_nota)
+    
+    return nueva_nota

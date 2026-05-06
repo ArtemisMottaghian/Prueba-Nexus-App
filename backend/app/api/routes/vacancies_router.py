@@ -9,6 +9,8 @@ from app.services import vacancies_service
 from app.schemas.vacancies_schemas import (
     CandidateTrackingOut,
     VacancyAssignmentRequest,
+    VacancyNoteCreate,
+    VacancyNoteOut,
     VacancySummary,
     VacancyDetail,
     VacancyFiltered,
@@ -242,3 +244,33 @@ async def read_vacancy_candidate_tracking(id: int, db: AsyncSession = Depends(ge
         raise HTTPException(status_code=404, detail="No se ha encontrado seguimiento para esta vacante")
         
     return tracking_data
+
+
+# -----------------
+# OBTENER NOTAS DE VACANTE (Historial de seguimiento)
+# GET /api/vacancies/{id}/notes
+# -----------------
+@router.get("/{id}/notes", response_model=List[VacancyNoteOut])
+async def read_vacancy_notes(id: int, db: AsyncSession = Depends(get_db)):
+    notes = await vacancies_service.get_vacancy_notes(db, id)
+    
+    if notes is None:
+        return [] 
+        
+    return notes
+
+# -----------------------------------------------------------
+# GUARDAR NOTA EN VACANTE
+# POST /api/vacancies/{id}/notes
+# -----------------------------------------------------------
+@router.post("/{id}/notes")
+async def create_vacancy_note(
+    id: int, 
+    note_data: VacancyNoteCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user) 
+):
+    user_id = current_user.get("id")
+
+    new_note = await vacancies_service.create_vacancy_note(db, id, note_data, user_id)
+    return {"message": "Nota guardada correctamente", "note_id": new_note.id}

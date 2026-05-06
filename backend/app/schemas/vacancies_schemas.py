@@ -118,3 +118,18 @@ class CandidateTrackingOut(BaseModel):
     date: datetime     
 
     model_config = ConfigDict(from_attributes=True)
+
+class VacancyNoteOut(BaseModel):
+    id: int
+    name: str
+    phase: str
+    result: Optional[str] = None
+    notes: str
+    date: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+class VacancyNoteCreate(BaseModel):
+    phase: str
+    result: Optional[str] = None
+    notes: str

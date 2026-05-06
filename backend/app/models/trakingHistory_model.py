@@ -16,6 +16,8 @@ class TrackingHistory(Base):
     new_status = Column(PgEnum(LeadStatus, name="lead_status", create_type=False))
     comments = Column(Text)
     recorded_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=True)
+    user = relationship("User", foreign_keys=[user_id])
 
 
     company = relationship("Company", back_populates="tracking_history")
