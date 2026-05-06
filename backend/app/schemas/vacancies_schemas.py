@@ -108,3 +108,34 @@ class CandidateMatchOut(BaseModel):
     application_status: Optional[str] # None si no hay aplicacion todavia
 
     model_config = ConfigDict(from_attributes=True)
+
+class CandidateTrackingOut(BaseModel):
+    id: int
+    name: str          
+    phase: str         
+    result: Optional[str] = None  
+    notes: Optional[str] = ""     
+    date: datetime     
+
+    model_config = ConfigDict(from_attributes=True)
+
+class VacancyNoteOut(BaseModel):
+    id: int
+    name: str
+    phase: str
+    result: Optional[str] = None
+    notes: str
+    date: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+class VacancyNoteCreate(BaseModel):
+    phase: str
+    result: Optional[str] = None
+    notes: str
+
+class CandidateTrackingCreate(BaseModel):
+    name: str
+    phase: str
+    result: Optional[str] = None
+    notes: Optional[str] = ""

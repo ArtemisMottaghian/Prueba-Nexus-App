@@ -1,3 +1,5 @@
+import enum
+
 from sqlalchemy import Column, Integer, String, Text, DateTime
 from sqlalchemy.sql import func
 from app.db.base import Base
@@ -19,3 +21,7 @@ class EmailTemplate(Base):
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+
+class EmailTemplateSlug(str, enum.Enum):
+    vacancy_assigned = "vacancy_assigned"
+    new_company = "new_company"
