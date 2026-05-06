@@ -276,6 +276,7 @@ async def create_vacancy_note(
     new_note = await vacancies_service.create_vacancy_note(db, id, note_data, user_id)
     return {"message": "Nota guardada correctamente", "note_id": new_note.id}
 
+
 # -----------------------------------------------------------
 # GUARDAR SEGUIMIENTO DE CANDIDATO POR VACANTE
 # POST /api/vacancies/{id}/candidate-tracking
