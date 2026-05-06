@@ -49,7 +49,7 @@ async def gather_raw_offers() -> list[dict]:
     for name, scraper_func in scrapers:
         print(f"\nIniciando scraper: {name.upper()}...")
         try:
-            result = await asyncio.wait_for(scraper_func(), timeout=900)  # 5 min máximo
+            result = await asyncio.wait_for(scraper_func(), timeout=1800)  # 30 min máximo
 
             if isinstance(result, list):
                 raw_offers.extend(result)
