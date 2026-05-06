@@ -161,16 +161,18 @@ export default function Candidates() {
     setShowDescartadas(false);
   };
 
-  const handleVerify = async (candidateId) => {
+  const handleVerify = async (candidateId, verified) => {
     setCandidates((prev) =>
-      prev.map((c) => (c.id === candidateId ? { ...c, verified: true } : c))
+      prev.map((c) => (c.id === candidateId ? { ...c, verified } : c))
     );
     try {
-      await candidatesService.verifyCandidate(candidateId, true);
+      await candidatesService.verifyCandidate(candidateId, verified);
     } catch (e) {
       console.error('No se pudo verificar el candidato', e);
       setCandidates((prev) =>
-        prev.map((c) => (c.id === candidateId ? { ...c, verified: false } : c))
+        prev.map((c) =>
+          c.id === candidateId ? { ...c, verified: !verified } : c
+        )
       );
     }
   };
