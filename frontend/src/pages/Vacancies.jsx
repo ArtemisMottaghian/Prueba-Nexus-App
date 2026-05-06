@@ -42,6 +42,7 @@ const applyLocalOverrides = (jobs) => {
 export default function Vacancies() {
   const { user, hasAnyRole } = useAuth();
   const isNegocio = hasAnyRole(['admin', 'negocio', 'company']);
+  const isReclutador = hasAnyRole(['hr_manager', 'reclutador']);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const queryURL = searchParams.get('q') || '';
@@ -237,7 +238,9 @@ export default function Vacancies() {
         r.nombre === user?.name ||
         String(r.id) === String(user?.id)
     );
-    const matchAssignedToMe = !showMyVacanciesOnly || isAssignedToMe;
+    const matchAssignedToMe = isReclutador
+      ? isAssignedToMe
+      : !showMyVacanciesOnly || isAssignedToMe;
 
     return (
       matchText &&
@@ -279,7 +282,7 @@ export default function Vacancies() {
           onClearFilters={handleClearFilters}
           industryOptions={mergedIndustryOptions}
           locationOptions={mergedLocationOptions}
-          showMyVacanciesToggle={true}
+          showMyVacanciesToggle={isNegocio}
           myVacanciesActive={showMyVacanciesOnly}
           onToggleMyVacancies={() =>
             setShowMyVacanciesOnly(!showMyVacanciesOnly)
