@@ -35,7 +35,7 @@ export default function CandidateCard({
 
   const handleVerify = (e) => {
     e.stopPropagation();
-    if (onVerify) onVerify(candidate.id, !candidate.verified);
+    if (onVerify && !candidate.verified) onVerify(candidate.id);
   };
 
   if (isListView) {
@@ -72,22 +72,21 @@ export default function CandidateCard({
               <i className="bi bi-geo-alt me-1"></i>
               {candidate.location}
             </span>
-            {candidate.verified && (
+            {candidate.verified ? (
               <span className="badge bg-success-subtle text-success border border-success-subtle">
                 <i className="bi bi-patch-check-fill me-1" />
                 Verificado
               </span>
-            )}
-            {onVerify && (
-              <button
-                type="button"
-                className={`btn btn-sm py-0 px-2 ${
-                  candidate.verified ? 'btn-outline-danger' : 'btn-primary'
-                }`}
-                onClick={handleVerify}
-              >
-                {candidate.verified ? 'Quitar' : 'Verificar'}
-              </button>
+            ) : (
+              onVerify && (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary py-0 px-2"
+                  onClick={handleVerify}
+                >
+                  Verificar
+                </button>
+              )
             )}
             <span className={`badge ${badgeClass}`}>{statusText}</span>
             <button
@@ -143,12 +142,10 @@ export default function CandidateCard({
 
         {/* Lado derecho: Botón Verificar y Estrella */}
         <div className="d-flex align-items-center gap-2">
-          {onVerify && (
+          {onVerify && !candidate.verified && (
             <button
               type="button"
-              className={`btn btn-sm ${
-                candidate.verified ? 'btn-outline-danger' : 'btn-primary'
-              }`}
+              className="btn btn-sm btn-primary"
               onClick={handleVerify}
               style={{
                 padding: '0.25rem 0.6rem',
@@ -156,7 +153,7 @@ export default function CandidateCard({
                 borderRadius: '6px',
               }}
             >
-              {candidate.verified ? 'Quitar' : 'Verificar'}
+              Verificar
             </button>
           )}
           <button
