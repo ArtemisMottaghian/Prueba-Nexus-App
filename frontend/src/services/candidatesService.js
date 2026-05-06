@@ -135,7 +135,7 @@ export const candidatesService = {
     return response.json();
   },
 
-  applyBulkActions: async (candidateIds, actionName) => {
+  applyBulkActions: async (candidateIds, actionName, targetUser = null) => {
     try {
       const response = await authFetch(
         ENDPOINTS.recruitment.candidatos.bulkActions,
@@ -145,6 +145,7 @@ export const candidatesService = {
           body: JSON.stringify({
             candidate_ids: candidateIds,
             action: actionName,
+            target_user: targetUser,
           }),
         }
       );

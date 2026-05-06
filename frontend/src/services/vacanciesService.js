@@ -235,7 +235,21 @@ export const vacanciesService = {
     }
   },
 
-  // 9. Añadir nota al historial de una vacante
+  // 9. Obtener notas de una vacante
+  getNotes: async (id) => {
+    try {
+      const response = await authFetch(
+        ENDPOINTS.recruitment.vacantes.detail(id) + '/notes'
+      );
+      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error(`Error al obtener notas de vacante ${id}:`, error);
+      return [];
+    }
+  },
+
+  // 10. Añadir nota al historial de una vacante
   addNote: async (id, texto) => {
     try {
       const response = await authFetch(
