@@ -40,8 +40,7 @@ const applyLocalOverrides = (jobs) => {
 };
 
 export default function Vacancies() {
-  const { user, hasRole, hasAnyRole } = useAuth();
-  const isReclutador = hasRole('hr_manager') || hasRole('reclutador');
+  const { user, hasAnyRole } = useAuth();
   const isNegocio = hasAnyRole(['admin', 'negocio', 'company']);
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -110,7 +109,7 @@ export default function Vacancies() {
         ]);
         setJobs(applyLocalOverrides(dataJobs));
         setLocationOptions(dataLocs.map(normalizeLocation));
-      } catch (error) {
+      } catch {
         console.log('Error de API, cargando datos locales de prueba...');
         setJobs(
           applyLocalOverrides(initialJobsData.vacantes || initialJobsData)
@@ -126,9 +125,7 @@ export default function Vacancies() {
         .getAllUsers()
         .then((users) => {
           setHrUsers(
-            users.filter(
-              (u) => u.role === 'hr_manager' || u.role === 'reclutador'
-            )
+            users.filter((u) => u.role === 'negocio' || u.role === 'company')
           );
         })
         .catch((err) => console.error('Error al cargar usuarios', err));
@@ -310,6 +307,7 @@ export default function Vacancies() {
                     id: userToAssign.id,
                     nombre: userToAssign.name,
                     email: userToAssign.email,
+                    role: userToAssign.role,
                     fecha: new Date().toLocaleDateString('es-ES'),
                   };
                   setJobs((prev) =>

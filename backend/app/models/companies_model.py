@@ -48,11 +48,6 @@ class Company(Base):
 
     notes = Column(Text)
 
-    recruiter_name = Column(String(100))
-    recruiter_lastname = Column(String(100))
-    recruiter_email = Column(String(255))
-    recruiter_phone = Column(String(20))
-
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

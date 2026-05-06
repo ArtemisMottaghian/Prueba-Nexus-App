@@ -23,9 +23,9 @@ from app.services.enrichment_service import (
 )
 from app.services.scraper_logs_service import log_scraper_error
 from app.services.vacancies_service import update_portal_last_run
+from app.services.email_service import send_company_vacancy_email_standalone
 
 SKIP_ENRICHMENT = False
-
 
 
 async def gather_raw_offers() -> list[dict]:
@@ -49,7 +49,7 @@ async def gather_raw_offers() -> list[dict]:
     for name, scraper_func in scrapers:
         print(f"\nIniciando scraper: {name.upper()}...")
         try:
-            result = await asyncio.wait_for(scraper_func(), timeout=900)  # 5 min máximo
+            result = await asyncio.wait_for(scraper_func(), timeout=1800)  # 30 min máximo
 
             if isinstance(result, list):
                 raw_offers.extend(result)
@@ -178,13 +178,13 @@ async def process_and_save_offers(valid_offers: list[ScrapedJobOffer]):
 
     async with AsyncSessionLocal() as session:
         for offer in valid_offers:
-            
+
             offer_dict = offer.model_dump()
-            
+
             # --- [PARCHE 2] Convertimos el objeto HttpUrl de Pydantic a String normal ---
             if offer_dict.get("offer_url"):
                 offer_dict["offer_url"] = str(offer_dict["offer_url"])
-                
+
             p_id = offer_dict.get("portal_id")
             ext_id = str(offer_dict.get("external_id"))
 
@@ -222,12 +222,12 @@ async def process_and_save_offers(valid_offers: list[ScrapedJobOffer]):
             else:
                 # --- ES NUEVA: Enriquecemos con la IA y guardamos ---
                 print(f"\n[NUEVA] Detectada oferta nueva: {ext_id}. Iniciando Inteligencia Artificial...")
-                
+
                 enriched_item = await enrich_single_offer(offer)
                 offer_data = enriched_item.get("offer_data", {})
                 company_name = offer_data.get("company_name")
                 company_id = None
-                
+
                 # --- [PARCHE 1] Limpiamos las columnas rebeldes antes de tocar la BBDD ---
                 offer_data.pop("recruiter_name", None)
                 offer_data.pop("recruiter_email", None)
@@ -297,6 +297,23 @@ async def process_and_save_offers(valid_offers: list[ScrapedJobOffer]):
                     nuevas_guardadas += 1
                     print(f" -> [ÉXITO] Oferta nueva guardada en la base de datos.")
 
+                    # DESCOMENTAR ESTA PARTE CUANDO SE PONGA EN MARCHA TODO EL SISTEMA DE CONTACTO
+                    # if recruiter_email:
+                    #     asyncio.create_task(
+                    #         send_company_vacancy_email_standalone(
+                    #             company_email=recruiter_email,
+                    #             company_name=company_name,
+                    #             job_title=offer_data.get("title", "vacante"),
+                    #         )
+                    #     )
+                    #     print(
+                    #         f" -> [EMAIL] Tarea B2B programada para {recruiter_email}"
+                    #     )
+                    # else:
+                    #     print(
+                    #         f" -> [EMAIL] Omitido: No se encontró email para {company_name}"
+                    #     )
+
                 except Exception as e:
                     await session.rollback()
                     print(f"\n[CRITICAL BBDD] Error al guardar oferta nueva: {e}\n")
@@ -305,7 +322,6 @@ async def process_and_save_offers(valid_offers: list[ScrapedJobOffer]):
     print(f"Ofertas extraídas por los scrapers: {len(valid_offers)}")
     print(f"Ofertas REPETIDAS (actualizadas sin pisar datos): {actualizadas}")
     print(f"Ofertas NUEVAS (enriquecidas e insertadas): {nuevas_guardadas}")
-
 
 
 async def run_scrapers() -> None:

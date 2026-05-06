@@ -33,6 +33,7 @@ export default function FilterBar({
     { value: 'hibrido', label: 'Híbrido' },
     { value: 'presencial', label: 'Presencial' },
   ],
+
   showVerifiedFilter = false,
 
   // NUEVAS PROPS: Para el botón de "Mis Vacantes"

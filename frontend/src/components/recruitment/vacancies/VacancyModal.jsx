@@ -761,7 +761,11 @@ export default function VacancyModal({
                         {localAsignados.length > 0 && (
                           <div className="asign-list mb-3">
                             {localAsignados.map((r, idx) => {
-                              if (r.role === 'negocio' || r.role === 'company')
+                              if (
+                                r.role === 'negocio' ||
+                                r.role === 'company' ||
+                                (r.nombre && r.nombre.includes('_Negocio'))
+                              )
                                 return null;
                               return (
                                 <div key={idx} className="asign-current">
