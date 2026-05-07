@@ -14,7 +14,7 @@
   --bg-primary: #ffffff;
   --bg-secondary: #f3f4f6;
   --bg-tertiary: #e5e7eb;
-  --bg-gradient: linear-gradient(135deg, #f5f0ff, #ffffff, #e0f7ff);
+  --bg-gradient: #f6f9fb;
 
   /* Textos */
   --text-primary: #111827;
@@ -160,3 +160,50 @@ body {
 /* Modals */
 .modal-backdrop { z-index: 1050; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); }
 .modal { z-index: 1060; }
+
+
+/* Grid de 4 tarjetas superiores */
+.four-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) { .four-cards-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1200px) { .four-cards-grid { grid-template-columns: repeat(4, 1fr); } }
+
+/* Ajuste fino de la tarjeta para coincidir con Figma */
+.tc-modern {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.tc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.tc-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.tc-trend { font-size: 0.75rem; font-weight: 600; }
+.tc-trend.green { color: #10b981; }
+.tc-trend.grey { color: #94a3b8; }
+
+.tc-title { font-size: 0.8125rem; color: #64748b; margin-bottom: 0.5rem; }
+.tc-body { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem;}
+.tc-value { font-size: 2.25rem; font-weight: 700; color: #0f172a; line-height: 1; margin: 0;}
+.tc-footer { font-size: 0.75rem; color: #94a3b8; margin: 0; }
