@@ -1,195 +1,186 @@
-/* Tarjetas resumen + enlace vacantes */
-.dashboard-quick-card {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 18px;
-  padding: 1.1rem 1.2rem;
-  height: 100%;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.9rem;
-  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
-  position: relative;
-  overflow: hidden;
+.quick-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
-.dashboard-quick-card:hover {
-  background: var(--bg-primary);
-  transform: translateY(-2px);
-  box-shadow: 0 14px 34px rgba(16, 24, 40, 0.12);
+@media(min-width: 768px) {
+  .quick-cards-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-.dashboard-quick-card::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 3px;
-  background: linear-gradient(
-    90deg,
-    var(--color-purple-secondary) 0%,
-    var(--color-cyan-primary) 100%
-  );
-  opacity: 0.7;
-}
-
-.dashboard-quick-card--link {
-  cursor: pointer;
-  /* En algunos temas se ve un acento morado en el lateral izquierdo.
-     Lo unificamos con el color de borde estándar del resto de tarjetas. */
-  border-left: 1px solid var(--border-color) !important;
-}
-
-.dashboard-quick-card--link:hover {
-  transform: translateY(-3px);
-  border-left-color: var(--border-color) !important;
-}
-
-.dashboard-quick-card--events {
-  border-color: rgba(124, 58, 237, 0.8) !important;
-  box-shadow: 0 16px 46px rgba(124, 58, 237, 0.18) !important;
-}
-
-/* Empty state para "Vacantes urgentes" (rol reclutador) */
-.urgent-empty-state {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 0.9rem;
-  border-radius: 14px;
-  background: rgba(245, 158, 11, 0.08);
-  border: 1px solid rgba(245, 158, 11, 0.25);
-}
-
-.urgent-empty-state__icon {
-  color: #f59e0b;
-  font-size: 1.2rem;
-  line-height: 1;
-}
-
-.urgent-empty-state__text {
+.quick-card-modern {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  height: 100%;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  text-decoration: none;
 }
 
-.urgent-empty-state__title {
-  font-weight: 700;
-  color: var(--text-primary);
-  font-size: 0.95rem;
+.quick-card-modern:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
 }
 
-.urgent-empty-state__subtitle {
-  color: var(--text-muted);
-  font-size: 0.85rem;
+.quick-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
 }
 
-/* Alineación del contador amarillo en "Vacantes urgentes" */
-.urgent-count-badge {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  line-height: 1 !important;
-  height: 24px;
-  padding: 0 0.65rem !important;
-  font-weight: 700 !important;
-}
-
-.dashboard-quick-card__icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
+.quick-card-icon-wrapper {
+  padding: 0.625rem;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
-  flex-shrink: 0;
+}
+.quick-card-icon-wrapper.violet { background: #f5f3ff; color: #8b5cf6; }
+.quick-card-icon-wrapper.cyan { background: #ecfeff; color: #06b6d4; }
+
+.quick-card-badge {
+  display: flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #10b981;
+}
+.quick-card-badge i { margin-right: 4px; }
+
+.quick-card-subtitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 0.25rem;
 }
 
-.dashboard-quick-card__icon--purple {
-  background: rgba(124, 63, 255, 0.12);
-  color: var(--color-purple-secondary);
+.quick-card-main-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.25rem;
 }
 
-.dashboard-quick-card__icon--cyan {
-  background: rgba(0, 212, 255, 0.12);
-  color: var(--color-cyan-primary);
-}
-
-.dashboard-quick-card__icon--violet {
-  background: rgba(168, 85, 247, 0.12);
-  color: var(--color-violet);
-}
-
-.dashboard-quick-card__icon--amber {
-  background: rgba(245, 158, 11, 0.12);
-  color: #f59e0b;
-}
-
-.dashboard-quick-card .text-muted {
-  color: var(--text-muted) !important;
-}
-
-.dashboard-quick-card h3,
-.dashboard-quick-card .h6,
-.dashboard-quick-card .fs-3 {
-  color: var(--text-primary) !important;
+.quick-card-value {
+  font-size: 2.25rem;
   font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  line-height: 1;
 }
 
-.dashboard-quick-card ul li {
-  color: var(--text-secondary);
+.quick-card-chart {
+  width: 80px;
+  height: 40px;
 }
 
-/* Filtro Día / Semana / Mes */
-.dashboard-page-intro .period-segment {
-  margin-bottom: 0;
+.quick-card-footer {
+  font-size: 0.6875rem;
+  color: #94a3b8;
+  margin-top: auto;
+  padding-top: 1rem;
+  line-height: 1.2;
 }
 
-.dashboard-quick-cards-row {
-  align-items: stretch;
+.quick-card-link-text {
+  margin-top: auto;
+  padding-top: 1rem;
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0891b2;
+  transition: color 0.2s;
+}
+.quick-card-modern:hover .quick-card-link-text { color: #0e7490; }
+.quick-card-link-text i { margin-left: 0.25rem; font-size: 1.1rem; }
+
+.dashboard-header-modern {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
 }
 
-.period-segment {
+.dashboard-header-title h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.dashboard-header-title p {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 4px 0 0 0;
+}
+
+.period-segment-modern {
   display: inline-flex;
-  align-items: stretch;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
   padding: 4px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 14px;
-  gap: 3px;
-  margin-bottom: 20px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .period-segment__btn {
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
   border: none;
   background: transparent;
-  color: var(--text-muted);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  padding: 0.55rem 1.35rem;
-  border-radius: 10px;
-  transition: all 0.2s ease;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.period-segment__btn:hover:not(:disabled) {
-  color: var(--text-primary);
-  background: var(--bg-tertiary);
-}
+.period-segment__btn:hover { color: #0f172a; }
 
 .period-segment__btn--active {
+  background: #713aba;
   color: #ffffff !important;
-  background: linear-gradient(
-    145deg,
-    var(--color-purple-primary) 0%,
-    var(--color-purple-secondary) 50%,
-    var(--color-cyan-primary) 100%
-  );
-  box-shadow: 0 4px 12px rgba(124, 63, 255, 0.25);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
-.period-segment__btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.kpi-row-modern {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
 }
+
+.main-layout-modern {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .main-layout-modern { grid-template-columns: 2fr 1fr; }
+}
+
+.left-col-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+[data-bs-theme="dark"] .dashboard-header-title h1, .dark .dashboard-header-title h1 { color: #f8fafc; }
+[data-bs-theme="dark"] .tc-modern, .dark .tc-modern { background: #1e293b; border-color: #334155; }
+[data-bs-theme="dark"] .tc-value, .dark .tc-value { color: #f8fafc; }
+[data-bs-theme="dark"] .tc-title, .dark .tc-title { color: #cbd5e1; }
+[data-bs-theme="dark"] .period-segment-modern, .dark .period-segment-modern { background: #1e293b; border-color: #334155; }
+[data-bs-theme="dark"] .period-segment__btn, .dark .period-segment__btn { color: #94a3b8; }
+[data-bs-theme="dark"] .period-segment__btn:hover, .dark .period-segment__btn:hover { color: #f8fafc; }
+[data-bs-theme="dark"] .period-segment__btn--active, .dark .period-segment__btn--active { background: #0f172a; border: 1px solid #475569; }
+

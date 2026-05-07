@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import SourceStatus from '../components/dashboard/SourceStatus';
 import CandidateScraperStatus from '../components/dashboard/CandidateScraperStatus';
 import StatsPanel from '../components/dashboard/StatsPanel';
-import DashboardQuickCards from '../components/dashboard/DashboardQuickCards';
 import CalendarWidget from '../components/dashboard/CalendarWidget';
 import { ENDPOINTS, authFetch } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -83,6 +82,14 @@ export default function Dashboard() {
   const isRecruiter = user?.role === 'hr_manager';
   const isBusiness = ROLE_BUSINESS.has(user?.role);
   const shouldLoadStats = isBusiness || isRecruiter;
+
+  const pipelineTotal = useMemo(
+    () =>
+      (stats?.newLeads?.value ?? 0) +
+      (stats?.contacted?.value ?? 0) +
+      (stats?.inProgress?.value ?? 0),
+    [stats]
+  );
 
   useEffect(() => {
     if (!shouldLoadStats) return undefined;
@@ -270,263 +277,403 @@ export default function Dashboard() {
     };
   }, [isBusiness, isRecruiter, user?.id]);
 
-  const businessNegotiationText = useMemo(
-    () =>
-      `${stats.contacted.value} contactadas · ${stats.inProgress.value} en proceso`,
-    [stats.contacted.value, stats.inProgress.value]
-  );
-
   return (
     <>
       {isBusiness && (
         <>
-          <div className="mb-4 dashboard-page-intro">
+          <div className="dashboard-header-modern">
+            <div className="dashboard-header-title"></div>
             <div
-              className="period-segment"
+              className="period-segment-modern"
               role="group"
               aria-label="Filtro de periodo"
             >
               <button
                 type="button"
-                className={`period-segment__btn ${
-                  periodType === 'day' ? 'period-segment__btn--active' : ''
-                }`}
+                className={`period-segment__btn ${periodType === 'day' ? 'period-segment__btn--active' : ''}`}
                 onClick={() => setPeriodType('day')}
                 disabled={loadingStats}
-                aria-pressed={periodType === 'day'}
               >
                 Día
               </button>
               <button
                 type="button"
-                className={`period-segment__btn ${
-                  periodType === 'week' ? 'period-segment__btn--active' : ''
-                }`}
+                className={`period-segment__btn ${periodType === 'week' ? 'period-segment__btn--active' : ''}`}
                 onClick={() => setPeriodType('week')}
                 disabled={loadingStats}
-                aria-pressed={periodType === 'week'}
               >
                 Semana
               </button>
               <button
                 type="button"
-                className={`period-segment__btn ${
-                  periodType === 'month' ? 'period-segment__btn--active' : ''
-                }`}
+                className={`period-segment__btn ${periodType === 'month' ? 'period-segment__btn--active' : ''}`}
                 onClick={() => setPeriodType('month')}
                 disabled={loadingStats}
-                aria-pressed={periodType === 'month'}
               >
                 Mes
               </button>
             </div>
           </div>
 
-          <DashboardQuickCards
-            stats={stats}
-            periodType={periodType}
-            loading={loadingStats}
-          />
+          <div className="four-cards-grid">
+            <div className="tc-modern">
+              <div className="tc-header">
+                <div
+                  className="tc-icon"
+                  style={{ background: '#f5f3ff', color: '#8b5cf6' }}
+                >
+                  <i className="bi bi-activity"></i>
+                </div>
+                <span className="tc-trend green">
+                  <i className="bi bi-graph-up-arrow"></i> +12%
+                </span>
+              </div>
+              <div className="tc-title">Resumen del Período</div>
+              <div className="tc-body">
+                <h3 className="tc-value">
+                  {loadingStats ? '—' : pipelineTotal}
+                </h3>
+                <svg width="60" height="20" viewBox="0 0 60 20" fill="none">
+                  <path
+                    d="M0 10 L10 5 L20 15 L30 10 L40 18 L50 2 L60 8"
+                    stroke="#8b5cf6"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+              <p className="tc-footer">
+                Vacantes en pipeline (nuevas + contactadas + en proceso)
+              </p>
+            </div>
 
-          <div className="row g-3 mb-4">
-            <div className="col-12 col-md-4">
-              <div className="dashboard-quick-card h-100">
-                <div className="text-muted small text-uppercase">
-                  Vacantes activas/vigentes
+            <div className="tc-modern">
+              <div className="tc-header">
+                <div
+                  className="tc-icon"
+                  style={{ background: '#eff6ff', color: '#3b82f6' }}
+                >
+                  <i className="bi bi-briefcase"></i>
                 </div>
-                <div className="fs-3 fw-bold text-body mt-1">
+                <span className="tc-trend green">
+                  <i className="bi bi-graph-up-arrow"></i> +8%
+                </span>
+              </div>
+              <div className="tc-title">Vacantes Activas/Vigentes</div>
+              <div className="tc-body">
+                <h3 className="tc-value">
                   {loadingRoleData ? '—' : businessExtra.activeVacancies}
+                </h3>
+                <svg width="60" height="4" viewBox="0 0 60 4" fill="none">
+                  <rect width="60" height="4" rx="2" fill="#3b82f6" />
+                </svg>
+              </div>
+              <p className="tc-footer">Directorio y filtros</p>
+            </div>
+
+            <div className="tc-modern">
+              <div className="tc-header">
+                <div
+                  className="tc-icon"
+                  style={{ background: '#ecfeff', color: '#06b6d4' }}
+                >
+                  <i className="bi bi-file-text"></i>
+                </div>
+                <span className="tc-trend grey">
+                  <i className="bi bi-dash"></i> ~ 0%
+                </span>
+              </div>
+              <div className="tc-title">Estado de Negociación</div>
+              <div
+                className="tc-body"
+                style={{
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  gap: '4px',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    gap: '6px',
+                  }}
+                >
+                  <h3 className="tc-value" style={{ fontSize: '1.5rem' }}>
+                    {loadingStats ? '—' : stats.contacted.value}
+                  </h3>
+                  <span style={{ fontSize: '0.8125rem', color: '#64748b' }}>
+                    contactadas
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    gap: '6px',
+                  }}
+                >
+                  <h3 className="tc-value" style={{ fontSize: '1.5rem' }}>
+                    {loadingStats ? '—' : stats.inProgress.value}
+                  </h3>
+                  <span style={{ fontSize: '0.8125rem', color: '#64748b' }}>
+                    en proceso
+                  </span>
                 </div>
               </div>
             </div>
-            <div className="col-12 col-md-4">
-              <div className="dashboard-quick-card h-100">
-                <div className="text-muted small text-uppercase">
-                  Estado de negociación
+
+            <div className="tc-modern">
+              <div className="tc-header">
+                <div
+                  className="tc-icon"
+                  style={{ background: '#fdf4ff', color: '#d946ef' }}
+                >
+                  <i className="bi bi-people"></i>
                 </div>
-                <div className="fw-semibold text-body mt-2">
-                  {loadingStats ? 'Cargando…' : businessNegotiationText}
-                </div>
+                <span className="tc-trend grey">
+                  <i className="bi bi-dash"></i> ~ 0%
+                </span>
               </div>
-            </div>
-            <div className="col-12 col-md-4">
-              <div className="dashboard-quick-card h-100">
-                <div className="text-muted small text-uppercase">
-                  Candidatos en procesos finales
-                </div>
-                <div className="fs-3 fw-bold text-body mt-1">
+              <div className="tc-title">Candidatos Procesos Finales</div>
+              <div className="tc-body">
+                <h3 className="tc-value">
                   {loadingRoleData ? '—' : businessExtra.finalCandidates}
-                </div>
+                </h3>
               </div>
+              <p className="tc-footer">En últimas etapas de selección</p>
             </div>
           </div>
 
-          <div className="row g-3 mb-4 align-items-stretch">
-            <div className="col-12">
+          {/* Layout Principal Scrapers y Calendario */}
+          <div
+            className="main-layout-modern"
+            style={{ marginBottom: '1.5rem' }}
+          >
+            <div className="left-col-modern">
+              <SourceStatus />
+              <CandidateScraperStatus />
+            </div>
+            <div>
               <CalendarWidget />
             </div>
           </div>
 
-          <SourceStatus />
-          <CandidateScraperStatus />
+          {/* Pipeline a todo el ancho debajo de los Scrapers y el Calendario */}
           <StatsPanel stats={stats} />
         </>
       )}
 
       {isRecruiter && (
         <>
-          <div className="mb-4 dashboard-page-intro">
+          <div className="dashboard-header-modern">
+            <div className="dashboard-header-title">
+              <h1>Nexus Dashboard</h1>
+              <p>Panel del reclutador</p>
+            </div>
             <div
-              className="period-segment"
+              className="period-segment-modern"
               role="group"
               aria-label="Filtro de periodo"
             >
               <button
                 type="button"
-                className={`period-segment__btn ${
-                  periodType === 'day' ? 'period-segment__btn--active' : ''
-                }`}
+                className={`period-segment__btn ${periodType === 'day' ? 'period-segment__btn--active' : ''}`}
                 onClick={() => setPeriodType('day')}
                 disabled={loadingStats}
-                aria-pressed={periodType === 'day'}
               >
                 Día
               </button>
               <button
                 type="button"
-                className={`period-segment__btn ${
-                  periodType === 'week' ? 'period-segment__btn--active' : ''
-                }`}
+                className={`period-segment__btn ${periodType === 'week' ? 'period-segment__btn--active' : ''}`}
                 onClick={() => setPeriodType('week')}
                 disabled={loadingStats}
-                aria-pressed={periodType === 'week'}
               >
                 Semana
               </button>
               <button
                 type="button"
-                className={`period-segment__btn ${
-                  periodType === 'month' ? 'period-segment__btn--active' : ''
-                }`}
+                className={`period-segment__btn ${periodType === 'month' ? 'period-segment__btn--active' : ''}`}
                 onClick={() => setPeriodType('month')}
                 disabled={loadingStats}
-                aria-pressed={periodType === 'month'}
               >
                 Mes
               </button>
             </div>
           </div>
 
-          <DashboardQuickCards
-            stats={stats}
-            periodType={periodType}
-            loading={loadingStats}
-          />
-
-          <div className="row g-3 mb-4 align-items-stretch">
-            <div className="col-12 col-lg-8">
-              <div className="row g-3 align-items-stretch">
-                <div className="col-12 col-md-6">
-                  <div className="dashboard-quick-card h-100">
-                    <div className="text-muted small text-uppercase">
-                      Vacantes asignadas
-                    </div>
-                    <div className="fs-3 fw-bold text-body mt-1">
-                      {loadingRoleData ? '—' : recruiterStats.assignedCount}
-                    </div>
-                  </div>
+          <div className="four-cards-grid">
+            <div className="tc-modern">
+              <div className="tc-header">
+                <div
+                  className="tc-icon"
+                  style={{ background: '#f5f3ff', color: '#8b5cf6' }}
+                >
+                  <i className="bi bi-activity"></i>
                 </div>
-
-                <div className="col-12 col-md-6">
-                  <div className="dashboard-quick-card h-100">
-                    <div className="text-muted small text-uppercase">
-                      Días promedio por vacante
-                    </div>
-                    <div className="fs-3 fw-bold text-body mt-1">
-                      {loadingRoleData ? '—' : recruiterStats.averageDays}
-                    </div>
-                    <div className="small text-muted">
-                      Estimado por fecha publicada (preparado para fecha exacta
-                      de asignación).
-                    </div>
-                  </div>
-                </div>
+                <span className="tc-trend green">
+                  <i className="bi bi-graph-up-arrow"></i> +12%
+                </span>
               </div>
+              <div className="tc-title">Resumen del Período</div>
+              <div className="tc-body">
+                <h3 className="tc-value">
+                  {loadingStats ? '—' : pipelineTotal}
+                </h3>
+                <svg width="60" height="20" viewBox="0 0 60 20" fill="none">
+                  <path
+                    d="M0 10 L10 5 L20 15 L30 10 L40 18 L50 2 L60 8"
+                    stroke="#8b5cf6"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+              <p className="tc-footer">
+                Vacantes en pipeline (nuevas + contactadas + en proceso)
+              </p>
             </div>
 
-            <div className="col-12 col-lg-4 h-100">
-              <CalendarWidget />
+            <div className="tc-modern">
+              <div className="tc-header">
+                <div
+                  className="tc-icon"
+                  style={{ background: '#eff6ff', color: '#3b82f6' }}
+                >
+                  <i className="bi bi-briefcase"></i>
+                </div>
+              </div>
+              <div className="tc-title">Vacantes asignadas</div>
+              <div className="tc-body">
+                <h3 className="tc-value">
+                  {loadingRoleData ? '—' : recruiterStats.assignedCount}
+                </h3>
+              </div>
+              <p className="tc-footer">Directorio y filtros</p>
+            </div>
+
+            <div className="tc-modern">
+              <div className="tc-header">
+                <div
+                  className="tc-icon"
+                  style={{ background: '#f5f3ff', color: '#8b5cf6' }}
+                >
+                  <i className="bi bi-calendar-check"></i>
+                </div>
+              </div>
+              <div className="tc-title">Días promedio por vacante</div>
+              <div className="tc-body">
+                <h3 className="tc-value">
+                  {loadingRoleData ? '—' : recruiterStats.averageDays}
+                </h3>
+              </div>
+              <p className="tc-footer">Estimado por fecha de asignación</p>
+            </div>
+
+            <div className="tc-modern" style={{ padding: '1rem' }}>
+              <div className="tc-header" style={{ marginBottom: '0.5rem' }}>
+                <div
+                  className="tc-icon"
+                  style={{ background: '#fffbeb', color: '#f59e0b' }}
+                >
+                  <i className="bi bi-bell"></i>
+                </div>
+              </div>
+              <div className="tc-title">Notificaciones</div>
+              <ul
+                className="mb-0 ps-3 mt-1"
+                style={{
+                  fontSize: '0.75rem',
+                  color: '#475569',
+                  paddingLeft: '1rem',
+                }}
+              >
+                <li className="mb-1">
+                  Hoy: {recruiterStats.todayEvents} evento
+                  {recruiterStats.todayEvents === 1 ? '' : 's'}
+                </li>
+                <li className="mb-1">
+                  Mañana: {recruiterStats.tomorrowEvents} evento
+                  {recruiterStats.tomorrowEvents === 1 ? '' : 's'}
+                </li>
+                <li>
+                  {recruiterStats.urgentCount} vacante
+                  {recruiterStats.urgentCount === 1 ? '' : 's'} urgente
+                </li>
+              </ul>
             </div>
           </div>
 
-          <div className="row g-3 mb-4">
-            <div className="col-12 col-lg-7">
-              <div className="dashboard-quick-card h-100">
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <h3 className="h6 mb-0">Vacantes urgentes (+14 días)</h3>
-                  <span className="badge text-bg-warning urgent-count-badge">
+          {/* Layout Principal Scrapers y Calendario */}
+          <div
+            className="main-layout-modern"
+            style={{ marginBottom: '1.5rem' }}
+          >
+            <div className="left-col-modern">
+              <div className="scrapers-container-card">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h3 className="scrapers-container-title mb-0">
+                    Vacantes urgentes (+14 días)
+                  </h3>
+                  <span className="badge text-bg-warning">
                     {recruiterStats.urgentCount}
                   </span>
                 </div>
                 {recruiterStats.urgentVacancies.length === 0 ? (
-                  <div className="urgent-empty-state">
-                    <i
-                      className="bi bi-exclamation-triangle-fill urgent-empty-state__icon"
-                      aria-hidden="true"
-                    ></i>
-                    <div className="urgent-empty-state__text">
-                      <div className="urgent-empty-state__title">
-                        Sin vacantes urgentes
-                      </div>
-                      <div className="urgent-empty-state__subtitle">
-                        No hay vacantes urgentes ahora mismo.
+                  <div
+                    className="scraper-list-item"
+                    style={{ background: '#ecfdf5', borderColor: '#a7f3d0' }}
+                  >
+                    <div className="scraper-list-left">
+                      <i
+                        className="bi bi-check-circle-fill"
+                        style={{ color: '#10b981', fontSize: '1.25rem' }}
+                      ></i>
+                      <div className="scraper-list-info">
+                        <h4 style={{ color: '#065f46' }}>Todo bajo control</h4>
+                        <p style={{ color: '#047857' }}>
+                          No hay vacantes urgentes ahora mismo.
+                        </p>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <ul className="mb-0 ps-3">
+                  <div>
                     {recruiterStats.urgentVacancies.map((vacancy) => (
-                      <li key={vacancy.id} className="mb-1">
-                        <span className="fw-semibold">{vacancy.title}</span>{' '}
-                        <span className="text-muted">
-                          ({vacancy.ageDays} días)
-                        </span>
-                      </li>
+                      <div key={vacancy.id} className="scraper-list-item">
+                        <div className="scraper-list-left">
+                          <div className="scraper-dot error"></div>
+                          <div className="scraper-list-info">
+                            <h4>{vacancy.title}</h4>
+                          </div>
+                        </div>
+                        <div className="scraper-list-right error">
+                          <span>{vacancy.ageDays} días</span>
+                        </div>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 )}
               </div>
+
+              <SourceStatus />
+              <CandidateScraperStatus />
             </div>
-            <div className="col-12 col-lg-5">
-              <div className="dashboard-quick-card h-100">
-                <h3 className="h6 mb-2">Notificaciones</h3>
-                <ul className="mb-0 ps-3">
-                  <li className="mb-2">
-                    Hoy tienes {recruiterStats.todayEvents} evento
-                    {recruiterStats.todayEvents === 1 ? '' : 's'}.
-                  </li>
-                  <li className="mb-2">
-                    Mañana tienes {recruiterStats.tomorrowEvents} evento
-                    {recruiterStats.tomorrowEvents === 1 ? '' : 's'}.
-                  </li>
-                  <li>
-                    Tienes {recruiterStats.urgentCount} vacante
-                    {recruiterStats.urgentCount === 1 ? '' : 's'} con urgencia
-                    alta.
-                  </li>
-                </ul>
-              </div>
+            <div>
+              <CalendarWidget />
             </div>
           </div>
 
-          <SourceStatus />
-          <CandidateScraperStatus />
+          {/* Pipeline a todo el ancho debajo de los Scrapers y el Calendario */}
           <StatsPanel stats={stats} />
         </>
       )}
 
       {!isBusiness && !isRecruiter && (
-        <div className="dashboard-quick-card">
+        <div className="tc-modern">
           <h2 className="h6 mb-2">Dashboard</h2>
           <p className="text-muted mb-0">
             No hay una vista específica configurada para tu rol.
