@@ -349,29 +349,32 @@ export const vacanciesService = {
   unassignHr: async (hrId, vacancyIds) => {
     try {
       const currentToken = localStorage.getItem('token');
-      const cleanHrId = parseInt(hrId, 10);
-      const cleanVacancyIds = Array.isArray(vacancyIds)
-        ? vacancyIds.map((id) => parseInt(id, 10))
-        : [parseInt(vacancyIds, 10)];
 
-      const response = await authFetch(
-        ENDPOINTS.recruitment.vacantes.unassignHr,
+      const params = new URLSearchParams();
+      params.append('hr_id', hrId);
+
+      const idsArray = Array.isArray(vacancyIds) ? vacancyIds : [vacancyIds];
+      idsArray.forEach((id) => params.append('vacancy_ids', id));
+
+      const response = await fetch(
+        `${ENDPOINTS.recruitment.vacantes.unassignHr}?${params.toString()}`,
         {
           method: 'DELETE',
           headers: {
-            'Content-Type': 'application/json',
             Authorization: `Bearer ${currentToken}`,
+            'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            hr_id: cleanHrId,
-            vacancy_ids: cleanVacancyIds,
-          }),
         }
       );
-      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-      return response.status === 204 ? null : await response.json();
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Error HTTP: ${response.status}`);
+      }
+
+      return await response.json();
     } catch (error) {
-      console.error(`Error al desasignar RRHH de vacantes:`, error);
+      console.error(`Error al desasignar RRHH (DELETE):`, error);
       throw error;
     }
   },
