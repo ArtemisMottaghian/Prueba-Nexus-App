@@ -285,5 +285,35 @@ select.badge-contactada, .badge-contactada {
 }
 
 .badge {
-  box-shadow: none !important; 
+  box-shadow: none !important;
+}
+
+/* ===================================================
+   RECLUTADORES ASIGNADOS (en tarjeta de vacante)
+   =================================================== */
+.vacante-assignee-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.vacante-assignee {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  background: rgba(0, 212, 255, 0.1);
+  color: var(--color-cyan-primary, #00d4ff);
+  border: 1px solid rgba(0, 212, 255, 0.25);
+  white-space: nowrap;
+}
+
+[data-theme='dark'] .vacante-assignee {
+  background: rgba(0, 212, 255, 0.08);
+  color: #67e8f9;
+  border-color: rgba(0, 212, 255, 0.2);
 }
