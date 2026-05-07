@@ -23,13 +23,19 @@ export default function VacancyGrid({
   const [activeMatchingId, setActiveMatchingId] = useState(null);
 
   const handleOpenModal = async (jobId) => {
+    // El job del listado ya tiene los overrides de localStorage aplicados
+    const localJob = jobs.find((j) => j.id === jobId);
+
     try {
       const fullJobData = await vacanciesService.getVacancyById(jobId);
+      // Si el backend no devuelve asignados, usamos los que están en localStorage
+      if (!fullJobData.assignedTo?.length && localJob?.assignedTo?.length) {
+        fullJobData.assignedTo = localJob.assignedTo;
+      }
       setSelectedJob(fullJobData);
     } catch (error) {
       console.error('Error al cargar detalle:', error);
-      const fallbackJob = jobs.find((j) => j.id === jobId);
-      if (fallbackJob) setSelectedJob(fallbackJob);
+      if (localJob) setSelectedJob(localJob);
     }
   };
 
