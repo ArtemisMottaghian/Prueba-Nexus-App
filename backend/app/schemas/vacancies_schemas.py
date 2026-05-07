@@ -16,6 +16,7 @@ class VacancySummary(BaseModel):
     portal_id: Optional[int] = None
     status: OfferStatus
     is_favourite: bool = False
+    sector: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
