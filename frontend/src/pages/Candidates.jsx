@@ -261,7 +261,8 @@ export default function Candidates() {
     const safeStatus = (candidate.status || '').toLowerCase().trim();
     const arrDiscard = ['descartada', 'discarded', 'rejected', 'descartado'];
     if (filters.status === 'All') {
-      if (!showDescartadas && arrDiscard.includes(safeStatus)) return false;
+      const isDiscarded = arrDiscard.includes(safeStatus);
+      if (showDescartadas ? !isDiscarded : isDiscarded) return false;
     }
 
     if (showFavoritesOnly && !candidate.isFavorite) return false;
@@ -362,6 +363,27 @@ export default function Candidates() {
           <div className="bulk-actions-wrapper animate__animated animate__fadeInDown animate__faster">
             <BulkActions
               selectedCount={selectedCandidates.length}
+              onDiscard={async () => {
+                const idsToDiscard = [...selectedCandidates];
+                if (idsToDiscard.length === 0) return;
+                const idSet = new Set(idsToDiscard);
+
+                setCandidates((prev) =>
+                  prev.map((candidate) =>
+                    idSet.has(candidate.id)
+                      ? { ...candidate, status: 'Descartado' }
+                      : candidate
+                  )
+                );
+
+                await Promise.allSettled(
+                  idsToDiscard.map((id) =>
+                    candidatesService.updateCandidateStatus(id, 'Descartado')
+                  )
+                );
+
+                setSelectedCandidates([]);
+              }}
               onClear={() => setSelectedCandidates([])}
               onAssign={handleBulkAssign}
               hrUsers={hrUsers}
@@ -393,14 +415,14 @@ export default function Candidates() {
               className={`btn btn-sm ${showDescartadas ? 'btn-danger' : 'btn-outline-secondary'}`}
               onClick={() => {
                 setShowDescartadas(!showDescartadas);
-                setShowFavoritesOnly(false);
+                setPaginaActual(1);
               }}
               title="Los candidatos descartados están ocultos por defecto"
             >
               <i
                 className={`bi ${showDescartadas ? 'bi-eye-fill' : 'bi-eye-slash'} me-2`}
               ></i>
-              {showDescartadas ? 'Ocultando activos' : 'Ver descartados'}
+              {showDescartadas ? 'Ver Activos' : 'Ver Descartados'}
             </button>
             <button
               className={`btn btn-sm ${showFavoritesOnly ? 'btn-warning' : 'btn-outline-secondary'}`}
