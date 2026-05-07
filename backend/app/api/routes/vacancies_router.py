@@ -195,10 +195,10 @@ async def read_vacancies_by_hr(hr_id: int, db: AsyncSession = Depends(get_db)):
 # Quitar asignación de HR a vacantes
 # DELETE /api/vacancies/assign-hr
 # -----------------
-@router.delete("/unassign-hr", response_model=MessageResponse)
+@router.delete("/unassign-hr")
 async def unassign_hr_from_vacancies(
-    hr_id: int = Query(...),
-    vacancy_ids: List[int] = Query(...), 
+    hr_id: int = Query(...), 
+    vacancy_ids: List[int] = Query(...),
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
