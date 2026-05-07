@@ -1,6 +1,6 @@
 import asyncio
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from app.services.orchestrator_vacancies import run_scrapers
@@ -197,30 +197,31 @@ async def read_vacancies_by_hr(hr_id: int, db: AsyncSession = Depends(get_db)):
 # -----------------
 @router.delete("/unassign-hr", response_model=MessageResponse)
 async def unassign_hr_from_vacancies(
-    body: VacancyAssignmentRequest, 
+    hr_id: int = Query(...),
+    vacancy_ids: List[int] = Query(...), 
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
     user_role = current_user.get("role")
     user_id = current_user.get("id")
 
-    # La lógica de permisos se queda IGUAL
     is_admin = user_role == UserRole.admin
     is_company = user_role == UserRole.company
     
-    if not is_admin and not is_company and user_id != body.hr_id:
+    if not is_admin and not is_company and user_id != hr_id:
         raise HTTPException(
             status_code=403, 
-            detail="No tienes permisos para esta acción."
+            detail="No tienes permisos para realizar esta acción."
         )
 
     unassigned_count = await vacancies_service.remove_hr_assignment(
-        db, body.hr_id, body.vacancy_ids, is_admin=(is_admin or is_company)
+        db, hr_id, vacancy_ids, is_admin=(is_admin or is_company)
     )
 
     return {
         "message": f"Acción realizada: se han liberado {unassigned_count} vacantes."
     }
+
 # -----------------
 # URL pública de vacante (sin login, sin indexación de buscadores)
 # GET /api/vacancies/public/{vacancy_id}
