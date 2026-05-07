@@ -193,15 +193,20 @@ async def read_vacancies_by_hr(hr_id: int, db: AsyncSession = Depends(get_db)):
 
 # -----------------
 # Quitar asignación de HR a vacantes
-# DELETE /api/vacancies/assign-hr
+# DELETE /api/vacancies/assign-hr/{hr_id}/{vacancy_ids_str}
 # -----------------
-@router.delete("/unassign-hr")
+@router.delete("/unassign-hr/{hr_id}/{vacancy_ids_str}")
 async def unassign_hr_from_vacancies(
-    hr_id: int = Query(...), 
-    vacancy_ids: List[int] = Query(...),
+    hr_id: int,
+    vacancy_ids_str: str, 
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
+    try:
+        vacancy_ids = [int(vid) for vid in vacancy_ids_str.split(",")]
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Formato de IDs de vacante inválido")
+
     user_role = current_user.get("role")
     user_id = current_user.get("id")
 
@@ -211,7 +216,7 @@ async def unassign_hr_from_vacancies(
     if not is_admin and not is_company and user_id != hr_id:
         raise HTTPException(
             status_code=403, 
-            detail="No tienes permisos para realizar esta acción."
+            detail="No tienes permisos para esta acción."
         )
 
     unassigned_count = await vacancies_service.remove_hr_assignment(
