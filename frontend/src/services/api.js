@@ -77,6 +77,7 @@ export const ENDPOINTS = {
       bulkActions: `${BASE_URL}/api/vacancies/bulk-actions`,
       updateStatus: (id) => `${BASE_URL}/api/vacancies/${id}/status`,
       assignHr: `${BASE_URL}/api/vacancies/assign-hr`,
+      unassignHr: `${BASE_URL}/api/vacancies/unassign-hr`,
     },
   },
 
