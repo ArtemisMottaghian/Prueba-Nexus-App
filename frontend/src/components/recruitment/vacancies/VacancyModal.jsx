@@ -73,7 +73,6 @@ export default function VacancyModal({
   const [localIsFavorite, setLocalIsFavorite] = useState(
     job?.isFavorite || false
   );
-  const [urlCopied, setUrlCopied] = useState(false);
   const [localSeguimiento, setLocalSeguimiento] = useState(
     job?.seguimiento || []
   );
@@ -495,22 +494,13 @@ export default function VacancyModal({
                 </button>
                 <button
                   className="btn-icon"
-                  title="Copiar URL pública de la vacante"
+                  title="Abrir URL pública de la vacante"
                   onClick={() => {
                     const url = `${window.location.origin}/vacante/${job.id}`;
-                    navigator.clipboard.writeText(url).then(() => {
-                      setUrlCopied(true);
-                      setTimeout(() => setUrlCopied(false), 2000);
-                    });
+                    window.open(url, '_blank');
                   }}
                 >
-                  <i
-                    className={
-                      urlCopied
-                        ? 'bi bi-check2 text-success'
-                        : 'bi bi-link-45deg'
-                    }
-                  ></i>
+                  <i className="bi bi-box-arrow-up-right"></i>
                 </button>
               </div>
 
@@ -761,7 +751,11 @@ export default function VacancyModal({
                         {localAsignados.length > 0 && (
                           <div className="asign-list mb-3">
                             {localAsignados.map((r, idx) => {
-                              if (r.role === 'negocio' || r.role === 'company')
+                              if (
+                                r.role === 'negocio' ||
+                                r.role === 'company' ||
+                                (r.nombre && r.nombre.includes('_Negocio'))
+                              )
                                 return null;
                               return (
                                 <div key={idx} className="asign-current">

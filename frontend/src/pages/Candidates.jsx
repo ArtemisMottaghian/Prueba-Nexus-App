@@ -4,6 +4,7 @@ import CandidateGrid from '../components/recruitment/candidates/CandidateGrid';
 import BulkActions from '../components/recruitment/shared/BulkActions';
 import initialCandidatesData from '../data/candidatesData.json';
 import { candidatesService } from '../services/candidatesService';
+import { usersService } from '../services/userManagementService';
 import { CANDIDATE_STATUS_OPTIONS } from '../constants/candidateStatus';
 import { useAuth } from '../context/AuthContext';
 
@@ -24,8 +25,9 @@ function filtersToApiQuery(f) {
 }
 
 export default function Candidates() {
-  const { user } = useAuth();
+  const { user, hasAnyRole } = useAuth();
   const canVerifyCandidates = user?.role === 'admin';
+  const isNegocio = hasAnyRole(['admin', 'negocio', 'company']);
   const [filters, setFilters] = useState({
     search: '',
     status: 'All',
@@ -42,6 +44,7 @@ export default function Candidates() {
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [locationOptions, setLocationOptions] = useState([]);
+  const [hrUsers, setHrUsers] = useState([]);
 
   const [paginaActual, setPaginaActual] = useState(1);
 
@@ -98,10 +101,28 @@ export default function Candidates() {
       }
     };
     load();
+
+    if (isNegocio) {
+      usersService
+        .getAllUsers()
+        .then((users) => {
+          setHrUsers(
+            users.filter(
+              (u) =>
+                u.role === 'negocio' ||
+                u.role === 'company' ||
+                u.role === 'hr_manager' ||
+                u.role === 'reclutador'
+            )
+          );
+        })
+        .catch((err) => console.error('Error al cargar usuarios', err));
+    }
+
     return () => {
       cancelled = true;
     };
-  }, [apiListQuery]);
+  }, [apiListQuery, isNegocio]);
 
   // NUEVO: Función para manejar el guardado del nuevo candidato
   const handleSaveNewCandidate = async (newCandidateData) => {
@@ -114,6 +135,26 @@ export default function Candidates() {
       setIsCreateModalOpen(false); // Cerramos tras guardar
     } catch (error) {
       console.error('Error al crear el candidato', error);
+    }
+  };
+
+  const handleBulkAssign = async (targetUserId) => {
+    const userToAssign = hrUsers.find(
+      (u) => String(u.id) === String(targetUserId)
+    );
+    if (!userToAssign) return;
+
+    try {
+      await candidatesService.applyBulkActions(
+        selectedCandidates,
+        'assign',
+        targetUserId
+      );
+      setSelectedCandidates([]);
+      // You can add a toast or alert here if desired
+    } catch (err) {
+      console.error(err);
+      alert('Error al asignar candidatos');
     }
   };
 
@@ -161,16 +202,18 @@ export default function Candidates() {
     setShowDescartadas(false);
   };
 
-  const handleVerify = async (candidateId) => {
+  const handleVerify = async (candidateId, verified) => {
     setCandidates((prev) =>
-      prev.map((c) => (c.id === candidateId ? { ...c, verified: true } : c))
+      prev.map((c) => (c.id === candidateId ? { ...c, verified } : c))
     );
     try {
-      await candidatesService.verifyCandidate(candidateId, true);
+      await candidatesService.verifyCandidate(candidateId, verified);
     } catch (e) {
       console.error('No se pudo verificar el candidato', e);
       setCandidates((prev) =>
-        prev.map((c) => (c.id === candidateId ? { ...c, verified: false } : c))
+        prev.map((c) =>
+          c.id === candidateId ? { ...c, verified: !verified } : c
+        )
       );
     }
   };
@@ -320,6 +363,10 @@ export default function Candidates() {
             <BulkActions
               selectedCount={selectedCandidates.length}
               onClear={() => setSelectedCandidates([])}
+              onAssign={handleBulkAssign}
+              hrUsers={hrUsers}
+              showAssign={isNegocio}
+              label="candidato"
             />
           </div>
         )}

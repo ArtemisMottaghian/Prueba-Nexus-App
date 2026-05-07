@@ -11,4 +11,5 @@ from .search_model import Search, SearchResult
 from .trakingHistory_model import TrackingHistory
 from .user_model import User
 from .companies_model import Company, CompanyComment
+from .email_template_model import EmailTemplate
 
