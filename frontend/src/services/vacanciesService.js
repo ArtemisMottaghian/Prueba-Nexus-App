@@ -350,19 +350,19 @@ export const vacanciesService = {
     try {
       const currentToken = localStorage.getItem('token');
 
-      const queryParams = new URLSearchParams();
-      queryParams.append('hr_id', hrId);
-      vacancyIds.forEach((id) => queryParams.append('vacancy_ids', id));
+      const idsString = Array.isArray(vacancyIds)
+        ? vacancyIds.join(',')
+        : vacancyIds;
 
-      const response = await fetch(
-        `${ENDPOINTS.recruitment.vacantes.unassignHr}?${queryParams.toString()}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${currentToken}`,
-          },
-        }
-      );
+      const url = ENDPOINTS.recruitment.vacantes.unassignHr(hrId, idsString);
+
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${currentToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
