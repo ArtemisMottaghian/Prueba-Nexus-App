@@ -10,46 +10,34 @@ const SCRAPER_LABELS = {
 
 const STATUS_CONFIG = {
   online: {
-    cls: 'status-success',
-    iconCls: 'bg-success-soft',
+    type: 'online',
     icon: 'bi-check-circle-fill',
-    textCls: 'text-success',
-    label: 'Sistema Online',
+    rightClass: 'success',
+    statusText: 'Sistema Online',
   },
   slow: {
-    cls: 'status-warning',
-    iconCls: 'bg-warning-soft',
+    type: 'warning',
     icon: 'bi-exclamation-triangle-fill',
-    textCls: 'text-warning',
-    label: 'Lentitud detectada',
+    rightClass: 'warning',
+    statusText: 'Lentitud detectada',
   },
   offline: {
-    cls: 'status-danger',
-    iconCls: 'bg-danger-soft',
+    type: 'error',
     icon: 'bi-wifi-off',
-    textCls: 'text-danger',
-    label: 'Sin actividad reciente',
-  },
-  warning: {
-    cls: 'status-warning',
-    iconCls: 'bg-warning-soft',
-    icon: 'bi-exclamation-triangle-fill',
-    textCls: 'text-warning',
-    label: 'Lentitud detectada',
+    rightClass: 'error',
+    statusText: 'Sin actividad reciente',
   },
   error: {
-    cls: 'status-danger',
-    iconCls: 'bg-danger-soft',
+    type: 'error',
     icon: 'bi-x-circle-fill',
-    textCls: 'text-danger',
-    label: 'API Bloqueada',
+    rightClass: 'error',
+    statusText: 'API Bloqueada',
   },
   unknown: {
-    cls: 'status-secondary',
-    iconCls: 'bg-secondary-soft',
+    type: 'unknown',
     icon: 'bi-question-circle-fill',
-    textCls: 'text-muted',
-    label: 'Desconocido',
+    rightClass: 'unknown',
+    statusText: 'Desconocido',
   },
 };
 
@@ -59,13 +47,19 @@ function formatDate(isoString) {
   return d.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
 }
 
-function VacancyScraperCard({ scraperKey, data }) {
-  const statusKey = String(data?.status || '').toLowerCase();
-  const runStatusKey = String(data?.last_run_status || '').toLowerCase();
+function VacancyScraperItem({ scraperKey, data }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const statusKey = String(data?.status || 'unknown').toLowerCase();
   const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.unknown;
   const label = SCRAPER_LABELS[scraperKey] || scraperKey;
-  const lastRunAt = formatDate(data.last_run_at);
-  const lastInsertion = formatDate(data.last_insertion || data.last_extraction);
+
+  const lastRunAt = formatDate(data?.last_run_at);
+  const lastInsertion = formatDate(
+    data?.last_insertion || data?.last_extraction
+  );
+
+  const runStatusKey = String(data?.last_run_status || '').toLowerCase();
   const runStatusLabel =
     runStatusKey === 'ok'
       ? 'OK'
@@ -76,40 +70,71 @@ function VacancyScraperCard({ scraperKey, data }) {
           : null;
 
   return (
-    <div className="col-12 col-md-4">
-      <div className={`source-card ${cfg.cls} justify-content-between`}>
-        <div className="d-flex align-items-center">
-          <div className={`source-icon-wrapper ${cfg.iconCls}`}>
-            <i className={`bi ${cfg.icon}`}></i>
-          </div>
-          <div className="source-info">
-            <h6 className="text-body">{label}</h6>
-            <span className={`source-status-text ${cfg.textCls}`}>
-              {cfg.label}
-            </span>
-            <div className="text-muted" style={{ fontSize: '0.7rem' }}>
-              {lastRunAt
-                ? `Última ejecución: ${lastRunAt}`
-                : 'Sin ejecución reciente'}
-            </div>
-            <div className="text-muted" style={{ fontSize: '0.7rem' }}>
-              {lastInsertion
-                ? `Última inserción: ${lastInsertion}`
-                : 'Sin inserciones registradas'}
-            </div>
-            {runStatusLabel && (
-              <div className="text-muted" style={{ fontSize: '0.7rem' }}>
-                Estado ejecución: {runStatusLabel}
-              </div>
-            )}
+    <div
+      className="scraper-list-item"
+      onClick={() => setIsExpanded(!isExpanded)}
+    >
+      <div className="scraper-item-header">
+        <div className="scraper-list-left">
+          <div className={`scraper-dot ${cfg.type}`}></div>
+          <div className="scraper-list-info">
+            <h4>{label}</h4>
+            <p
+              className={cfg.rightClass}
+              style={{ fontWeight: 600, margin: 0 }}
+            >
+              {cfg.statusText}
+            </p>
           </div>
         </div>
-        {(statusKey === 'error' || statusKey === 'offline') && (
-          <button className="btn-icon btn-icon-sm" title="Reiniciar Bot">
-            <i className="bi bi-arrow-clockwise text-danger"></i>
-          </button>
-        )}
+
+        <div className={`scraper-list-right ${cfg.rightClass}`}>
+          {statusKey === 'error' || statusKey === 'offline' ? (
+            <button
+              className="scraper-action-btn"
+              title="Reiniciar Bot"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#ef4444',
+              }}
+              onClick={(e) => {
+                e.stopPropagation(); /* Aquí iría tu lógica de reiniciar */
+              }}
+            >
+              <i
+                className="bi bi-arrow-clockwise"
+                style={{ fontSize: '1.25rem' }}
+              ></i>
+            </button>
+          ) : (
+            <i className={`bi ${cfg.icon}`} style={{ fontSize: '1.25rem' }}></i>
+          )}
+          {/* Icono de flechita para indicar que es desplegable */}
+          <i
+            className={`bi bi-chevron-${isExpanded ? 'up' : 'down'} text-muted`}
+            style={{ fontSize: '1rem' }}
+          ></i>
+        </div>
       </div>
+
+      {/* Contenido Desplegable */}
+      {isExpanded && (
+        <div className="scraper-item-details">
+          <p>
+            <strong>Última ejecución:</strong> {lastRunAt || '---'}
+          </p>
+          <p>
+            <strong>Última inserción:</strong> {lastInsertion || '---'}
+          </p>
+          {runStatusLabel && (
+            <p>
+              <strong>Estado ejecución:</strong> {runStatusLabel}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -120,68 +145,38 @@ export default function SourceStatus() {
 
   useEffect(() => {
     let cancelled = false;
-
     const load = async () => {
       try {
-        setLoading(true);
         const r = await authFetch(ENDPOINTS.metrics.scrapersStatus);
-        if (!r.ok) {
-          throw new Error(`HTTP ${r.status}`);
-        }
-        const ct = r.headers.get('content-type') || '';
-        if (!ct.includes('application/json')) {
-          throw new Error('Non-JSON response');
-        }
         const data = await r.json();
         if (!cancelled) setScrapers(data);
       } catch (e) {
-        console.error('Scrapers de vacantes:', e);
+        console.error(
+          'Error al cargar el estado de los scrapers de vacantes:',
+          e
+        );
         if (!cancelled) setScrapers(null);
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
-
     load();
     return () => {
       cancelled = true;
     };
   }, []);
 
-  if (loading) {
-    return (
-      <section className="source-status-section mb-4">
-        <h3 className="source-status-section__title h6 fw-semibold mb-3">
-          Scrapers de vacantes
-        </h3>
-        <p className="text-muted small mb-0">Cargando estado de scrapers...</p>
-      </section>
-    );
-  }
-
-  if (!scrapers || Object.keys(scrapers).length === 0) {
-    return (
-      <section className="source-status-section mb-4">
-        <h3 className="source-status-section__title h6 fw-semibold mb-3">
-          Scrapers de vacantes
-        </h3>
-        <p className="text-muted small mb-0">
-          No hay datos de scrapers de vacantes.
-        </p>
-      </section>
-    );
-  }
+  if (loading) return null;
+  if (!scrapers || Object.keys(scrapers).length === 0) return null;
 
   return (
-    <section className="source-status-section mb-4">
-      <h3 className="source-status-section__title h6 fw-semibold mb-3">
-        Scrapers de vacantes
-      </h3>
-      <div className="row g-3">
+    <div className="scrapers-container-card">
+      <h3 className="scrapers-container-title">Scrapers de vacantes</h3>
+      <div>
         {Object.entries(scrapers).map(([key, data]) => (
-          <VacancyScraperCard key={key} scraperKey={key} data={data} />
+          <VacancyScraperItem key={key} scraperKey={key} data={data} />
         ))}
       </div>
-    </section>
+    </div>
   );
 }

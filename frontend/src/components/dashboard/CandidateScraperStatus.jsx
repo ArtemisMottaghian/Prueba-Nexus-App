@@ -1,29 +1,25 @@
 import { useState, useEffect } from 'react';
 import { ENDPOINTS, authFetch } from '../../services/api';
 import './SourceStatus.css';
-import './CandidateScraperStatus.css';
 
 const STATUS_CONFIG = {
   online: {
-    cls: 'status-success',
-    iconCls: 'bg-success-soft',
+    type: 'online',
     icon: 'bi-check-circle-fill',
-    textCls: 'text-success',
-    label: 'Sistema Online',
+    rightClass: 'success',
+    text: 'Sistema Online',
   },
   error: {
-    cls: 'status-danger',
-    iconCls: 'bg-danger-soft',
+    type: 'error',
     icon: 'bi-x-circle-fill',
-    textCls: 'text-danger',
-    label: 'Ultima ejecucion con error',
+    rightClass: 'error',
+    text: 'Desconocido / Error',
   },
   unknown: {
-    cls: 'status-secondary',
-    iconCls: 'bg-secondary-soft',
+    type: 'unknown',
     icon: 'bi-question-circle-fill',
-    textCls: 'text-muted',
-    label: 'Desconocido',
+    rightClass: 'unknown',
+    text: 'Desconocido',
   },
 };
 
@@ -34,67 +30,96 @@ function formatDate(isoString) {
 }
 
 function formatCount(n) {
-  if (n == null || Number.isNaN(n)) return '—';
+  if (n == null || Number.isNaN(n)) return '0';
   return new Intl.NumberFormat('es-ES').format(n);
+}
+
+// Subcomponente para gestionar el estado desplegable de cada candidato
+function CandidateScraperItem({ item }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  let statusKey = String(item.status || 'unknown').toLowerCase();
+  const fecha = formatDate(item.last_insertion || item.last_extraction);
+  const total = item.candidates_today ?? item.total_candidates;
+
+  // Si el backend no manda status pero tenemos datos o fecha, forzamos online
+  if ((statusKey === 'unknown' || statusKey === '') && (total > 0 || fecha)) {
+    statusKey = 'online';
+  }
+
+  const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.unknown;
+
+  return (
+    <div
+      className="scraper-list-item"
+      onClick={() => setIsExpanded(!isExpanded)}
+    >
+      <div className="scraper-item-header">
+        {/* Lado izquierdo: Puntito, Título y Texto de estado */}
+        <div className="scraper-list-left">
+          <div className={`scraper-dot ${cfg.type}`}></div>
+          <div className="scraper-list-info">
+            <h4>{item.name}</h4>
+            <p
+              className={cfg.rightClass}
+              style={{ fontWeight: 600, margin: 0 }}
+            >
+              {cfg.text}
+            </p>
+          </div>
+        </div>
+
+        {/* Lado derecho: Icono de estado y Flechita */}
+        <div className={`scraper-list-right ${cfg.rightClass}`}>
+          <i className={`bi ${cfg.icon}`} style={{ fontSize: '1.25rem' }}></i>
+          <i
+            className={`bi bi-chevron-${isExpanded ? 'up' : 'down'} text-muted`}
+            style={{ fontSize: '1rem', marginLeft: '0.5rem' }}
+          ></i>
+        </div>
+      </div>
+
+      {/* Contenido Desplegable */}
+      {isExpanded && (
+        <div className="scraper-item-details">
+          <p>
+            <strong>Inserción:</strong>{' '}
+            {fecha ? fecha : 'Sin inserciones registradas'}
+          </p>
+          <p>
+            <strong>Candidatos hoy:</strong>{' '}
+            {total != null ? formatCount(total) : '0'}
+          </p>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function CandidateScraperStatus() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
-
     (async () => {
       try {
-        setLoading(true);
-        setError(null);
         const res = await authFetch(ENDPOINTS.metrics.candidatesStatus);
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
         const json = await res.json();
         if (!cancelled) setData(json);
       } catch (e) {
-        console.error('Candidate scraper status:', e);
-        if (!cancelled) {
-          setError('No se pudo cargar el estado de los scrapers.');
-          setData(null);
-        }
+        console.error('Error al cargar el estado de los candidatos:', e);
+        if (!cancelled) setData(null);
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
-
     return () => {
       cancelled = true;
     };
   }, []);
 
-  if (loading) {
-    return (
-      <section className="candidate-scraper-status candidate-scraper-status--loading mb-4">
-        <h3 className="candidate-scraper-status__title h6 fw-semibold mb-3">
-          Scrapers de candidatos
-        </h3>
-        <p className="text-muted small mb-0">
-          Cargando estado de scrapers de candidatos…
-        </p>
-      </section>
-    );
-  }
-
-  if (error) {
-    return (
-      <section className="candidate-scraper-status mb-4">
-        <h3 className="candidate-scraper-status__title h6 fw-semibold mb-3">
-          Scrapers de candidatos
-        </h3>
-        <p className="text-danger small mb-0">{error}</p>
-      </section>
-    );
-  }
+  if (loading) return null;
 
   const scrapers = Array.isArray(data?.scrapers)
     ? data.scrapers
@@ -104,60 +129,17 @@ export default function CandidateScraperStatus() {
           ...item,
         }))
       : [];
-  if (scrapers.length === 0) {
-    return (
-      <section className="candidate-scraper-status mb-4">
-        <h3 className="candidate-scraper-status__title h6 fw-semibold mb-3">
-          Scrapers de candidatos
-        </h3>
-        <p className="text-muted small mb-0">
-          No hay datos de scrapers de candidatos.
-        </p>
-      </section>
-    );
-  }
+
+  if (scrapers.length === 0) return null;
 
   return (
-    <section className="candidate-scraper-status mb-4">
-      <h3 className="candidate-scraper-status__title h6 fw-semibold mb-3">
-        Scrapers de candidatos
-      </h3>
-      <div className="row g-3">
-        {scrapers.map((item) => {
-          const statusKey = String(item.status || '').toLowerCase();
-          const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.unknown;
-          const fecha = formatDate(item.last_insertion || item.last_extraction);
-          const total = item.candidates_today ?? item.total_candidates;
-
-          return (
-            <div className="col-12 col-md-4" key={item.name}>
-              <div className={`source-card ${cfg.cls}`}>
-                <div className="d-flex align-items-center">
-                  <div className={`source-icon-wrapper ${cfg.iconCls}`}>
-                    <i className={`bi ${cfg.icon}`}></i>
-                  </div>
-                  <div className="source-info flex-grow-1 min-w-0">
-                    <h6 className="text-body mb-0">{item.name}</h6>
-                    <span
-                      className={`source-status-text ${cfg.textCls} d-block`}
-                    >
-                      {cfg.label}
-                    </span>
-                    <div className="text-muted candidate-scraper-status__meta">
-                      {fecha
-                        ? `Inserción: ${fecha}`
-                        : 'Sin inserciones registradas'}
-                    </div>
-                    <div className="text-muted candidate-scraper-status__meta">
-                      Candidatos hoy: {formatCount(total)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+    <div className="scrapers-container-card">
+      <h3 className="scrapers-container-title">Scrapers de Candidatos</h3>
+      <div>
+        {scrapers.map((item) => (
+          <CandidateScraperItem key={item.name} item={item} />
+        ))}
       </div>
-    </section>
+    </div>
   );
 }

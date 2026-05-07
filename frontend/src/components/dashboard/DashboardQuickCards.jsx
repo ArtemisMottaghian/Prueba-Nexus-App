@@ -1,11 +1,48 @@
-import { Link } from 'react-router-dom';
 import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import './DashboardQuickCards.css';
 
 const PERIOD_LABELS = {
   day: 'Hoy',
   week: 'Últimos 7 días',
   month: 'Últimos 30 días',
+};
+
+// Componente SVG puro para la gráfica (Sparkline) - SIN librerías
+const MiniSparkline = ({ data }) => {
+  const max = Math.max(...data.map((d) => d.value));
+  const min = Math.min(...data.map((d) => d.value));
+  const range = max - min || 1;
+  const width = 80;
+  const height = 30;
+  const step = width / (data.length - 1);
+
+  // Calcula las coordenadas para la línea
+  const points = data
+    .map((d, i) => {
+      const x = i * step;
+      const y = height - ((d.value - min) / range) * height;
+      return `${x},${y}`;
+    })
+    .join(' ');
+
+  return (
+    <svg
+      width="80"
+      height="40"
+      viewBox="0 -5 80 40"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <polyline
+        points={points}
+        stroke="#8b5cf6"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 };
 
 export default function DashboardQuickCards({ stats, periodType, loading }) {
@@ -19,53 +56,63 @@ export default function DashboardQuickCards({ stats, periodType, loading }) {
 
   const periodLabel = PERIOD_LABELS[periodType] ?? periodType;
 
+  // Datos para nuestra mini gráfica
+  const sparklineData = [
+    { value: 4 },
+    { value: 5 },
+    { value: 3 },
+    { value: 6 },
+    { value: 5 },
+    { value: 6 },
+  ];
+
   return (
-    <div className="row g-3 mb-4 dashboard-quick-cards-row">
-      <div className="col-12 col-md-6">
-        <div className="dashboard-quick-card">
-          <div className="dashboard-quick-card__icon dashboard-quick-card__icon--purple">
-            <i className="bi bi-lightning-charge-fill"></i>
+    <div className="quick-cards-grid">
+      {/* Tarjeta 1: Resumen del periodo */}
+      <div className="quick-card-modern">
+        <div className="quick-card-header">
+          <div className="quick-card-icon-wrapper violet">
+            <i className="bi bi-activity"></i>
           </div>
-          <div className="flex-grow-1 min-w-0">
-            <div
-              className="text-muted small text-uppercase"
-              style={{ letterSpacing: '0.04em' }}
-            >
-              Resumen del periodo
-            </div>
-            <div
-              className="fs-3 fw-bold text-body mb-0"
-              style={{ lineHeight: 1.2 }}
-            >
-              {loading ? '—' : pipelineTotal}
-            </div>
-            <div className="small text-muted">{periodLabel}</div>
-            <div className="small text-muted mt-1">
-              Vacantes en pipeline (nuevas + contactadas + en proceso)
-            </div>
+          <span className="quick-card-badge">
+            <i className="bi bi-graph-up"></i>+12%
+          </span>
+        </div>
+
+        <p className="quick-card-subtitle">Resumen del período</p>
+
+        <div className="quick-card-main-row">
+          <h3 className="quick-card-value">{loading ? '—' : pipelineTotal}</h3>
+          <div className="quick-card-chart">
+            <MiniSparkline data={sparklineData} />
           </div>
         </div>
+
+        <p className="quick-card-footer">
+          Vacantes en pipeline ({periodLabel})
+        </p>
       </div>
 
-      <div className="col-12 col-md-6">
-        <Link
-          to="/vacantes"
-          className="text-decoration-none text-reset d-block h-100"
-        >
-          <div className="dashboard-quick-card dashboard-quick-card--link h-100">
-            <div className="dashboard-quick-card__icon dashboard-quick-card__icon--cyan">
-              <i className="bi bi-briefcase"></i>
-            </div>
-            <div className="flex-grow-1 min-w-0">
-              <div className="fw-semibold text-body mb-1">Vacantes</div>
-              <div className="small text-muted">Directorio y filtros</div>
-              <div className="small text-primary mt-2 mb-0">
-                Ir <i className="bi bi-arrow-right-short"></i>
-              </div>
-            </div>
+      {/* Tarjeta 2: Enlace a Vacantes */}
+      <Link to="/vacantes" className="quick-card-modern">
+        <div className="quick-card-header">
+          <div className="quick-card-icon-wrapper cyan">
+            <i className="bi bi-briefcase"></i>
           </div>
-        </Link>
-      </div>
+        </div>
+
+        <p className="quick-card-subtitle">Vacantes</p>
+
+        <div className="quick-card-main-row">
+          <h3 className="quick-card-value" style={{ fontSize: '1.5rem' }}>
+            Directorio y filtros
+          </h3>
+        </div>
+
+        <div className="quick-card-link-text">
+          Ir a vacantes <i className="bi bi-arrow-right-short"></i>
+        </div>
+      </Link>
     </div>
   );
 }
