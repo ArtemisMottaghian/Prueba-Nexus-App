@@ -808,6 +808,13 @@
 
 /* ── Asignación de reclutador ─────────────────────────── */
 
+/* Lista de reclutadores asignados */
+.asign-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 /* Tarjeta "ya asignado" */
 .asign-current {
   display: flex;
