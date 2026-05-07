@@ -35,7 +35,7 @@ const mapVacancyData = (v) => {
     location: v.location || 'No especificada',
     status: translatedStatus,
     source: getPortalName(v.portal_id),
-    isFavourite: v.is_favourite || false,
+    isFavorite: v.is_favourite || false,
     time: v.published_at
       ? new Date(v.published_at).toLocaleDateString()
       : 'Sin fecha',
