@@ -199,14 +199,18 @@ async def read_vacancies_by_hr(hr_id: int, db: AsyncSession = Depends(get_db)):
 async def unassign_hr_from_vacancies(
     body: VacancyAssignmentRequest, 
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
+    
+    user_role = current_user.get("role")
+    user_id = current_user.get("id")
+
     # Comprobamos los roles 
-    is_admin = current_user.role == UserRole.admin
-    is_company = current_user.role == UserRole.company
+    is_admin = user_role == UserRole.admin
+    is_company = user_role == UserRole.company
     
     # si no es admin o company ni el perfil de hr que lleva la asignación, no puede quitarla
-    if not is_admin and not is_company and current_user.id != body.hr_id:
+    if not is_admin and not is_company and user_id != body.hr_id:
         raise HTTPException(
             status_code=403, 
             detail="No tienes permisos para quitarle la asignación a otro compañero."
