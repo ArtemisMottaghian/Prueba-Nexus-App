@@ -195,28 +195,25 @@ async def read_vacancies_by_hr(hr_id: int, db: AsyncSession = Depends(get_db)):
 # Quitar asignación de HR a vacantes
 # DELETE /api/vacancies/assign-hr
 # -----------------
-@router.delete("/assign-hr", response_model=MessageResponse)
+@router.delete("/unassign-hr", response_model=MessageResponse)
 async def unassign_hr_from_vacancies(
     body: VacancyAssignmentRequest, 
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    
     user_role = current_user.get("role")
     user_id = current_user.get("id")
 
-    # Comprobamos los roles 
+    # La lógica de permisos se queda IGUAL
     is_admin = user_role == UserRole.admin
     is_company = user_role == UserRole.company
     
-    # si no es admin o company ni el perfil de hr que lleva la asignación, no puede quitarla
     if not is_admin and not is_company and user_id != body.hr_id:
         raise HTTPException(
             status_code=403, 
-            detail="No tienes permisos para quitarle la asignación a otro compañero."
+            detail="No tienes permisos para esta acción."
         )
 
-    # Ejecutamos la baja
     unassigned_count = await vacancies_service.remove_hr_assignment(
         db, body.hr_id, body.vacancy_ids, is_admin=(is_admin or is_company)
     )
@@ -224,7 +221,6 @@ async def unassign_hr_from_vacancies(
     return {
         "message": f"Acción realizada: se han liberado {unassigned_count} vacantes."
     }
-
 # -----------------
 # URL pública de vacante (sin login, sin indexación de buscadores)
 # GET /api/vacancies/public/{vacancy_id}

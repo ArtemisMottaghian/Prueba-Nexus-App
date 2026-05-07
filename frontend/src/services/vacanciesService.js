@@ -355,7 +355,7 @@ export const vacanciesService = {
         : [parseInt(vacancyIds, 10)];
 
       const response = await authFetch(
-        ENDPOINTS.recruitment.vacantes.assignHr,
+        ENDPOINTS.recruitment.vacantes.unassignHr,
         {
           method: 'DELETE',
           headers: {

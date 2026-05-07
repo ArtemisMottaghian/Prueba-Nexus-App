@@ -49,8 +49,6 @@ export const AuthProvider = ({ children }) => {
       const isValid = authService.isTokenValidFromToken(token);
       const currentUser = authService.getCurrentUserFromToken(token);
 
-      console.log('¿Token válido según el frontend?:', isValid);
-
       if (currentUser && isValid) {
         setUser(currentUser);
       } else {
