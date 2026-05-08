@@ -4,6 +4,7 @@ from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
+import json
 
 from app.models.user_model import User, UserRole
 from app.schemas.users_schemas import UserType
@@ -410,13 +411,22 @@ async def get_candidate_tracking(db: AsyncSession, vacancy_id: int) -> list[dict
         c = candidates_dict.get(app.candidate_id)
         if not c:
             continue  
-            
+        
+        notas_array = []
+        if app.feedback:
+            try:
+                notas_array = json.loads(app.feedback)
+                if not isinstance(notas_array, list):
+                    notas_array = [str(notas_array)]
+            except json.JSONDecodeError:
+                notas_array = [app.feedback]
+
         output.append({
             "id": app.id, 
             "name": f"{c.first_name} {c.last_name}".strip(),
             "phase": app.status.value if hasattr(app.status, "value") else str(app.status),
             "result": None, 
-            "notes": app.feedback or "", 
+            "notes": notas_array, 
             "date": app.updated_at or app.created_at
         })
 
@@ -520,8 +530,21 @@ async def update_candidate_tracking(
         return False
 
     app_to_update.status = data.phase
-    app_to_update.feedback = data.notes
+
+    notas_existentes = []
+    if app_to_update.feedback:
+        try:
+            notas_existentes = json.loads(app_to_update.feedback)
+            if not isinstance(notas_existentes, list):
+                notas_existentes = [str(notas_existentes)]
+
+        except json.JSONDecodeError:
+            notas_existentes = [app_to_update.feedback]
+
+    if data.notes:
+        notas_existentes.extend(data.notes)
     
+    app_to_update.feedback = json.dumps(notas_existentes, ensure_ascii=False)
     
     db.add(app_to_update)
     await db.commit()
