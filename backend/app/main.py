@@ -5,11 +5,14 @@ from app.core.config import settings
 from app.db.session import engine
 from app.db.connection import Base
 
+import sys
+import asyncio
 import uvicorn
 import os
 import app.models
 
-
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())# type: ignore
 # Inicializacion
 ENV = os.getenv("ENV", "development")
 

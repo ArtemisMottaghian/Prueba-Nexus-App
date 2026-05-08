@@ -23,10 +23,10 @@ class CandidateBase(BaseModel):
     skills: Optional[str] = Field(None, max_length=500)
     notes: Optional[str] = Field(None, max_length=1000)
     status: Optional[CandidateStatus] = CandidateStatus.active
-
     location: Optional[str] = Field(None, max_length=255)
     source: Optional[str] = Field(None, max_length=100)
     experience: Optional[str] = None
+    education: Optional[str] = None
     verified: Optional[bool] = False
 
 
@@ -47,10 +47,10 @@ class CandidateUpdate(BaseModel):
     skills: Optional[str] = Field(None, max_length=500)
     notes: Optional[str] = Field(None, max_length=1000)
     status: Optional[CandidateStatus] = None
-
     location: Optional[str] = Field(None, max_length=255)
     source: Optional[str] = Field(None, max_length=100)
     experience: Optional[str] = None
+    education: Optional[str] = None
 
 
 # Salida (CandidateOut / CandidateResponse)
@@ -82,9 +82,10 @@ class CandidateFrontendOut(BaseModel):
     status: str
     source: str
     experience: Optional[str] = "Consultar CV"
+    education: str
     isAvailable: bool
     time: str
-    is_favourite: bool = False
+    is_favorite: bool = False
     verified: bool = False
     email: Optional[str] = None
 
@@ -110,6 +111,7 @@ class CandidateFrontendOut(BaseModel):
                 # Lógica de origen: Si viene del scraper tendrá un ID de origen
                 "source": getattr(data, "source", None) or "Carga Manual",
                 "experience": getattr(data, "experience") or "Consultar CV",
+                "education": getattr(data, "education"),
                 "email": getattr(data, "email", None),
                 # Extraemos el valor del Enum (ej: "active")
                 "status": (
@@ -126,7 +128,7 @@ class CandidateFrontendOut(BaseModel):
                     if getattr(data, "created_at", None)
                     else "Reciente"
                 ),
-                "is_favourite": True if getattr(data, "is_favourite", False) else False,
+                "is_favorite": True if getattr(data, "is_favorite", False) else False,
                 "verified": getattr(data, "verified", False),
             }
         return data
@@ -155,8 +157,8 @@ class CandidateScraperStatusOut(BaseModel):
 
 
 # Schema para marcar como favorita
-class FavouriteRequest(BaseModel):
-    favourite: bool
+class FavoriteRequest(BaseModel):
+    favorite: bool
 
 
 class VerifyRequest(BaseModel):
