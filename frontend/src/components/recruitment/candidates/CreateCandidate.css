@@ -103,3 +103,108 @@
   border-color: var(--color-purple-primary);
   color: var(--color-purple-primary);
 }
+
+/* ── Zona de subida de CV ── */
+.cv-upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 24px 16px;
+  border: 2px dashed var(--border-color);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  background: var(--bg-secondary);
+  margin-bottom: 4px;
+}
+
+.cv-upload-zone:hover,
+.cv-upload-zone--drag {
+  border-color: var(--color-purple-primary, #5b3fff);
+  background: rgba(91, 63, 255, 0.05);
+}
+
+.cv-upload-icon {
+  font-size: 28px;
+  color: var(--color-purple-primary, #5b3fff);
+  opacity: 0.8;
+}
+
+.cv-upload-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cv-upload-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Estado: parseando */
+.cv-parsing-state {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  font-size: 13px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.text-purple {
+  color: var(--color-purple-primary, #5b3fff) !important;
+}
+
+/* Banner de éxito */
+.cv-success-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(0, 212, 255, 0.08);
+  border: 1px solid rgba(0, 212, 255, 0.25);
+  font-size: 13px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.cv-success-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cv-success-banner .bi-check-circle-fill {
+  color: #10b981;
+  font-size: 15px;
+}
+
+.cv-clear-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.cv-clear-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* Separador visual entre CV y formulario */
+.cv-divider {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
