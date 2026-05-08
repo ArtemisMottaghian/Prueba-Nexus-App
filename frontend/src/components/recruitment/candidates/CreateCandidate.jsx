@@ -1,209 +1,9 @@
 import { useState, useRef } from 'react';
-import * as pdfjsLib from 'pdfjs-dist';
-import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import { candidatesService } from '../../../services/candidatesService';
 import './CreateCandidate.css';
 
-// Configurar el worker de PDF.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl;
-
-// ─── Utilidad: extraer texto de un PDF ────────────────────────────────────────
-async function extractTextFromPDF(file) {
-  const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-  let fullText = '';
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const textContent = await page.getTextContent();
-    const pageText = textContent.items.map((item) => item.str).join(' ');
-    fullText += pageText + '\n';
-  }
-  return fullText;
-}
-
-// ─── Utilidad: parsear el texto del CV (optimizado para LinkedIn) ─────────────
-function parseCVText(text) {
-  const lines = text
-    .split('\n')
-    .map((l) => l.trim())
-    .filter(Boolean);
-
-  // ── Nombre: LinkedIn siempre pone el nombre en la primera línea ──
-  let name = '';
-  const skipNamePatterns =
-    /curriculum|cv\b|resume|perfil|experiencia|formación|education|summary|@|http|linkedin|teléfono|phone|\+\d/i;
-  for (const line of lines.slice(0, 10)) {
-    if (skipNamePatterns.test(line)) continue;
-    if (/^\d/.test(line)) continue;
-    if (line.length < 3 || line.length > 60) continue;
-    const words = line.split(/\s+/);
-    if (
-      words.length >= 2 &&
-      words.length <= 6 &&
-      words.every((w) => /^[A-ZÁÉÍÓÚÜÑa-záéíóúüñ''-]+$/i.test(w))
-    ) {
-      name = line;
-      break;
-    }
-  }
-
-  // ── Localización: formato LinkedIn "Ciudad, Comunidad, País" ──
-  let location = '';
-  const locationLabelMatch = text.match(
-    /(?:ubicación|localización|location|ciudad|city|dirección)[:\s]+([^\n·|]+)/i
-  );
-  if (locationLabelMatch) {
-    // Quedarse solo con la ciudad (antes de la primera coma)
-    location = locationLabelMatch[1].split(',')[0].trim();
-  } else {
-    const cities =
-      /\b(Madrid|Barcelona|Valencia|Sevilla|Bilbao|Zaragoza|Málaga|Murcia|Alicante|Córdoba|Valladolid|Vigo|Granada|Oviedo|Vitoria|Coruña|Pamplona|Almería|Santander|Burgos|Toledo|León|Alcalá|Remoto|Remote)\b/i;
-    const cityMatch = text.match(cities);
-    if (cityMatch) location = cityMatch[1];
-  }
-
-  // ── Años de experiencia: suma las duraciones LinkedIn "· X años Y meses" ──
-  let experience = '';
-  let totalMonths = 0;
-  const durationRegex =
-    /·\s*(?:(\d+)\s*a(?:ño|no)s?\s*)?(?:(\d+)\s*mes(?:es)?)?/gi;
-  let dMatch;
-  while ((dMatch = durationRegex.exec(text)) !== null) {
-    const yrs = parseInt(dMatch[1] || '0', 10);
-    const mos = parseInt(dMatch[2] || '0', 10);
-    if (yrs > 0 || mos > 0) totalMonths += yrs * 12 + mos;
-  }
-  if (totalMonths > 0) {
-    experience = String(Math.round(totalMonths / 12));
-  } else {
-    // Fallback para CVs que escriben "X años de experiencia"
-    const expFallbacks = [
-      /(\d+)\+?\s*años?\s*(?:de\s*)?experiencia/i,
-      /experiencia[:\s]+(\d+)\+?\s*años?/i,
-      /(\d+)\+?\s*years?\s*(?:of\s*)?experience/i,
-    ];
-    for (const p of expFallbacks) {
-      const m = text.match(p);
-      if (m) {
-        experience = m[1];
-        break;
-      }
-    }
-  }
-
-  // ── Formación ──
-  let education = '';
-  const educationMap = [
-    { pattern: /m[áa]ster\b|master\b|\bmsc\b/i, value: 'Máster' },
-    {
-      pattern:
-        /grado universitario|grado en\b|ingenier[íi]a|licenciatura|arquitectura/i,
-      value: 'Grado Universitario',
-    },
-    {
-      pattern: /fp\s*grado\s*superior|cfgs|ciclo.*grado\s*superior/i,
-      value: 'FP Grado Superior',
-    },
-    {
-      pattern: /fp\s*grado\s*medio|cfgm|ciclo.*grado\s*medio/i,
-      value: 'FP Grado Medio',
-    },
-    { pattern: /bootcamp/i, value: 'Bootcamp' },
-    { pattern: /autodidacta|self.?taught/i, value: 'Autodidacta' },
-  ];
-  for (const { pattern, value } of educationMap) {
-    if (pattern.test(text)) {
-      education = value;
-      break;
-    }
-  }
-
-  // ── Habilidades: primero busca la sección "Aptitudes" de LinkedIn ──
-  let skills = '';
-  const aptitudesMatch = text.match(
-    /aptitudes?(?:\s+principales?)?[\s\n:·]+([^\n].+?)(?=\n[A-ZÁÉÍÓÚ][a-záéíóúñ\s]{3,}\n|$)/is
-  );
-  if (aptitudesMatch) {
-    const skillsList = aptitudesMatch[1]
-      .split(/[\n,·•]/)
-      .map((s) => s.trim())
-      .filter((s) => s.length > 1 && s.length < 50)
-      .slice(0, 10);
-    if (skillsList.length > 0) skills = skillsList.join(', ');
-  }
-
-  // Fallback: keywords tecnológicos si no encontró sección Aptitudes
-  if (!skills) {
-    const techKeywords = [
-      'JavaScript',
-      'TypeScript',
-      'React',
-      'Vue',
-      'Angular',
-      'Node.js',
-      'Python',
-      'Java',
-      'PHP',
-      'Laravel',
-      'Django',
-      'Flask',
-      'SQL',
-      'MySQL',
-      'PostgreSQL',
-      'MongoDB',
-      'Docker',
-      'Kubernetes',
-      'AWS',
-      'Azure',
-      'GCP',
-      'Git',
-      'GitHub',
-      'GitLab',
-      'HTML',
-      'CSS',
-      'SCSS',
-      'Tailwind',
-      'Bootstrap',
-      'REST',
-      'GraphQL',
-      'Figma',
-      'Photoshop',
-      'Illustrator',
-      'Agile',
-      'Scrum',
-      'Jira',
-      'Linux',
-      'C#',
-      'C++',
-      'Go',
-      'Swift',
-      'Kotlin',
-      'Spring',
-      'Express',
-      'Next.js',
-      'Nuxt',
-      'Redux',
-      'Webpack',
-      'Vite',
-      'Firebase',
-      'Redis',
-      'Elasticsearch',
-      'Kafka',
-      'Liderazgo',
-      'Comunicación',
-    ];
-    const found = techKeywords.filter((kw) =>
-      new RegExp(
-        `\\b${kw.replace(/\./g, '\\.').replace(/\+/g, '\\+')}\\b`,
-        'i'
-      ).test(text)
-    );
-    skills = found.slice(0, 10).join(', ');
-  }
-
-  return { name, location, experience, education, skills };
-}
-
 // ─── Componente principal ─────────────────────────────────────────────────────
+
 export default function CreateCandidate({ onClose, onSave }) {
   const [formData, setFormData] = useState({
     name: '',
@@ -254,21 +54,13 @@ export default function CreateCandidate({ onClose, onSave }) {
     setCvExtracted(false);
 
     try {
-      const text = await extractTextFromPDF(file);
-      const parsed = parseCVText(text);
-
-      setFormData((prev) => ({
-        name: parsed.name || prev.name,
-        education: parsed.education || prev.education,
-        location: parsed.location || prev.location,
-        experience: parsed.experience || prev.experience,
-        skills: parsed.skills || prev.skills,
-      }));
-      setCvExtracted(true);
+      // El backend crea el candidato directamente y devuelve el objeto creado
+      const createdCandidate = await candidatesService.processCV(file);
+      // Llamamos a onSave con el candidato ya creado en BD para añadirlo a la lista
+      onSave(createdCandidate);
     } catch (err) {
-      console.error('Error al leer el CV:', err);
+      console.error('Error al procesar el CV:', err);
       setCvFileName('');
-    } finally {
       setIsParsing(false);
     }
   };
