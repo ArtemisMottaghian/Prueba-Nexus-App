@@ -7,7 +7,6 @@ class EmailTemplateSlug(str, Enum):
     PROSPECT_VACANCY = "prospect_vacancy"
     VACANCY_CONFIRMATION = "vacancy_confirmation"
 
-
 class EmailTemplate(Base):
     """
     Representa una plantilla de correo electrónico en la base de datos.

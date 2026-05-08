@@ -1,8 +1,12 @@
 from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
+from app.db.connection import get_db
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
 from app.core.config import settings
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.models.user_model import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/api/login')
 
@@ -29,3 +33,28 @@ def get_current_user(token:str = Depends(oauth2_scheme)):
             headers={'WWW-Authenticate': 'Bearer'}
         )
     return payload
+
+
+async def get_current_user_db(
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(get_current_user),
+):
+    """
+    Nueva dependencia que transforma el payload del token
+    en un objeto de usuario real de la base de datos.
+    """
+    user_email = payload.get("sub")
+    if not user_email:
+        raise HTTPException(
+            status_code=401, detail="Token sin identificación de usuario"
+        )
+
+    result = await db.execute(select(User).where(User.email == user_email))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=404, detail="Usuario no encontrado en el sistema"
+        )
+
+    return user
