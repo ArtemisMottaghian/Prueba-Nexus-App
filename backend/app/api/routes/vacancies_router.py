@@ -53,6 +53,14 @@ async def read_vacancies_filtered(
     return vacancies
 
 # -----------------
+# Obtener la localizacion de las vacantes
+# GET /api/vacancies/locations
+# -----------------
+@router.get("/locations", response_model=List[str])
+async def read_locations(db: AsyncSession = Depends(get_db)):
+    return await vacancies_service.get_distinct_locations(db)
+
+# -----------------
 # Obtener candidates para una vacante
 # GET /api/vacancies/{vacancy_id}/candidates
 # -----------------

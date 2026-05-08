@@ -31,6 +31,7 @@ class Company(Base):
     id = Column(BigInteger, primary_key=True, index=True)
     name = Column(String(255), unique=True, nullable=False)
     company_description = Column(Text)
+    entity_type = Column(String(50), nullable=True)
     cif = Column(String(50))
     sector = Column(String(255))
     website = Column(String(255))
@@ -42,7 +43,8 @@ class Company(Base):
     )
 
     source_id = Column(Integer, ForeignKey("job_portals.id"))
-    original_offer_id = Column(String, nullable=True)
+    original_offer_id = Column(BigInteger, ForeignKey("job_offers.id"), nullable=True)
+    managed_by_id = Column(BigInteger, ForeignKey("users.id"), nullable=True)
 
     notes = Column(Text)
 
@@ -57,6 +59,7 @@ class Company(Base):
     )
 
     comments = relationship("CompanyComment", back_populates="company")
+    manager = relationship("User", foreign_keys=[managed_by_id])
     contacts = relationship("Contact", back_populates="company")
     tracking_history = relationship("TrackingHistory", back_populates="company")
     offers = relationship("JobOffer", back_populates="company", foreign_keys="[JobOffer.company_id]")

@@ -16,6 +16,27 @@ from app.schemas.candidates_schemas import CandidateCreate
 
 from app.db.connection import AsyncSessionLocal
 from app.services.scrapers.scraper_candidates_github.utils import upsert_scraped_candidate 
+from datetime import datetime, timezone
+from sqlalchemy import select
+from app.models.candidate_portal_model import CandidatePortal
+
+
+
+
+async def update_candidate_portal_last_run(name: str, status: str = "ok") -> None:
+    """Actualiza la fecha y estado de la última ejecución del scraper de candidatos."""
+    try:
+        async with AsyncSessionLocal() as session:
+            query = select(CandidatePortal).where(CandidatePortal.name.ilike(f"%{name}%"))
+            result = await session.execute(query)
+            portal = result.scalar_one_or_none()
+            if portal:
+                portal.last_run_at = datetime.now(timezone.utc)
+                portal.last_run_status = status
+                await session.commit()
+    except Exception as e:
+        print(f"Error actualizando last_run de {name}: {e}")
+
 
 async def gather_raw_candidates() -> list[dict]:
     """
@@ -48,9 +69,11 @@ async def gather_raw_candidates() -> list[dict]:
             if isinstance(result, list):
                 raw_candidates.extend(result)
                 print(f"{name.upper()} terminado. {len(result)} perfiles extraídos.")
+                await update_candidate_portal_last_run(name, status="ok")
 
         except Exception as e:
             print(f"Error crítico en {name.upper()}: {e}")
+            await update_candidate_portal_last_run(name, status="error")
 
     return raw_candidates
 

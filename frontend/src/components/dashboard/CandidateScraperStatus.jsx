@@ -11,19 +11,12 @@ const STATUS_CONFIG = {
     textCls: 'text-success',
     label: 'Sistema Online',
   },
-  slow: {
-    cls: 'status-warning',
-    iconCls: 'bg-warning-soft',
-    icon: 'bi-exclamation-triangle-fill',
-    textCls: 'text-warning',
-    label: 'Lentitud detectada',
-  },
-  offline: {
+  error: {
     cls: 'status-danger',
     iconCls: 'bg-danger-soft',
-    icon: 'bi-wifi-off',
+    icon: 'bi-x-circle-fill',
     textCls: 'text-danger',
-    label: 'Sin actividad reciente',
+    label: 'Ultima ejecucion con error',
   },
   unknown: {
     cls: 'status-secondary',
@@ -57,9 +50,7 @@ export default function CandidateScraperStatus() {
       try {
         setLoading(true);
         setError(null);
-        const res = await authFetch(
-          ENDPOINTS.recruitment.candidatos.scraperStatus
-        );
+        const res = await authFetch(ENDPOINTS.metrics.candidatesStatus);
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
         }
@@ -105,8 +96,15 @@ export default function CandidateScraperStatus() {
     );
   }
 
-  const scrapers = data?.scrapers;
-  if (!Array.isArray(scrapers) || scrapers.length === 0) {
+  const scrapers = Array.isArray(data?.scrapers)
+    ? data.scrapers
+    : data && typeof data === 'object'
+      ? Object.entries(data).map(([key, item]) => ({
+          name: item?.name || key,
+          ...item,
+        }))
+      : [];
+  if (scrapers.length === 0) {
     return (
       <section className="candidate-scraper-status mb-4">
         <h3 className="candidate-scraper-status__title h6 fw-semibold mb-3">
@@ -126,9 +124,10 @@ export default function CandidateScraperStatus() {
       </h3>
       <div className="row g-3">
         {scrapers.map((item) => {
-          const cfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.unknown;
-          const fecha = formatDate(item.last_extraction);
-          const total = item.total_candidates;
+          const statusKey = String(item.status || '').toLowerCase();
+          const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.unknown;
+          const fecha = formatDate(item.last_insertion || item.last_extraction);
+          const total = item.candidates_today ?? item.total_candidates;
 
           return (
             <div className="col-12 col-md-4" key={item.name}>
@@ -146,11 +145,11 @@ export default function CandidateScraperStatus() {
                     </span>
                     <div className="text-muted candidate-scraper-status__meta">
                       {fecha
-                        ? `Extracción: ${fecha}`
-                        : 'Sin extracciones registradas'}
+                        ? `Inserción: ${fecha}`
+                        : 'Sin inserciones registradas'}
                     </div>
                     <div className="text-muted candidate-scraper-status__meta">
-                      Candidatos: {formatCount(total)}
+                      Candidatos hoy: {formatCount(total)}
                     </div>
                   </div>
                 </div>

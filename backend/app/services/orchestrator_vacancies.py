@@ -42,14 +42,14 @@ async def gather_raw_offers() -> list[dict]:
     # Lista de scrapers a ejecutar (Comenta los que no quieras usar)
     scrapers = [
         ("adzuna", extract_adzuna),
-        #("linkedin", extract_linked),
-        #("infojobs", extract_infojobs),
+        ("linkedin", extract_linked),
+        ("infojobs", extract_infojobs),
     ]
 
     for name, scraper_func in scrapers:
         print(f"\nIniciando scraper: {name.upper()}...")
         try:
-            result = await asyncio.wait_for(scraper_func(), timeout=900)  # 5 min máximo
+            result = await asyncio.wait_for(scraper_func(), timeout=1800)  # 30 min máximo
 
             if isinstance(result, list):
                 raw_offers.extend(result)
@@ -251,7 +251,7 @@ async def process_and_save_offers(valid_offers: list[ScrapedJobOffer]):
                                 insert(Company)
                                 .values(
                                     name=company_name,
-                                    original_offer_id=offer_data.get("external_id"),
+                                    original_offer_id=int(offer_data.get("external_id")) if offer_data.get("external_id") else None,
                                     cif=enriched_company_data.get("cif"),
                                     website=enriched_company_data.get("website"),
                                     sector=enriched_company_data.get("sector"),

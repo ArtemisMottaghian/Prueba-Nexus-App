@@ -209,11 +209,13 @@ export default function LoginForm() {
 const getDefaultRouteForRole = (role) => {
   switch (role) {
     case 'admin':
-      return '/dashboard';
+      return '/';
     case 'hr_manager':
-      return '/candidates';
+      return '/';
+    case 'negocio':
+      return '/';
     case 'company':
-      return '/clientes';
+      return '/';
     default:
       return '/';
   }
