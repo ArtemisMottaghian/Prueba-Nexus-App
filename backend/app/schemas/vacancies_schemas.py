@@ -115,7 +115,7 @@ class CandidateTrackingOut(BaseModel):
     name: str          
     phase: str         
     result: Optional[str] = None  
-    notes: Optional[str] = ""     
+    notes: Optional[List[str]] = []     
     date: datetime     
 
     model_config = ConfigDict(from_attributes=True)
@@ -125,7 +125,7 @@ class VacancyNoteOut(BaseModel):
     name: str
     phase: str
     result: Optional[str] = None
-    notes: str
+    notes: List[str]
     date: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -133,10 +133,10 @@ class VacancyNoteOut(BaseModel):
 class VacancyNoteCreate(BaseModel):
     phase: str
     result: Optional[str] = None
-    notes: str
+    notes: List[str]
 
 class CandidateTrackingCreate(BaseModel):
     name: str
     phase: str
     result: Optional[str] = None
-    notes: Optional[str] = ""
+    notes: Optional[List[str]] = []
