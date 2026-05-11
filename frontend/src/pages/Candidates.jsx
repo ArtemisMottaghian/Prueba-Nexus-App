@@ -8,8 +8,8 @@ import { usersService } from '../services/userManagementService';
 import { CANDIDATE_STATUS_OPTIONS } from '../constants/candidateStatus';
 import { useAuth } from '../context/AuthContext';
 
-// NUEVO: Importamos el componente con el nombre y ruta correctos
 import CreateCandidate from '../components/recruitment/candidates/CreateCandidate';
+import EditCandidate from '../components/recruitment/candidates/EditCandidate'; // <-- IMPORTAMOS EL MODAL DE EDITAR
 
 const ITEMS_POR_PAGINA = 10;
 
@@ -51,8 +51,8 @@ export default function Candidates() {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showDescartadas, setShowDescartadas] = useState(false);
 
-  // NUEVO: Estado para controlar si CreateCandidate está abierto o cerrado
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingCandidate, setEditingCandidate] = useState(null); // <-- ESTADO PARA EDITAR
 
   const apiListQuery = useMemo(
     () =>
@@ -124,11 +124,45 @@ export default function Candidates() {
     };
   }, [apiListQuery, isNegocio]);
 
-  // NUEVO: Función para manejar el guardado del nuevo candidato
   const handleSaveNewCandidate = (newCandidateData) => {
-    // El candidato ya viene creado en BD (procesado por el backend desde el CV)
     setCandidates((prev) => [newCandidateData, ...prev]);
     setIsCreateModalOpen(false);
+  };
+
+  // --- ELIMINAR CANDIDATO ---
+  const handleDeleteCandidate = async (candidateId) => {
+    const confirmar = window.confirm(
+      '⚠️ ¿Estás seguro de que deseas eliminar este candidato definitivamente? Esta acción no se puede deshacer.'
+    );
+    if (!confirmar) return;
+
+    try {
+      await candidatesService.deleteCandidate(candidateId);
+      setCandidates((prev) => prev.filter((c) => c.id !== candidateId));
+      setSelectedCandidates((prev) => prev.filter((id) => id !== candidateId));
+    } catch (error) {
+      console.error('Error al eliminar el candidato:', error);
+      alert('Hubo un problema al intentar eliminar el candidato.');
+    }
+  };
+
+  // --- GUARDAR EDICIÓN DE CANDIDATO ---
+  const handleSaveEditCandidate = async (candidateId, updatedData) => {
+    try {
+      const updatedCandidate = await candidatesService.updateCandidate(
+        candidateId,
+        updatedData
+      );
+
+      setCandidates((prev) =>
+        prev.map((c) => (c.id === candidateId ? updatedCandidate : c))
+      );
+
+      setEditingCandidate(null);
+    } catch (error) {
+      console.error('Error al editar el candidato', error);
+      alert('Hubo un error al actualizar el candidato: ' + error.message);
+    }
   };
 
   const handleBulkAssign = async (targetUserId) => {
@@ -144,7 +178,6 @@ export default function Candidates() {
         targetUserId
       );
       setSelectedCandidates([]);
-      // You can add a toast or alert here if desired
     } catch (err) {
       console.error(err);
       alert('Error al asignar candidatos');
@@ -395,7 +428,6 @@ export default function Candidates() {
           </div>
 
           <div className="d-flex gap-2">
-            {/* NUEVO: Botón principal para abrir CreateCandidate */}
             <button
               className="btn btn-sm btn-primary"
               onClick={() => setIsCreateModalOpen(true)}
@@ -444,6 +476,8 @@ export default function Candidates() {
           onUpdateCandidateStatus={handleUpdateCandidateStatus}
           onToggleFavorite={handleToggleFavorite}
           onVerify={canVerifyCandidates ? handleVerify : undefined}
+          onDeleteCandidate={handleDeleteCandidate}
+          onEditCandidate={setEditingCandidate} // <--- AQUÍ ESTÁ LA CONEXIÓN CLAVE
         />
       )}
       {!loading && totalPaginas > 1 && (
@@ -512,11 +546,19 @@ export default function Candidates() {
         </div>
       )}
 
-      {/* NUEVO: Renderizamos el componente CreateCandidate si el estado es true */}
       {isCreateModalOpen && (
         <CreateCandidate
           onClose={() => setIsCreateModalOpen(false)}
           onSave={handleSaveNewCandidate}
+        />
+      )}
+
+      {/* RENDERIZAMOS EL MODAL DE EDITAR SI HAY UN CANDIDATO SELECCIONADO */}
+      {editingCandidate && (
+        <EditCandidate
+          candidate={editingCandidate}
+          onClose={() => setEditingCandidate(null)}
+          onSave={handleSaveEditCandidate}
         />
       )}
     </>
