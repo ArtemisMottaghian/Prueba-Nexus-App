@@ -11,6 +11,8 @@ export default function CandidateGrid({
   onUpdateCandidateStatus,
   onToggleFavorite,
   onVerify,
+  onDeleteCandidate, // <-- Recibe la función de borrar desde Candidates.jsx
+  onEditCandidate, // <-- Recibe la función de editar desde Candidates.jsx
 }) {
   const [viewMode, setViewMode] = useState('grid');
   const [selectedCandidate, setSelectedCandidate] = useState(null);
@@ -85,6 +87,8 @@ export default function CandidateGrid({
                 onUpdateStatus={onUpdateCandidateStatus}
                 onToggleFavorite={onToggleFavorite}
                 onVerify={onVerify}
+                onDeleteCandidate={onDeleteCandidate} // <-- Pasa la función a la tarjeta
+                onEditCandidate={onEditCandidate} // <-- Pasa la función a la tarjeta
               />
             </div>
           ))
@@ -102,6 +106,8 @@ export default function CandidateGrid({
           onUpdateStatus={onUpdateCandidateStatus}
           onToggleFavorite={onToggleFavorite}
           onVerify={onVerify}
+          onDeleteCandidate={onDeleteCandidate} // <-- Pasa la función al modal
+          onEditCandidate={onEditCandidate} // <-- Pasa la función al modal
         />
       )}
     </div>
