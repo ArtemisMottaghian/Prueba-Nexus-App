@@ -5,6 +5,7 @@ from sqlalchemy import select
 from app.core.jwt import get_current_user_db
 from app.models.user_model import User
 from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException, Request
+from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from google_auth_oauthlib.flow import Flow
 
@@ -69,12 +70,14 @@ async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.id == int(user_id)))
     user = result.scalar_one_or_none()
 
-    if user:
-        user.google_refresh_token = credentials.refresh_token  # 👈 Guardamos el token
-        await db.commit()
-        return {"status": "ok", "message": "¡Gmail conectado con éxito!"}
+    base_url = os.getenv("FRONTEND_URL", "https://nexus.ara-tech.es").rstrip("/")
+    target_url = f"{base_url}/cuenta"
 
-    return {"status": "error", "message": "Usuario no encontrado"}
+    if user:
+        user.google_refresh_token = credentials.refresh_token
+        await db.commit()
+
+        return RedirectResponse(url=f"{target_url}?google_success=true")
 
 
 @router.post("/send-prospect", status_code=202)
@@ -105,3 +108,28 @@ async def send_manual_prospect_template(
         "status": "accepted",
         "message": "El ha sido enviado",
     }
+
+
+@router.get("/google/status")
+async def get_google_status(current_user: User = Depends(get_current_user_db)):
+    """
+    Indica al frontend si el usuario actual tiene su cuenta vinculada.
+    """
+    return {
+        "is_linked": current_user.google_refresh_token is not None,
+        "email": current_user.email,
+    }
+
+
+@router.delete("/google/unlink")
+async def unlink_google_account(
+    current_user: User = Depends(get_current_user_db),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Borra el token de Google del usuario, desvinculando su cuenta.
+    """
+    current_user.google_refresh_token = None
+    await db.commit()
+
+    return {"message": "Cuenta de Google desvinculada correctamente"}
