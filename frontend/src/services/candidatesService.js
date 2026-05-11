@@ -2,7 +2,7 @@ import { ENDPOINTS, authFetch } from './api';
 
 const mapCandidateData = (c) => ({
   id: c.id,
-  name: c.name,
+  name: c.name || `${c.first_name || ''} ${c.last_name || ''}`.trim(),
   specialty: c.specialty || 'N/A',
   location: c.location || 'Remoto',
   status: c.status,
@@ -32,6 +32,25 @@ function buildListUrl(query = {}) {
 }
 
 export const candidatesService = {
+  // Subir CV en PDF: el backend extrae los datos con Gemini y crea el candidato
+  processCV: async (pdfFile) => {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('pdf_file', pdfFile);
+
+    const response = await fetch(ENDPOINTS.recruitment.candidatos.processCV, {
+      method: 'POST',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+    const data = await response.json();
+    return mapCandidateData(data);
+  },
+
   getAllCandidates: async (query) => {
     try {
       const response = await authFetch(buildListUrl(query || {}));

@@ -125,17 +125,10 @@ export default function Candidates() {
   }, [apiListQuery, isNegocio]);
 
   // NUEVO: Función para manejar el guardado del nuevo candidato
-  const handleSaveNewCandidate = async (newCandidateData) => {
-    try {
-      // Aquí conectaremos con tu candidatesService más adelante
-      // const createdCandidate = await candidatesService.createCandidate(newCandidateData);
-      // setCandidates((prev) => [createdCandidate, ...prev]);
-
-      console.log('Candidato listo para guardar:', newCandidateData);
-      setIsCreateModalOpen(false); // Cerramos tras guardar
-    } catch (error) {
-      console.error('Error al crear el candidato', error);
-    }
+  const handleSaveNewCandidate = (newCandidateData) => {
+    // El candidato ya viene creado en BD (procesado por el backend desde el CV)
+    setCandidates((prev) => [newCandidateData, ...prev]);
+    setIsCreateModalOpen(false);
   };
 
   const handleBulkAssign = async (targetUserId) => {

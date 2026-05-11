@@ -48,6 +48,7 @@ export const ENDPOINTS = {
   recruitment: {
     candidatos: {
       list: `${BASE_URL}/api/candidates`,
+      processCV: `${BASE_URL}/api/candidates/process_cv`,
       detail: (id) => `${BASE_URL}/api/candidates/${id}`,
       updateStatus: (id) => `${BASE_URL}/api/candidates/${id}/status`,
       delete: (id) => `${BASE_URL}/api/candidates/${id}`,
