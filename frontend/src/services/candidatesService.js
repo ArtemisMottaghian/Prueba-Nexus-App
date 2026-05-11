@@ -241,7 +241,7 @@ export const candidatesService = {
     }
   },
 
-  // --- EDITAR CANDIDATO EXISTENTE (NUEVO) ---
+// --- EDITAR CANDIDATO EXISTENTE ---
   updateCandidate: async (id, candidateData) => {
     try {
       const response = await authFetch(`/api/candidates/${id}`, {
@@ -253,12 +253,15 @@ export const candidatesService = {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Error al actualizar el candidato');
+        throw new Error('Error al actualizar el candidato en el servidor');
       }
 
-      const data = await response.json();
-      return mapCandidateData(data);
+      // Leemos la respuesta como texto primero en lugar de forzar JSON
+      const text = await response.text();
+      // Si hay texto, lo parseamos, si está vacío (FastAPI no devuelve nada), devolvemos null
+      const data = text ? JSON.parse(text) : null; 
+      
+      return data;
     } catch (error) {
       console.error(`Error en updateCandidate para el ID ${id}:`, error);
       throw error;

@@ -146,18 +146,30 @@ export default function Candidates() {
     }
   };
 
-  // --- GUARDAR EDICIÓN DE CANDIDATO ---
+// --- GUARDAR EDICIÓN DE CANDIDATO ---
   const handleSaveEditCandidate = async (candidateId, updatedData) => {
     try {
-      const updatedCandidate = await candidatesService.updateCandidate(
-        candidateId,
-        updatedData
+      // 1. Enviamos los datos al servidor (ya no fallará si no hay JSON)
+      await candidatesService.updateCandidate(candidateId, updatedData);
+      
+      // 2. Actualizamos el estado local fusionando lo antiguo con lo nuevo
+      setCandidates((prev) => 
+        prev.map((c) => {
+          if (c.id === candidateId) {
+            return {
+              ...c,
+              ...updatedData, // Metemos los datos nuevos
+              // Reconstruimos el nombre completo para la tarjeta
+              name: `${updatedData.first_name || ''} ${updatedData.last_name || ''}`.trim() || c.name,
+              // Mapeamos 'skills' al campo 'specialty' que usa la tarjeta visualmente
+              specialty: updatedData.skills || c.specialty
+            };
+          }
+          return c;
+        })
       );
-
-      setCandidates((prev) =>
-        prev.map((c) => (c.id === candidateId ? updatedCandidate : c))
-      );
-
+      
+      // 3. Cerramos el modal
       setEditingCandidate(null);
     } catch (error) {
       console.error('Error al editar el candidato', error);
