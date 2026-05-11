@@ -5,6 +5,9 @@ from sqlalchemy import Column, Integer, String, Text, DateTime
 from sqlalchemy.sql import func
 from app.db.base import Base
 
+class EmailTemplateSlug(str, Enum):
+    PROSPECT_VACANCY = "prospect_vacancy"
+    VACANCY_CONFIRMATION = "vacancy_confirmation"
 
 class EmailTemplateSlug(str, Enum):
     PROSPECT_VACANCY = "prospect_vacancy"

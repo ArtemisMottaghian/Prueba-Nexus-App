@@ -1,14 +1,19 @@
 import os
-import smtplib
+import base64
 from email.message import EmailMessage
 from backend.app.db.connection import AsyncSessionLocal
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+
 from app.models.email_template_model import EmailTemplate, EmailTemplateSlug
+from app.models.user_model import User
 
 
 async def send_company_vacancy_email(
-    db: AsyncSession, company_email: str, company_name: str, job_title: str
+    db: AsyncSession, user: User, company_email: str, company_name: str, job_title: str
 ):
     """
     Busca la plantilla de confirmación de vacante, personaliza el contenido y envía el email.
@@ -30,7 +35,9 @@ async def send_company_vacancy_email(
     template = result.scalar_one_or_none()
 
     if not template:
-        print(f"[ERROR] No se encontró la plantilla '{EmailTemplateSlug.PROSPECT_VACANCY}' en la BBDD")
+        print(
+            f"[ERROR] No se encontró la plantilla '{EmailTemplateSlug.PROSPECT_VACANCY}' en la BBDD"
+        )
         return False
 
     final_subject = template.subject.format(job_title=job_title)
@@ -38,7 +45,7 @@ async def send_company_vacancy_email(
 
     msg = EmailMessage()
     msg["Subject"] = final_subject
-    msg["From"] = os.getenv("SMTP_USER", "no-reply@nexus.com")
+    msg["From"] = user.email
     msg["To"] = company_email
     msg.set_content("Por favor, visualiza este mensaje en formato HTML.")
     msg.add_alternative(final_body, subtype="html")
@@ -46,25 +53,37 @@ async def send_company_vacancy_email(
     mode = os.getenv("EMAIL_MODE", "mock").lower()
 
     if mode == "real":
+
+        if not user.google_refresh_token:
+            print(
+                f"[ERROR] El usuario {user.email} no tiene cuenta de Gmail vinculada."
+            )
+            return False
+
         try:
             print(
                 f"[EMAIL] Conectando al servidor SMTP para enviar a {company_email}..."
             )
 
-            smtp_server = os.getenv("SMTP_SERVER")
-            smtp_port = int(os.getenv("SMTP_PORT", 465))
-            smtp_user = os.getenv("SMTP_USER")
-            smtp_password = os.getenv("SMTP_PASSWORD")
+            creds = Credentials(
+                token=None,
+                refresh_token=user.google_refresh_token,
+                token_uri="https://oauth2.googleapis.com/token",
+                client_id=os.getenv("GOOGLE_CLIENT_ID"),
+                client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+            )
 
-            with smtplib.SMTP_SSL(smtp_server, smtp_port) as server:
-                server.login(smtp_user, smtp_password)
-                server.send_message(msg)
+            gmail_service = build("gmail", "v1", credentials=creds)
 
-            print(f"[INFO] Email enviado de verdad con éxito a {company_email}")
+            raw_message = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+            body = {"raw": raw_message}
+
+            gmail_service.users().messages().send(userId="me", body=body).execute()
+
             return True
 
         except Exception as e:
-            print(f"[ERROR] Fallo crítico al enviar el email real: {e}")
+            print(f"[ERROR] Fallo crítico al enviar el email: {e}")
             return False
 
     else:
@@ -74,10 +93,9 @@ async def send_company_vacancy_email(
 
         return True
 
+
 async def send_company_vacancy_email_standalone(
-        company_email: str,
-        company_name: str,
-        job_title: str
+    user: User, company_email: str, company_name: str, job_title: str
 ):
     """
     Función envoltorio para tareas en segundo plano (Background Tasks / asyncio).
