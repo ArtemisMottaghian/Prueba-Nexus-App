@@ -1,44 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import './EditCandidate.css';
 
 export default function EditCandidate({ candidate, onClose, onSave }) {
+  // 1. Preparamos el nombre antes de inicializar el estado
+  const nameParts = (candidate?.name || '').split(' ');
+  const fName = nameParts[0] || '';
+  const lName = nameParts.slice(1).join(' ') || '';
+
+  // 2. Metemos los datos del candidato DIRECTAMENTE en el estado inicial
   const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    email: '',
-    phone: '',
-    candidate_url: '',
-    cv_url: '',
-    location: '',
-    experience: '',
-    skills: '',
-    notes: '',
+    first_name: fName,
+    last_name: lName,
+    email: candidate?.email || '',
+    phone: candidate?.phone || '',
+    candidate_url: candidate?.candidate_url || '',
+    cv_url: candidate?.cv_url || '',
+    location: candidate?.location || '',
+    experience: candidate?.experience || '',
+    skills: candidate?.specialty || '',
+    notes: candidate?.notes || '',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Rellenamos el formulario con los datos actuales del candidato al abrirlo
-  useEffect(() => {
-    if (candidate) {
-      // Separamos el nombre completo en nombre y apellidos por si acaso
-      const nameParts = (candidate.name || '').split(' ');
-      const fName = nameParts[0] || '';
-      const lName = nameParts.slice(1).join(' ') || '';
-
-      setFormData({
-        first_name: fName,
-        last_name: lName,
-        email: candidate.email || '',
-        phone: candidate.phone || '',
-        candidate_url: candidate.candidate_url || '',
-        cv_url: candidate.cv_url || '',
-        location: candidate.location || '',
-        experience: candidate.experience || '',
-        skills: candidate.specialty || '', // En tu grid lo llamas specialty
-        notes: candidate.notes || '',
-      });
-    }
-  }, [candidate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -62,7 +45,6 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
       experience: formData.experience.trim(),
     };
 
-    // Le pasamos el ID y los nuevos datos a la función padre
     await onSave(candidate.id, updatedData);
     setIsSubmitting(false);
   };
