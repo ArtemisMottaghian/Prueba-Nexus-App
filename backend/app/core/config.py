@@ -57,8 +57,8 @@ class Settings(BaseSettings):
     ]
 
 
-    LINKEDIN_SESSION_COOKIE:str
-    LINKEDIN_USER_AGENT:str
+    LINKEDIN_SESSION_COOKIE: str = ""
+    LINKEDIN_USER_AGENT: str = ""
 
     model_config = SettingsConfigDict(
         env_file=RUTA_ENV,

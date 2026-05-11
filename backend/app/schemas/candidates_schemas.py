@@ -82,7 +82,7 @@ class CandidateFrontendOut(BaseModel):
     status: str
     source: str
     experience: Optional[str] = "Consultar CV"
-    education: str
+    education: Optional[str] = None
     isAvailable: bool
     time: str
     is_favorite: bool = False

@@ -1,0 +1,94 @@
+/* Contenedor principal del modal */
+.custom-create-modal .modal-content {
+  background: var(--bg-primary, #ffffff);
+  border: 1px solid var(--border-color, #e9ecef);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Cabecera del modal */
+.custom-create-modal .modal-header {
+  border-bottom: 1px solid var(--border-color, #e9ecef);
+  background-color: rgba(124, 63, 255, 0.03); /* Un toque sutil morado de fondo */
+  padding: 1.5rem;
+}
+
+.custom-create-modal .modal-title {
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+/* Cuerpo del modal */
+.custom-create-modal .modal-body {
+  padding: 1.5rem;
+}
+
+/* Estilos de las etiquetas (Labels) */
+.custom-create-modal .form-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+/* Estilos de los inputs y textareas */
+.custom-create-modal .form-control,
+.custom-create-modal .form-select {
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #d1d5db);
+  padding: 0.6rem 1rem;
+  background-color: var(--bg-secondary, #f9fafb);
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+
+/* Efecto al hacer clic (Focus) en los inputs */
+.custom-create-modal .form-control:focus,
+.custom-create-modal .form-select:focus {
+  border-color: var(--color-purple-primary, #5b3fff);
+  box-shadow: 0 0 0 3px rgba(91, 63, 255, 0.15);
+  background-color: var(--bg-primary, #ffffff);
+  outline: none;
+}
+
+/* Pie del modal (Botones) */
+.custom-create-modal .modal-footer {
+  border-top: 1px solid var(--border-color, #e9ecef);
+  padding: 1.25rem 1.5rem;
+  background-color: var(--bg-secondary, #f8f9fa);
+}
+
+.custom-create-modal .btn {
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+/* ── COMPATIBILIDAD CON MODO OSCURO (Dark Mode) ── */
+[data-bs-theme='dark'] .custom-create-modal .modal-content {
+  background: var(--bg-secondary, #1f2937);
+  border-color: #374151;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+[data-bs-theme='dark'] .custom-create-modal .modal-header,
+[data-bs-theme='dark'] .custom-create-modal .modal-footer {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-color: #374151;
+}
+
+[data-bs-theme='dark'] .custom-create-modal .form-control,
+[data-bs-theme='dark'] .custom-create-modal .form-select {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #f3f4f6;
+}
+
+[data-bs-theme='dark'] .custom-create-modal .form-control:focus,
+[data-bs-theme='dark'] .custom-create-modal .form-select:focus {
+  background-color: #1f2937;
+  border-color: var(--color-purple-primary, #5b3fff);
+}
