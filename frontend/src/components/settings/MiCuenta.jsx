@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import EmailIntegration from './EmailIntegration';
 import './MiCuenta.css';
 
 const ROLE_META = {
@@ -306,6 +307,9 @@ export default function MiCuenta() {
             </div>
           </div>
         </div>
+
+        {/* Integración de Correo */}
+        <EmailIntegration />
 
         {/* Sesión activa */}
         <div className="cuenta-card">
