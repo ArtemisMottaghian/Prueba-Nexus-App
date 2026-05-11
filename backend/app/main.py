@@ -49,6 +49,9 @@ app.add_middleware(
 async def arrancar_servidor():
     print("Iniciando ")
 
+    if not settings.LINKEDIN_SESSION_COOKIE or not settings.LINKEDIN_USER_AGENT:
+        print("[WARNING] LINKEDIN_SESSION_COOKIE / LINKEDIN_USER_AGENT no definidos — scraper de LinkedIn y búsqueda de reclutadores (PhantomBuster) fallarán si se invocan.")
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
