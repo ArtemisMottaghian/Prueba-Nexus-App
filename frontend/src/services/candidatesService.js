@@ -241,7 +241,7 @@ export const candidatesService = {
     }
   },
 
-// --- EDITAR CANDIDATO EXISTENTE ---
+  // --- EDITAR CANDIDATO EXISTENTE ---
   updateCandidate: async (id, candidateData) => {
     try {
       const response = await authFetch(`/api/candidates/${id}`, {
@@ -259,8 +259,8 @@ export const candidatesService = {
       // Leemos la respuesta como texto primero en lugar de forzar JSON
       const text = await response.text();
       // Si hay texto, lo parseamos, si está vacío (FastAPI no devuelve nada), devolvemos null
-      const data = text ? JSON.parse(text) : null; 
-      
+      const data = text ? JSON.parse(text) : null;
+
       return data;
     } catch (error) {
       console.error(`Error en updateCandidate para el ID ${id}:`, error);
