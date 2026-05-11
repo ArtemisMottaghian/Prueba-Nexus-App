@@ -9,7 +9,8 @@ from app.db.base import Base
 class EmailTemplateSlug(str, Enum):
     PROSPECT_VACANCY = "prospect_vacancy"
     VACANCY_CONFIRMATION = "vacancy_confirmation"
-
+    VACANCY_ASSIGNED = "vacancy_assigned"
+    NEW_COMPANY = "new_company"
 
 class EmailTemplate(Base):
     """
@@ -27,7 +28,3 @@ class EmailTemplate(Base):
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
-
-class EmailTemplateSlug(str, enum.Enum):
-    vacancy_assigned = "vacancy_assigned"
-    new_company = "new_company"

@@ -57,7 +57,7 @@ async def upsert_company_sql(db_session, company_data: dict) -> int | None:
             "website": company_data.get("website"),
             "linkedin_url": company_data.get("linkedin_url"),
             "address": company_data.get("address"),
-            "original_offer_id": company_data.get("original_offer_id")
+            "original_offer_id": None
         }
         
         # Ejecutamos la inserción de empresa (solo 2 parámetros)

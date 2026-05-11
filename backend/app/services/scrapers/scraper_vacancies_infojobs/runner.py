@@ -230,21 +230,19 @@ async def extract_infojobs() -> list[dict]:
                         job_data, driver = await process_single_offer(offer, kw, driver, PROCESSED_JOB_IDS)
 
                         if job_data:
-                            if job_data:
                             
                                 print(f"\n--- Enriqueciendo empresa (InfoJobs): {job_data['company_name']} ---")
                                 
                                 # Usamos asyncio.to_thread para que la IA (que no es asíncrona) no paralice el navegador
                                 company_data = await asyncio.to_thread(
-                                    extract_company_data, 
-                                    job_data['job_description'] or "", 
+                                    extract_company_data,
+                                    job_data['job_description'] or "",
                                     job_data['company_name']
                                 )
 
                                 company_data["company_description"] = job_data.get("company_description")
                                 if "contact_first_name" not in company_data: company_data["contact_first_name"] = None
                                 if "contact_last_name" not in company_data: company_data["contact_last_name"] = None
-                                company_data["original_offer_id"] = job_data["external_id"]
                                 company_id = await upsert_company_sql(db_session, company_data)
 
                                 if not company_id:
