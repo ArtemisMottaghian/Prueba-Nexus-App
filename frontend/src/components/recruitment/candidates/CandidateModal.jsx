@@ -8,8 +8,8 @@ export default function CandidateModal({
   onUpdateStatus,
   onToggleFavorite,
   onVerify,
-  onDeleteCandidate, // <-- NUEVA PROP
-  onEditCandidate, // <-- NUEVA PROP
+  onDeleteCandidate, 
+  onEditCandidate, 
 }) {
   const [activeTab, setActiveTab] = useState('detalles');
   const [localStatus, setLocalStatus] = useState(() => candidate?.status || '');
@@ -166,7 +166,7 @@ export default function CandidateModal({
                     ></i>
                   </button>
 
-                  {/* Editar (Ahora siempre visible) */}
+                  {/* Editar  */}
                   <button
                     className="btn-icon text-secondary hover-primary ms-1"
                     onClick={() => {
@@ -184,7 +184,7 @@ export default function CandidateModal({
                     <i className="bi bi-pencil-square fs-5"></i>
                   </button>
 
-                  {/* Eliminar (Ahora siempre visible) */}
+                  {/* Eliminar  */}
                   <button
                     className="btn-icon text-secondary hover-danger ms-1"
                     onClick={() => {
