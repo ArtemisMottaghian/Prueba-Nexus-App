@@ -98,8 +98,9 @@ export default function CreateCandidate({ onClose, onSave }) {
       setCvExtracted(true);
     } catch (err) {
       console.error('Error al procesar el CV:', err);
+      // AHORA LA ALERTA NOS DIRÁ EL ERROR REAL DEL SERVIDOR 👇
       alert(
-        'Hubo un problema procesando el PDF. Puedes rellenar los datos manualmente.'
+        `Hubo un problema procesando el PDF: ${err.message}\n\nPuedes rellenar los datos manualmente.`
       );
       setCvFileName('');
     } finally {
