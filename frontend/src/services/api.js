@@ -32,7 +32,7 @@ export const ENDPOINTS = {
     register: `${BASE_URL}/api/auth/register`,
   },
   companies: {
-    list: `${BASE_URL}/api/companies`,
+    list: `${BASE_URL}/api/companies/clientes`,
     detail: (id) => `${BASE_URL}/api/companies/${id}`,
     create: `${BASE_URL}/api/companies`,
     update: (id) => `${BASE_URL}/api/companies/${id}`,
