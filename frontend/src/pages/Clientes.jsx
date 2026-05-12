@@ -51,7 +51,7 @@ export default function Clientes() {
   const cargarClientes = async () => {
     try {
       setIsLoading(true);
-      const data = await getClientes();
+      const data = await getClientes('confirmed_client');
       setClientes(data);
     } catch (error) {
       console.error('Error al cargar clientes:', error);

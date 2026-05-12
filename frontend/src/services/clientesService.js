@@ -54,11 +54,11 @@ const mapToFrontend = (client) => ({
   })),
   vacantes: client.positions
     ? client.positions.map((p) => ({
-        id: p.id,
-        titulo: p.title,
-        estado: p.status,
-        fecha: p.date,
-      }))
+      id: p.id,
+      titulo: p.title,
+      estado: p.status,
+      fecha: p.date,
+    }))
     : client.vacantes || [],
 });
 
@@ -75,16 +75,34 @@ const mapToBackend = (client) => ({
 });
 
 const getClientesDummy = () => clientesDummy.map(mapToFrontend);
-
-export const getClientes = async () => {
+export const getClientes = async (entityType = 'confirmed_client') => {
   try {
-    const response = await authFetch(ENDPOINTS.companies.list);
+    const separator = ENDPOINTS.companies.list.includes('?') ? '&' : '?';
+
+    const urlFinal = entityType
+      ? `${ENDPOINTS.companies.list}${separator}entity_type=${entityType}`
+      : ENDPOINTS.companies.list;
+
+    const response = await authFetch(urlFinal);
+
     if (!response.ok) throw new Error('Error al obtener clientes');
+
     const data = await response.json();
     return data.map(mapToFrontend);
+
   } catch (error) {
-    console.warn('Backend offline, usando clientesData.json...', error);
-    return getClientesDummy();
+    console.warn(
+      'Backend offline o fallando, usando datos de prueba...',
+      error
+    );
+
+    const dummyData = getClientesDummy();
+    if (entityType) {
+      return dummyData
+        .filter((c) => c.entity_type === entityType)
+        .map(mapToFrontend);
+    }
+    return dummyData;
   }
 };
 
