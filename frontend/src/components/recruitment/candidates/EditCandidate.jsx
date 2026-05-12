@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import './EditCandidate.css'; 
+import './EditCandidate.css';
 
 export default function EditCandidate({ candidate, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -24,8 +24,13 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
     setIsSubmitting(true);
 
     // Formateamos los datos tal y como los espera el backend
-    const expNumber = formData.experience ? parseInt(formData.experience, 10) : 0;
-    const skillsArray = formData.specialty.split(',').map(s => s.trim()).filter(Boolean);
+    const expNumber = formData.experience
+      ? parseInt(formData.experience, 10)
+      : 0;
+    const skillsArray = formData.specialty
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
 
     const updatedData = {
       name: formData.name.trim(),
@@ -41,6 +46,7 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
     try {
       await onSave(candidate.id, updatedData);
     } catch (err) {
+      console.error('Fallo al guardar la edición:', err);
       // Si el backend da error, paramos el spinner para que no se quede "pillado"
       setIsSubmitting(false);
     }
@@ -49,7 +55,12 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
   return (
     <>
       <div className="modal-backdrop fade show" style={{ zIndex: 1055 }}></div>
-      <div className="modal fade show d-block custom-create-modal" style={{ zIndex: 1060 }} tabIndex="-1" role="dialog">
+      <div
+        className="modal fade show d-block custom-create-modal"
+        style={{ zIndex: 1060 }}
+        tabIndex="-1"
+        role="dialog"
+      >
         <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
           <div className="modal-content">
             <div className="modal-header">
@@ -57,47 +68,108 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
                 <i className="bi bi-pencil-square me-2"></i>
                 Editar Candidato
               </h4>
-              <button type="button" className="btn-close" onClick={onClose} disabled={isSubmitting}></button>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={onClose}
+                disabled={isSubmitting}
+              ></button>
             </div>
 
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
                 {/* Nombre Completo */}
                 <div className="mb-3">
-                  <label htmlFor="name" className="form-label fw-semibold">Nombre Completo <span className="text-danger">*</span></label>
-                  <input type="text" className="form-control" id="name" name="name" value={formData.name} onChange={handleChange} required />
+                  <label htmlFor="name" className="form-label fw-semibold">
+                    Nombre Completo <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                  />
                 </div>
 
                 {/* Contacto */}
                 <div className="row">
                   <div className="col-md-6 mb-3">
-                    <label htmlFor="email" className="form-label fw-semibold">Email</label>
-                    <input type="email" className="form-control" id="email" name="email" value={formData.email} onChange={handleChange} />
+                    <label htmlFor="email" className="form-label fw-semibold">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                    />
                   </div>
                   <div className="col-md-6 mb-3">
-                    <label htmlFor="phone" className="form-label fw-semibold">Teléfono</label>
-                    <input type="tel" className="form-control" id="phone" name="phone" value={formData.phone} onChange={handleChange} />
+                    <label htmlFor="phone" className="form-label fw-semibold">
+                      Teléfono
+                    </label>
+                    <input
+                      type="tel"
+                      className="form-control"
+                      id="phone"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                    />
                   </div>
                 </div>
 
                 {/* Perfil */}
                 <div className="row">
                   <div className="col-md-6 mb-3">
-                    <label htmlFor="education" className="form-label fw-semibold">Formación / Titulación</label>
-                    <select className="form-select" id="education" name="education" value={formData.education} onChange={handleChange}>
+                    <label
+                      htmlFor="education"
+                      className="form-label fw-semibold"
+                    >
+                      Formación / Titulación
+                    </label>
+                    <select
+                      className="form-select"
+                      id="education"
+                      name="education"
+                      value={formData.education}
+                      onChange={handleChange}
+                    >
                       <option value="">Selecciona una opción...</option>
                       <option value="Bootcamp">Bootcamp</option>
                       <option value="FP Grado Medio">FP Grado Medio</option>
-                      <option value="FP Grado Superior">FP Grado Superior</option>
-                      <option value="Grado Universitario">Grado Universitario</option>
+                      <option value="FP Grado Superior">
+                        FP Grado Superior
+                      </option>
+                      <option value="Grado Universitario">
+                        Grado Universitario
+                      </option>
                       <option value="Máster">Máster</option>
                       <option value="Autodidacta">Autodidacta</option>
                     </select>
                   </div>
                   <div className="col-md-6 mb-3">
-                    <label htmlFor="experience" className="form-label fw-semibold">Años de experiencia</label>
+                    <label
+                      htmlFor="experience"
+                      className="form-label fw-semibold"
+                    >
+                      Años de experiencia
+                    </label>
                     <div className="input-group">
-                      <input type="number" className="form-control" id="experience" name="experience" value={formData.experience} onChange={handleChange} min="0" />
+                      <input
+                        type="number"
+                        className="form-control"
+                        id="experience"
+                        name="experience"
+                        value={formData.experience}
+                        onChange={handleChange}
+                        min="0"
+                      />
                       <span className="input-group-text">años</span>
                     </div>
                   </div>
@@ -105,19 +177,50 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
 
                 {/* Localización y Habilidades */}
                 <div className="mb-3">
-                  <label htmlFor="location" className="form-label fw-semibold">Localización</label>
-                  <input type="text" className="form-control" id="location" name="location" value={formData.location} onChange={handleChange} />
+                  <label htmlFor="location" className="form-label fw-semibold">
+                    Localización
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="location"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleChange}
+                  />
                 </div>
                 <div className="mb-3">
-                  <label htmlFor="specialty" className="form-label fw-semibold">Herramientas y Habilidades Específicas</label>
-                  <input type="text" className="form-control" id="specialty" name="specialty" value={formData.specialty} onChange={handleChange} />
-                  <div className="form-text">Escribe las tecnologías o habilidades separadas por comas.</div>
+                  <label htmlFor="specialty" className="form-label fw-semibold">
+                    Herramientas y Habilidades Específicas
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="specialty"
+                    name="specialty"
+                    value={formData.specialty}
+                    onChange={handleChange}
+                  />
+                  <div className="form-text">
+                    Escribe las tecnologías o habilidades separadas por comas.
+                  </div>
                 </div>
               </div>
 
               <div className="modal-footer bg-light">
-                <button type="button" className="btn btn-outline-secondary" onClick={onClose} disabled={isSubmitting}>Cancelar</button>
-                <button type="submit" className="btn btn-primary" disabled={!formData.name.trim() || isSubmitting}>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={onClose}
+                  disabled={isSubmitting}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={!formData.name.trim() || isSubmitting}
+                >
                   {isSubmitting ? 'Guardando...' : 'Actualizar Candidato'}
                 </button>
               </div>

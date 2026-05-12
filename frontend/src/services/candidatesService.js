@@ -109,14 +109,14 @@ export const candidatesService = {
     }
   },
 
-deleteCandidate: async (id) => {
+  deleteCandidate: async (id) => {
     try {
       const response = await authFetch(
         ENDPOINTS.recruitment.candidatos.delete(id),
         { method: 'DELETE' }
       );
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-      
+
       // ARREGLO: Manejar 204 No Content (respuesta vacía de FastAPI)
       const text = await response.text();
       return text ? JSON.parse(text) : { success: true };

@@ -146,13 +146,13 @@ export default function Candidates() {
     }
   };
 
-// --- GUARDAR EDICIÓN DE CANDIDATO ---
+  // --- GUARDAR EDICIÓN DE CANDIDATO ---
   const handleSaveEditCandidate = async (candidateId, updatedData) => {
     try {
       await candidatesService.updateCandidate(candidateId, updatedData);
-      
+
       // ARREGLO: Mapeamos explícitamente para que la tarjeta visual no se líe
-      setCandidates((prev) => 
+      setCandidates((prev) =>
         prev.map((c) => {
           if (c.id === candidateId) {
             return {
@@ -160,19 +160,22 @@ export default function Candidates() {
               ...updatedData,
               name: updatedData.name || c.name,
               specialty: updatedData.specialty || c.specialty,
-              experience: updatedData.experience !== undefined ? updatedData.experience : c.experience
+              experience:
+                updatedData.experience !== undefined
+                  ? updatedData.experience
+                  : c.experience,
             };
           }
           return c;
         })
       );
-      
+
       setEditingCandidate(null);
     } catch (error) {
       console.error('Error al editar el candidato', error);
       alert('Hubo un error al actualizar el candidato: ' + error.message);
       // ARREGLO: Lanzamos el error para avisar al modal de que pare el spinner
-      throw error; 
+      throw error;
     }
   };
 

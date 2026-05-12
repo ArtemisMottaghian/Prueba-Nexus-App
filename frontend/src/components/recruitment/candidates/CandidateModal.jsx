@@ -8,8 +8,8 @@ export default function CandidateModal({
   onUpdateStatus,
   onToggleFavorite,
   onVerify,
-  onDeleteCandidate, 
-  onEditCandidate, 
+  onDeleteCandidate,
+  onEditCandidate,
 }) {
   const [activeTab, setActiveTab] = useState('detalles');
   const [localStatus, setLocalStatus] = useState(() => candidate?.status || '');
