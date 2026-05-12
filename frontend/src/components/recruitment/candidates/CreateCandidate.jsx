@@ -2,50 +2,78 @@ import { useState, useRef } from 'react';
 import { candidatesService } from '../../../services/candidatesService';
 import './CreateCandidate.css';
 
-// ─── Componente principal ─────────────────────────────────────────────────────
-
 export default function CreateCandidate({ onClose, onSave }) {
   const [formData, setFormData] = useState({
     name: '',
+    email: '',
+    phone: '',
     education: '',
     location: '',
     experience: '',
-    skills: '',
+    specialty: '',
   });
 
   const [isParsing, setIsParsing] = useState(false);
   const [cvFileName, setCvFileName] = useState('');
   const [cvExtracted, setCvExtracted] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [parsedCandidateId, setParsedCandidateId] = useState(null);
+
   const fileInputRef = useRef(null);
 
-  // ── Handlers de formulario ──
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const skillsArray = formData.skills
+    setIsSubmitting(true);
+
+    const expNumber = formData.experience
+      ? parseInt(formData.experience, 10)
+      : 0;
+    const skillsArray = formData.specialty
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean);
-    const newCandidateData = {
+
+    const finalData = {
       name: formData.name.trim(),
+      email: formData.email.trim(),
+      phone: formData.phone.trim(),
       education: formData.education,
       location: formData.location.trim(),
-      experience: formData.experience ? parseInt(formData.experience, 10) : 0,
-      specialty: skillsArray.join(', '),
+      experience: expNumber,
+      specialty: formData.specialty.trim(),
       skills: skillsArray,
-      status: 'En proceso',
-      isFavorite: false,
-      verified: false,
     };
-    onSave(newCandidateData);
+
+    try {
+      let finalCandidate;
+      if (parsedCandidateId) {
+        finalCandidate = await candidatesService.updateCandidate(
+          parsedCandidateId,
+          finalData
+        );
+      } else {
+        finalCandidate = await candidatesService.createCandidate(finalData);
+      }
+
+      // Aseguramos el cruce correcto para la tarjeta visual
+      finalCandidate.name = finalData.name;
+      finalCandidate.specialty = finalData.specialty;
+
+      onSave(finalCandidate);
+    } catch (error) {
+      console.error('Error al guardar el candidato:', error);
+      alert('Hubo un error al guardar el candidato. Inténtalo de nuevo.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  // ── Handlers de CV ──
   const processCVFile = async (file) => {
     if (!file || file.type !== 'application/pdf') return;
 
@@ -54,13 +82,27 @@ export default function CreateCandidate({ onClose, onSave }) {
     setCvExtracted(false);
 
     try {
-      // El backend crea el candidato directamente y devuelve el objeto creado
       const createdCandidate = await candidatesService.processCV(file);
-      // Llamamos a onSave con el candidato ya creado en BD para añadirlo a la lista
-      onSave(createdCandidate);
+
+      setFormData({
+        name: createdCandidate.name || '',
+        email: createdCandidate.email || '',
+        phone: createdCandidate.phone || '',
+        education: createdCandidate.education || '',
+        location: createdCandidate.location || '',
+        experience: createdCandidate.experience || '',
+        specialty: createdCandidate.specialty || createdCandidate.skills || '',
+      });
+
+      setParsedCandidateId(createdCandidate.id);
+      setCvExtracted(true);
     } catch (err) {
       console.error('Error al procesar el CV:', err);
+      alert(
+        'Hubo un problema procesando el PDF. Puedes rellenar los datos manualmente.'
+      );
       setCvFileName('');
+    } finally {
       setIsParsing(false);
     }
   };
@@ -80,12 +122,15 @@ export default function CreateCandidate({ onClose, onSave }) {
   const handleClearCV = () => {
     setCvFileName('');
     setCvExtracted(false);
+    setParsedCandidateId(null);
     setFormData({
       name: '',
+      email: '',
+      phone: '',
       education: '',
       location: '',
       experience: '',
-      skills: '',
+      specialty: '',
     });
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -98,7 +143,7 @@ export default function CreateCandidate({ onClose, onSave }) {
         tabIndex="-1"
         role="dialog"
       >
-        <div className="modal-dialog modal-dialog-centered modal-lg">
+        <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
           <div className="modal-content">
             <div className="modal-header">
               <h4 className="modal-title fw-bold">Añadir Nuevo Candidato</h4>
@@ -106,13 +151,12 @@ export default function CreateCandidate({ onClose, onSave }) {
                 type="button"
                 className="btn-close"
                 onClick={onClose}
-                aria-label="Cerrar"
+                disabled={isParsing || isSubmitting}
               ></button>
             </div>
 
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
-                {/* ── Zona de subida de CV ── */}
                 {!cvFileName ? (
                   <div
                     className={`cv-upload-zone ${isDragging ? 'cv-upload-zone--drag' : ''}`}
@@ -140,37 +184,35 @@ export default function CreateCandidate({ onClose, onSave }) {
                     />
                   </div>
                 ) : isParsing ? (
-                  <div className="cv-parsing-state">
+                  <div className="cv-parsing-state text-center p-4 bg-light rounded border">
                     <div
-                      className="spinner-border spinner-border-sm text-purple me-2"
+                      className="spinner-border text-primary me-2 mb-2"
                       role="status"
                     ></div>
-                    <span>
-                      Leyendo <strong>{cvFileName}</strong>…
-                    </span>
+                    <div className="text-muted">
+                      Extrayendo datos de <strong>{cvFileName}</strong>...
+                    </div>
                   </div>
                 ) : cvExtracted ? (
-                  <div className="cv-success-banner">
+                  <div className="cv-success-banner d-flex justify-content-between align-items-center p-3 mb-4 bg-success-subtle text-success rounded border border-success">
                     <div className="cv-success-left">
                       <i className="bi bi-check-circle-fill me-2"></i>
                       <span>
                         Datos extraídos de <strong>{cvFileName}</strong> —
-                        revisa y ajusta si es necesario
+                        Revisa los campos.
                       </span>
                     </div>
                     <button
                       type="button"
-                      className="cv-clear-btn"
+                      className="btn btn-sm btn-outline-danger border-0"
                       onClick={handleClearCV}
-                      title="Quitar CV y limpiar formulario"
                     >
                       <i className="bi bi-x-lg"></i>
                     </button>
                   </div>
                 ) : null}
 
-                <div className={cvFileName ? 'mt-3' : 'cv-divider'}>
-                  {/* Nombre */}
+                <div className={cvFileName ? '' : 'cv-divider mt-4'}>
                   <div className="mb-3">
                     <label htmlFor="name" className="form-label fw-semibold">
                       Nombre Completo <span className="text-danger">*</span>
@@ -182,13 +224,40 @@ export default function CreateCandidate({ onClose, onSave }) {
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      placeholder="Ej. Carlos Mendoza"
                       required
                     />
                   </div>
 
                   <div className="row">
-                    {/* Formación */}
+                    <div className="col-md-6 mb-3">
+                      <label htmlFor="email" className="form-label fw-semibold">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        id="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                      <label htmlFor="phone" className="form-label fw-semibold">
+                        Teléfono
+                      </label>
+                      <input
+                        type="tel"
+                        className="form-control"
+                        id="phone"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="row">
                     <div className="col-md-6 mb-3">
                       <label
                         htmlFor="education"
@@ -216,8 +285,6 @@ export default function CreateCandidate({ onClose, onSave }) {
                         <option value="Autodidacta">Autodidacta</option>
                       </select>
                     </div>
-
-                    {/* Experiencia */}
                     <div className="col-md-6 mb-3">
                       <label
                         htmlFor="experience"
@@ -234,14 +301,12 @@ export default function CreateCandidate({ onClose, onSave }) {
                           value={formData.experience}
                           onChange={handleChange}
                           min="0"
-                          placeholder="Ej. 3"
                         />
                         <span className="input-group-text">años</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Localización */}
                   <div className="mb-3">
                     <label
                       htmlFor="location"
@@ -256,45 +321,43 @@ export default function CreateCandidate({ onClose, onSave }) {
                       name="location"
                       value={formData.location}
                       onChange={handleChange}
-                      placeholder="Ej. Madrid, España (o 'Remoto')"
                     />
                   </div>
 
-                  {/* Habilidades */}
                   <div className="mb-3">
-                    <label htmlFor="skills" className="form-label fw-semibold">
+                    <label
+                      htmlFor="specialty"
+                      className="form-label fw-semibold"
+                    >
                       Herramientas y Habilidades Específicas
                     </label>
                     <input
                       type="text"
                       className="form-control"
-                      id="skills"
-                      name="skills"
-                      value={formData.skills}
+                      id="specialty"
+                      name="specialty"
+                      value={formData.specialty}
                       onChange={handleChange}
-                      placeholder="Ej. React, Node.js, Figma, Liderazgo"
                     />
-                    <div className="form-text">
-                      Escribe las tecnologías o habilidades separadas por comas.
-                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="modal-footer">
+              <div className="modal-footer bg-light">
                 <button
                   type="button"
                   className="btn btn-outline-secondary"
                   onClick={onClose}
+                  disabled={isParsing || isSubmitting}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  disabled={!formData.name.trim() || isParsing}
+                  disabled={!formData.name.trim() || isParsing || isSubmitting}
                 >
-                  Guardar Candidato
+                  {isSubmitting ? 'Guardando...' : 'Guardar Candidato'}
                 </button>
               </div>
             </form>
