@@ -102,6 +102,7 @@ export const ENDPOINTS = {
   users: {
     list: `${BASE_URL}/api/users`,
     create: `${BASE_URL}/api/users`,
+    detail: (email) => `${BASE_URL}/api/users/${email}`,
     update: (email) => `${BASE_URL}/api/users/${email}`,
     delete: (email) => `${BASE_URL}/api/users/${email}`,
   },

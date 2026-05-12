@@ -1,41 +1,82 @@
 import { useState, useEffect } from 'react';
-import { authFetch, ENDPOINTS } from '../../services/api';
+import { authFetch } from '../../services/api';
 
 export default function EmailIntegration() {
   const [isLinked, setIsLinked] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkGoogleStatus = async () => {
-      try {
-        // endpoint ficticio
-        const res = await authFetch(
-          ENDPOINTS?.user?.googleStatus || '/api/google/status'
+    const initializeComponent = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('google_success') === 'true') {
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
         );
-        const data = await res.json();
-        setIsLinked(data.isLinked);
+      }
+
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL;
+        const response = await authFetch(`${apiUrl}/api/emails/google/status`);
+
+        if (response.ok) {
+          const data = await response.json();
+          setIsLinked(data.is_linked);
+        }
       } catch (error) {
         console.error('Error comprobando el estado de Google', error);
       } finally {
         setLoading(false);
       }
     };
-    checkGoogleStatus();
+
+    initializeComponent();
   }, []);
 
   const handleLinkGoogle = async () => {
     try {
-      // endpoint ficticio
-      const res = await authFetch(
-        ENDPOINTS?.user?.getGoogleAuthUrl || '/api/google/auth-url'
-      );
-      const data = await res.json();
+      const apiUrl = import.meta.env.VITE_API_URL;
+      const response = await authFetch(`${apiUrl}/api/emails/google/login`);
+
+      if (!response.ok) {
+        throw new Error('No se pudo generar el enlace de Google');
+      }
+
+      const data = await response.json();
 
       if (data.url) {
         window.location.href = data.url;
       }
     } catch (error) {
-      console.error('Error al obtener la URL de Google', error);
+      console.error('Error al iniciar vinculación con Google:', error);
+      alert('No se pudo iniciar la conexión con Google. Revisa la consola.');
+    }
+  };
+
+  const handleUnlink = async () => {
+    // Un pequeño aviso por si le dan sin querer
+    if (!window.confirm('¿Seguro que quieres desvincular tu cuenta de Google?'))
+      return;
+
+    try {
+      setLoading(true); // Ponemos la pantalla de carga un segundito
+      const apiUrl = import.meta.env.VITE_API_URL;
+
+      const response = await authFetch(`${apiUrl}/api/emails/google/unlink`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setIsLinked(false); // ¡Magia! Vuelve a salir el botón gris de Conectar
+      } else {
+        throw new Error('Error al desvincular la cuenta');
+      }
+    } catch (error) {
+      console.error('Error al desvincular:', error);
+      alert('Hubo un problema al desvincular la cuenta. Revisa la consola.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -84,6 +125,7 @@ export default function EmailIntegration() {
                 backgroundColor: '#fee2e2',
                 color: '#ef4444',
               }}
+              onClick={handleUnlink}
             >
               Desvincular
             </span>

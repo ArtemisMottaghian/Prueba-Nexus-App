@@ -123,13 +123,21 @@ export default function UserManagement() {
     setShowModal(true);
   };
 
-  const handleEditUser = (user) => {
-    setEditingUser(user);
+  const handleEditUser = async (user) => {
+    let userForForm = user;
+    try {
+      const freshUser = await usersService.getUserByEmail(user.email);
+      if (freshUser) userForForm = freshUser;
+    } catch {
+      // fallback: seguimos con los datos de la tabla
+    }
+
+    setEditingUser(userForForm);
     setForm({
-      name: user.name,
-      email: user.email,
+      name: userForForm.name,
+      email: userForForm.email,
       password: '',
-      role: user.role,
+      role: userForForm.role,
     });
     setFormErrors({});
     setShowModal(true);
