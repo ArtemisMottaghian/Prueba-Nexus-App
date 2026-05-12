@@ -31,6 +31,18 @@ export const usersService = {
     }
   },
 
+  getUserByEmail: async (email) => {
+    try {
+      const response = await authFetch(ENDPOINTS.users.detail(email));
+      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      const data = await response.json();
+      return mapUserData(data);
+    } catch (error) {
+      console.error(`Error al obtener usuario ${email}:`, error);
+      throw error;
+    }
+  },
+
   createUser: async (userData) => {
     try {
       const response = await authFetch(ENDPOINTS.users.create, {

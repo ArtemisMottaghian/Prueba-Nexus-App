@@ -4,6 +4,7 @@ from app.api.routes.main_router import api_router
 from app.core.config import settings
 from app.db.session import engine
 from app.db.connection import Base
+from sqlalchemy import text
 
 import sys
 import asyncio
@@ -49,8 +50,23 @@ app.add_middleware(
 async def arrancar_servidor():
     print("Iniciando ")
 
+    if not settings.LINKEDIN_SESSION_COOKIE or not settings.LINKEDIN_USER_AGENT:
+        print("[WARNING] LINKEDIN_SESSION_COOKIE / LINKEDIN_USER_AGENT no definidos — scraper de LinkedIn y búsqueda de reclutadores (PhantomBuster) fallarán si se invocan.")
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+        portales = [
+            (1, "adzuna", "https://www.adzuna.es"),
+            (2, "infojobs", "https://www.infojobs.net"),
+            (3, "linkedin", "https://www.linkedin.com"),
+        ]
+        for portal_id, name, url in portales:
+            await conn.execute(text("""
+                       INSERT INTO job_portals (id, name, base_url)
+                       VALUES (:id, :name, :url)
+                       ON CONFLICT (id) DO NOTHING
+                   """), {"id": portal_id, "name": name, "url": url})
 
 app.include_router(api_router, prefix="/api")
 

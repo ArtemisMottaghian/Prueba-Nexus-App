@@ -32,7 +32,7 @@ export const ENDPOINTS = {
     register: `${BASE_URL}/api/auth/register`,
   },
   companies: {
-    list: `${BASE_URL}/api/companies`,
+    list: `${BASE_URL}/api/companies/clientes`,
     detail: (id) => `${BASE_URL}/api/companies/${id}`,
     create: `${BASE_URL}/api/companies`,
     update: (id) => `${BASE_URL}/api/companies/${id}`,
@@ -102,6 +102,7 @@ export const ENDPOINTS = {
   users: {
     list: `${BASE_URL}/api/users`,
     create: `${BASE_URL}/api/users`,
+    detail: (email) => `${BASE_URL}/api/users/${email}`,
     update: (email) => `${BASE_URL}/api/users/${email}`,
     delete: (email) => `${BASE_URL}/api/users/${email}`,
   },
