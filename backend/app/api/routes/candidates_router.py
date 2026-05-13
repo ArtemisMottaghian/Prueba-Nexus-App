@@ -70,6 +70,16 @@ async def get_scraper_status(db: AsyncSession = Depends(get_db)):
     return await candidates_service.get_scraper_status(db)
 
 
+# -----------------
+# Localizaciones únicas de candidatos
+# GET /api/candidates/locations
+# -----------------
+@router.get("/locations", response_model=List[str])
+async def get_candidate_locations(db: AsyncSession = Depends(get_db)):
+    """Devuelve la lista de ciudades únicas de los candidatos."""
+    return await candidates_service.get_location_options(db)
+
+
 # --------------------
 # obtener candidato
 # GET /api/candidates/{candidate_id}
@@ -267,3 +277,4 @@ async def process_cv(
         traceback.print_exc()
 
         raise HTTPException(status_code=500, detail=f"Error interno procesando el candidato: {str(e)}")
+
