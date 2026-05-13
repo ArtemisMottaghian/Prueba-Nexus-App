@@ -211,10 +211,10 @@ export default function VacancyModal({
         nuevaNota.texto
       );
       // Si el backend responde con un id real, lo guardamos en la nota
-      if (notaCreada?.id) {
+      if (notaCreada?.note_id) {
         setLocalSeguimiento((prev) =>
           prev.map((n) =>
-            n.localId === localId ? { ...n, id: notaCreada.id } : n
+            n.localId === localId ? { ...n, id: notaCreada.note_id } : n
           )
         );
       }
