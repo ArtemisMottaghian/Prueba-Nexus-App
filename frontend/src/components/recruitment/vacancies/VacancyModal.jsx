@@ -119,6 +119,30 @@ export default function VacancyModal({
     }
   }, [isNegocio, activeTab]);
 
+ useEffect(() => {
+  if (activeTab !== 'seguimiento' || !job?.id) return;
+
+  const fetchNotes = async () => {
+    try {
+      const notes = await vacanciesService.getNotes(job.id);
+      setLocalSeguimiento(
+        notes.map((n) => ({
+          id: n.id,
+          texto: n.result || n.notes || '',
+          fecha: n.date
+            ? new Date(n.date).toLocaleDateString('es-ES')
+            : '',
+          autor: n.name || 'Sistema',
+        }))
+      );
+    } catch (err) {
+      console.error('Error cargando notas:', err);
+    }
+  };
+
+  fetchNotes();
+}, [activeTab, job?.id]);
+
   // Documentos locales
   const [localDocs, setLocalDocs] = useState(job?.documentos || []);
   const [docTipo, setDocTipo] = useState('CV');
