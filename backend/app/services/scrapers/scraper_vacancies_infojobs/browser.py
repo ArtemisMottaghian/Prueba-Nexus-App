@@ -100,6 +100,7 @@ async def fetch_infojobs_details(driver: Any, job_url: str, company_url: str) ->
                     for item in items_to_check:
                         if item.get('@type') == 'JobPosting':
                             details["job_description"] = item.get('description', '')
+                            details["sector"] = item.get('occupationalCategory', None)
                             break
 
                     if details["job_description"]:
