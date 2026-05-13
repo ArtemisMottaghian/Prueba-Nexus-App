@@ -90,7 +90,7 @@ async def get_company(company_id: int, db: AsyncSession = Depends(get_db)):
     try:
         return await companies_service.get_company_by_id(db, company_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Error interno del servidor")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # -----------------
