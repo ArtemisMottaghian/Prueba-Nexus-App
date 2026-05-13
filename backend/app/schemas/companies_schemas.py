@@ -44,6 +44,7 @@ class CompanyUpdate(BaseModel):
     address: Optional[str] = Field(None, max_length=500)
     lead_status: Optional[LeadStatus] = None
     notes: Optional[str] = None
+    entity_type: Optional[str] = None
 
 
 

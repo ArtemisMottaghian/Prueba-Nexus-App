@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import SourceOriginBadge from '../shared/SourceOriginBadge';
 import {
-  getClienteByNombre,
+  getClienteById,
   updateEstadoCuenta,
 } from '../../../services/clientesService';
 import { vacanciesService } from '../../../services/vacanciesService';
 import { usersService } from '../../../services/userManagementService';
 import { useAuth } from '../../../context/AuthContext';
 import CrmEmpresaPanel from '../../crm/CrmEmpresaPanel';
+import SmartMatchResults from './SmartMatchResults';
+import { authFetch } from '../../../services/api';
 import './VacancyModal.css';
 
 /**
@@ -62,8 +64,6 @@ export default function VacancyModal({
   onAsignarVacante,
   currentUser,
   isNegocio,
-  onSmartMatch,
-  isMatching,
 }) {
   const { hasRole } = useAuth();
   const isReclutador = hasRole('hr_manager') || hasRole('reclutador');
@@ -102,6 +102,39 @@ export default function VacancyModal({
   const [hrUsers, setHrUsers] = useState([]);
   const [selectedHrId, setSelectedHrId] = useState('');
 
+  // --- 🤖 ESTADOS Y FUNCIÓN PARA SMART MATCH IA 🤖 ---
+  const [showMatchModal, setShowMatchModal] = useState(false);
+  const [isMatchingLocal, setIsMatchingLocal] = useState(false);
+  const [matchResults, setMatchResults] = useState([]);
+
+  const handleSmartMatchClick = async (e) => {
+    e.stopPropagation();
+    setIsMatchingLocal(true);
+
+    try {
+      const res = await authFetch(
+        `/api/matching/anthropic/offers/${job.id}/matches?top_n=5&min_skill_overlap=1&use_ai=true`,
+        {
+          method: 'GET',
+        }
+      );
+
+      if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+
+      const data = await res.json();
+
+      setMatchResults(data.candidates || data || []);
+      setShowMatchModal(true);
+    } catch (error) {
+      console.error('Error en Smart Match IA:', error);
+      setMatchResults([]);
+      setShowMatchModal(true);
+    } finally {
+      setIsMatchingLocal(false);
+    }
+  };
+  // --------------------------------------------------
+
   useEffect(() => {
     if (isNegocio && activeTab === 'detalles') {
       const fetchHrUsers = async () => {
@@ -118,6 +151,28 @@ export default function VacancyModal({
       fetchHrUsers();
     }
   }, [isNegocio, activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== 'seguimiento' || !job?.id) return;
+
+    const fetchNotes = async () => {
+      try {
+        const notes = await vacanciesService.getNotes(job.id);
+        setLocalSeguimiento(
+          notes.map((n) => ({
+            id: n.id,
+            texto: n.notes?.[0] || n.result || '',
+            fecha: n.date ? new Date(n.date).toLocaleDateString('es-ES') : '',
+            autor: n.name || 'Sistema',
+          }))
+        );
+      } catch (err) {
+        console.error('Error cargando notas:', err);
+      }
+    };
+
+    fetchNotes();
+  }, [activeTab, job?.id]);
 
   // Documentos locales
   const [localDocs, setLocalDocs] = useState(job?.documentos || []);
@@ -146,14 +201,14 @@ export default function VacancyModal({
   const [loadingEmpresa, setLoadingEmpresa] = useState(false);
 
   useEffect(() => {
-    // Cargamos el CRM solo cuando se abre la pestaña CRM y hay empresa identificada
     let cancelado = false;
-    if (activeTab !== 'crm' || !job?.companyName || empresaCrm) return;
+
+    if (activeTab !== 'crm' || !job?.company_id || empresaCrm) return;
 
     (async () => {
       try {
         setLoadingEmpresa(true);
-        const empresa = await getClienteByNombre(job.companyName);
+        const empresa = await getClienteById(job.company_id);
         if (!cancelado) setEmpresaCrm(empresa);
       } catch (err) {
         console.error('Error cargando CRM de la empresa:', err);
@@ -165,7 +220,7 @@ export default function VacancyModal({
     return () => {
       cancelado = true;
     };
-  }, [activeTab, job?.companyName, empresaCrm]);
+  }, [activeTab, job?.company_id, empresaCrm]);
 
   if (!job) return null;
 
@@ -211,10 +266,10 @@ export default function VacancyModal({
         nuevaNota.texto
       );
       // Si el backend responde con un id real, lo guardamos en la nota
-      if (notaCreada?.id) {
+      if (notaCreada?.note_id) {
         setLocalSeguimiento((prev) =>
           prev.map((n) =>
-            n.localId === localId ? { ...n, id: notaCreada.id } : n
+            n.localId === localId ? { ...n, id: notaCreada.note_id } : n
           )
         );
       }
@@ -268,11 +323,6 @@ export default function VacancyModal({
   };
 
   const handleDeleteNote = async (idx) => {
-    if (
-      !window.confirm('¿Eliminar esta nota? Esta acción no se puede deshacer.')
-    )
-      return;
-
     const nota = localSeguimiento[idx];
 
     setLocalSeguimiento((prev) => prev.filter((_, i) => i !== idx));
@@ -571,15 +621,12 @@ export default function VacancyModal({
                 {isNegocio && (
                   <div className="pb-2 pe-2">
                     <button
-                      className={`btn btn-primary-custom btn-sm ${isMatching ? 'disabled' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (onSmartMatch) onSmartMatch(e);
-                      }}
-                      disabled={isMatching}
+                      className={`btn btn-primary-custom btn-sm ${isMatchingLocal ? 'disabled' : ''}`}
+                      onClick={handleSmartMatchClick}
+                      disabled={isMatchingLocal}
                       title="Smart Match con IA"
                     >
-                      {isMatching ? (
+                      {isMatchingLocal ? (
                         <>
                           <span
                             className="spinner-border spinner-border-sm me-2"
@@ -1620,6 +1667,14 @@ export default function VacancyModal({
           </div>
         </div>
       </div>
+      {/* MODAL DE RESULTADOS DE IA */}
+      {showMatchModal && (
+        <SmartMatchResults
+          job={job}
+          candidates={matchResults}
+          onClose={() => setShowMatchModal(false)}
+        />
+      )}
     </>
   );
 }

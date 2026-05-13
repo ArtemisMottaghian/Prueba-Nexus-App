@@ -20,7 +20,7 @@ class CandidateBase(BaseModel):
     phone: Optional[str] = Field(None, pattern=r"^\+?[\d\s\-]{7,20}$")
     candidate_url: Optional[HttpUrl] = None  # Valida que sea una URL válida
     cv_url: Optional[HttpUrl] = None
-    skills: Optional[str] = Field(None, max_length=500)
+    skills: Optional[str] = Field(None)
     notes: Optional[str] = Field(None, max_length=1000)
     status: Optional[CandidateStatus] = CandidateStatus.active
     location: Optional[str] = Field(None, max_length=255)
@@ -44,7 +44,7 @@ class CandidateUpdate(BaseModel):
     )  # Formato internacional de teléfono
     candidate_url: Optional[HttpUrl] = None  # Valida que sea una URL válida
     cv_url: Optional[HttpUrl] = None
-    skills: Optional[str] = Field(None, max_length=500)
+    skills: Optional[str] = Field(None)
     notes: Optional[str] = Field(None, max_length=1000)
     status: Optional[CandidateStatus] = None
     location: Optional[str] = Field(None, max_length=255)

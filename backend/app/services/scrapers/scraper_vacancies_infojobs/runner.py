@@ -166,7 +166,7 @@ async def process_single_offer(offer: dict, kw: str, driver: Any, processed_ids:
         "offer_url": job_url,
         "job_description": job_description,
         "published_at": datetime.now(),
-        "sector": f"Keyword: {kw}",
+        "sector": details.get("sector", None),
         "salary_min": salary_min,
         "salary_max": salary_max,
         "contract_type": contract_type.capitalize() if contract_type else None,

@@ -302,3 +302,55 @@ async def create_candidate_tracking(
         )
         
     return {"message": "Seguimiento del candidato actualizado correctamente"}
+
+# -----------------
+# Actualizar datos de una vacante
+# PATCH /api/vacancies/{vacancy_id}
+# -----------------
+@router.patch("/{vacancy_id}", response_model=MessageResponse)
+async def update_vacancy(
+    vacancy_id: int, body: StatusRequest, db: AsyncSession = Depends(get_db)
+):
+    vacancy = await vacancies_service.get_vacancy_by_id(db, vacancy_id)
+    if vacancy is None:
+        raise HTTPException(status_code=404, detail="La vacante no existe")
+
+    updated = await vacancies_service.update_vacancy_status(db, vacancy_id, body.status)
+    if not updated:
+        raise HTTPException(status_code=400, detail="No se pudo actualizar la vacante")
+
+    return {"message": "Vacante actualizada correctamente"}
+
+# -----------------------------------------------------------
+# EDITAR NOTA DE VACANTE
+# PATCH /api/vacancies/{id}/notes/{note_id}
+# -----------------------------------------------------------
+@router.patch("/{id}/notes/{note_id}", response_model=MessageResponse)
+async def update_vacancy_note(
+    id: int,
+    note_id: int,
+    note_data: VacancyNoteCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    updated = await vacancies_service.update_vacancy_note(db, note_id, note_data)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Nota no encontrada")
+    return {"message": "Nota actualizada correctamente"}
+
+
+# -----------------------------------------------------------
+# ELIMINAR NOTA DE VACANTE
+# DELETE /api/vacancies/{id}/notes/{note_id}
+# -----------------------------------------------------------
+@router.delete("/{id}/notes/{note_id}", response_model=MessageResponse)
+async def delete_vacancy_note(
+    id: int,
+    note_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    deleted = await vacancies_service.delete_vacancy_note(db, note_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Nota no encontrada")
+    return {"message": "Nota eliminada correctamente"}

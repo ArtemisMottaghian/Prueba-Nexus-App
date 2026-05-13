@@ -473,7 +473,7 @@ async def get_vacancy_notes(db: AsyncSession, vacancy_id: int) -> list[dict]:
             "name": nombre_usuario, 
             "phase": entry.action_type or "Actualización",
             "result": resultado_texto,
-            "notes": entry.comments or "",
+            "notes": [entry.comments] if entry.comments else [],
             "date": entry.recorded_at
         })
 
@@ -488,8 +488,8 @@ async def create_vacancy_note(
     nueva_nota = TrackingHistory(
         offer_id=vacancy_id,
         user_id=user_id, 
-        action_type=note_data.phase,
-        comments=note_data.notes,
+        action_type="Nota",
+        comments=note_data.texto,
     )
     
     db.add(nueva_nota)
@@ -549,4 +549,27 @@ async def update_candidate_tracking(
     db.add(app_to_update)
     await db.commit()
     
+    return True
+
+async def update_vacancy_note(db: AsyncSession, note_id: int, note_data) -> bool:
+    result = await db.execute(
+        select(TrackingHistory).where(TrackingHistory.id == note_id)
+    )
+    note = result.scalar_one_or_none()
+    if not note:
+        return False
+    note.comments = note_data.texto
+    await db.commit()
+    return True
+
+
+async def delete_vacancy_note(db: AsyncSession, note_id: int) -> bool:
+    result = await db.execute(
+        select(TrackingHistory).where(TrackingHistory.id == note_id)
+    )
+    note = result.scalar_one_or_none()
+    if not note:
+        return False
+    await db.delete(note)
+    await db.commit()
     return True
