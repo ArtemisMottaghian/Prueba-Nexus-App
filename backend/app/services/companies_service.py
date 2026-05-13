@@ -85,22 +85,20 @@ async def create_company(db: AsyncSession, company_data: CompanyCreate) -> Compa
 async def update_company(db: AsyncSession, company_id: int, company_data: CompanyUpdate) -> CompanyResponse:
     try:
         company = await _get_company_or_404(db, company_id)
-        # model_dump(exclude_unset=True) solo devuelve los campos enviados en el body
+
         update_data = company_data.model_dump(exclude_unset=True)
 
-        for field, value in update_data.items():
-            setattr(company, field, value)
+        if update_data:
+            stmt = update(Company).where(Company.id == company_id).values(**update_data)
+            await db.execute(stmt)
+            await db.commit()
+            await db.refresh(company)
 
-        await db.commit()
-        await db.refresh(company)
         return CompanyResponse.model_validate(company)
-    except HTTPException:
-        raise
-    except SQLAlchemyError as e:
+    except Exception as e:
         await db.rollback()
         print(f"Error al actualizar empresa {company_id}: {e}")
-        raise HTTPException(status_code=500, detail="Error updating company")
-
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 async def delete_company(db: AsyncSession, company_id: int) -> dict:
