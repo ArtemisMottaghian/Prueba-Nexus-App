@@ -112,22 +112,22 @@ export default function VacancyModal({
     setIsMatchingLocal(true);
 
     try {
-      // ⚠️ LLAMADA REAL AL BACKEND DE ALBERTO
-      const res = await authFetch(`/api/ai/match-vacancy/${job.id}`, {
-        method: 'POST',
-      });
+      const res = await authFetch(
+        `/api/matching/anthropic/offers/${job.id}/matches`,
+        {
+          method: 'GET',
+        }
+      );
 
       if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
 
       const data = await res.json();
 
-      // Asegúrate con Alberto de que su JSON devuelva 'candidates' (ej: { candidates: [...] })
-      // Si devuelve otra cosa, cambiaremos el 'data.candidates' por lo que él diga.
       setMatchResults(data.candidates || data || []);
       setShowMatchModal(true);
     } catch (error) {
       console.error('Error en Smart Match IA:', error);
-      setMatchResults([]); // Si falla el backend, mostramos tu estado vacío (robot)
+      setMatchResults([]);
       setShowMatchModal(true);
     } finally {
       setIsMatchingLocal(false);
