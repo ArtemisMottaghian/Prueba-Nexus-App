@@ -213,10 +213,10 @@ export default function VacancyModal({
       // Si el backend responde con un id real, lo guardamos en la nota
       if (notaCreada?.note_id) {
         setLocalSeguimiento((prev) =>
-         prev.map((n) =>
+          prev.map((n) =>
             n.localId === localId ? { ...n, id: notaCreada.note_id } : n
-         )
-  );
+          )
+        );
       }
     } catch {
       // Nota añadida localmente, se sincronizará cuando el backend esté disponible
