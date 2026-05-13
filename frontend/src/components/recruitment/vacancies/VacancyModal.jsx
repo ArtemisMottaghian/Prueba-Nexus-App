@@ -113,7 +113,7 @@ export default function VacancyModal({
 
     try {
       const res = await authFetch(
-        `/api/matching/anthropic/offers/${job.id}/matches`,
+        `/api/matching/anthropic/offers/${job.id}/matches?top_n=5&min_skill_overlap=1&use_ai=true`,
         {
           method: 'GET',
         }
