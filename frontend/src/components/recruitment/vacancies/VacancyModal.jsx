@@ -290,11 +290,6 @@ export default function VacancyModal({
   };
 
   const handleDeleteNote = async (idx) => {
-    if (
-      !window.confirm('¿Eliminar esta nota? Esta acción no se puede deshacer.')
-    )
-      return;
-
     const nota = localSeguimiento[idx];
 
     setLocalSeguimiento((prev) => prev.filter((_, i) => i !== idx));
