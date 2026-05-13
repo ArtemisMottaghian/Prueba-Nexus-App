@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import SourceOriginBadge from '../shared/SourceOriginBadge';
 import {
-  getClienteByNombre,
   getClienteById,
   updateEstadoCuenta,
 } from '../../../services/clientesService';
