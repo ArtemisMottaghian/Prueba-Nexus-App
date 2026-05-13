@@ -488,8 +488,8 @@ async def create_vacancy_note(
     nueva_nota = TrackingHistory(
         offer_id=vacancy_id,
         user_id=user_id, 
-        action_type=note_data.phase,
-        comments=note_data.notes,
+        action_type="Nota",
+        comments=note_data.texto,
     )
     
     db.add(nueva_nota)

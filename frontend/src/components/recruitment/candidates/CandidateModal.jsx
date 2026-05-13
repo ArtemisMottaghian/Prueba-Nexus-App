@@ -8,6 +8,8 @@ export default function CandidateModal({
   onUpdateStatus,
   onToggleFavorite,
   onVerify,
+  onDeleteCandidate,
+  onEditCandidate,
 }) {
   const [activeTab, setActiveTab] = useState('detalles');
   const [localStatus, setLocalStatus] = useState(() => candidate?.status || '');
@@ -96,7 +98,6 @@ export default function CandidateModal({
                 <h2 className="modal-title">{candidate.name}</h2>
                 <div className="d-flex align-items-center gap-2 mt-1 flex-wrap">
                   <span className="modal-subtitle">{candidate.specialty}</span>
-                  {/* FIX 1: Tag Disponible ajustado al contenido */}
                   {candidate.isAvailable && (
                     <span
                       className="badge badge-client-sm d-inline-flex align-items-center"
@@ -147,18 +148,61 @@ export default function CandidateModal({
                     {candidate.verified ? 'Quitar' : 'Verificar candidato'}
                   </button>
                 )}
-                <button
-                  className={`btn-icon ${candidate.isFavorite ? 'text-warning' : ''}`}
-                  onClick={() =>
-                    onToggleFavorite(candidate.id, candidate.isFavorite)
-                  }
-                >
-                  <i
-                    className={
-                      candidate.isFavorite ? 'bi bi-star-fill' : 'bi bi-star'
+
+                {/* --- ZONA DE ICONOS (ESTRELLA, EDITAR, ELIMINAR) --- */}
+                <div className="d-flex align-items-center gap-1 border-start ps-3 ms-1">
+                  {/* Favorito */}
+                  <button
+                    className={`btn-icon ${candidate.isFavorite ? 'text-warning' : ''}`}
+                    onClick={() =>
+                      onToggleFavorite(candidate.id, candidate.isFavorite)
                     }
-                  ></i>
-                </button>
+                    title="Favorito"
+                  >
+                    <i
+                      className={
+                        candidate.isFavorite ? 'bi bi-star-fill' : 'bi bi-star'
+                      }
+                    ></i>
+                  </button>
+
+                  {/* Editar  */}
+                  <button
+                    className="btn-icon text-secondary hover-primary ms-1"
+                    onClick={() => {
+                      if (onEditCandidate) {
+                        onEditCandidate(candidate);
+                        onClose();
+                      } else {
+                        alert(
+                          'Falta conectar la función de Editar en CandidateGrid'
+                        );
+                      }
+                    }}
+                    title="Editar candidato"
+                  >
+                    <i className="bi bi-pencil-square fs-5"></i>
+                  </button>
+
+                  {/* Eliminar  */}
+                  <button
+                    className="btn-icon text-secondary hover-danger ms-1"
+                    onClick={() => {
+                      if (onDeleteCandidate) {
+                        onDeleteCandidate(candidate.id);
+                        onClose();
+                      } else {
+                        alert(
+                          'Falta conectar la función de Borrar en CandidateGrid'
+                        );
+                      }
+                    }}
+                    title="Eliminar candidato"
+                  >
+                    <i className="bi bi-trash3 fs-5"></i>
+                  </button>
+                </div>
+                {/* -------------------------------------------------- */}
               </div>
 
               <ul className="nav nav-tabs mb-4">
@@ -195,7 +239,6 @@ export default function CandidateModal({
                     <div className="detail-section">
                       <h4 className="section-title">Información General</h4>
                       <div className="detail-grid">
-                        {/* Campo Ubicación */}
                         <div className="detail-field d-flex align-items-start gap-3">
                           <div className="detail-icon icon-blue flex-shrink-0 mt-1">
                             <i className="bi bi-geo-alt"></i>
@@ -208,7 +251,6 @@ export default function CandidateModal({
                           </div>
                         </div>
 
-                        {/* FIX 2: Campo Experiencia con Icono protegido y texto que rompe líneas */}
                         <div className="detail-field d-flex align-items-start gap-3">
                           <div className="detail-icon icon-purple flex-shrink-0 mt-1">
                             <i className="bi bi-briefcase"></i>
@@ -235,7 +277,6 @@ export default function CandidateModal({
                         Seguimiento de candidatos
                       </h4>
 
-                      {/* Formulario añadir candidato */}
                       <div className="cand-tracking-form mb-4">
                         <div className="cand-form-row">
                           <div className="cand-form-field cand-form-field--wide">
@@ -325,7 +366,6 @@ export default function CandidateModal({
                         </div>
                       </div>
 
-                      {/* Lista de candidatos */}
                       {candidatosList.length > 0 ? (
                         <div className="cand-tracking-list">
                           {candidatosList.map((c, i) => (
@@ -397,7 +437,6 @@ export default function CandidateModal({
                     <div className="detail-section">
                       <h4 className="section-title">ADJUNTAR DOCUMENTOS</h4>
 
-                      {/* Zona de tipo + drop */}
                       <div className="doc-upload-row mb-3">
                         <select
                           className="form-select input-field doc-tipo-select"
@@ -441,7 +480,6 @@ export default function CandidateModal({
                         </label>
                       </div>
 
-                      {/* Lista de documentos */}
                       <h4 className="section-title">
                         ARCHIVOS ADJUNTOS{' '}
                         {localDocs.length > 0 && (

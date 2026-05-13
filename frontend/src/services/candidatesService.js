@@ -116,7 +116,10 @@ export const candidatesService = {
         { method: 'DELETE' }
       );
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-      return await response.json();
+
+      // ARREGLO: Manejar 204 No Content (respuesta vacía de FastAPI)
+      const text = await response.text();
+      return text ? JSON.parse(text) : { success: true };
     } catch (error) {
       console.error(`Error al eliminar el candidato ${id}:`, error);
       throw error;
@@ -177,7 +180,6 @@ export const candidatesService = {
   },
 
   searchCandidatesByName: async (name) => {
-    // El backend exige un mínimo de 3 caracteres
     if (!name || name.length < 3) return [];
 
     try {
@@ -185,7 +187,6 @@ export const candidatesService = {
         ENDPOINTS.recruitment.candidatos.search(name)
       );
 
-      // Si devuelve 404, significa que no hay resultados (según la doc de Alberto)
       if (response.status === 404) {
         return [];
       }
@@ -195,8 +196,6 @@ export const candidatesService = {
       }
 
       const data = await response.json();
-
-      // Mapeamos los datos para que el frontend los entienda con el formato correcto
       return data.map(mapCandidateData);
     } catch (error) {
       console.error('Error al buscar candidatos por nombre:', error);
@@ -218,6 +217,57 @@ export const candidatesService = {
     } catch (error) {
       console.error('Error al obtener la lista de ubicaciones:', error);
       return [];
+    }
+  },
+
+  // --- CREAR CANDIDATO MANUALMENTE ---
+  createCandidate: async (candidateData) => {
+    try {
+      const response = await authFetch('/api/candidates', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(candidateData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Error al crear el candidato');
+      }
+
+      const data = await response.json();
+      return mapCandidateData(data);
+    } catch (error) {
+      console.error('Error en createCandidate:', error);
+      throw error;
+    }
+  },
+
+  // --- EDITAR CANDIDATO EXISTENTE ---
+  updateCandidate: async (id, candidateData) => {
+    try {
+      const response = await authFetch(`/api/candidates/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(candidateData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al actualizar el candidato en el servidor');
+      }
+
+      // Leemos la respuesta como texto primero en lugar de forzar JSON
+      const text = await response.text();
+      // Si hay texto, lo parseamos, si está vacío (FastAPI no devuelve nada), devolvemos null
+      const data = text ? JSON.parse(text) : null;
+
+      return data;
+    } catch (error) {
+      console.error(`Error en updateCandidate para el ID ${id}:`, error);
+      throw error;
     }
   },
 };

@@ -131,9 +131,7 @@ class VacancyNoteOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class VacancyNoteCreate(BaseModel):
-    phase: str
-    result: Optional[str] = None
-    notes: List[str]
+    texto: str
 
 class CandidateTrackingCreate(BaseModel):
     name: str
