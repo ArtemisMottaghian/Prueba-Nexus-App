@@ -9,7 +9,7 @@ import { usersService } from '../../../services/userManagementService';
 import { useAuth } from '../../../context/AuthContext';
 import CrmEmpresaPanel from '../../crm/CrmEmpresaPanel';
 import SmartMatchResults from './SmartMatchResults';
-import { authFetch } from '../../../utils/authFetch';
+import { authFetch } from '../../../services/api';
 import './VacancyModal.css';
 
 /**
