@@ -128,7 +128,7 @@ export default function VacancyModal({
         setLocalSeguimiento(
           notes.map((n) => ({
             id: n.id,
-            texto: n.result || n.notes || '',
+            texto: n.notes?.[0] || n.result || '',
             fecha: n.date ? new Date(n.date).toLocaleDateString('es-ES') : '',
             autor: n.name || 'Sistema',
           }))
