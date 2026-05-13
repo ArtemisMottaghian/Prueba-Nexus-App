@@ -11,6 +11,12 @@ const ESTADOS_CUENTA_VALIDOS = [
 const normalizarEstadoCuenta = (raw) => {
   if (!raw) return 'lead';
   const v = String(raw).toLowerCase().trim().replace(/\s+/g, '_');
+
+  if (v === 'new') return 'lead';
+  if (v === 'contacted') return 'contactada';
+  if (v === 'negotiating' || v === 'in_progress') return 'en_negociacion';
+  if (v === 'converted' || v === 'confirmed_client') return 'cliente';
+
   if (v === 'negociacion' || v === 'negociando') return 'en_negociacion';
   if (ESTADOS_CUENTA_VALIDOS.includes(v)) return v;
   return 'lead';
@@ -28,7 +34,7 @@ const mapToFrontend = (client) => ({
   direccion: client.address || client.direccion || '',
   prioritario: client.prioritario || client.priority || false,
   estadoCuenta: normalizarEstadoCuenta(
-    client.lead_status || client.account_status || client.estadoCuenta
+    client.lead_status || client.account_status || client.entity_type || 'lead'
   ),
   responsable: client.account_owner || client.responsable || '',
   ultimoContacto: client.last_contact_at || client.ultimoContacto || null,
@@ -160,19 +166,34 @@ export const updateCliente = async (id, cliente) => {
 
 export const updateEstadoCuenta = async (id, nuevoEstado) => {
   const estado = normalizarEstadoCuenta(nuevoEstado);
+
+  const statusMap = {
+    lead: 'new',
+    contactada: 'contacted',
+    en_negociacion: 'negotiating',
+    cliente: 'converted',
+  };
+
+  const payload = {
+    lead_status: statusMap[estado] || 'new',
+  };
+
+  if (estado === 'cliente') {
+    payload.entity_type = 'confirmed_client';
+  }
+
   try {
     const response = await authFetch(ENDPOINTS.companies.update(id), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ account_status: estado }),
+      body: JSON.stringify(payload),
     });
-    if (!response.ok) throw new Error('Error al actualizar estado de cuenta');
+
+    if (!response.ok) throw new Error('Error al actualizar en el servidor');
+
     return { id, estadoCuenta: estado };
   } catch (error) {
-    console.warn(
-      'Backend offline — estado de cuenta actualizado solo en cliente.',
-      error
-    );
+    console.error('Error en la sincronización:', error);
     return { id, estadoCuenta: estado };
   }
 };
