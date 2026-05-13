@@ -239,7 +239,7 @@ export const vacanciesService = {
   getNotes: async (id) => {
     try {
       const response = await authFetch(
-        ENDPOINTS.recruitment.vacantes.detail(id) + '/notes'
+        ENDPOINTS.recruitment.vacantes.notes(id)
       );
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       return await response.json();
@@ -253,7 +253,7 @@ export const vacanciesService = {
   addNote: async (id, texto) => {
     try {
       const response = await authFetch(
-        ENDPOINTS.recruitment.vacantes.detail(id) + '/notes',
+        ENDPOINTS.recruitment.vacantes.notes(id),
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -272,7 +272,7 @@ export const vacanciesService = {
   updateNote: async (id, noteId, texto) => {
     try {
       const response = await authFetch(
-        ENDPOINTS.recruitment.vacantes.detail(id) + `/notes/${noteId}`,
+        ENDPOINTS.recruitment.vacantes.updateNote(id, noteId),
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -294,7 +294,7 @@ export const vacanciesService = {
   deleteNote: async (id, noteId) => {
     try {
       const response = await authFetch(
-        ENDPOINTS.recruitment.vacantes.detail(id) + `/notes/${noteId}`,
+        ENDPOINTS.recruitment.vacantes.updateNote(id, noteId),
         {
           method: 'DELETE',
         }
