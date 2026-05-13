@@ -113,7 +113,7 @@ export default function VacancyModal({
 
     try {
       const res = await authFetch(
-        `/api/matching/anthropic/offers/${job.id}/matches?top_n=5&min_skill_overlap=1&use_ai=true`,
+        `/api/matching/anthropic/offers/${job.id}/matches?top_n=5&min_skill_overlap=1&use_ai=false`,
         {
           method: 'GET',
         }
@@ -123,7 +123,26 @@ export default function VacancyModal({
 
       const data = await res.json();
 
-      setMatchResults(data.candidates || data || []);
+      // 1. Accedemos a 'ranked' que es donde el backend envía la lista
+      const rankedCandidates = data.ranked || [];
+
+      // 2. Mapeamos los datos al formato que usa tu interfaz
+      const normalized = rankedCandidates.map((item) => ({
+        id: item.candidate?.id || item.candidate_id,
+        // Combinamos Nombre y Apellido
+        nombre: item.candidate
+          ? `${item.candidate.first_name || ''} ${item.candidate.last_name || ''}`.trim()
+          : 'Candidato desconocido',
+        score: item.score || 0,
+        reasoning: item.reasoning || 'Sin descripción disponible.',
+        matched_skills: item.matched_skills || [],
+        gaps: item.gaps || [],
+        location: item.candidate?.location || 'No especificada',
+        skills: item.candidate?.skills || '',
+        candidate_url: item.candidate?.candidate_url || '',
+      }));
+
+      setMatchResults(normalized);
       setShowMatchModal(true);
     } catch (error) {
       console.error('Error en Smart Match IA:', error);

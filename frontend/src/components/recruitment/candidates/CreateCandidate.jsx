@@ -83,12 +83,12 @@ export default function CreateCandidate({ onClose, onSave }) {
     }
   };
 
-  // Función de procesamiento con mensajes 
+  // Función de procesamiento con mensajes
   const processCVFile = async (file) => {
     if (!file || file.type !== 'application/pdf') return;
 
     setIsParsing(true);
-    setErrorStatus(null); // Limpiamos errores 
+    setErrorStatus(null); // Limpiamos errores
     setCvFileName(file.name);
     setCvExtracted(false);
 
@@ -110,7 +110,7 @@ export default function CreateCandidate({ onClose, onSave }) {
     } catch (err) {
       console.error('Error al procesar el CV:', err);
 
-      // Traductor de errores 
+      // Traductor de errores
       let msg = 'No hemos podido leer este PDF correctamente.';
       if (
         err.message.includes('already exists') ||
