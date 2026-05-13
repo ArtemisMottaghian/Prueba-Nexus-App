@@ -1642,7 +1642,6 @@ export default function VacancyModal({
               </button>
             </div>
 
-            {/* 👇 AQUÍ ESTÁ EL MODAL DE IA QUE SE ABRIRÁ POR ENCIMA 👇 */}
             {showMatchModal && (
               <SmartMatchResults
                 job={job}
