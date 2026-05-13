@@ -8,6 +8,8 @@ import { vacanciesService } from '../../../services/vacanciesService';
 import { usersService } from '../../../services/userManagementService';
 import { useAuth } from '../../../context/AuthContext';
 import CrmEmpresaPanel from '../../crm/CrmEmpresaPanel';
+import SmartMatchResults from './SmartMatchResults';
+import { authFetch } from '../../../services/api';
 import './VacancyModal.css';
 
 /**
@@ -62,8 +64,6 @@ export default function VacancyModal({
   onAsignarVacante,
   currentUser,
   isNegocio,
-  onSmartMatch,
-  isMatching,
 }) {
   const { hasRole } = useAuth();
   const isReclutador = hasRole('hr_manager') || hasRole('reclutador');
@@ -101,6 +101,39 @@ export default function VacancyModal({
   });
   const [hrUsers, setHrUsers] = useState([]);
   const [selectedHrId, setSelectedHrId] = useState('');
+
+  // --- 🤖 ESTADOS Y FUNCIÓN PARA SMART MATCH IA 🤖 ---
+  const [showMatchModal, setShowMatchModal] = useState(false);
+  const [isMatchingLocal, setIsMatchingLocal] = useState(false);
+  const [matchResults, setMatchResults] = useState([]);
+
+  const handleSmartMatchClick = async (e) => {
+    e.stopPropagation();
+    setIsMatchingLocal(true);
+
+    try {
+      const res = await authFetch(
+        `/api/matching/anthropic/offers/${job.id}/matches?top_n=5&min_skill_overlap=1&use_ai=true`,
+        {
+          method: 'GET',
+        }
+      );
+
+      if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+
+      const data = await res.json();
+
+      setMatchResults(data.candidates || data || []);
+      setShowMatchModal(true);
+    } catch (error) {
+      console.error('Error en Smart Match IA:', error);
+      setMatchResults([]);
+      setShowMatchModal(true);
+    } finally {
+      setIsMatchingLocal(false);
+    }
+  };
+  // --------------------------------------------------
 
   useEffect(() => {
     if (isNegocio && activeTab === 'detalles') {
@@ -593,15 +626,12 @@ export default function VacancyModal({
                 {isNegocio && (
                   <div className="pb-2 pe-2">
                     <button
-                      className={`btn btn-primary-custom btn-sm ${isMatching ? 'disabled' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (onSmartMatch) onSmartMatch(e);
-                      }}
-                      disabled={isMatching}
+                      className={`btn btn-primary-custom btn-sm ${isMatchingLocal ? 'disabled' : ''}`}
+                      onClick={handleSmartMatchClick}
+                      disabled={isMatchingLocal}
                       title="Smart Match con IA"
                     >
-                      {isMatching ? (
+                      {isMatchingLocal ? (
                         <>
                           <span
                             className="spinner-border spinner-border-sm me-2"
@@ -1642,6 +1672,13 @@ export default function VacancyModal({
           </div>
         </div>
       </div>
+      {/* MODAL DE RESULTADOS DE IA */}
+      {showMatchModal && (
+        <SmartMatchResults
+          candidates={matchResults}
+          onClose={() => setShowMatchModal(false)}
+        />
+      )}
     </>
   );
 }
