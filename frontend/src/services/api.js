@@ -81,7 +81,8 @@ export const ENDPOINTS = {
       unassignHr: (hrId, vacancyIds) =>
         `${BASE_URL}/api/vacancies/unassign-hr/${hrId}/${vacancyIds}`,
       notes: (id) => `${BASE_URL}/api/vacancies/${id}/notes`,
-      updateNote: (id, noteId) => `${BASE_URL}/api/vacancies/${id}/notes/${noteId}`,
+      updateNote: (id, noteId) =>
+        `${BASE_URL}/api/vacancies/${id}/notes/${noteId}`,
     },
   },
 
