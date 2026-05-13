@@ -550,3 +550,26 @@ async def update_candidate_tracking(
     await db.commit()
     
     return True
+
+async def update_vacancy_note(db: AsyncSession, note_id: int, note_data) -> bool:
+    result = await db.execute(
+        select(TrackingHistory).where(TrackingHistory.id == note_id)
+    )
+    note = result.scalar_one_or_none()
+    if not note:
+        return False
+    note.comments = note_data.texto
+    await db.commit()
+    return True
+
+
+async def delete_vacancy_note(db: AsyncSession, note_id: int) -> bool:
+    result = await db.execute(
+        select(TrackingHistory).where(TrackingHistory.id == note_id)
+    )
+    note = result.scalar_one_or_none()
+    if not note:
+        return False
+    await db.delete(note)
+    await db.commit()
+    return True
