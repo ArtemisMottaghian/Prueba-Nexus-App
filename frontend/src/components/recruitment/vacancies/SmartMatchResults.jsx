@@ -40,28 +40,7 @@ export default function SmartMatchResults({ job, candidates, onClose }) {
                   <div className="match-candidate-header">
                     <div className="candidate-info">
                       <span className="candidate-name">
-                        <span
-                          onClick={() =>
-                            window.open(
-                              `/candidates/${candidate.candidate_id}`,
-                              '_blank'
-                            )
-                          }
-                          style={{
-                            cursor: 'pointer',
-                            textDecoration: 'none',
-                          }}
-                          title="Ver perfil completo"
-                          onMouseEnter={(e) =>
-                            (e.target.style.color = '#7c3aed')
-                          }
-                          onMouseLeave={(e) =>
-                            (e.target.style.color = 'inherit')
-                          }
-                        >
-                          {candidate.name}
-                        </span>
-
+                        {candidate.name}
                         {candidate.verified && (
                           <i
                             className="bi bi-patch-check-fill text-info ms-2"
