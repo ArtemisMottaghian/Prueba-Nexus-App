@@ -1670,6 +1670,7 @@ export default function VacancyModal({
       {/* MODAL DE RESULTADOS DE IA */}
       {showMatchModal && (
         <SmartMatchResults
+          job={job}
           candidates={matchResults}
           onClose={() => setShowMatchModal(false)}
         />
