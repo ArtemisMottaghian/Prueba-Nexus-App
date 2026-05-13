@@ -2,23 +2,14 @@ import { useState } from 'react';
 import './EditCandidate.css';
 
 export default function EditCandidate({ candidate, onClose, onSave }) {
-  // 1. Preparamos el nombre antes de inicializar el estado
-  const nameParts = (candidate?.name || '').split(' ');
-  const fName = nameParts[0] || '';
-  const lName = nameParts.slice(1).join(' ') || '';
-
-  // 2. Metemos los datos del candidato DIRECTAMENTE en el estado inicial
   const [formData, setFormData] = useState({
-    first_name: fName,
-    last_name: lName,
+    name: candidate?.name || '',
     email: candidate?.email || '',
     phone: candidate?.phone || '',
-    candidate_url: candidate?.candidate_url || '',
-    cv_url: candidate?.cv_url || '',
+    education: candidate?.education || '',
     location: candidate?.location || '',
     experience: candidate?.experience || '',
-    skills: candidate?.specialty || '',
-    notes: candidate?.notes || '',
+    specialty: candidate?.specialty || candidate?.skills || '',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,25 +23,34 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
     e.preventDefault();
     setIsSubmitting(true);
 
+    // Formateamos los datos tal y como los espera el backend
+    const expNumber = formData.experience
+      ? parseInt(formData.experience, 10)
+      : 0;
+    const skillsArray = formData.specialty
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
     const updatedData = {
-      first_name: formData.first_name.trim(),
-      last_name: formData.last_name.trim(),
+      name: formData.name.trim(),
       email: formData.email.trim(),
       phone: formData.phone.trim(),
-      candidate_url: formData.candidate_url.trim(),
-      cv_url: formData.cv_url.trim(),
-      skills: formData.skills.trim(),
-      notes: formData.notes.trim(),
+      education: formData.education,
       location: formData.location.trim(),
-      experience: formData.experience.trim(),
+      experience: expNumber,
+      specialty: formData.specialty.trim(),
+      skills: skillsArray,
     };
 
-    await onSave(candidate.id, updatedData);
-    setIsSubmitting(false);
+    try {
+      await onSave(candidate.id, updatedData);
+    } catch (err) {
+      console.error('Fallo al guardar la edición:', err);
+      // Si el backend da error, paramos el spinner para que no se quede "pillado"
+      setIsSubmitting(false);
+    }
   };
-
-  const isFormValid =
-    formData.first_name.trim() !== '' && formData.email.trim() !== '';
 
   return (
     <>
@@ -78,56 +78,45 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
 
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
-                {/* --- SECCIÓN: Datos Personales --- */}
-                <h6 className="text-primary mb-3 border-bottom pb-2">
-                  Datos Personales
-                </h6>
-                <div className="row">
-                  <div className="col-md-6 mb-3">
-                    <label className="form-label fw-semibold">
-                      Nombre <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="first_name"
-                      value={formData.first_name}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="col-md-6 mb-3">
-                    <label className="form-label fw-semibold">Apellidos</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="last_name"
-                      value={formData.last_name}
-                      onChange={handleChange}
-                    />
-                  </div>
+                {/* Nombre Completo */}
+                <div className="mb-3">
+                  <label htmlFor="name" className="form-label fw-semibold">
+                    Nombre Completo <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                  />
                 </div>
 
-                {/* --- SECCIÓN: Contacto --- */}
+                {/* Contacto */}
                 <div className="row">
                   <div className="col-md-6 mb-3">
-                    <label className="form-label fw-semibold">
-                      Email <span className="text-danger">*</span>
+                    <label htmlFor="email" className="form-label fw-semibold">
+                      Email
                     </label>
                     <input
                       type="email"
                       className="form-control"
+                      id="email"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      required
                     />
                   </div>
                   <div className="col-md-6 mb-3">
-                    <label className="form-label fw-semibold">Teléfono</label>
+                    <label htmlFor="phone" className="form-label fw-semibold">
+                      Teléfono
+                    </label>
                     <input
                       type="tel"
                       className="form-control"
+                      id="phone"
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
@@ -135,45 +124,85 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
                   </div>
                 </div>
 
+                {/* Perfil */}
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label
+                      htmlFor="education"
+                      className="form-label fw-semibold"
+                    >
+                      Formación / Titulación
+                    </label>
+                    <select
+                      className="form-select"
+                      id="education"
+                      name="education"
+                      value={formData.education}
+                      onChange={handleChange}
+                    >
+                      <option value="">Selecciona una opción...</option>
+                      <option value="Bootcamp">Bootcamp</option>
+                      <option value="FP Grado Medio">FP Grado Medio</option>
+                      <option value="FP Grado Superior">
+                        FP Grado Superior
+                      </option>
+                      <option value="Grado Universitario">
+                        Grado Universitario
+                      </option>
+                      <option value="Máster">Máster</option>
+                      <option value="Autodidacta">Autodidacta</option>
+                    </select>
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label
+                      htmlFor="experience"
+                      className="form-label fw-semibold"
+                    >
+                      Años de experiencia
+                    </label>
+                    <div className="input-group">
+                      <input
+                        type="number"
+                        className="form-control"
+                        id="experience"
+                        name="experience"
+                        value={formData.experience}
+                        onChange={handleChange}
+                        min="0"
+                      />
+                      <span className="input-group-text">años</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Localización y Habilidades */}
                 <div className="mb-3">
-                  <label className="form-label fw-semibold">Ubicación</label>
+                  <label htmlFor="location" className="form-label fw-semibold">
+                    Localización
+                  </label>
                   <input
                     type="text"
                     className="form-control"
+                    id="location"
                     name="location"
                     value={formData.location}
                     onChange={handleChange}
                   />
                 </div>
-
-                {/* --- SECCIÓN: Perfil --- */}
-                <h6 className="text-primary mt-4 mb-3 border-bottom pb-2">
-                  Perfil Profesional
-                </h6>
-                <div className="row">
-                  <div className="col-md-6 mb-3">
-                    <label className="form-label fw-semibold">
-                      Experiencia
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="experience"
-                      value={formData.experience}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="col-md-6 mb-3">
-                    <label className="form-label fw-semibold">
-                      Habilidades
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="skills"
-                      value={formData.skills}
-                      onChange={handleChange}
-                    />
+                <div className="mb-3">
+                  <label htmlFor="specialty" className="form-label fw-semibold">
+                    Herramientas y Habilidades Específicas
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="specialty"
+                    name="specialty"
+                    value={formData.specialty}
+                    onChange={handleChange}
+                  />
+                  <div className="form-text">
+                    Escribe las tecnologías o habilidades separadas por comas.
                   </div>
                 </div>
               </div>
@@ -190,7 +219,7 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  disabled={!isFormValid || isSubmitting}
+                  disabled={!formData.name.trim() || isSubmitting}
                 >
                   {isSubmitting ? 'Guardando...' : 'Actualizar Candidato'}
                 </button>

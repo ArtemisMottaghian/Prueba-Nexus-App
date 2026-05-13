@@ -54,11 +54,11 @@ const mapToFrontend = (client) => ({
   })),
   vacantes: client.positions
     ? client.positions.map((p) => ({
-      id: p.id,
-      titulo: p.title,
-      estado: p.status,
-      fecha: p.date,
-    }))
+        id: p.id,
+        titulo: p.title,
+        estado: p.status,
+        fecha: p.date,
+      }))
     : client.vacantes || [],
 });
 
@@ -89,7 +89,6 @@ export const getClientes = async (entityType = 'confirmed_client') => {
 
     const data = await response.json();
     return data.map(mapToFrontend);
-
   } catch (error) {
     console.warn(
       'Backend offline o fallando, usando datos de prueba...',

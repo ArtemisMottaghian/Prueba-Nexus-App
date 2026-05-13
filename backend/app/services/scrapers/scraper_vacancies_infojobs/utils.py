@@ -126,23 +126,23 @@ async def upsert_job_offer(db_session, job_data: dict, model_class=None) -> bool
     Usa 'company_id' para la relación correcta en la base de datos.
     """    
     # Eliminamos company_name del diccionario para que no choque con el SQL
-    job_data.pop("company_name", None)
     job_data.pop("company_description", None)
 
     # Query usando company_id
     query = text("""
         INSERT INTO job_offers (
-            portal_id, company_id, external_id, title, location, offer_url, 
+            portal_id, company_id, external_id, title,company_name,location, offer_url, 
             job_description, published_at, sector, salary_min, salary_max, 
             contract_type, contract_time, work_modality
         ) VALUES (
-            :portal_id, :company_id, :external_id, :title, :location, :offer_url, 
+            :portal_id, :company_id, :external_id, :title, :company_name, :location, :offer_url, 
             :job_description, :published_at, :sector, :salary_min, :salary_max, 
             :contract_type, :contract_time, :work_modality
         )
         ON CONFLICT (portal_id, external_id) 
         DO UPDATE SET 
             company_id = EXCLUDED.company_id,
+            company_name = EXCLUDED.company_name,
             title = EXCLUDED.title,
             location = EXCLUDED.location,
             offer_url = EXCLUDED.offer_url,
@@ -154,6 +154,8 @@ async def upsert_job_offer(db_session, job_data: dict, model_class=None) -> bool
             work_modality = EXCLUDED.work_modality,
             sector = EXCLUDED.sector
     """)
+
+
     try:
         await db_session.execute(query, job_data)
         await db_session.commit()
