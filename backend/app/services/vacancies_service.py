@@ -473,7 +473,7 @@ async def get_vacancy_notes(db: AsyncSession, vacancy_id: int) -> list[dict]:
             "name": nombre_usuario, 
             "phase": entry.action_type or "Actualización",
             "result": resultado_texto,
-            "notes": entry.comments or "",
+            "notes": [entry.comments] if entry.comments else [],
             "date": entry.recorded_at
         })
 
