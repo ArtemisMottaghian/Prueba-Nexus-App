@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import SourceOriginBadge from '../shared/SourceOriginBadge';
 import {
-  getClienteByNombre,
+  getClienteById,
   updateEstadoCuenta,
 } from '../../../services/clientesService';
 import { vacanciesService } from '../../../services/vacanciesService';
@@ -119,28 +119,6 @@ export default function VacancyModal({
     }
   }, [isNegocio, activeTab]);
 
-  useEffect(() => {
-    if (activeTab !== 'seguimiento' || !job?.id) return;
-
-    const fetchNotes = async () => {
-      try {
-        const notes = await vacanciesService.getNotes(job.id);
-        setLocalSeguimiento(
-          notes.map((n) => ({
-            id: n.id,
-            texto: n.notes?.[0] || n.result || '',
-            fecha: n.date ? new Date(n.date).toLocaleDateString('es-ES') : '',
-            autor: n.name || 'Sistema',
-          }))
-        );
-      } catch (err) {
-        console.error('Error cargando notas:', err);
-      }
-    };
-
-    fetchNotes();
-  }, [activeTab, job?.id]);
-
   // Documentos locales
   const [localDocs, setLocalDocs] = useState(job?.documentos || []);
   const [docTipo, setDocTipo] = useState('CV');
@@ -168,14 +146,14 @@ export default function VacancyModal({
   const [loadingEmpresa, setLoadingEmpresa] = useState(false);
 
   useEffect(() => {
-    // Cargamos el CRM solo cuando se abre la pestaña CRM y hay empresa identificada
     let cancelado = false;
-    if (activeTab !== 'crm' || !job?.companyName || empresaCrm) return;
+
+    if (activeTab !== 'crm' || !job?.company_id || empresaCrm) return;
 
     (async () => {
       try {
         setLoadingEmpresa(true);
-        const empresa = await getClienteByNombre(job.companyName);
+        const empresa = await getClienteById(job.company_id);
         if (!cancelado) setEmpresaCrm(empresa);
       } catch (err) {
         console.error('Error cargando CRM de la empresa:', err);
@@ -187,7 +165,7 @@ export default function VacancyModal({
     return () => {
       cancelado = true;
     };
-  }, [activeTab, job?.companyName, empresaCrm]);
+  }, [activeTab, job?.company_id, empresaCrm]);
 
   if (!job) return null;
 
