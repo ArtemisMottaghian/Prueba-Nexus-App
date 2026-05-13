@@ -119,8 +119,6 @@ export default function VacancyModal({
     }
   }, [isNegocio, activeTab]);
 
-  }, [isNegocio, activeTab]);
-
   useEffect(() => {
     if (activeTab !== 'seguimiento' || !job?.id) return;
 
