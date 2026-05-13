@@ -8,6 +8,8 @@ import { vacanciesService } from '../../../services/vacanciesService';
 import { usersService } from '../../../services/userManagementService';
 import { useAuth } from '../../../context/AuthContext';
 import CrmEmpresaPanel from '../../crm/CrmEmpresaPanel';
+import { authFetch } from '../../../services/api';
+import SmartMatchResults from './SmartMatchResults';
 import './VacancyModal.css';
 
 /**
@@ -62,8 +64,6 @@ export default function VacancyModal({
   onAsignarVacante,
   currentUser,
   isNegocio,
-  onSmartMatch,
-  isMatching,
 }) {
   const { hasRole } = useAuth();
   const isReclutador = hasRole('hr_manager') || hasRole('reclutador');
@@ -101,6 +101,39 @@ export default function VacancyModal({
   });
   const [hrUsers, setHrUsers] = useState([]);
   const [selectedHrId, setSelectedHrId] = useState('');
+
+  // --- 🤖 ESTADOS Y FUNCIÓN PARA SMART MATCH IA 🤖 ---
+  const [showMatchModal, setShowMatchModal] = useState(false);
+  const [isMatchingLocal, setIsMatchingLocal] = useState(false);
+  const [matchResults, setMatchResults] = useState([]);
+
+  const handleSmartMatchClick = async (e) => {
+    e.stopPropagation();
+    setIsMatchingLocal(true);
+
+    try {
+      // ⚠️ LLAMADA REAL AL BACKEND DE ALBERTO
+      const res = await authFetch(`/api/ai/match-vacancy/${job.id}`, {
+        method: 'POST',
+      });
+
+      if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+
+      const data = await res.json();
+
+      // Asegúrate con Alberto de que su JSON devuelva 'candidates' (ej: { candidates: [...] })
+      // Si devuelve otra cosa, cambiaremos el 'data.candidates' por lo que él diga.
+      setMatchResults(data.candidates || data || []);
+      setShowMatchModal(true);
+    } catch (error) {
+      console.error('Error en Smart Match IA:', error);
+      setMatchResults([]); // Si falla el backend, mostramos tu estado vacío (robot)
+      setShowMatchModal(true);
+    } finally {
+      setIsMatchingLocal(false);
+    }
+  };
+  // --------------------------------------------------
 
   useEffect(() => {
     if (isNegocio && activeTab === 'detalles') {
@@ -146,7 +179,6 @@ export default function VacancyModal({
   const [loadingEmpresa, setLoadingEmpresa] = useState(false);
 
   useEffect(() => {
-    // Cargamos el CRM solo cuando se abre la pestaña CRM y hay empresa identificada
     let cancelado = false;
     if (activeTab !== 'crm' || !job?.companyName || empresaCrm) return;
 
@@ -174,7 +206,7 @@ export default function VacancyModal({
     try {
       await vacanciesService.updateVacancy(job.id, { status: localStatus });
     } catch {
-      // Persiste localmente vía Vacancies.jsx (handleUpdateJobStatus ya lo guarda en LS)
+      // Persiste localmente vía Vacancies.jsx
     }
     setSaveSuccess(true);
     setTimeout(() => {
@@ -193,7 +225,6 @@ export default function VacancyModal({
     if (!noteText.trim()) return;
     setSavingNote(true);
 
-    // Id local para identificar la nota antes de que el backend le asigne uno
     const localId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     const nuevaNota = {
@@ -210,7 +241,6 @@ export default function VacancyModal({
         job.id,
         nuevaNota.texto
       );
-      // Si el backend responde con un id real, lo guardamos en la nota
       if (notaCreada?.id) {
         setLocalSeguimiento((prev) =>
           prev.map((n) =>
@@ -219,7 +249,7 @@ export default function VacancyModal({
         );
       }
     } catch {
-      // Nota añadida localmente, se sincronizará cuando el backend esté disponible
+      // Persiste en local
     } finally {
       setSavingNote(false);
     }
@@ -241,7 +271,6 @@ export default function VacancyModal({
 
     const nota = localSeguimiento[idx];
 
-    // Actualización optimista (siempre funciona en local)
     setLocalSeguimiento((prev) =>
       prev.map((n, i) =>
         i === idx
@@ -257,12 +286,11 @@ export default function VacancyModal({
     setEditingNoteIdx(null);
     setEditingNoteText('');
 
-    // Sincronizar con backend solo si la nota ya tiene id real
     if (nota?.id) {
       try {
         await vacanciesService.updateNote?.(job.id, nota.id, nuevoTexto);
       } catch {
-        // Cambio persiste en local, se sincronizará cuando el backend esté disponible
+        // Fallo silencioso, persiste en local
       }
     }
   };
@@ -281,14 +309,13 @@ export default function VacancyModal({
       try {
         await vacanciesService.deleteNote?.(job.id, nota.id);
       } catch {
-        // Borrado local, se sincronizará cuando el backend esté disponible
+        // Fallo silencioso, persiste en local
       }
     }
   };
 
   const handleUpdateEstadoCuenta = async (nuevoEstado) => {
     if (!empresaCrm) return;
-    // Optimistic update: el cambio se refleja inmediatamente
     setEmpresaCrm((prev) => ({ ...prev, estadoCuenta: nuevoEstado }));
     try {
       await updateEstadoCuenta(empresaCrm.id, nuevoEstado);
@@ -571,15 +598,12 @@ export default function VacancyModal({
                 {isNegocio && (
                   <div className="pb-2 pe-2">
                     <button
-                      className={`btn btn-primary-custom btn-sm ${isMatching ? 'disabled' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (onSmartMatch) onSmartMatch(e);
-                      }}
-                      disabled={isMatching}
+                      className={`btn btn-primary-custom btn-sm ${isMatchingLocal ? 'disabled' : ''}`}
+                      onClick={handleSmartMatchClick}
+                      disabled={isMatchingLocal}
                       title="Smart Match con IA"
                     >
-                      {isMatching ? (
+                      {isMatchingLocal ? (
                         <>
                           <span
                             className="spinner-border spinner-border-sm me-2"
@@ -590,7 +614,7 @@ export default function VacancyModal({
                         </>
                       ) : (
                         <>
-                          <i className="bi bi-stars me-2"></i>Smart Match IA
+                          <i className="bi bi-robot me-2"></i>Smart Match IA
                         </>
                       )}
                     </button>
@@ -1477,7 +1501,7 @@ export default function VacancyModal({
                             No hay candidatos registrados para esta vacante.
                           </p>
                           <small className="text-muted">
-                            Usa el formulario de arriba para añadir el primer
+                            Uusa el formulario de arriba para añadir el primer
                             candidato.
                           </small>
                         </div>
@@ -1617,6 +1641,15 @@ export default function VacancyModal({
                 )}
               </button>
             </div>
+
+            {/* 👇 AQUÍ ESTÁ EL MODAL DE IA QUE SE ABRIRÁ POR ENCIMA 👇 */}
+            {showMatchModal && (
+              <SmartMatchResults
+                job={job}
+                candidates={matchResults}
+                onClose={() => setShowMatchModal(false)}
+              />
+            )}
           </div>
         </div>
       </div>
