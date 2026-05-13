@@ -46,7 +46,7 @@ async def read_candidates(
 ):
     return await candidates_service.get_all_candidates(db, location, skills, status, source,verified)
 
-#busqueda por nombre o apellido
+# busqueda por nombre o apellido
 @router.get("/search", response_model=List[CandidateFrontendOut])
 async def search_candidates(
     name: str = Query(..., min_length=3, description="Nombre o apellido a buscar"),
@@ -181,7 +181,7 @@ async def verify_candidate(
     return {
         "message": f"Candidato {'verificado' if body.verified else 'desverificado'} correctamente"
     }
-    
+
 # --------------------
 # PROCESAR CV (INBOUND PDF O LINKEDIN)
 # POST /api/candidates/process-cv
@@ -194,54 +194,54 @@ async def process_cv(
     """Procesa un candidato subiendo su CV en PDF y se guarda en la BD"""
     if not pdf_file:
         raise HTTPException(status_code=400, detail="Debes subir un archivo PDF con el CV.")
-    
+
     try:
         raw_text = ""
-        
+
         # Subida de archivo PDF
         if not pdf_file.filename.lower().endswith('.pdf'):
             raise HTTPException(status_code=400, detail="El archivo debe ser un PDF válido.")
-        
+
         file_bytes = await pdf_file.read()
-        
+
         with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
             raw_text = "\n".join([page.extract_text() for page in pdf.pages if page.extract_text()])
-        
+
         if not raw_text or not raw_text.strip():
             raise HTTPException(status_code=400, detail="No se pudo extraer el texto del documento PDF.")
-        
+
         # Estructuramos los datos con Gemini
         candidate_json = await parse_with_gemini(raw_text)
-        
+
         email_extraido = candidate_json.get("email", "")
         if not email_extraido or "@" not in email_extraido:
             fn = str(candidate_json.get("first_name", "candidato")).lower().replace(" ", "")
             ln = str(candidate_json.get("last_name", "desconocido")).lower().replace(" ", "")
-            
+
             fn = unicodedata.normalize('NFKD', fn).encode('ascii', 'ignore').decode('utf-8')
             ln = unicodedata.normalize('NFKD', ln).encode('ascii', 'ignore').decode('utf-8')
-            
+
             fn_clean = re.sub(r'[^a-z0-9]', '', fn)
             ln_clean = re.sub(r'[^a-z0-9]', '', ln)
-            
+
             if not fn_clean: fn_clean = "candidato"
             if not ln_clean: ln_clean = "desconocido"
-            
+
             codigo_unico = uuid.uuid4().hex[:5]    
             email_extraido = f"{fn_clean}.{ln_clean}.{codigo_unico}@scraping.com"
-                
+
         phone_extraido = candidate_json.get("phone", "")
         if not phone_extraido or len(str(phone_extraido)) < 7:
             phone_extraido = "000000000"
-        
+
         fn_final = str(candidate_json.get("first_name", "")).strip()
         if len(fn_final) < 2:
             fn_final = "Candidato"
-            
+
         ln_final = str(candidate_json.get("last_name", "")).strip()
         if len(ln_final) < 2:
             ln_final = "Desconocido"
-            
+
         candidate_payload = CandidateCreate(
             first_name=fn_final,
             last_name=ln_final,
@@ -255,10 +255,10 @@ async def process_cv(
             candidate_url=None, # <- ¡CORREGIDO! Ya no usamos la variable fantasma de LinkedIn
             status="active"
         )
-        
+
         new_candidate = await candidates_service.create_candidate(db, candidate_payload)
         return new_candidate
-    
+
     except HTTPException:
         # Si es un error HTTP controlado, lo lanzamos tal cual
         raise
@@ -267,3 +267,9 @@ async def process_cv(
         traceback.print_exc()
 
         raise HTTPException(status_code=500, detail=f"Error interno procesando el candidato: {str(e)}")
+
+
+@router.get("/locations", response_model=List[str])
+async def get_locations(db: AsyncSession = Depends(get_db)):
+    """Devuelve una lista de ubicaciones normalizadas."""
+    return await candidates_service.get_location_options(db)
