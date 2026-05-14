@@ -48,6 +48,8 @@ class Settings(BaseSettings):
 
     ANTHROPIC_API_KEY: str = ""
 
+    CHAT_ENCRYPTION_KEY: str = ""
+
     # URLs de Google OAuth
     GOOGLE_AUTH_URL: str = "https://accounts.google.com/o/oauth2/v2/auth"
     GOOGLE_TOKEN_URL: str = "https://oauth2.googleapis.com/token"

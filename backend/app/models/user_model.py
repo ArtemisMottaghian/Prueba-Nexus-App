@@ -22,6 +22,7 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     google_access_token = Column(String, nullable=True)
     google_refresh_token = Column(String, nullable=True)
+    last_seen_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
@@ -32,6 +33,7 @@ class User(Base):
     searches = relationship("Search", back_populates="user")
     # 'managed_offers" accede a ofertas donde este usuario es el gestor
     managed_offers = relationship("JobOffer", secondary=VacancyAssignment.__table__, back_populates="managers")
+    conversations = relationship("ConversationParticipant", back_populates="user")
 
     #client_profile = relationship("Client", back_populates="user", uselist=False)
 

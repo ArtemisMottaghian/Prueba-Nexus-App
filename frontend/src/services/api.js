@@ -116,4 +116,15 @@ export const ENDPOINTS = {
     update: (id) => `${BASE_URL}/api/calendar/${id}`,
     delete: (id) => `${BASE_URL}/api/calendar/${id}`,
   },
+
+  chat: {
+    list: `${BASE_URL}/api/conversations`,
+    create: `${BASE_URL}/api/conversations`,
+    messages: (convId) => `${BASE_URL}/api/conversations/${convId}/messages`,
+    send: (convId) => `${BASE_URL}/api/conversations/${convId}/messages`,
+    markRead: (convId) => `${BASE_URL}/api/conversations/${convId}/read`,
+    offline: `${BASE_URL}/api/conversations/offline`,
+    deleteMessage: (convId, msgId) =>
+      `${BASE_URL}/api/conversations/${convId}/messages/${msgId}`,
+  },
 };

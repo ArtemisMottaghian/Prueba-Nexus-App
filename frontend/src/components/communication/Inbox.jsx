@@ -1,5 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import './Inbox.css';
+import { ChatThread } from './ChatThread';
+import { usersService } from '../../services/userManagementService';
+import { useAuth } from '../../context/AuthContext';
 
 function useMediaQuery(query) {
   const [matches, setMatches] = useState(() =>
@@ -17,24 +20,65 @@ function useMediaQuery(query) {
   return matches;
 }
 
-const InboxComponent = ({ conversations, onSelectConversation }) => {
-  const [selectedId, setSelectedId] = useState(null);
+const InboxComponent = ({
+  conversations,
+  onSelectChat,
+  selectedChatId,
+  onSendMessage,
+  onNewChat,
+  isLoading,
+}) => {
+  const { user } = useAuth();
   const isMobile = useMediaQuery('(max-width: 767px)');
+  const [showPicker, setShowPicker] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const pickerRef = useRef(null);
 
-  const showSidebar = !isMobile || !selectedId;
-  const showChatPanel = !isMobile || !!selectedId;
+  const showSidebar = !isMobile || !selectedChatId;
+  const showChatPanel = !isMobile || selectedChatId;
 
   const handleSelect = useCallback(
-    (conv) => {
-      setSelectedId(conv.id);
-      onSelectConversation(conv);
-    },
-    [onSelectConversation]
+    (conv) => onSelectChat(conv.id),
+    [onSelectChat]
   );
 
-  const handleBack = useCallback(() => {
-    setSelectedId(null);
-  }, []);
+  const handleBack = useCallback(() => onSelectChat(null), [onSelectChat]);
+
+  const selectedConversation = conversations.find(
+    (c) => c.id === selectedChatId
+  );
+
+  const handleOpenPicker = async () => {
+    setShowPicker((v) => !v);
+    if (users.length > 0) return;
+    setLoadingUsers(true);
+    try {
+      const all = await usersService.getAllUsers();
+      setUsers(all.filter((u) => u.id !== user?.id));
+    } catch {
+      setUsers([]);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const handlePickUser = async (userId) => {
+    setShowPicker(false);
+    if (onNewChat) await onNewChat(userId);
+  };
+
+  // Cerrar picker al hacer click fuera
+  useEffect(() => {
+    if (!showPicker) return;
+    const onClickOutside = (e) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target)) {
+        setShowPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [showPicker]);
 
   return (
     <div className="inbox-container">
@@ -42,77 +86,102 @@ const InboxComponent = ({ conversations, onSelectConversation }) => {
         <aside className="inbox-sidebar">
           <div className="inbox-header">
             <h2>Mensajes</h2>
-            <span className="badge">{conversations.length}</span>
-          </div>
-          <div className="inbox-list">
-            {conversations.map((conv) => (
-              <div
-                key={conv.id}
-                className={`conversation-item ${selectedId === conv.id ? 'active' : ''}`}
-                onClick={() => handleSelect(conv)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleSelect(conv);
-                  }
-                }}
-              >
-                <div className="avatar">{conv.name.charAt(0)}</div>
-                <div className="conv-info">
-                  <div className="conv-top">
-                    <span className="name">{conv.name}</span>
-                    <span className="time">{conv.time}</span>
+            <div className="inbox-header-actions">
+              <span className="badge">{conversations.length}</span>
+              <div className="new-chat-wrapper" ref={pickerRef}>
+                <button
+                  className="new-chat-btn"
+                  onClick={handleOpenPicker}
+                  title="Nueva conversación"
+                  type="button"
+                >
+                  +
+                </button>
+                {showPicker && (
+                  <div className="user-picker">
+                    <p className="user-picker-title">Nueva conversación</p>
+                    {loadingUsers ? (
+                      <p className="user-picker-empty">Cargando...</p>
+                    ) : users.length === 0 ? (
+                      <p className="user-picker-empty">No hay usuarios</p>
+                    ) : (
+                      users.map((u) => (
+                        <div
+                          key={u.id}
+                          className="user-picker-item"
+                          onClick={() => handlePickUser(u.id)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handlePickUser(u.id);
+                          }}
+                        >
+                          <div className="avatar avatar--sm">
+                            {(u.name || u.email).charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="user-picker-name">
+                              {u.name || u.email}
+                            </p>
+                            <p className="user-picker-role">{u.role}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
-                  <p className="last-msg">{conv.lastMessage}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="inbox-list">
+            {isLoading ? (
+              <div className="text-center p-3">
+                <div className="spinner-border" role="status">
+                  <span className="visually-hidden">Cargando...</span>
                 </div>
               </div>
-            ))}
+            ) : (
+              conversations.map((conv) => {
+                const lastMsg = conv.messages[conv.messages.length - 1];
+                return (
+                  <div
+                    key={conv.id}
+                    className={`conversation-item ${selectedChatId === conv.id ? 'active' : ''}`}
+                    onClick={() => handleSelect(conv)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleSelect(conv);
+                      }
+                    }}
+                  >
+                    <div className="avatar">{conv.name.charAt(0)}</div>
+                    <div className="conv-info">
+                      <div className="conv-top">
+                        <span className="name">{conv.name}</span>
+                        <span className="time">{lastMsg?.timestamp ?? ''}</span>
+                      </div>
+                      <p className="last-msg">{lastMsg?.content ?? ''}</p>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </aside>
       )}
 
       {showChatPanel && (
         <main className="chat-window">
-          {selectedId ? (
-            <>
-              <header className="chat-header">
-                {isMobile && (
-                  <button
-                    type="button"
-                    className="chat-header__back"
-                    onClick={handleBack}
-                    aria-label="Volver al listado"
-                  >
-                    <i className="bi bi-arrow-left" aria-hidden />
-                  </button>
-                )}
-                <h3>{conversations.find((c) => c.id === selectedId)?.name}</h3>
-              </header>
-              <div className="chat-messages">
-                <div className="empty-state">
-                  <p>Cargando historial de mensajes para este candidato...</p>
-                </div>
-              </div>
-              <footer className="chat-input">
-                <input
-                  type="text"
-                  placeholder="Escribe un mensaje de seguimiento..."
-                />
-                <button type="button" className="send-btn">
-                  Enviar
-                </button>
-              </footer>
-            </>
-          ) : (
-            <div className="no-selection">
-              <div>
-                <i className="bi bi-chat-dots no-selection__icon" aria-hidden />
-                <p>Selecciona una conversación para ver los detalles</p>
-              </div>
-            </div>
-          )}
+          <ChatThread
+            selectedConversation={selectedConversation}
+            isMobile={isMobile}
+            handleBack={handleBack}
+            onSendMessage={onSendMessage}
+          />
         </main>
       )}
     </div>
