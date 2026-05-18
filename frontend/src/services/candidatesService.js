@@ -46,7 +46,22 @@ export const candidatesService = {
       body: formData,
     });
 
-    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+    if (!response.ok) {
+      // Capturamos el error EXACTO que devuelve FastAPI
+      const errorText = await response.text();
+      let errorMessage = `Error HTTP ${response.status}`;
+      try {
+        const errJson = JSON.parse(errorText);
+        errorMessage = errJson.detail
+          ? JSON.stringify(errJson.detail)
+          : errorText;
+      } catch (e) {
+        console.warn('La respuesta del error no era JSON:', e);
+        errorMessage = errorText;
+      }
+      throw new Error(errorMessage);
+    }
+
     const data = await response.json();
     return mapCandidateData(data);
   },

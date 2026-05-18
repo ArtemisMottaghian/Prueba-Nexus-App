@@ -20,6 +20,9 @@ export default function CreateCandidate({ onClose, onSave }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [parsedCandidateId, setParsedCandidateId] = useState(null);
 
+  // Nuevo estado para mostrar errores amigables en la interfaz
+  const [errorStatus, setErrorStatus] = useState(null);
+
   const fileInputRef = useRef(null);
 
   const handleChange = (e) => {
@@ -30,14 +33,17 @@ export default function CreateCandidate({ onClose, onSave }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setErrorStatus(null);
 
     const expNumber = formData.experience
       ? parseInt(formData.experience, 10)
       : 0;
     const skillsArray = formData.specialty
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
+      ? formData.specialty
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
 
     const finalData = {
       name: formData.name.trim(),
@@ -61,23 +67,28 @@ export default function CreateCandidate({ onClose, onSave }) {
         finalCandidate = await candidatesService.createCandidate(finalData);
       }
 
-      // Aseguramos el cruce correcto para la tarjeta visual
-      finalCandidate.name = finalData.name;
-      finalCandidate.specialty = finalData.specialty;
-
-      onSave(finalCandidate);
+      onSave({
+        ...finalCandidate,
+        name: finalData.name,
+        specialty: finalData.specialty,
+        experience: expNumber,
+      });
     } catch (error) {
-      console.error('Error al guardar el candidato:', error);
-      alert('Hubo un error al guardar el candidato. Inténtalo de nuevo.');
+      console.error('Error al guardar:', error);
+      setErrorStatus(
+        'No se ha podido guardar el candidato. Revisa los datos e inténtalo de nuevo.'
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Función de procesamiento con mensajes
   const processCVFile = async (file) => {
     if (!file || file.type !== 'application/pdf') return;
 
     setIsParsing(true);
+    setErrorStatus(null); // Limpiamos errores
     setCvFileName(file.name);
     setCvExtracted(false);
 
@@ -98,9 +109,20 @@ export default function CreateCandidate({ onClose, onSave }) {
       setCvExtracted(true);
     } catch (err) {
       console.error('Error al procesar el CV:', err);
-      alert(
-        'Hubo un problema procesando el PDF. Puedes rellenar los datos manualmente.'
-      );
+
+      // Traductor de errores
+      let msg = 'No hemos podido leer este PDF correctamente.';
+      if (
+        err.message.includes('already exists') ||
+        err.message.includes('duplicate')
+      ) {
+        msg =
+          '¡Este candidato ya existe! El email de este PDF ya está en la base de datos.';
+      } else if (err.message.includes('413')) {
+        msg = 'El archivo es demasiado grande para procesarlo.';
+      }
+
+      setErrorStatus(msg);
       setCvFileName('');
     } finally {
       setIsParsing(false);
@@ -122,6 +144,7 @@ export default function CreateCandidate({ onClose, onSave }) {
   const handleClearCV = () => {
     setCvFileName('');
     setCvExtracted(false);
+    setErrorStatus(null);
     setParsedCandidateId(null);
     setFormData({
       name: '',
@@ -137,9 +160,10 @@ export default function CreateCandidate({ onClose, onSave }) {
 
   return (
     <>
-      <div className="modal-backdrop fade show"></div>
+      <div className="modal-backdrop fade show" style={{ zIndex: 1055 }}></div>
       <div
         className="modal fade show d-block custom-create-modal"
+        style={{ zIndex: 1060 }}
         tabIndex="-1"
         role="dialog"
       >
@@ -157,6 +181,18 @@ export default function CreateCandidate({ onClose, onSave }) {
 
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
+                {/* ZONA DE ERROR (Cartelito rojo detallado) */}
+                {errorStatus && (
+                  <div
+                    className="alert alert-danger d-flex align-items-center animate__animated animate__shakeX"
+                    role="alert"
+                  >
+                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                    <div>{errorStatus}</div>
+                  </div>
+                )}
+
+                {/* Zona de Carga de PDF */}
                 {!cvFileName ? (
                   <div
                     className={`cv-upload-zone ${isDragging ? 'cv-upload-zone--drag' : ''}`}
@@ -198,8 +234,8 @@ export default function CreateCandidate({ onClose, onSave }) {
                     <div className="cv-success-left">
                       <i className="bi bi-check-circle-fill me-2"></i>
                       <span>
-                        Datos extraídos de <strong>{cvFileName}</strong> —
-                        Revisa los campos.
+                        Datos extraídos con éxito — Revisa los campos antes de
+                        guardar.
                       </span>
                     </div>
                     <button
@@ -212,7 +248,11 @@ export default function CreateCandidate({ onClose, onSave }) {
                   </div>
                 ) : null}
 
-                <div className={cvFileName ? '' : 'cv-divider mt-4'}>
+                <div
+                  className={
+                    cvFileName || errorStatus ? 'mt-3' : 'cv-divider mt-4'
+                  }
+                >
                   <div className="mb-3">
                     <label htmlFor="name" className="form-label fw-semibold">
                       Nombre Completo <span className="text-danger">*</span>
@@ -338,6 +378,7 @@ export default function CreateCandidate({ onClose, onSave }) {
                       name="specialty"
                       value={formData.specialty}
                       onChange={handleChange}
+                      placeholder="Ej: React, Node, SQL..."
                     />
                   </div>
                 </div>
