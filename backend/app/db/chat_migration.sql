@@ -51,6 +51,21 @@ CREATE INDEX IF NOT EXISTS idx_participants_user_id
 CREATE INDEX IF NOT EXISTS idx_participants_conversation_id
     ON conversation_participants(conversation_id);
 
+-- Cubre ORDER BY updated_at DESC en list_conversations
+CREATE INDEX IF NOT EXISTS idx_conversations_updated_at
+    ON conversations(updated_at DESC);
+
+-- Partial index para unread count: excluye mensajes eliminados del índice
+-- Cubre: WHERE conversation_id IN (...) AND sender_id != X AND is_deleted = false AND created_at > Y
+CREATE INDEX IF NOT EXISTS idx_messages_unread
+    ON messages(conversation_id, created_at, sender_id)
+    WHERE is_deleted = false;
+
+-- Cubre el MAX(id) por conversación usado en list_conversations optimizado
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_max_id
+    ON messages(conversation_id, id DESC)
+    WHERE is_deleted = false;
+
 
 -- Trigger updated_at para conversations
 CREATE TRIGGER update_conversations_modtime

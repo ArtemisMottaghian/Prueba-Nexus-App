@@ -3,11 +3,45 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from typing import List
 
-from app.schemas.users_schemas import NewUser, UserResponse,UserUpdate, MessageResponse
+from app.schemas.users_schemas import NewUser, UserResponse, UserUpdate, MessageResponse, NotificationPrefsUpdate
 from app.services import users_service
 from app.db.connection import get_db
+from app.core.jwt import get_current_user_db
+from app.models.user_model import User
+from sqlalchemy import update
 
 router = APIRouter() 
+
+# -----------------
+# Perfil propio
+# GET /api/users/me
+# -----------------
+@router.get("/me", response_model=UserResponse)
+async def get_me(
+    current_user: User = Depends(get_current_user_db),
+):
+    return current_user
+
+
+# ---------------------------------
+# Preferencias de notificación
+# PATCH /api/users/me/notifications
+# ---------------------------------
+@router.patch("/me/notifications", response_model=UserResponse)
+async def update_notifications(
+    body: NotificationPrefsUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_db),
+):
+    await db.execute(
+        update(User)
+        .where(User.id == current_user.id)
+        .values(email_notifications=body.email_notifications)
+    )
+    await db.commit()
+    current_user.email_notifications = body.email_notifications
+    return current_user
+
 
 # --------------------
 # CREAR usuario

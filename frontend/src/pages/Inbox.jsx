@@ -5,29 +5,129 @@ import {
   getMessages,
   sendMessage,
   markAsRead,
+  deleteMessage,
+  editMessage,
+  archiveConversation,
   createConversation,
+  openChatStream,
+  sendTyping,
 } from '../services/chatService';
 
-const POLL_INTERVAL = 4000;
+const POLL_INTERVAL_SSE = 15000;  // solo online-status cuando SSE activo
+const POLL_INTERVAL_FALLBACK = 4000; // fallback si SSE no disponible
 
 const InboxPage = () => {
   const [conversations, setConversations] = useState([]);
   const [selectedChatId, setSelectedChatId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showArchived, setShowArchived] = useState(false);
+  const showArchivedRef = useRef(false);
+  const [typingConvId, setTypingConvId] = useState(null);
+  const [sseActive, setSseActive] = useState(false);
+  const typingTimerRef = useRef(null);
   const selectedChatIdRef = useRef(null);
+  const conversationsRef = useRef(conversations);
 
-  // Mantener ref sincronizada para usarla dentro del intervalo sin stale closure
+  // Mantener refs sincronizadas para usarlas dentro de callbacks sin stale closure
   useEffect(() => {
     selectedChatIdRef.current = selectedChatId;
   }, [selectedChatId]);
 
-  // Carga inicial de conversaciones
+  useEffect(() => {
+    conversationsRef.current = conversations;
+  }, [conversations]);
+
+  useEffect(() => {
+    showArchivedRef.current = showArchived;
+  }, [showArchived]);
+
+  // SSE — recibir mensajes nuevos e indicadores de escritura en tiempo real
+  useEffect(() => {
+    const close = openChatStream((event) => {
+      if (event.type === 'connected') {
+        setSseActive(true);
+      } else if (event.type === 'new_message') {
+        const { conv_id, message } = event;
+        setConversations((prev) =>
+          prev.map((c) => {
+            if (c.id !== conv_id) return c;
+            const alreadyExists = c.messages.some((m) => m.id === message.id);
+            if (alreadyExists) return c;
+            const mapped = {
+              id: message.id,
+              senderId: message.is_mine ? 'me' : 'other',
+              content: message.is_deleted ? '[Mensaje eliminado]' : message.content,
+              timestamp: new Date(message.created_at).toLocaleString('es-ES', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit',
+              }),
+              isDeleted: message.is_deleted,
+              isEdited: message.is_edited ?? false,
+            };
+            const isActive = selectedChatIdRef.current === conv_id;
+            return {
+              ...c,
+              messages: [...c.messages, mapped],
+              unread_count: isActive ? 0 : (c.unread_count ?? 0) + 1,
+            };
+          })
+        );
+      } else if (event.type === 'message_deleted') {
+        const { conv_id, message_id } = event;
+        setConversations((prev) =>
+          prev.map((c) => {
+            if (c.id !== conv_id) return c;
+            return {
+              ...c,
+              messages: c.messages.map((m) =>
+                m.id === message_id
+                  ? { ...m, content: '[Mensaje eliminado]', isDeleted: true }
+                  : m
+              ),
+            };
+          })
+        );
+      } else if (event.type === 'message_edited') {
+        const { conv_id, message } = event;
+        setConversations((prev) =>
+          prev.map((c) => {
+            if (c.id !== conv_id) return c;
+            return {
+              ...c,
+              messages: c.messages.map((m) =>
+                m.id === message.id
+                  ? {
+                      ...m,
+                      content: message.content,
+                      isEdited: true,
+                      isDeleted: false,
+                    }
+                  : m
+              ),
+            };
+          })
+        );
+      } else if (event.type === 'typing') {
+        setTypingConvId(event.conv_id);
+        clearTimeout(typingTimerRef.current);
+        typingTimerRef.current = setTimeout(() => setTypingConvId(null), 3000);
+      }
+    });
+    return () => {
+      close();
+      clearTimeout(typingTimerRef.current);
+    };
+  }, []);
+
+  // Recarga conversaciones cuando cambia el modo activo/archivado
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
     setError(null);
-    getChats()
+    setSelectedChatId(null);
+    setConversations([]);
+    getChats(showArchived)
       .then((data) => {
         if (!cancelled) setConversations(data);
       })
@@ -44,31 +144,29 @@ const InboxPage = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [showArchived]);
 
-  // Polling cada POLL_INTERVAL: mensajes del chat activo + estado online de todos
+  // Polling: online-status siempre + mensajes solo si SSE no está activo
   useEffect(() => {
-    const interval = setInterval(async () => {
+    const tick = async () => {
       const convId = selectedChatIdRef.current;
+      const useSSE = sseActive;
 
-      // Lanzar ambas peticiones en paralelo
       const fetches = [
-        getChats().catch(() => null),
-        convId ? getMessages(convId).catch(() => null) : Promise.resolve(null),
+        getChats(showArchivedRef.current).catch(() => null),
+        !useSSE && convId ? getMessages(convId).catch(() => null) : Promise.resolve(null),
       ];
 
       const [freshConvs, freshMsgs] = await Promise.all(fetches);
 
-      setConversations((prev) => {
-        return prev.map((c) => {
-          // Actualizar online y último mensaje desde la lista fresca
+      setConversations((prev) =>
+        prev.map((c) => {
           const fresh = freshConvs?.find((f) => f.id === c.id);
           const updated = fresh
             ? { ...c, online: fresh.online, unread_count: fresh.unread_count }
             : c;
 
-          // Actualizar mensajes del chat activo si hay nuevos
-          if (convId && c.id === convId && freshMsgs) {
+          if (!useSSE && convId && c.id === convId && freshMsgs) {
             const lastKnown = updated.messages[updated.messages.length - 1];
             const lastFetched = freshMsgs.messages[freshMsgs.messages.length - 1];
             if (lastFetched && (!lastKnown || lastKnown.id !== lastFetched.id)) {
@@ -77,24 +175,27 @@ const InboxPage = () => {
           }
 
           return updated;
-        });
-      });
-    }, POLL_INTERVAL);
+        })
+      );
+    };
 
+    const interval = setInterval(tick, sseActive ? POLL_INTERVAL_SSE : POLL_INTERVAL_FALLBACK);
     return () => clearInterval(interval);
-  }, []);
+  }, [sseActive]);
 
   const handleSelectChat = useCallback(async (convId) => {
     setSelectedChatId(convId);
     if (!convId) return;
     try {
-      const [{ messages }] = await Promise.all([
+      const [{ messages, next_cursor, has_more }] = await Promise.all([
         getMessages(convId),
         markAsRead(convId),
       ]);
       setConversations((prev) =>
         prev.map((c) =>
-          c.id === convId ? { ...c, messages, unread_count: 0 } : c
+          c.id === convId
+            ? { ...c, messages, unread_count: 0, cursor: next_cursor, hasMore: has_more }
+            : c
         )
       );
     } catch (err) {
@@ -120,6 +221,83 @@ const InboxPage = () => {
     },
     [selectedChatId]
   );
+
+  const handleLoadMore = useCallback(async () => {
+    const convId = selectedChatIdRef.current;
+    if (!convId) return;
+    const conv = conversationsRef.current.find((c) => c.id === convId);
+    if (!conv?.hasMore || !conv?.cursor) return;
+    try {
+      const { messages: older, next_cursor, has_more } = await getMessages(convId, conv.cursor);
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === convId
+            ? { ...c, messages: [...older, ...c.messages], cursor: next_cursor, hasMore: has_more }
+            : c
+        )
+      );
+    } catch (err) {
+      console.error('Error al cargar más mensajes:', err);
+    }
+  }, []);
+
+  const handleDeleteMessage = useCallback(async (messageId) => {
+    const convId = selectedChatIdRef.current;
+    if (!convId) return;
+    try {
+      await deleteMessage(convId, messageId);
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === convId
+            ? {
+                ...c,
+                messages: c.messages.map((m) =>
+                  m.id === messageId
+                    ? { ...m, content: '[Mensaje eliminado]', isDeleted: true }
+                    : m
+                ),
+              }
+            : c
+        )
+      );
+    } catch (err) {
+      console.error('Error al eliminar mensaje:', err);
+    }
+  }, []);
+
+  const handleEditMessage = useCallback(async (messageId, newContent) => {
+    const convId = selectedChatIdRef.current;
+    if (!convId) return;
+    try {
+      const updated = await editMessage(convId, messageId, newContent);
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === convId
+            ? {
+                ...c,
+                messages: c.messages.map((m) => (m.id === messageId ? updated : m)),
+              }
+            : c
+        )
+      );
+    } catch (err) {
+      console.error('Error al editar mensaje:', err);
+      throw err;
+    }
+  }, []);
+
+  const handleArchive = useCallback(async (convId, archived) => {
+    try {
+      await archiveConversation(convId, archived);
+      // En ambos modos (activo/archivado) la conversación desaparece de la vista actual
+      setConversations((prev) => prev.filter((c) => c.id !== convId));
+      if (selectedChatIdRef.current === convId) {
+        setSelectedChatId(null);
+      }
+    } catch (err) {
+      console.error('Error al archivar conversación:', err);
+    }
+  }, []);
 
   const handleNewChat = useCallback(
     async (otherUserId) => {
@@ -161,7 +339,17 @@ const InboxPage = () => {
         onSelectChat={handleSelectChat}
         onSendMessage={handleSendMessage}
         onNewChat={handleNewChat}
+        onDeleteMessage={handleDeleteMessage}
+        onEditMessage={handleEditMessage}
+        onArchive={handleArchive}
+        onLoadMore={handleLoadMore}
         isLoading={isLoading}
+        showArchived={showArchived}
+        onToggleArchived={() => setShowArchived((v) => !v)}
+        typingConvId={typingConvId}
+        onTyping={useCallback(() => {
+          if (selectedChatIdRef.current) sendTyping(selectedChatIdRef.current);
+        }, [])}
       />
     </div>
   );

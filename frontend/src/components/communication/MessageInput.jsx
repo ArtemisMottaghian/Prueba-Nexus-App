@@ -1,15 +1,19 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
-export function MessageInput({ onSend }) {
+export function MessageInput({ onSend, onTyping }) {
   const [texto, setTexto] = useState('');
+  const typingDebounceRef = useRef(null);
 
-  const TextoChat = (ingreso) => {
-    setTexto(ingreso.target.value);
+  const handleChange = (e) => {
+    setTexto(e.target.value);
+    if (onTyping) {
+      clearTimeout(typingDebounceRef.current);
+      typingDebounceRef.current = setTimeout(() => {
+        onTyping();
+      }, 400);
+    }
   };
 
-  {
-    /*Funcion Enter*/
-  }
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -17,12 +21,9 @@ export function MessageInput({ onSend }) {
     }
   };
 
-  {
-    /* Funcion dejar texarea vacio una vez se envie */
-  }
   const handleSend = () => {
     if (!texto.trim()) return;
-
+    clearTimeout(typingDebounceRef.current);
     onSend(texto);
     setTexto('');
   };
@@ -31,11 +32,10 @@ export function MessageInput({ onSend }) {
     <div className="chat-input">
       <textarea
         value={texto}
-        onChange={TextoChat}
+        onChange={handleChange}
         onKeyDown={handleKeyDown}
-        placeholder="Escribe para inciar chat..."
+        placeholder="Escribe para iniciar chat..."
       />
-
       <button type="button" className="send-btn" onClick={handleSend}>
         Enviar
       </button>

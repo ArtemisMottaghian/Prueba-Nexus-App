@@ -1,18 +1,22 @@
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.jwt import get_current_user_db
 from app.db.connection import get_db
 from app.models.user_model import User
 from app.schemas.chat_schemas import (
+    ArchiveBody,
     ConversationCreate,
     ConversationOut,
     MessageCreate,
+    MessageEdit,
     MessageOut,
     MessagesPage,
+    UnreadCountOut,
 )
 from app.services import chat_service
 
@@ -36,14 +40,16 @@ async def create_or_get_conversation(
 
 @router.get("", response_model=list[ConversationOut])
 async def list_conversations(
+    archived: bool = False,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user_db),
 ):
     await chat_service.update_last_seen(db, current_user.id)
-    return await chat_service.list_conversations(db, current_user.id)
+    return await chat_service.list_conversations(db, current_user.id, include_archived=archived)
 
 
-# /offline must be registered before /{conv_id} routes to avoid being matched as a conv_id
+# Rutas estáticas antes de las dinámicas /{conv_id}
+
 @router.post("/offline", status_code=204)
 async def mark_offline(
     db: AsyncSession = Depends(get_db),
@@ -51,6 +57,38 @@ async def mark_offline(
 ):
     await chat_service.mark_offline(db, current_user.id)
 
+
+@router.get("/stream")
+async def stream_events(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_db),
+):
+    await chat_service.update_last_seen(db, current_user.id)
+
+    async def generator():
+        async for chunk in chat_service.stream_user_events(current_user.id):
+            if await request.is_disconnected():
+                break
+            yield chunk
+
+    return StreamingResponse(
+        generator(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+@router.get("/unread", response_model=UnreadCountOut)
+async def get_total_unread(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_db),
+):
+    total = await chat_service.get_total_unread(db, current_user.id)
+    return UnreadCountOut(total=total)
+
+
+# Rutas dinámicas /{conv_id}
 
 @router.get("/{conv_id}/messages", response_model=MessagesPage)
 async def get_messages(
@@ -84,6 +122,26 @@ async def send_message(
     return await chat_service.send_message(db, conv_id, current_user.id, body.content)
 
 
+@router.post("/{conv_id}/typing", status_code=204)
+async def typing_indicator(
+    conv_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_db),
+):
+    await chat_service.notify_typing(db, conv_id, current_user.id)
+
+
+@router.patch("/{conv_id}/messages/{message_id}", response_model=MessageOut)
+async def edit_message(
+    conv_id: int,
+    message_id: int,
+    body: MessageEdit,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_db),
+):
+    return await chat_service.edit_message(db, conv_id, message_id, current_user.id, body.content)
+
+
 @router.patch("/{conv_id}/read", status_code=204)
 async def mark_as_read(
     conv_id: int,
@@ -91,6 +149,16 @@ async def mark_as_read(
     current_user: User = Depends(get_current_user_db),
 ):
     await chat_service.mark_as_read(db, conv_id, current_user.id)
+
+
+@router.patch("/{conv_id}/archive", status_code=204)
+async def archive_conversation(
+    conv_id: int,
+    body: ArchiveBody,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_db),
+):
+    await chat_service.archive_conversation(db, conv_id, current_user.id, body.archived)
 
 
 @router.delete("/{conv_id}/messages/{message_id}", status_code=204)

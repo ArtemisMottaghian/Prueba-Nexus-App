@@ -26,7 +26,15 @@ const InboxComponent = ({
   selectedChatId,
   onSendMessage,
   onNewChat,
+  onDeleteMessage,
+  onEditMessage,
+  onArchive,
+  onLoadMore,
   isLoading,
+  showArchived,
+  onToggleArchived,
+  typingConvId,
+  onTyping,
 }) => {
   const { user } = useAuth();
   const isMobile = useMediaQuery('(max-width: 767px)');
@@ -85,9 +93,20 @@ const InboxComponent = ({
       {showSidebar && (
         <aside className="inbox-sidebar">
           <div className="inbox-header">
-            <h2>Mensajes</h2>
+            <h2>{showArchived ? 'Archivados' : 'Mensajes'}</h2>
             <div className="inbox-header-actions">
               <span className="badge">{conversations.length}</span>
+              <button
+                type="button"
+                className={`archive-toggle-btn ${showArchived ? 'archive-toggle-btn--active' : ''}`}
+                onClick={onToggleArchived}
+                title={showArchived ? 'Ver mensajes activos' : 'Ver archivados'}
+              >
+                <i
+                  className={`bi ${showArchived ? 'bi-chat-dots' : 'bi-archive'}`}
+                  aria-hidden
+                />
+              </button>
               <div className="new-chat-wrapper" ref={pickerRef}>
                 <button
                   className="new-chat-btn"
@@ -164,7 +183,14 @@ const InboxComponent = ({
                         <span className="name">{conv.name}</span>
                         <span className="time">{lastMsg?.timestamp ?? ''}</span>
                       </div>
-                      <p className="last-msg">{lastMsg?.content ?? ''}</p>
+                      <div className="conv-bottom">
+                        <p className="last-msg">{lastMsg?.content ?? ''}</p>
+                        {conv.unread_count > 0 && (
+                          <span className="unread-badge">
+                            {conv.unread_count > 99 ? '99+' : conv.unread_count}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -181,6 +207,13 @@ const InboxComponent = ({
             isMobile={isMobile}
             handleBack={handleBack}
             onSendMessage={onSendMessage}
+            onDeleteMessage={onDeleteMessage}
+            onEditMessage={onEditMessage}
+            onArchive={onArchive}
+            onLoadMore={onLoadMore}
+            isArchived={showArchived}
+            isTyping={typingConvId === selectedChatId}
+            onTyping={onTyping}
           />
         </main>
       )}

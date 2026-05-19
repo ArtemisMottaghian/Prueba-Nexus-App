@@ -16,6 +16,8 @@ class MessageOut(BaseModel):
     content: str
     created_at: datetime
     is_deleted: bool
+    is_edited: bool = False
+    edited_at: Optional[datetime] = None
     is_mine: bool = False
 
 
@@ -37,6 +39,7 @@ class ConversationOut(BaseModel):
     last_message: Optional[MessageOut]
     unread_count: int
     updated_at: datetime
+    is_archived: bool = False
 
 
 class MessageCreate(BaseModel):
@@ -51,6 +54,28 @@ class MessageCreate(BaseModel):
         if len(v) > 4000:
             raise ValueError("El mensaje no puede superar los 4000 caracteres")
         return v
+
+
+class MessageEdit(BaseModel):
+    content: str
+
+    @field_validator("content")
+    @classmethod
+    def validate_content(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("El mensaje no puede estar vacío")
+        if len(v) > 4000:
+            raise ValueError("El mensaje no puede superar los 4000 caracteres")
+        return v
+
+
+class ArchiveBody(BaseModel):
+    archived: bool
+
+
+class UnreadCountOut(BaseModel):
+    total: int
 
 
 class MessagesPage(BaseModel):

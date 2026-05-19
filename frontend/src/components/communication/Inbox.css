@@ -637,3 +637,296 @@
   font-size: 0.875rem;
   border-radius: 10px;
 }
+
+/* Typing indicator */
+.typing-indicator {
+  padding: 6px 2rem;
+  font-size: 0.8rem;
+  color: var(--clr-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 2;
+}
+
+.typing-indicator__name {
+  font-weight: 600;
+  color: var(--clr-purple-light);
+}
+
+.typing-dots {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+  margin-left: 2px;
+}
+
+.typing-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--clr-purple);
+  animation: typing-bounce 1.2s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(1) { animation-delay: 0s; }
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30%            { transform: translateY(-4px); opacity: 1; }
+}
+
+/* Unread badge */
+.conv-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.conv-bottom .last-msg {
+  flex: 1;
+  min-width: 0;
+}
+
+.unread-badge {
+  flex-shrink: 0;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--clr-purple);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.5);
+}
+
+/* Message row — anchor para botones absolutos */
+.msg-row {
+  position: relative;
+  align-items: center;
+}
+
+/* Deleted message style */
+.msg--deleted {
+  opacity: 0.55;
+  font-style: italic;
+}
+
+/* Archive button in chat header */
+.chat-header__archive {
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--clr-border);
+  border-radius: 10px;
+  background: var(--clr-surface);
+  color: var(--clr-text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.chat-header__archive:hover {
+  background: rgba(124, 58, 237, 0.1);
+  border-color: var(--clr-purple);
+  color: var(--clr-purple-light);
+}
+
+/* ── Botones de acción del mensaje ─────────────────────────────── */
+/* Visibilidad controlada por CSS: opacity 0 → 1 en hover (desktop)
+   y siempre visibles en touch (mobile). Sin layout shift porque son
+   position:absolute dentro de msg-bubble-wrapper. */
+
+.msg-actions {
+  position: absolute;
+  right: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%) scale(0.88);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: 10px;
+  padding: 3px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+  z-index: 10;
+}
+
+/* Desktop: revelar en hover sobre la fila */
+.msg-row:hover .msg-actions {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) scale(1);
+}
+
+.msg-action-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--clr-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
+}
+
+.msg-action-btn:hover {
+  background: rgba(124, 58, 237, 0.12);
+  color: var(--clr-purple-light);
+}
+
+.msg-action-btn--danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* Mobile: siempre visibles, diseño compacto */
+@media (max-width: 767px) {
+  .msg-actions {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(-50%) scale(1);
+    right: calc(100% + 4px);
+    padding: 2px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .msg-action-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 5px;
+    font-size: 0.7rem;
+  }
+}
+
+/* Inline edit form */
+.msg-bubble-wrapper {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.msg-edit-form {
+  background: var(--clr-surface-2);
+  border: 1px solid var(--clr-purple);
+  border-radius: 10px;
+  padding: 10px;
+  min-width: 220px;
+  max-width: 400px;
+}
+
+.msg-edit-input {
+  width: 100%;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: var(--clr-text);
+  font-size: 0.875rem;
+  resize: none;
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.msg-edit-input:focus {
+  border-color: var(--clr-cyan);
+}
+
+.msg-edit-error {
+  font-size: 0.75rem;
+  color: #ef4444;
+  margin: 4px 0 0;
+}
+
+.msg-edit-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  justify-content: flex-end;
+}
+
+.msg-edit-save {
+  padding: 4px 14px;
+  border-radius: 6px;
+  border: none;
+  background: var(--clr-purple);
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--transition);
+}
+
+.msg-edit-save:hover {
+  opacity: 0.85;
+}
+
+.msg-edit-cancel {
+  padding: 4px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--clr-border);
+  background: transparent;
+  color: var(--clr-text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.msg-edit-cancel:hover {
+  border-color: var(--clr-text-muted);
+}
+
+/* Edited label */
+.msg-edited-label {
+  font-size: 0.7rem;
+  opacity: 0.65;
+  font-style: italic;
+  margin-left: 4px;
+}
+
+/* Load more button */
+.load-more-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 0 1rem;
+}
+
+.load-more-btn {
+  padding: 0.4rem 1.2rem;
+  border-radius: 20px;
+  border: 1px solid var(--clr-border);
+  background: var(--clr-surface-2);
+  color: var(--clr-text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.load-more-btn:hover {
+  border-color: var(--clr-purple);
+  color: var(--clr-purple-light);
+  background: rgba(124, 58, 237, 0.08);
+}

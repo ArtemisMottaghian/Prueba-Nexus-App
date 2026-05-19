@@ -9,6 +9,7 @@ function mapConversation(conv) {
     online: conv.other_user.is_online,
     unread_count: conv.unread_count,
     updated_at: conv.updated_at,
+    is_archived: conv.is_archived ?? false,
     messages: conv.last_message
       ? [
           {
@@ -26,6 +27,7 @@ function mapConversation(conv) {
                 minute: '2-digit',
               }
             ),
+            isDeleted: conv.last_message.is_deleted,
           },
         ]
       : [],
@@ -45,11 +47,16 @@ function mapMessage(msg) {
       hour: '2-digit',
       minute: '2-digit',
     }),
+    isDeleted: msg.is_deleted,
+    isEdited: msg.is_edited ?? false,
   };
 }
 
-export async function getChats() {
-  const res = await authFetch(ENDPOINTS.chat.list);
+export async function getChats(archived = false) {
+  const url = archived
+    ? `${ENDPOINTS.chat.list}?archived=true`
+    : ENDPOINTS.chat.list;
+  const res = await authFetch(url);
   if (!res.ok) throw new Error('Error al cargar conversaciones');
   const data = await res.json();
   return data.map(mapConversation);
@@ -88,6 +95,112 @@ export async function markOffline() {
   } catch {
     // Silencioso — no bloquear el logout si falla
   }
+}
+
+export async function editMessage(convId, messageId, content) {
+  const res = await authFetch(ENDPOINTS.chat.editMessage(convId, messageId), {
+    method: 'PATCH',
+    body: JSON.stringify({ content }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Error al editar mensaje');
+  }
+  return mapMessage(await res.json());
+}
+
+export async function getTotalUnread() {
+  const res = await authFetch(ENDPOINTS.chat.unread);
+  if (!res.ok) throw new Error('Error al obtener no leídos');
+  const data = await res.json();
+  return data.total;
+}
+
+/**
+ * Abre una conexión SSE al servidor usando fetch + Authorization header.
+ * Llama onEvent(event) por cada evento recibido.
+ * Devuelve una función de cleanup que cierra la conexión.
+ */
+export function openChatStream(onEvent) {
+  let abortController = new AbortController();
+  let reconnectTimer = null;
+  let closed = false;
+
+  const connect = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const response = await fetch(ENDPOINTS.chat.stream, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'text/event-stream',
+        },
+        signal: abortController.signal,
+      });
+
+      if (response.status === 401 || response.status === 403) return;
+      if (!response.ok) throw new Error(`SSE ${response.status}`);
+
+      onEvent({ type: 'connected' });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const event = JSON.parse(line.slice(6));
+              if (event.type !== 'ping') onEvent(event);
+            } catch {
+              // ignore malformed SSE line
+            }
+          }
+        }
+      }
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+    }
+    if (!closed) {
+      reconnectTimer = setTimeout(connect, 3000);
+    }
+  };
+
+  connect();
+  return () => {
+    closed = true;
+    clearTimeout(reconnectTimer);
+    abortController.abort();
+  };
+}
+
+export async function sendTyping(convId) {
+  try {
+    await authFetch(ENDPOINTS.chat.typing(convId), { method: 'POST' });
+  } catch {
+    // fire-and-forget
+  }
+}
+
+export async function archiveConversation(convId, archived) {
+  const res = await authFetch(ENDPOINTS.chat.archive(convId), {
+    method: 'PATCH',
+    body: JSON.stringify({ archived }),
+  });
+  if (!res.ok) throw new Error('Error al archivar conversación');
+}
+
+export async function deleteMessage(convId, messageId) {
+  const res = await authFetch(ENDPOINTS.chat.deleteMessage(convId, messageId), {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Error al eliminar mensaje');
 }
 
 export async function createConversation(otherUserId) {
