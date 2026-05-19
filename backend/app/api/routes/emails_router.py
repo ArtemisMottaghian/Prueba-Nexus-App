@@ -133,3 +133,73 @@ async def unlink_google_account(
     await db.commit()
 
     return {"message": "Cuenta de Google desvinculada correctamente"}
+
+CALENDAR_SCOPES = [
+    "https://www.googleapis.com/auth/calendar",
+    "openid",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/userinfo.profile",
+]
+
+
+@router.get("/google/calendar/login")
+async def google_calendar_login(current_user: User = Depends(get_current_user_db)):
+    base_url = "https://accounts.google.com/o/oauth2/v2/auth"
+    params = {
+        "client_id": os.getenv("GOOGLE_CLIENT_ID"),
+        "redirect_uri": os.getenv("GOOGLE_CALENDAR_REDIRECT_URI"),
+        "response_type": "code",
+        "scope": " ".join(CALENDAR_SCOPES),
+        "access_type": "offline",
+        "prompt": "consent",
+        "state": str(current_user.id),
+    }
+    auth_url = f"{base_url}?{urllib.parse.urlencode(params)}"
+    return {"url": auth_url}
+
+
+@router.get("/google/calendar/callback")
+async def google_calendar_callback(request: Request, db: AsyncSession = Depends(get_db)):
+    code = request.query_params.get("code")
+    user_id = request.query_params.get("state")
+
+    if not code:
+        raise HTTPException(status_code=400, detail="No se recibió el código de Google")
+
+    flow = Flow.from_client_config(
+        {
+            "web": {
+                "client_id": os.getenv("GOOGLE_CLIENT_ID"),
+                "client_secret": os.getenv("GOOGLE_CLIENT_SECRET"),
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://accounts.google.com/o/oauth2/token",
+            }
+        },
+        scopes=CALENDAR_SCOPES,
+        redirect_uri=os.getenv("GOOGLE_CALENDAR_REDIRECT_URI"),
+    )
+
+    flow.fetch_token(code=code)
+    credentials = flow.credentials
+
+    result = await db.execute(select(User).where(User.id == int(user_id)))
+    user = result.scalar_one_or_none()
+
+    base_url = os.getenv("FRONTEND_URL", "https://nexus.ara-tech.es").rstrip("/")
+
+    if user:
+        user.google_access_token = credentials.token
+        if credentials.refresh_token:
+            user.google_calendar_refresh_token = credentials.refresh_token
+        await db.commit()
+        return RedirectResponse(url=f"{base_url}/cuenta?calendar_success=true")
+
+    raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+
+@router.get("/google/calendar/status")
+async def get_calendar_status(current_user: User = Depends(get_current_user_db)):
+    return {
+        "is_linked": current_user.google_access_token is not None,
+        "email": current_user.email,
+    }

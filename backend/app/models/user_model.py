@@ -22,6 +22,7 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     google_access_token = Column(String, nullable=True)
     google_refresh_token = Column(String, nullable=True)
+    google_calendar_refresh_token = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
