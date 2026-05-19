@@ -14,7 +14,6 @@ const EVENT_TYPES = {
 };
 
 const PREDEFINED_OPTIONS = Object.keys(EVENT_TYPES);
-
 const LS_CALENDAR_KEY = 'nexus_calendar_events';
 
 const saveEventsToStorage = (evts) =>
@@ -58,6 +57,8 @@ export default function Calendario() {
         return '📲';
       case 'Seguimiento':
         return '🔍';
+      default:
+        return '📌';
     }
   };
 
@@ -87,7 +88,7 @@ export default function Calendario() {
             notified: false,
           };
         });
-        // Fusionar eventos de API con locales (priorizamos API, añadimos solo los locales no encontrados)
+
         const localEvts = loadEventsFromStorage();
         const apiIds = new Set(mapped.map((e) => e.id));
         const onlyLocal = localEvts.filter((e) => !apiIds.has(e.id));
@@ -96,7 +97,7 @@ export default function Calendario() {
         saveEventsToStorage(merged);
       })
       .catch(() => {
-        // Backend offline: ya usamos los eventos de localStorage (estado inicial)
+        // Backend offline: usa el estado inicial de localStorage
       });
   }, []);
 
@@ -170,11 +171,9 @@ export default function Calendario() {
     const endIso = `${datePart}T${endHour}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 
     const payload = { title: type, description, start: startIso, end: endIso };
-
     let updatedEvents;
 
     if (editingEventId) {
-      // Actualizar estado local siempre (con o sin API)
       updatedEvents = events.map((e) =>
         e.id === editingEventId
           ? { ...e, text: type, description, time, date: selectedDate }
@@ -194,7 +193,6 @@ export default function Calendario() {
         // Persistido localmente
       }
     } else {
-      // Generar ID local provisional mientras esperamos la API
       const localId = `local_${Date.now()}`;
       const newEvent = {
         id: localId,
@@ -216,7 +214,6 @@ export default function Calendario() {
         });
         if (res.ok) {
           const created = await res.json();
-          // Reemplazar ID local por el real del servidor
           setEvents((prev) =>
             prev.map((e) => (e.id === localId ? { ...e, id: created.id } : e))
           );
@@ -233,21 +230,48 @@ export default function Calendario() {
     closeModal();
   };
 
+  // CORRECCIÓN PUNTO 5: Eliminación síncrona real y manejo de fallos de Google Calendar
   const deleteEvent = async (id) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar este evento?'))
+      return;
+
+    const previousEvents = [...events];
     const updatedEvents = events.filter((e) => e.id !== id);
+
+    // Actualización optimista de la UI
     setEvents(updatedEvents);
     saveEventsToStorage(updatedEvents);
 
     try {
-      await authFetch(ENDPOINTS.calendar.delete(id), { method: 'DELETE' });
-    } catch {
-      // Eliminado localmente
+      const deleteUrl =
+        typeof ENDPOINTS.calendar.delete === 'function'
+          ? ENDPOINTS.calendar.delete(id)
+          : `/api/calendar/${id}`;
+
+      const res = await authFetch(deleteUrl, { method: 'DELETE' });
+
+      if (!res.ok) {
+        throw new Error(
+          'El servidor no pudo eliminar el evento en Google Calendar'
+        );
+      }
+    } catch (err) {
+      console.error('Error al borrar el evento:', err);
+      alert(
+        'No se pudo eliminar el evento del servidor remoto. Sincronización revertida.'
+      );
+
+      // Revertir el estado si la API falla para evitar desfases visuales
+      setEvents(previousEvents);
+      saveEventsToStorage(previousEvents);
     }
   };
 
   const clearAllEvents = () => {
     if (
-      window.confirm('¿Estás seguro de que quieres borrar todos los eventos?')
+      window.confirm(
+        '¿Estás seguro de que quieres borrar todos los eventos locales?'
+      )
     ) {
       setEvents([]);
       saveEventsToStorage([]);
@@ -271,6 +295,13 @@ export default function Calendario() {
   const formatDate = (day) =>
     `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
+  // Función auxiliar para parsear correctamente la fecha local al input sin desfases de huso horario
+  const getLocalDateString = (dateObj) => {
+    const tzOffset = dateObj.getTimezoneOffset() * 60000;
+    const localISOTime = new Date(dateObj.getTime() - tzOffset).toISOString();
+    return localISOTime.split('T')[0];
+  };
+
   const todayStr = new Date().toISOString().split('T')[0];
 
   return (
@@ -284,7 +315,7 @@ export default function Calendario() {
               className="btn btn-sm btn-outline-danger me-2"
               onClick={clearAllEvents}
             >
-              <i className="bi bi-trash3 me-1"></i> Limpiar
+              <i className="bi bi-trash3 me-1"></i> Limpiar Locales
             </button>
             <button className="btn-primary-custom" onClick={loginWithGoogle}>
               <i className="bi bi-globe me-1"></i> Sincronizar con Google
@@ -311,7 +342,7 @@ export default function Calendario() {
           </div>
         )}
 
-        {/* NAVEGACIÓN */}
+        {/* NAVEGACIÓN Y CORRECCIÓN PUNTO 6: Buscador de fecha directo */}
         <div className="calendar-header">
           <div className="nav-controls d-flex align-items-center gap-2">
             <button
@@ -348,6 +379,25 @@ export default function Calendario() {
             >
               <i className="bi bi-chevron-right"></i>
             </button>
+
+            {/* Input Buscador de Fecha ágil */}
+            <div className="date-search-wrapper ms-2">
+              <input
+                type="date"
+                className="calendar-date-picker-input"
+                value={getLocalDateString(currentDate)}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    const newParsedDate = new Date(
+                      e.target.value + 'T00:00:00'
+                    );
+                    setCurrentDate(newParsedDate);
+                    setSelectedDate(e.target.value);
+                  }
+                }}
+                title="Saltar directamente a una fecha específica"
+              />
+            </div>
           </div>
           <span className="calendar-month-text">
             {currentDate.toLocaleDateString('es-ES', {
@@ -387,7 +437,10 @@ export default function Calendario() {
                         <div
                           key={e.id}
                           className="event-dot"
-                          style={{ backgroundColor: EVENT_TYPES[e.text] }}
+                          style={{
+                            backgroundColor:
+                              EVENT_TYPES[e.text] || 'var(--text-muted)',
+                          }}
                         ></div>
                       ))}
                     </div>
@@ -396,7 +449,10 @@ export default function Calendario() {
                         key={e.id}
                         className="event-item"
                         onClick={(ev) => openEditModal(ev, e)}
-                        style={{ backgroundColor: EVENT_TYPES[e.text] }}
+                        style={{
+                          backgroundColor:
+                            EVENT_TYPES[e.text] || 'var(--text-muted)',
+                        }}
                       >
                         <div className="event-content">
                           <span className="event-time-type">
