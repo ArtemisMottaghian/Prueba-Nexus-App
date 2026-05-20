@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react';
 import VacancyModal from '../recruitment/vacancies/VacancyModal';
 import CrmEmpresaPanel from './CrmEmpresaPanel';
 import { updateEstadoCuenta } from '../../services/clientesService';
+import {
+  getCompanyComments,
+  addCompanyComment,
+  deleteCompanyComment,
+} from '../../services/companiesService';
 import './ClienteDetail.css';
 
 const getBadgeEstado = (estado) => {
@@ -30,12 +35,30 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
   const [vacanteSeleccionada, setVacanteSeleccionada] = useState(null);
   const [notaTexto, setNotaTexto] = useState('');
   const [notas, setNotas] = useState([]);
+  const [cargandoNotas, setCargandoNotas] = useState(false);
   const [activeTab, setActiveTab] = useState('info');
   const [empresaCrm, setEmpresaCrm] = useState(cliente);
 
   useEffect(() => {
     setEmpresaCrm(cliente);
   }, [cliente]);
+
+  // Carga las notas del backend al montar o al cambiar de cliente
+  useEffect(() => {
+    if (!cliente?.id) return;
+    const cargarNotas = async () => {
+      setCargandoNotas(true);
+      try {
+        const data = await getCompanyComments(cliente.id);
+        setNotas(data);
+      } catch (err) {
+        console.error('Error cargando notas:', err);
+      } finally {
+        setCargandoNotas(false);
+      }
+    };
+    cargarNotas();
+  }, [cliente?.id]);
 
   const handleUpdateEstadoCuenta = async (nuevoEstado) => {
     if (!cliente) return;
@@ -50,25 +73,27 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
     }
   };
 
-  const agregarNota = () => {
+  const agregarNota = async () => {
     if (!notaTexto.trim()) return;
-    const nueva = {
-      id: Date.now(),
-      texto: notaTexto.trim(),
-      fecha: new Date().toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-    };
-    setNotas((prev) => [nueva, ...prev]);
-    setNotaTexto('');
+    try {
+      const nueva = await addCompanyComment(cliente.id, {
+        comment: notaTexto.trim(),
+      });
+      setNotas((prev) => [nueva, ...prev]);
+      setNotaTexto('');
+    } catch (err) {
+      console.error('Error guardando nota:', err);
+    }
   };
 
-  const eliminarNota = (id) =>
-    setNotas((prev) => prev.filter((n) => n.id !== id));
+  const eliminarNota = async (id) => {
+    try {
+      await deleteCompanyComment(id);
+      setNotas((prev) => prev.filter((n) => n.id !== id));
+    } catch (err) {
+      console.error('Error eliminando nota:', err);
+    }
+  };
 
   if (!cliente) {
     return (
@@ -86,7 +111,6 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
   }
 
   const esPrioritario = cliente.prioritario || false;
-  // PROTECCIÓN 2: Variable segura para el nombre en todo el detalle (Añadido cliente.name)
   const nombreParaMostrar =
     cliente.name || cliente.company_name || cliente.nombre || 'Desconocido';
 
@@ -96,14 +120,12 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
       <div className="cliente-profile-header mb-4">
         <div className="d-flex justify-content-between align-items-start flex-wrap gap-2">
           <div className="d-flex align-items-start gap-3">
-            {/* PROTECCIÓN 3: Avatar seguro */}
             <div className="cliente-avatar">
               {nombreParaMostrar.charAt(0).toUpperCase()}
             </div>
             <div>
               <div className="d-flex align-items-center gap-2 flex-wrap">
                 <h3 className="cliente-profile-nombre mb-0">
-                  {/* PROTECCIÓN 4: Título seguro */}
                   {nombreParaMostrar}
                 </h3>
                 {esPrioritario && (
@@ -309,7 +331,6 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
                 </div>
                 <div className="info-item">
                   <span className="info-label">Dirección</span>
-                  {/* PROTECCIÓN: Añadido cliente.address */}
                   <span className="info-value">
                     {cliente.address || cliente.direccion || '—'}
                   </span>
@@ -395,14 +416,20 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
             </div>
           </div>
 
-          {notas.length > 0 ? (
+          {cargandoNotas ? (
+            <div className="text-center p-3">
+              <div className="spinner-border spinner-border-sm" role="status">
+                <span className="visually-hidden">Cargando notas...</span>
+              </div>
+            </div>
+          ) : notas.length > 0 ? (
             <div className="notas-timeline">
               {notas.map((nota) => (
                 <div key={nota.id} className="nota-item">
                   <div className="nota-dot"></div>
                   <div className="nota-content">
                     <div className="d-flex justify-content-between align-items-start">
-                      <p className="nota-texto mb-1">{nota.texto}</p>
+                      <p className="nota-texto mb-1">{nota.comment}</p>
                       <button
                         className="btn-icon btn-icon-sm ms-2 flex-shrink-0"
                         onClick={() => eliminarNota(nota.id)}
@@ -416,7 +443,7 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
                     </div>
                     <span className="activity-time">
                       <i className="bi bi-clock me-1"></i>
-                      {nota.fecha}
+                      {new Date(nota.created_at).toLocaleString('es-ES')}
                     </span>
                   </div>
                 </div>
