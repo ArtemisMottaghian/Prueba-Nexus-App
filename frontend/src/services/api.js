@@ -135,5 +135,4 @@ export const ENDPOINTS = {
     stream: `${BASE_URL}/api/conversations/stream`,
     typing: (convId) => `${BASE_URL}/api/conversations/${convId}/typing`,
   },
-
 };

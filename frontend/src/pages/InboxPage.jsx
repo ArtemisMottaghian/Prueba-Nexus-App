@@ -13,23 +13,30 @@ import {
   sendTyping,
 } from '../services/chatService';
 
-const POLL_INTERVAL_SSE = 15000;  // solo online-status cuando SSE activo
-const POLL_INTERVAL_FALLBACK = 4000; // fallback si SSE no disponible
+// Intervalo de polling cuando SSE está activo (solo sincroniza online-status)
+const POLL_INTERVAL_SSE = 15000;
+// Intervalo de polling cuando SSE no está disponible (sincroniza mensajes también)
+const POLL_INTERVAL_FALLBACK = 4000;
 
 const InboxPage = () => {
+  // ─── Estado principal ────────────────────────────────────────────────────────
   const [conversations, setConversations] = useState([]);
   const [selectedChatId, setSelectedChatId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
-  const showArchivedRef = useRef(false);
   const [typingConvId, setTypingConvId] = useState(null);
   const [sseActive, setSseActive] = useState(false);
+
+  // ─── Refs para evitar stale closures en callbacks y effects ──────────────────
+  // Se usan refs en lugar de estado para leer valores actuales dentro de
+  // intervalos y listeners sin añadirlos como dependencias y evitar re-renders.
+  const showArchivedRef = useRef(false);
   const typingTimerRef = useRef(null);
   const selectedChatIdRef = useRef(null);
   const conversationsRef = useRef(conversations);
 
-  // Mantener refs sincronizadas para usarlas dentro de callbacks sin stale closure
+  // ─── Sincronización de refs con el estado ────────────────────────────────────
   useEffect(() => {
     selectedChatIdRef.current = selectedChatId;
   }, [selectedChatId]);
@@ -42,12 +49,16 @@ const InboxPage = () => {
     showArchivedRef.current = showArchived;
   }, [showArchived]);
 
-  // SSE — recibir mensajes nuevos e indicadores de escritura en tiempo real
+  // ─── SSE: recepción de eventos en tiempo real ────────────────────────────────
+  // Abre un stream con el backend. Gestiona: mensajes nuevos, eliminaciones,
+  // ediciones e indicadores de escritura. Se monta una sola vez.
   useEffect(() => {
     const close = openChatStream((event) => {
       if (event.type === 'connected') {
         setSseActive(true);
       } else if (event.type === 'new_message') {
+        // Añade el mensaje a la conversación correspondiente.
+        // Si el chat está activo, marca como leído (unread_count = 0).
         const { conv_id, message } = event;
         setConversations((prev) =>
           prev.map((c) => {
@@ -57,10 +68,15 @@ const InboxPage = () => {
             const mapped = {
               id: message.id,
               senderId: message.is_mine ? 'me' : 'other',
-              content: message.is_deleted ? '[Mensaje eliminado]' : message.content,
+              content: message.is_deleted
+                ? '[Mensaje eliminado]'
+                : message.content,
               timestamp: new Date(message.created_at).toLocaleString('es-ES', {
-                day: '2-digit', month: '2-digit', year: 'numeric',
-                hour: '2-digit', minute: '2-digit',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
               }),
               isDeleted: message.is_deleted,
               isEdited: message.is_edited ?? false,
@@ -74,6 +90,7 @@ const InboxPage = () => {
           })
         );
       } else if (event.type === 'message_deleted') {
+        // Marca el mensaje como eliminado sin borrarlo del array
         const { conv_id, message_id } = event;
         setConversations((prev) =>
           prev.map((c) => {
@@ -89,6 +106,7 @@ const InboxPage = () => {
           })
         );
       } else if (event.type === 'message_edited') {
+        // Actualiza el contenido del mensaje editado
         const { conv_id, message } = event;
         setConversations((prev) =>
           prev.map((c) => {
@@ -109,24 +127,33 @@ const InboxPage = () => {
           })
         );
       } else if (event.type === 'typing') {
+        // Muestra el indicador de escritura 3 segundos y luego lo oculta
         setTypingConvId(event.conv_id);
         clearTimeout(typingTimerRef.current);
         typingTimerRef.current = setTimeout(() => setTypingConvId(null), 3000);
       }
     });
+
     return () => {
       close();
       clearTimeout(typingTimerRef.current);
     };
   }, []);
 
-  // Recarga conversaciones cuando cambia el modo activo/archivado
+  // ─── Carga inicial y recarga al cambiar entre activos/archivados ─────────────
+  // FIX: los setState de reset se mueven a queueMicrotask para no llamarlos
+  // sincrónicamente en el cuerpo del effect (react-hooks/set-state-in-effect).
   useEffect(() => {
     let cancelled = false;
-    setIsLoading(true);
-    setError(null);
-    setSelectedChatId(null);
-    setConversations([]);
+
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setIsLoading(true);
+      setError(null);
+      setSelectedChatId(null);
+      setConversations([]);
+    });
+
     getChats(showArchived)
       .then((data) => {
         if (!cancelled) setConversations(data);
@@ -141,12 +168,15 @@ const InboxPage = () => {
       .finally(() => {
         if (!cancelled) setIsLoading(false);
       });
+
     return () => {
       cancelled = true;
     };
   }, [showArchived]);
 
-  // Polling: online-status siempre + mensajes solo si SSE no está activo
+  // ─── Polling periódico ───────────────────────────────────────────────────────
+  // Si SSE está activo: solo refresca online-status cada 15s.
+  // Si SSE no está activo: también recarga mensajes del chat seleccionado cada 4s.
   useEffect(() => {
     const tick = async () => {
       const convId = selectedChatIdRef.current;
@@ -154,7 +184,9 @@ const InboxPage = () => {
 
       const fetches = [
         getChats(showArchivedRef.current).catch(() => null),
-        !useSSE && convId ? getMessages(convId).catch(() => null) : Promise.resolve(null),
+        !useSSE && convId
+          ? getMessages(convId).catch(() => null)
+          : Promise.resolve(null),
       ];
 
       const [freshConvs, freshMsgs] = await Promise.all(fetches);
@@ -166,10 +198,15 @@ const InboxPage = () => {
             ? { ...c, online: fresh.online, unread_count: fresh.unread_count }
             : c;
 
+          // Solo actualiza mensajes si SSE no está disponible y hay mensajes nuevos
           if (!useSSE && convId && c.id === convId && freshMsgs) {
             const lastKnown = updated.messages[updated.messages.length - 1];
-            const lastFetched = freshMsgs.messages[freshMsgs.messages.length - 1];
-            if (lastFetched && (!lastKnown || lastKnown.id !== lastFetched.id)) {
+            const lastFetched =
+              freshMsgs.messages[freshMsgs.messages.length - 1];
+            if (
+              lastFetched &&
+              (!lastKnown || lastKnown.id !== lastFetched.id)
+            ) {
               return { ...updated, messages: freshMsgs.messages };
             }
           }
@@ -179,10 +216,16 @@ const InboxPage = () => {
       );
     };
 
-    const interval = setInterval(tick, sseActive ? POLL_INTERVAL_SSE : POLL_INTERVAL_FALLBACK);
+    const interval = setInterval(
+      tick,
+      sseActive ? POLL_INTERVAL_SSE : POLL_INTERVAL_FALLBACK
+    );
     return () => clearInterval(interval);
   }, [sseActive]);
 
+  // ─── Handlers de conversación ────────────────────────────────────────────────
+
+  // Selecciona un chat: carga sus mensajes y lo marca como leído
   const handleSelectChat = useCallback(async (convId) => {
     setSelectedChatId(convId);
     if (!convId) return;
@@ -194,7 +237,13 @@ const InboxPage = () => {
       setConversations((prev) =>
         prev.map((c) =>
           c.id === convId
-            ? { ...c, messages, unread_count: 0, cursor: next_cursor, hasMore: has_more }
+            ? {
+                ...c,
+                messages,
+                unread_count: 0,
+                cursor: next_cursor,
+                hasMore: has_more,
+              }
             : c
         )
       );
@@ -203,6 +252,7 @@ const InboxPage = () => {
     }
   }, []);
 
+  // Envía un mensaje en el chat activo y lo añade al estado local
   const handleSendMessage = useCallback(
     async (content) => {
       if (!selectedChatId) return;
@@ -222,17 +272,27 @@ const InboxPage = () => {
     [selectedChatId]
   );
 
+  // Carga mensajes anteriores (paginación hacia atrás) usando el cursor guardado
   const handleLoadMore = useCallback(async () => {
     const convId = selectedChatIdRef.current;
     if (!convId) return;
     const conv = conversationsRef.current.find((c) => c.id === convId);
     if (!conv?.hasMore || !conv?.cursor) return;
     try {
-      const { messages: older, next_cursor, has_more } = await getMessages(convId, conv.cursor);
+      const {
+        messages: older,
+        next_cursor,
+        has_more,
+      } = await getMessages(convId, conv.cursor);
       setConversations((prev) =>
         prev.map((c) =>
           c.id === convId
-            ? { ...c, messages: [...older, ...c.messages], cursor: next_cursor, hasMore: has_more }
+            ? {
+                ...c,
+                messages: [...older, ...c.messages],
+                cursor: next_cursor,
+                hasMore: has_more,
+              }
             : c
         )
       );
@@ -241,6 +301,7 @@ const InboxPage = () => {
     }
   }, []);
 
+  // Elimina un mensaje: llama al backend y actualiza el estado local
   const handleDeleteMessage = useCallback(async (messageId) => {
     const convId = selectedChatIdRef.current;
     if (!convId) return;
@@ -265,6 +326,7 @@ const InboxPage = () => {
     }
   }, []);
 
+  // Edita un mensaje: llama al backend y sustituye el mensaje en el estado local
   const handleEditMessage = useCallback(async (messageId, newContent) => {
     const convId = selectedChatIdRef.current;
     if (!convId) return;
@@ -275,7 +337,9 @@ const InboxPage = () => {
           c.id === convId
             ? {
                 ...c,
-                messages: c.messages.map((m) => (m.id === messageId ? updated : m)),
+                messages: c.messages.map((m) =>
+                  m.id === messageId ? updated : m
+                ),
               }
             : c
         )
@@ -286,10 +350,10 @@ const InboxPage = () => {
     }
   }, []);
 
+  // Archiva o desarchiva una conversación y la elimina de la vista actual
   const handleArchive = useCallback(async (convId, archived) => {
     try {
       await archiveConversation(convId, archived);
-      // En ambos modos (activo/archivado) la conversación desaparece de la vista actual
       setConversations((prev) => prev.filter((c) => c.id !== convId));
       if (selectedChatIdRef.current === convId) {
         setSelectedChatId(null);
@@ -299,6 +363,7 @@ const InboxPage = () => {
     }
   }, []);
 
+  // Crea una nueva conversación con otro usuario y la selecciona automáticamente
   const handleNewChat = useCallback(
     async (otherUserId) => {
       try {
@@ -315,6 +380,13 @@ const InboxPage = () => {
     [handleSelectChat]
   );
 
+  // FIX: extraído del JSX para no llamar useCallback condicionalmente dentro del return
+  // Notifica al backend que el usuario está escribiendo en el chat activo
+  const handleTyping = useCallback(() => {
+    if (selectedChatIdRef.current) sendTyping(selectedChatIdRef.current);
+  }, []);
+
+  // ─── Render de error ─────────────────────────────────────────────────────────
   if (error) {
     return (
       <div
@@ -331,6 +403,7 @@ const InboxPage = () => {
     );
   }
 
+  // ─── Render principal ────────────────────────────────────────────────────────
   return (
     <div className="inbox-page-wrapper">
       <InboxComponent
@@ -347,9 +420,7 @@ const InboxPage = () => {
         showArchived={showArchived}
         onToggleArchived={() => setShowArchived((v) => !v)}
         typingConvId={typingConvId}
-        onTyping={useCallback(() => {
-          if (selectedChatIdRef.current) sendTyping(selectedChatIdRef.current);
-        }, [])}
+        onTyping={handleTyping}
       />
     </div>
   );

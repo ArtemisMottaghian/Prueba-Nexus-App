@@ -14,7 +14,7 @@ import Clientes from './pages/Clientes';
 import Candidates from './pages/Candidates';
 import UserManagement from './components/settings/UserManagement';
 import MiCuenta from './components/settings/MiCuenta';
-import InboxPage from './pages/Inbox';
+import InboxPage from './pages/InboxPage';
 // Issue #452 — URL pública de vacante (sin login)
 import VacancyPublicDetail from './components/recruitment/vacancies/VacancyPublicDetail';
 import './index.css';
