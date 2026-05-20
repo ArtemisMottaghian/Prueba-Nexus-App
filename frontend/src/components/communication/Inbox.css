@@ -569,7 +569,7 @@
   }
 }
 
-/* Inbox chat*/
+/* Inbox chat */
 
 .header-info {
   display: flex;
@@ -742,7 +742,7 @@
   color: var(--clr-purple-light);
 }
 
-/* ── Botones de acción del mensaje ─────────────────────────────── */
+/* Botones de acción del mensaje */
 /* Visibilidad controlada por CSS: opacity 0 → 1 en hover (desktop)
    y siempre visibles en touch (mobile). Sin layout shift porque son
    position:absolute dentro de msg-bubble-wrapper. */

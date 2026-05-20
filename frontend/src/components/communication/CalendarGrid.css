@@ -199,7 +199,9 @@
   font-size: 0.875rem;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
   box-sizing: border-box;
 }
 
@@ -225,8 +227,13 @@
 }
 
 /* ── BOTONES ───────────────────────────────────── */
-.action-btn, .primary-btn {
-  background: linear-gradient(135deg, var(--color-purple-primary), var(--color-purple-secondary));
+.action-btn,
+.primary-btn {
+  background: linear-gradient(
+    135deg,
+    var(--color-purple-primary),
+    var(--color-purple-secondary)
+  );
   color: white;
   border: none;
   border-radius: 10px;
@@ -235,7 +242,8 @@
   transition: all 0.2s;
 }
 
-.action-btn:hover, .primary-btn:hover {
+.action-btn:hover,
+.primary-btn:hover {
   filter: brightness(1.1);
   transform: translateY(-1px);
 }

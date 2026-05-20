@@ -3,7 +3,7 @@
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 12px 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
 }
 
@@ -19,7 +19,7 @@
   min-width: 300px;
   display: flex;
   align-items: center;
-  background: var(--bg-secondary); 
+  background: var(--bg-secondary);
   padding: 8px 16px;
   border-radius: 8px;
   transition: all 0.2s;
@@ -29,7 +29,7 @@
 .search-input-group:focus-within {
   background: var(--bg-primary);
   border-color: #7c3aed;
-  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2); 
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
 }
 
 .search-icon {
@@ -76,7 +76,7 @@
 }
 
 .pill-select.active {
-  background: rgba(124, 58, 237, 0.1); 
+  background: rgba(124, 58, 237, 0.1);
   border-color: #7c3aed;
   color: #7c3aed;
 }
@@ -93,7 +93,7 @@
   transition: all 0.2s;
 }
 
-.btn-advanced-toggle.active, 
+.btn-advanced-toggle.active,
 .btn-advanced-toggle:hover {
   background: #7c3aed;
   color: white;
@@ -111,7 +111,7 @@
 }
 
 .btn-clear-link:hover {
-  color: #ef4444; 
+  color: #ef4444;
 }
 
 .filter-advanced-row {
@@ -172,9 +172,9 @@
     width: 100%;
   }
 
-  .pill-select, 
+  .pill-select,
   .btn-advanced-toggle {
-    flex: 1 1 calc(50% - 8px); 
+    flex: 1 1 calc(50% - 8px);
     text-align: center;
     padding: 8px 10px;
   }
@@ -191,13 +191,13 @@
 }
 
 @media (max-width: 480px) {
-  .pill-select, 
+  .pill-select,
   .btn-advanced-toggle {
-    flex: 1 1 100%; 
+    flex: 1 1 100%;
   }
 
   .advanced-grid {
-    grid-template-columns: 1fr; 
+    grid-template-columns: 1fr;
   }
 }
 
@@ -206,13 +206,13 @@
    ========================================= */
 .sticky-controls {
   position: sticky;
-  top: -23px; 
+  top: -23px;
   z-index: 100;
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin: 0;
-  padding: 0px 0px 16px 0px; 
+  padding: 0px 0px 16px 0px;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -221,7 +221,7 @@
    ========================================= */
 @media (max-width: 768px) {
   .sticky-controls {
-    top: 65px; 
-    padding: 12px 0; 
+    top: 65px;
+    padding: 12px 0;
   }
 }
