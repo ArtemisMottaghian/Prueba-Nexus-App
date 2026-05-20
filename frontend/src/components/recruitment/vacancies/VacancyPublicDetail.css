@@ -7,7 +7,12 @@
 .vpd-shell {
   min-height: 100vh;
   background: #f8fafc;
-  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family:
+    'Inter',
+    'Segoe UI',
+    system-ui,
+    -apple-system,
+    sans-serif;
   color: #1e293b;
   display: flex;
   flex-direction: column;
@@ -342,7 +347,9 @@
   font-size: 0.9rem;
   font-weight: 700;
   text-decoration: none;
-  transition: opacity 0.2s, transform 0.15s;
+  transition:
+    opacity 0.2s,
+    transform 0.15s;
   box-shadow: 0 4px 16px rgba(124, 63, 255, 0.38);
   cursor: pointer;
 }
