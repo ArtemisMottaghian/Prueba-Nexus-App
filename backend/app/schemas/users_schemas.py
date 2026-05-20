@@ -28,13 +28,16 @@ class UserUpdate(BaseModel):
 class UserResponse(BaseModel):
     id: int
     name: Optional[str] = None
-    email: EmailStr # Valida formato email
+    email: EmailStr
     role: UserType
-    created_at:Optional[datetime]=None # Fecha de creación del usuario
+    created_at: Optional[datetime] = None
+    email_notifications: bool = False
 
-
-    # Permite leer datos directamente desde objetos SQLAlchemy
     model_config = ConfigDict(from_attributes=True)
+
+
+class NotificationPrefsUpdate(BaseModel):
+    email_notifications: bool
 
 class MessageResponse(BaseModel):
     message: str

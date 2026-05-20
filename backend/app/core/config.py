@@ -48,6 +48,15 @@ class Settings(BaseSettings):
 
     ANTHROPIC_API_KEY: str = ""
 
+    CHAT_ENCRYPTION_KEY: str = ""
+
+    # SMTP para notificaciones de chat (dejar vacío para desactivar)
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = ""
+
     # URLs de Google OAuth
     GOOGLE_AUTH_URL: str = "https://accounts.google.com/o/oauth2/v2/auth"
     GOOGLE_TOKEN_URL: str = "https://oauth2.googleapis.com/token"
