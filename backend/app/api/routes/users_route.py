@@ -9,6 +9,7 @@ from app.db.connection import get_db
 from app.core.jwt import get_current_user_db
 from app.models.user_model import User
 from sqlalchemy import update
+from app.core.jwt import get_current_user
 
 router = APIRouter() 
 
@@ -50,7 +51,8 @@ async def update_notifications(
 @router.post("", response_model=UserResponse,status_code=201)
 async def create_user(
     datos_cliente: NewUser, 
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
     try:
         nuevo_user = await users_service.newUser(db, datos_cliente)
@@ -67,7 +69,10 @@ async def create_user(
 # -----------------
 
 @router.get("", response_model=List[UserResponse]) 
-async def get_all_users(db: AsyncSession = Depends(get_db)):
+async def get_all_users(
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
     usuarios = await users_service.get_all_users(db)
     return usuarios
 
@@ -79,7 +84,8 @@ async def get_all_users(db: AsyncSession = Depends(get_db)):
 @router.get("/{email}", response_model=UserResponse)
 async def get_user(
     email: str, 
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
     usuario = await users_service.getUser(db, email)
     
@@ -92,11 +98,13 @@ async def get_user(
 # Actualizar usuario
 # PATCH /api/users/{email}
 # -----------------
+
 @router.patch("/{email}", response_model=UserResponse)
 async def update_user(
     email: str,
     datos: UserUpdate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
     usuario = await users_service.update_user(db, email, datos)
     if not usuario:
@@ -110,7 +118,8 @@ async def update_user(
 @router.delete("/{email}", response_model=MessageResponse)
 async def delete_user(
     email: str,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
     success = await users_service.delete_user(db, email)
     if not success:
