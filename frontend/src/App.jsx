@@ -6,6 +6,8 @@ import Topbar from './components/layout/Topbar';
 // Autenticación
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import LoginForm from './components/auth/LoginForm';
+import ForgotPassword from './components/auth/ForgotPassword';
+import ResetPassword from './components/auth/ResetPassword';
 // Páginas
 import Dashboard from './pages/Dashboard';
 import Vacancies from './pages/Vacancies';
@@ -26,6 +28,8 @@ function App() {
       <Routes>
         {/* 1. RUTAS PÚBLICAS: Sin autenticación requerida */}
         <Route path="/login" element={<LoginForm />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         {/* Issue #452 — Detalle de vacante para candidatos externos (noindex) */}
         <Route path="/vacante/:id" element={<VacancyPublicDetail />} />
         {/* 2. RUTAS PRIVADAS: Todo lo que requiere estar logueado */}

@@ -86,12 +86,27 @@ export default function MiCuenta() {
     }
 
     setSaving(true);
-    // TODO: PATCH /api/auth/change-password  (pendiente de backend)
-    await new Promise((r) => setTimeout(r, 700));
-    setSaving(false);
-    setPwd(EMPTY_PWD);
-    setPwdMsg({ type: 'success', text: 'Contraseña actualizada.' });
-    setTimeout(() => setPwdMsg(null), 3500);
+    try {
+      const res = await authFetch(ENDPOINTS.auth.changePassword, {
+        method: 'POST',
+        body: JSON.stringify({
+          current_password: pwd.current,
+          new_password: pwd.next,
+        }),
+      });
+      if (res.ok) {
+        setPwd(EMPTY_PWD);
+        setPwdMsg({ type: 'success', text: 'Contraseña actualizada correctamente.' });
+        setTimeout(() => setPwdMsg(null), 3500);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setPwdMsg({ type: 'error', text: data.detail || 'Error al actualizar la contraseña.' });
+      }
+    } catch {
+      setPwdMsg({ type: 'error', text: 'Error al conectar con el servidor.' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const toggleEmailNotif = async () => {
