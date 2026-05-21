@@ -1,4 +1,7 @@
+import os
+import re
 import asyncio
+import aiohttp
 from dotenv import load_dotenv
 from sqlalchemy import select, update, func
 load_dotenv()
@@ -17,187 +20,188 @@ from app.schemas.job_offer import ScrapedJobOffer
 from app.services.scrapers.scraper_vacancies_linkedin.runner import extract_linked
 from app.services.scrapers.scraper_vacancies_adzuna import extract_adzuna
 from app.services.scrapers.scraper_vacancies_infojobs.runner import extract_infojobs
-from app.services.enrichment_service import (
-    search_in_dropcontact,
-    search_with_phantombuster,
-)
-from app.services.scraper_logs_service import log_scraper_error
-from app.services.vacancies_service import update_portal_last_run
-from app.services.email_service import send_company_vacancy_email_standalone
 
-SKIP_ENRICHMENT = False
+async def search_in_apollo(company_name: str, company_domain: str = None, known_recruiter_name: str = None) -> dict:
+    """
+    Integración 100% Apollo API (Requiere Plan Básico).
+    """
+    api_key = os.getenv("APOLLO_API_KEY")
+    if not api_key:
+        print("      [AVISO APOLLO] API Key no encontrada en el archivo .env.")
+        return {}
+
+    headers = {
+        "Cache-Control": "no-cache",
+        "Content-Type": "application/json",
+        "x-api-key": api_key
+    }
+
+    first_name = ""
+    last_name = ""
+    linkedin_url = None
+    job_title = None
+
+    # --- FASE 1: BÚSQUEDA DEL CONTACTO ---
+    if known_recruiter_name:
+        parts = known_recruiter_name.strip().split(" ", 1)
+        first_name = parts[0]
+        last_name = parts[1] if len(parts) > 1 else ""
+        print(f"      [APOLLO] Nombre del scraper detectado: {known_recruiter_name}")
+    else:
+        search_url = "https://api.apollo.io/v1/mixed_people/api_search"
+        search_payload = {
+            "person_titles": ["Recruiter", "HR", "Talent Acquisition", "HR Manager", "Selección", "People"],
+            "person_locations": ["Spain"],
+            "per_page": 1
+        }
+        
+        clean_domain = re.sub(r"https?://(www\.)?", "", company_domain).split('/')[0] if company_domain else None
+        if clean_domain:
+            search_payload["q_organization_domains"] = clean_domain
+        else:
+            search_payload["q_organization_name"] = company_name
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(search_url, headers=headers, json=search_payload, timeout=15) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        people = data.get("people", [])
+                        if people:
+                            person = people[0]
+                            first_name = person.get("first_name", "") or ""
+                            last_name = person.get("last_name", "") or ""
+                            linkedin_url = person.get("linkedin_url")
+                            job_title = person.get("title")
+                            print(f"      [APOLLO] Perfil encontrado por búsqueda: {first_name} {last_name}")
+                        else:
+                            print(f"      [APOLLO] No se encontraron reclutadores en {company_name}.")
+                            return {}
+                    else:
+                        print(f"      [APOLLO AVISO] HTTP {response.status}. Revisa los permisos de la API Key.")
+                        return {}
+        except Exception as e:
+            print(f"      [EXCEPCIÓN APOLLO SEARCH] {e}")
+            return {}
+
+    # Validación estricta para evitar errores 400 de Apollo
+    if not last_name or last_name.strip() == "":
+        print(f"      [APOLLO AVISO] No se puede revelar email sin apellidos. Guardando datos básicos.")
+        return {"nombre": first_name, "email": None, "telefono": None, "linkedin_url": linkedin_url, "job_title": job_title}
+
+    # --- FASE 2: REVELADO DEL EMAIL ---
+    print(f"      [APOLLO] Consultando base de datos para extraer email...")
+    match_url = "https://api.apollo.io/v1/people/match"
+    match_payload = {
+        "first_name": first_name,
+        "last_name": last_name,
+        "organization_name": company_name,
+        "reveal_personal_emails": True
+    }
+    if company_domain:
+        match_payload["domain"] = re.sub(r"https?://(www\.)?", "", company_domain).split('/')[0]
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(match_url, headers=headers, json=match_payload, timeout=15) as match_response:
+                email = None
+                phone = None
+                
+                if match_response.status == 200:
+                    match_data = await match_response.json()
+                    matched_person = match_data.get("person", {})
+                    
+                    if matched_person:
+                        if not linkedin_url: linkedin_url = matched_person.get("linkedin_url")
+                        if not job_title: job_title = matched_person.get("title")
+                        
+                        email = matched_person.get("email")
+                        if not email:
+                            p_emails = matched_person.get("personal_emails", [])
+                            if p_emails and isinstance(p_emails, list) and len(p_emails) > 0:
+                                email = p_emails[0]
+                        
+                        if email:
+                            print(f"      [ÉXITO APOLLO] ¡Email extraído!: {email}")
+                        else:
+                            print(f"      [INFO APOLLO] La persona no tiene email público indexado.")
+                else:
+                    print(f"      [ERROR APOLLO MATCH] Código {match_response.status}")
+
+                return {
+                    "nombre": f"{first_name} {last_name}".strip(),
+                    "email": email,
+                    "telefono": phone,
+                    "linkedin_url": linkedin_url,
+                    "job_title": job_title
+                }
+    except Exception as e:
+        print(f"      [EXCEPCIÓN APOLLO MATCH] {e}")
+
+    return {}
 
 
 async def gather_raw_offers() -> list[dict]:
-    """
-    Ejecuta todos los scrapers de forma concurrente, gestiona los errores individuales
-    y unifica todos los resultados en una sola lista plana.
-
-    Returns:
-        list[dict]: Lista de diccionarios crudos con las ofertas extraídas de todos los portales.
-    """
-
     raw_offers = []
-
-    # Lista de scrapers a ejecutar (Comenta los que no quieras usar)
     scrapers = [
         ("adzuna", extract_adzuna),
         ("linkedin", extract_linked),
-        ("infojobs", extract_infojobs),
+        #("infojobs", extract_infojobs),
     ]
 
     for name, scraper_func in scrapers:
         print(f"\nIniciando scraper: {name.upper()}...")
         try:
-            result = await asyncio.wait_for(scraper_func(), timeout=1800)  # 30 min máximo
-
+            result = await asyncio.wait_for(scraper_func(), timeout=900)
             if isinstance(result, list):
                 raw_offers.extend(result)
                 print(f"{name.upper()} terminado. {len(result)} ofertas extraídas.")
-                await update_portal_last_run(name, status="ok")
-
         except asyncio.TimeoutError:
             print(f"TIMEOUT en {name.upper()} — saltando scraper")
-            await update_portal_last_run(name, status="timeout")
-            await log_scraper_error(
-                error_code=f"SCRAPER_{name.upper()}_TIMEOUT",
-                message=f"scraper={name} | stage=gather | exc=TimeoutError after 300s",
-            )
-
         except Exception as e:
             print(f"Error crítico en {name.upper()}: {e}")
-            await update_portal_last_run(name, status="error")
-            await log_scraper_error(
-                error_code=f"SCRAPER_{name.upper()}_CRITICAL",
-                message=f"scraper={name} | stage=gather | exc={e}",
-            )
-
     return raw_offers
 
 
 def validate_and_filter_offers(raw_offers: list[dict]) -> list[ScrapedJobOffer]:
-    """
-    Valida las ofertas crudas contra el esquema de Pydantic y descarta aquellas
-    que no tengan nombre de empresa o que tengan más de 72 horas de antigüedad.
-
-    Args:
-        raw_offers (list[dict]): Lista de ofertas crudas extraídas por los scrapers.
-
-    Returns:
-        list[ScrapedJobOffer]: Lista de ofertas validadas como objetos Pydantic.
-    """
-
     valid_offers = []
     today = datetime.now(timezone.utc)
 
     for offer in raw_offers:
         try:
             validated_offer = ScrapedJobOffer(**offer)
-
-            if not validated_offer.company_name:
-                continue
+            if not validated_offer.company_name: continue
 
             public_date = validated_offer.published_at
             if public_date:
                 if public_date.tzinfo is None:
                     public_date = public_date.replace(tzinfo=timezone.utc)
-
-                time_filter = today - public_date
-                if time_filter > timedelta(hours=72):
+                if (today - public_date) > timedelta(hours=72):
                     continue
-
             valid_offers.append(validated_offer)
         except Exception:
             continue
-
     return valid_offers
 
 
-async def enrich_single_offer(offer: ScrapedJobOffer) -> dict[str, Any]:
-    """
-    Intenta enriquecer una oferta buscando el email y nombre del reclutador
-    usando Dropcontact y PhantomBuster si es necesario.
-
-    Args:
-        offer (ScrapedJobOffer): Objeto Pydantic con la oferta validada.
-
-    Returns:
-        dict[str, Any]: Diccionario con los datos de la oferta original más
-                        el reclutador y email obtenidos (si los hay).
-    """
-
-    offer_dict = offer.model_dump()
-    obtained_email = offer_dict.get("recruiter_email")
-    company = offer_dict.get("company_name")
-    recruiter = offer_dict.get("recruiter_name")
-
-    if offer_dict.get("offer_url"):
-        offer_dict["offer_url"] = str(offer_dict["offer_url"])
-
-    if SKIP_ENRICHMENT:
-        return {
-            "offer_data": offer_dict,
-            "recruiter_name": recruiter,
-            "recruiter_email": obtained_email,
-        }
-
-    if not obtained_email:
-        # Tenemos el nombre, pero no el correo -> A Dropcontact directo
-        if recruiter and company:
-            obtained_email = await search_in_dropcontact(
-                name=recruiter, company=company
-            )
-
-        # No tenemos ni el nombre ni el correo -> A PhantomBuster primero
-        elif company and not recruiter:
-            phantom_data = await search_with_phantombuster(company)
-
-            if phantom_data and phantom_data.get("nombre"):
-                recruiter = f"{phantom_data['nombre']} {phantom_data.get('apellidos', '')}".strip()
-                obtained_email = await search_in_dropcontact(
-                    name=recruiter, company=company
-                )
-
-    if offer_dict.get("offer_url"):
-        offer_dict["offer_url"] = str(offer_dict["offer_url"])
-
-    return {
-        "offer_data": offer_dict,
-        "recruiter_name": recruiter,
-        "recruiter_email": obtained_email,
-    }
-
-
 async def process_and_save_offers(valid_offers: list[ScrapedJobOffer]):
-    """
-    Toma la lista de ofertas válidas, evalúa una por una si es nueva o repetida.
-    Actualiza las repetidas silenciosamente (omitiendo NULLs) y enriquece/guarda las nuevas.
-    """
     nuevas_guardadas = 0
     actualizadas = 0
 
     async with AsyncSessionLocal() as session:
         for offer in valid_offers:
-
+            
             offer_dict = offer.model_dump()
-
-            # --- [PARCHE 2] Convertimos el objeto HttpUrl de Pydantic a String normal ---
-            if offer_dict.get("offer_url"):
-                offer_dict["offer_url"] = str(offer_dict["offer_url"])
-
+            if offer_dict.get("offer_url"): offer_dict["offer_url"] = str(offer_dict["offer_url"])
+                
             p_id = offer_dict.get("portal_id")
             ext_id = str(offer_dict.get("external_id"))
 
-            # 1. ¿Existe ya la oferta en la base de datos?
-            stmt_check_job = select(JobOffer.id).where(
-                JobOffer.portal_id == p_id,
-                JobOffer.external_id == ext_id
-            )
+            stmt_check_job = select(JobOffer.id).where(JobOffer.portal_id == p_id, JobOffer.external_id == ext_id)
             result_job = await session.execute(stmt_check_job)
             job_exists = result_job.scalar_one_or_none()
 
             if job_exists:
-                # --- ES REPETIDA: Actualizamos sin gastar recursos de IA usando COALESCE ---
                 stmt_update = (
                     update(JobOffer)
                     .where(JobOffer.id == job_exists)
@@ -217,128 +221,140 @@ async def process_and_save_offers(valid_offers: list[ScrapedJobOffer]):
                 await session.execute(stmt_update)
                 await session.commit()
                 actualizadas += 1
-                print(f"-> [REPETIDA] Oferta {ext_id} actualizada silenciosamente (protegiendo datos con COALESCE).")
+                print(f"-> [REPETIDA] Oferta {ext_id} actualizada.")
 
             else:
-                # --- ES NUEVA: Enriquecemos con la IA y guardamos ---
-                print(f"\n[NUEVA] Detectada oferta nueva: {ext_id}. Iniciando Inteligencia Artificial...")
-
-                enriched_item = await enrich_single_offer(offer)
-                offer_data = enriched_item.get("offer_data", {})
-                company_name = offer_data.get("company_name")
+                company_name = offer_dict.get("company_name")
+                if not company_name: continue
+                
+                print(f"\n[NUEVA OFERTA] {ext_id} - Procesando {company_name}...")
                 company_id = None
-
-                # --- [PARCHE 1] Limpiamos las columnas rebeldes antes de tocar la BBDD ---
-                offer_data.pop("recruiter_name", None)
-                offer_data.pop("recruiter_email", None)
-                offer_data.pop("recruiter_phone", None)
-                # Volvemos a asegurar que la URL sea un string en caso de que enrich_single_offer traiga el HttpUrl
-                if offer_data.get("offer_url"):
-                    offer_data["offer_url"] = str(offer_data["offer_url"])
-
+                company_domain = None
+                
                 try:
-                    if company_name:
-                        # Buscamos la empresa
-                        stmt_check_company = select(Company.id).where(Company.name == company_name)
-                        result_company = await session.execute(stmt_check_company)
-                        company_id = result_company.scalar_one_or_none()
+                    # ==========================================
+                    # PASO 1: EXTRAER Y GUARDAR EMPRESA (GEMINI)
+                    # ==========================================
+                    stmt_check_company = select(Company.id, Company.website).where(Company.name == company_name)
+                    result_company = await session.execute(stmt_check_company)
+                    company_row = result_company.first()
 
-                        # Si la empresa no existe, la creamos y la enriquecemos
-                        if not company_id:
-                            job_desc = offer_data.get("job_description", "")
-                            enriched_company_data = await enrich_company(company_name, job_desc)
-                            stmt_new_company = (
-                                insert(Company)
-                                .values(
-                                    name=company_name,
-                                    original_offer_id=int(offer_data.get("external_id")) if offer_data.get("external_id") else None,
-                                    cif=enriched_company_data.get("cif"),
-                                    website=enriched_company_data.get("website"),
-                                    sector=enriched_company_data.get("sector"),
-                                    address=enriched_company_data.get("address"),
-                                    linkedin_url=enriched_company_data.get("linkedin_url"),
-                                    company_description=enriched_company_data.get("company_description") 
-                                )
-                                .returning(Company.id)
+                    if not company_row:
+                        job_desc = offer_dict.get("job_description", "")
+                        enriched_company_data = await enrich_company(company_name, job_desc)
+                        company_domain = enriched_company_data.get("website")
+                        
+                        stmt_new_company = (
+                            insert(Company)
+                            .values(
+                                name=company_name,
+                                original_offer_id=None, 
+                                cif=enriched_company_data.get("cif"),
+                                website=company_domain,
+                                sector=enriched_company_data.get("sector"),
+                                address=enriched_company_data.get("address"),
+                                linkedin_url=enriched_company_data.get("linkedin_url"),
+                                company_description=enriched_company_data.get("company_description") 
                             )
-                            result_new_company = await session.execute(stmt_new_company)
-                            company_id = result_new_company.scalar_one()
+                            .returning(Company.id)
+                        )
+                        result_new_company = await session.execute(stmt_new_company)
+                        company_id = result_new_company.scalar_one()
+                    else:
+                        company_id, company_domain = company_row
 
-                    # Limpiamos y asignamos identificadores para JobOffer
-                    offer_data["company_id"] = company_id
-                    offer_data.pop("company_name", None)
-                    recruiter_name = enriched_item.get("recruiter_name")
-                    recruiter_email = enriched_item.get("recruiter_email")
+                    # ==========================================
+                    # PASO 2: EXTRAER CONTACTOS (APOLLO)
+                    # ==========================================
+                    recruiter_name = offer_dict.get("recruiter_name")
+                    recruiter_email = offer_dict.get("recruiter_email")
+                    recruiter_phone = offer_dict.get("recruiter_phone")
+                    recruiter_linkedin = None
+                    recruiter_job_title = None
 
-                    # Búsqueda de reclutador de respaldo con PhantomBuster
-                    if not recruiter_name and company_name:
-                        print(f"   -> Buscando reclutador para {company_name} en LinkedIn...")
-                        pb_data = await search_with_phantombuster(company_name)
-                        if pb_data:
-                            recruiter_name = f"{pb_data['nombre']} {pb_data.get('apellidos', '')}".strip()
+                    if not recruiter_email and company_name:
+                        apollo_data = await search_in_apollo(company_name, company_domain, recruiter_name)
+                        
+                        if apollo_data:
+                            apollo_name = apollo_data.get("nombre")
+                            if apollo_name and (not recruiter_name or " " in apollo_name):
+                                recruiter_name = apollo_name
+                            
+                            if apollo_data.get("email"): recruiter_email = apollo_data.get("email")
+                            if apollo_data.get("telefono"): recruiter_phone = apollo_data.get("telefono")
+                            if apollo_data.get("linkedin_url"): recruiter_linkedin = apollo_data.get("linkedin_url")
+                            if apollo_data.get("job_title"): recruiter_job_title = apollo_data.get("job_title")
 
-                    # Guardar Contacto
-                    if (recruiter_name or recruiter_email) and company_id:
+                    # ==========================================
+                    # PASO 3: GUARDADO FINAL EN BD
+                    # ==========================================
+                    if (recruiter_name or recruiter_email or recruiter_linkedin) and company_id:
                         try:
-                            stmt_contact = insert(Contact).values(
-                                company_id=company_id,
-                                full_name=recruiter_name,
-                                email=recruiter_email
-                            ).on_conflict_do_nothing()
-                            await session.execute(stmt_contact)
-                        except Exception as e:
-                            print(f"Error al guardar el contacto {recruiter_name}: {e}")
+                            safe_name = recruiter_name if recruiter_name else "Reclutador Desconocido"
+                            
+                            stmt_check_contact = select(Contact.id, Contact.email, Contact.phone, Contact.linkedin_url, Contact.job_title).where(
+                                Contact.company_id == company_id,
+                                Contact.full_name == safe_name
+                            )
+                            result_contact = await session.execute(stmt_check_contact)
+                            existing_contact = result_contact.first()
 
-                    # Guardar Oferta Nueva
-                    stmt_offer = insert(JobOffer).values(**offer_data).on_conflict_do_nothing()
+                            if not existing_contact:
+                                stmt_contact = insert(Contact).values(
+                                    company_id=company_id,
+                                    full_name=safe_name,
+                                    email=recruiter_email,
+                                    phone=recruiter_phone,
+                                    linkedin_url=recruiter_linkedin,
+                                    job_title=recruiter_job_title
+                                )
+                                await session.execute(stmt_contact)
+                            else:
+                                existing_id, ex_email, ex_phone, ex_linkedin, ex_job_title = existing_contact
+                                update_values = {}
+                                
+                                if not ex_email and recruiter_email: update_values["email"] = recruiter_email
+                                if not ex_phone and recruiter_phone: update_values["phone"] = recruiter_phone
+                                if not ex_linkedin and recruiter_linkedin: update_values["linkedin_url"] = recruiter_linkedin
+                                if not ex_job_title and recruiter_job_title: update_values["job_title"] = recruiter_job_title
+                                    
+                                if update_values:
+                                    stmt_update_contact = (
+                                        update(Contact)
+                                        .where(Contact.id == existing_id)
+                                        .values(**update_values)
+                                    )
+                                    await session.execute(stmt_update_contact)
+                        except Exception as e:
+                            print(f"      [ERROR BD] Fallo al guardar contacto: {e}")
+
+                    # Guardar Oferta
+                    offer_dict["company_id"] = company_id
+                    for key in ["company_name", "recruiter_name", "recruiter_email", "recruiter_phone"]:
+                        offer_dict.pop(key, None)
+                    
+                    stmt_offer = insert(JobOffer).values(**offer_dict).on_conflict_do_nothing()
                     await session.execute(stmt_offer)
                     await session.commit()
 
                     nuevas_guardadas += 1
-                    print(f" -> [ÉXITO] Oferta nueva guardada en la base de datos.")
-
-                    # DESCOMENTAR ESTA PARTE CUANDO SE PONGA EN MARCHA TODO EL SISTEMA DE CONTACTO
-                    # if recruiter_email:
-                    #     asyncio.create_task(
-                    #         send_company_vacancy_email_standalone(
-                    #             company_email=recruiter_email,
-                    #             company_name=company_name,
-                    #             job_title=offer_data.get("title", "vacante"),
-                    #         )
-                    #     )
-                    #     print(
-                    #         f" -> [EMAIL] Tarea B2B programada para {recruiter_email}"
-                    #     )
-                    # else:
-                    #     print(
-                    #         f" -> [EMAIL] Omitido: No se encontró email para {company_name}"
-                    #     )
+                    print(f" -> [ÉXITO] Oferta guardada en PostgreSQL.")
 
                 except Exception as e:
                     await session.rollback()
-                    print(f"\n[CRITICAL BBDD] Error al guardar oferta nueva: {e}\n")
-                    await log_scraper_error(error_code="SCRAPPER_ORCHESTRATOR_DB", message=f"stage=db_save | exc={e}")
+                    print(f"\n[CRITICAL BBDD] Error en el flujo de guardado: {e}\n")
 
-    print(f"Ofertas extraídas por los scrapers: {len(valid_offers)}")
-    print(f"Ofertas REPETIDAS (actualizadas sin pisar datos): {actualizadas}")
-    print(f"Ofertas NUEVAS (enriquecidas e insertadas): {nuevas_guardadas}")
+    print(f"\nOfertas extraídas: {len(valid_offers)}")
+    print(f"Ofertas REPETIDAS: {actualizadas}")
+    print(f"Ofertas NUEVAS: {nuevas_guardadas}")
 
 
 async def run_scrapers() -> None:
-    """
-    Orquestador principal. Coordina la extracción, validación, enriquecimiento
-    y guardado de las ofertas de empleo en la base de datos.
-    """
     raw_offers = await gather_raw_offers()
-    if not raw_offers:
-        return
-
+    if not raw_offers: return
     valid_offers = validate_and_filter_offers(raw_offers)
-    if not valid_offers:
-        return
-
+    if not valid_offers: return
     await process_and_save_offers(valid_offers)
-
 
 if __name__ == "__main__":
     asyncio.run(run_scrapers())
