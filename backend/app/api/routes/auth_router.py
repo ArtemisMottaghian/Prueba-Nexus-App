@@ -1,15 +1,22 @@
+import asyncio
+import smtplib
+from email.message import EmailMessage
+
 from fastapi import APIRouter,Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 import httpx
 
 from app.db.connection import get_db
 from app.services import users_service
-from app.core.security import verify_password
+from app.core.security import verify_password, hash_password
 from app.core.jwt import create_access_token
 from app.core.config import settings
-from app.schemas.users_schemas import TokenResponse
+from app.schemas.users_schemas import TokenResponse, ForgotPasswordRequest, ResetPasswordRequest
+
+RESET_TOKEN_EXPIRE_MINUTES = 30
 
 
 router = APIRouter()
@@ -108,3 +115,93 @@ async def google_callback(code: str, db:AsyncSession = Depends(get_db)):
 
     frontend_url = f"{settings.FRONTEND_URL}/auth/google/callback?token={access_token}"
     return RedirectResponse(url=frontend_url)
+
+
+def _create_reset_token(email: str) -> str:
+    from datetime import datetime, timedelta, timezone
+    payload = {
+        "sub": email,
+        "purpose": "password_reset",
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=RESET_TOKEN_EXPIRE_MINUTES),
+    }
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+async def _send_reset_email(to_email: str, token: str):
+    reset_url = f"{settings.FRONTEND_URL}/reset-password?token={token}"
+    msg = EmailMessage()
+    msg["Subject"] = "Restablecer contraseña — Nexus"
+    msg["From"] = settings.SMTP_FROM
+    msg["To"] = to_email
+    msg.set_content(f"Haz clic en el siguiente enlace para restablecer tu contraseña:\n\n{reset_url}\n\nEste enlace expira en {RESET_TOKEN_EXPIRE_MINUTES} minutos.")
+    msg.add_alternative(f"""
+    <div style="font-family:sans-serif;max-width:480px;margin:auto">
+      <h2>Restablecer contraseña</h2>
+      <p>Haz clic en el botón para crear una nueva contraseña. El enlace expira en <strong>{RESET_TOKEN_EXPIRE_MINUTES} minutos</strong>.</p>
+      <a href="{reset_url}" style="display:inline-block;padding:12px 24px;background:#6366f1;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">
+        Restablecer contraseña
+      </a>
+      <p style="color:#888;font-size:12px;margin-top:24px">Si no solicitaste este cambio, ignora este mensaje.</p>
+    </div>
+    """, subtype="html")
+
+    def _smtp_send():
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+            server.starttls()
+            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            server.send_message(msg)
+
+    await asyncio.to_thread(_smtp_send)
+
+
+async def _send_reset_email_silent(to_email: str, token: str):
+    try:
+        await _send_reset_email(to_email, token)
+    except Exception as e:
+        print(f"[ERROR] forgot_password email to {to_email}: {e}")
+
+
+@router.post("/forgot-password", status_code=204)
+async def forgot_password(
+    body: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    # Verificar SMTP antes de consultar la BD — evita revelar si el email existe
+    # en caso de que el servicio no esté configurado (retornaría 503 solo para emails válidos)
+    if not settings.SMTP_HOST:
+        raise HTTPException(status_code=503, detail="Servicio de email no configurado")
+
+    usuario = await users_service.getUser(db, body.email)
+
+    # Respuesta siempre 204 aunque el email no exista — evita enumeración de usuarios.
+    # El email se envía en background para que el tiempo de respuesta sea constante
+    # independientemente de si el usuario existe o no.
+    # Nota: el token JWT no es de un solo uso — válido hasta expiración (30 min).
+    # Para single-use se requeriría una tabla de tokens en BD (mejora futura).
+    if not usuario or not usuario.is_active:
+        return
+
+    token = _create_reset_token(usuario.email)
+    asyncio.create_task(_send_reset_email_silent(usuario.email, token))
+
+
+@router.post("/reset-password", status_code=204)
+async def reset_password(
+    body: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        payload = jwt.decode(body.token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+    except JWTError:
+        raise HTTPException(status_code=400, detail="Token inválido o expirado")
+
+    if payload.get("purpose") != "password_reset":
+        raise HTTPException(status_code=400, detail="Token inválido")
+
+    email = payload.get("sub")
+    usuario = await users_service.getUser(db, email)
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    usuario.password_hash = hash_password(body.new_password)
+    await db.commit()
