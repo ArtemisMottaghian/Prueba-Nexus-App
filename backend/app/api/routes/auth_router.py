@@ -14,7 +14,9 @@ from app.services import users_service
 from app.core.security import verify_password, hash_password
 from app.core.jwt import create_access_token
 from app.core.config import settings
-from app.schemas.users_schemas import TokenResponse, ForgotPasswordRequest, ResetPasswordRequest
+from app.schemas.users_schemas import TokenResponse, ForgotPasswordRequest, ResetPasswordRequest, ChangePasswordRequest
+from app.core.jwt import get_current_user_db
+from app.models.user_model import User
 
 RESET_TOKEN_EXPIRE_MINUTES = 30
 
@@ -204,4 +206,17 @@ async def reset_password(
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
     usuario.password_hash = hash_password(body.new_password)
+    await db.commit()
+
+
+@router.post("/change-password", status_code=204)
+async def change_password(
+    body: ChangePasswordRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_db),
+):
+    if not verify_password(body.current_password, current_user.password_hash):
+        raise HTTPException(status_code=400, detail="La contraseña actual es incorrecta")
+
+    current_user.password_hash = hash_password(body.new_password)
     await db.commit()

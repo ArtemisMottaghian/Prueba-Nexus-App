@@ -210,9 +210,14 @@
   padding: 0.8rem 1rem 0.8rem 2.5rem;
   border: none;
   background: transparent;
-  color: #111827;
+  color: #111827 !important;
   font-size: 0.9rem;
   outline: none;
+}
+
+.input-wrapper input::placeholder {
+  color: #9ca3af !important;
+  opacity: 1;
 }
 
 .eye-toggle {

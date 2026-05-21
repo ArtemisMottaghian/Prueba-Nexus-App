@@ -30,6 +30,9 @@ export const ENDPOINTS = {
     googleLogin: `${BASE_URL}/api/login/google/login`,
     googleCallback: `${BASE_URL}/api/login/google/callback`,
     register: `${BASE_URL}/api/auth/register`,
+    forgotPassword: `${BASE_URL}/api/login/forgot-password`,
+    resetPassword: `${BASE_URL}/api/login/reset-password`,
+    changePassword: `${BASE_URL}/api/login/change-password`,
   },
   companies: {
     list: `${BASE_URL}/api/companies/clientes`,

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import logoNexus from '../../assets/logo-nexus.svg';
 import './LoginForm.css';
@@ -184,9 +184,9 @@ export default function LoginForm() {
                 Recordarme
               </label>
 
-              <a href="#" className="forgot-password">
+              <Link to="/forgot-password" className="forgot-password">
                 ¿Olvidaste tu contraseña?
-              </a>
+              </Link>
             </div>
 
             {/* Botón principal */}

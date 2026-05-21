@@ -50,12 +50,12 @@ class Settings(BaseSettings):
 
     CHAT_ENCRYPTION_KEY: str = ""
 
-    # SMTP para notificaciones de chat (dejar vacío para desactivar)
+    # SMTP para emails de seguridad (forgot-password, etc). Dejar vacío para desactivar.
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
-    SMTP_FROM: str = ""
+    SMTP_FROM: str = "noreply@nexus.com"
 
     # URLs de Google OAuth
     GOOGLE_AUTH_URL: str = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -70,12 +70,6 @@ class Settings(BaseSettings):
 
     LINKEDIN_SESSION_COOKIE: str = ""
     LINKEDIN_USER_AGENT: str = ""
-
-    SMTP_HOST: str = ""
-    SMTP_PORT: int = 587
-    SMTP_USER: str = ""
-    SMTP_PASSWORD: str = ""
-    SMTP_FROM: str = "noreply@nexus.com"
 
     model_config = SettingsConfigDict(
         env_file=RUTA_ENV, env_file_encoding="utf-8", extra="ignore"
