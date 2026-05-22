@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ENDPOINTS, authFetch } from '../../../../services/api';
+import { ENDPOINTS, authFetch } from '../../../services/api';
 import './SmartMatchResults.css';
 
 export default function SmartMatchResults({ job, candidates, onClose }) {
