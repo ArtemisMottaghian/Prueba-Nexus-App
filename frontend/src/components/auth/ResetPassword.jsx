@@ -47,7 +47,10 @@ export default function ResetPassword() {
         setTimeout(() => navigate('/login'), 3000);
       } else {
         const data = await res.json().catch(() => ({}));
-        setError(data.detail || 'El enlace ha expirado o es inválido. Solicita uno nuevo.');
+        setError(
+          data.detail ||
+            'El enlace ha expirado o es inválido. Solicita uno nuevo.'
+        );
       }
     } catch {
       setError('Error al conectar con el servidor.');
@@ -61,7 +64,11 @@ export default function ResetPassword() {
       <div className="login-panel-brand">
         <div className="brand-content">
           <div className="brand-logo-container">
-            <img src={logoNexus} alt="NexusAI Logo" className="brand-logo-image" />
+            <img
+              src={logoNexus}
+              alt="NexusAI Logo"
+              className="brand-logo-image"
+            />
           </div>
           <h2 className="brand-title">
             Crea una nueva
@@ -96,7 +103,12 @@ export default function ResetPassword() {
             <div style={{ textAlign: 'center' }}>
               <i
                 className="bi bi-check-circle-fill"
-                style={{ fontSize: '3rem', color: '#10b981', display: 'block', marginBottom: '1rem' }}
+                style={{
+                  fontSize: '3rem',
+                  color: '#10b981',
+                  display: 'block',
+                  marginBottom: '1rem',
+                }}
               />
               <h1
                 style={{
@@ -108,13 +120,24 @@ export default function ResetPassword() {
               >
                 Contraseña actualizada
               </h1>
-              <p style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '2rem' }}>
-                Tu contraseña ha sido cambiada correctamente. Redirigiendo al inicio de sesión…
+              <p
+                style={{
+                  color: '#6b7280',
+                  fontSize: '0.9rem',
+                  marginBottom: '2rem',
+                }}
+              >
+                Tu contraseña ha sido cambiada correctamente. Redirigiendo al
+                inicio de sesión…
               </p>
               <Link
                 to="/login"
                 className="submit-btn"
-                style={{ display: 'block', textDecoration: 'none', textAlign: 'center' }}
+                style={{
+                  display: 'block',
+                  textDecoration: 'none',
+                  textAlign: 'center',
+                }}
               >
                 Ir al inicio de sesión
               </Link>
@@ -148,7 +171,9 @@ export default function ResetPassword() {
                       onClick={() => setShowPwd((v) => !v)}
                       tabIndex="-1"
                     >
-                      <i className={`bi ${showPwd ? 'bi-eye-slash' : 'bi-eye'}`} />
+                      <i
+                        className={`bi ${showPwd ? 'bi-eye-slash' : 'bi-eye'}`}
+                      />
                     </button>
                   </div>
                 </div>

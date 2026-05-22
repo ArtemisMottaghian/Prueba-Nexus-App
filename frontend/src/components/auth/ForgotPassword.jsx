@@ -37,7 +37,11 @@ export default function ForgotPassword() {
       <div className="login-panel-brand">
         <div className="brand-content">
           <div className="brand-logo-container">
-            <img src={logoNexus} alt="NexusAI Logo" className="brand-logo-image" />
+            <img
+              src={logoNexus}
+              alt="NexusAI Logo"
+              className="brand-logo-image"
+            />
           </div>
           <h2 className="brand-title">
             Recupera tu acceso
@@ -71,7 +75,12 @@ export default function ForgotPassword() {
             <div style={{ textAlign: 'center' }}>
               <i
                 className="bi bi-envelope-check-fill"
-                style={{ fontSize: '3rem', color: '#7c3aed', display: 'block', marginBottom: '1rem' }}
+                style={{
+                  fontSize: '3rem',
+                  color: '#7c3aed',
+                  display: 'block',
+                  marginBottom: '1rem',
+                }}
               />
               <h1
                 style={{
@@ -83,14 +92,24 @@ export default function ForgotPassword() {
               >
                 Revisa tu email
               </h1>
-              <p style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '2rem' }}>
-                Si el correo está registrado en Nexus, recibirás un enlace para restablecer tu
-                contraseña en los próximos minutos.
+              <p
+                style={{
+                  color: '#6b7280',
+                  fontSize: '0.9rem',
+                  marginBottom: '2rem',
+                }}
+              >
+                Si el correo está registrado en Nexus, recibirás un enlace para
+                restablecer tu contraseña en los próximos minutos.
               </p>
               <Link
                 to="/login"
                 className="submit-btn"
-                style={{ display: 'block', textDecoration: 'none', textAlign: 'center' }}
+                style={{
+                  display: 'block',
+                  textDecoration: 'none',
+                  textAlign: 'center',
+                }}
               >
                 Volver al inicio de sesión
               </Link>
@@ -99,7 +118,9 @@ export default function ForgotPassword() {
             <>
               <div className="form-header">
                 <h1>¿Olvidaste tu contraseña?</h1>
-                <p>Introduce tu email y te enviaremos un enlace de recuperación</p>
+                <p>
+                  Introduce tu email y te enviaremos un enlace de recuperación
+                </p>
               </div>
 
               {error && <div className="form-general-error">{error}</div>}
