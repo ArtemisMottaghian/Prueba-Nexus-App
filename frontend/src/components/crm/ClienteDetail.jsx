@@ -90,10 +90,10 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
     }
   };
 
-  const esPrioritario = cliente.prioritario || false;
+  const esPrioritario = cliente?.prioritario || false;
   // PROTECCIÓN 2: Variable segura para el nombre en todo el detalle (Añadido cliente.name)
   const nombreParaMostrar =
-    cliente.name || cliente.company_name || cliente.nombre || 'Desconocido';
+    cliente?.name || cliente?.company_name || cliente?.nombre || 'Desconocido';
 
   return (
     <>
