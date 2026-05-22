@@ -457,20 +457,37 @@ export default function VacancyModal({
     });
   };
 
-  const handleAddCandidato = () => {
+  const handleAddCandidato = async () => {
     if (!candForm.nombre.trim()) return;
-    const nuevo = {
-      ...candForm,
-      nombre: candForm.nombre.trim(),
-      fecha: new Date().toLocaleDateString('es-ES'),
-    };
-    setCandidatosList((prev) => [nuevo, ...prev]);
-    setCandForm({
-      nombre: '',
-      fase: 'Enviado CV',
-      resultado: 'Pendiente',
-      notas: '',
-    });
+    try {
+      await authFetch(
+        ENDPOINTS.recruitment.vacantes.candidateTracking(job.id),
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: candForm.nombre.trim(),
+            phase: candForm.fase,
+            result: candForm.resultado,
+            notes: candForm.notas ? [candForm.notas] : [],
+          }),
+        }
+      );
+      const nuevo = {
+        ...candForm,
+        nombre: candForm.nombre.trim(),
+        fecha: new Date().toLocaleDateString('es-ES'),
+      };
+      setCandidatosList((prev) => [nuevo, ...prev]);
+      setCandForm({
+        nombre: '',
+        fase: 'Enviado CV',
+        resultado: 'Pendiente',
+        notas: '',
+      });
+    } catch (err) {
+      console.error('Error guardando seguimiento:', err);
+    }
   };
 
   const getBadgeClass = (status) => {

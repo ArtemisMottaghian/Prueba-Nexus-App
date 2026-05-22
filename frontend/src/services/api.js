@@ -86,6 +86,8 @@ export const ENDPOINTS = {
       notes: (id) => `${BASE_URL}/api/vacancies/${id}/notes`,
       updateNote: (id, noteId) =>
         `${BASE_URL}/api/vacancies/${id}/notes/${noteId}`,
+      candidateTracking: (id) =>
+        `${BASE_URL}/api/vacancies/${id}/candidate-tracking`,
     },
   },
 
