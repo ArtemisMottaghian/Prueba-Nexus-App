@@ -90,6 +90,21 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
     }
   };
 
+  if (!cliente) {
+    return (
+      <div className="clientes-empty-state">
+        <div className="empty-icon-wrapper">
+          <i className="bi bi-building"></i>
+        </div>
+        <h5>Selecciona un cliente</h5>
+        <p className="text-muted">
+          Haz clic en un cliente de la lista para ver sus datos y vacantes
+          asociadas.
+        </p>
+      </div>
+    );
+  }
+
   const esPrioritario = cliente?.prioritario || false;
   // PROTECCIÓN 2: Variable segura para el nombre en todo el detalle (Añadido cliente.name)
   const nombreParaMostrar =
@@ -133,7 +148,7 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
                 )}
               </div>
               <span className="cliente-sector">
-                {cliente.sector || 'Sin sector'}
+                {cliente?.sector || 'Sin sector'}
                 {empresaCrm?.responsable && (
                   <>
                     {' · '}
