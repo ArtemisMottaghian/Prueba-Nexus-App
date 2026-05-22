@@ -96,11 +96,17 @@ export default function MiCuenta() {
       });
       if (res.ok) {
         setPwd(EMPTY_PWD);
-        setPwdMsg({ type: 'success', text: 'Contraseña actualizada correctamente.' });
+        setPwdMsg({
+          type: 'success',
+          text: 'Contraseña actualizada correctamente.',
+        });
         setTimeout(() => setPwdMsg(null), 3500);
       } else {
         const data = await res.json().catch(() => ({}));
-        setPwdMsg({ type: 'error', text: data.detail || 'Error al actualizar la contraseña.' });
+        setPwdMsg({
+          type: 'error',
+          text: data.detail || 'Error al actualizar la contraseña.',
+        });
       }
     } catch {
       setPwdMsg({ type: 'error', text: 'Error al conectar con el servidor.' });
