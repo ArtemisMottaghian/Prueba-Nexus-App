@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import VacancyModal from '../recruitment/vacancies/VacancyModal';
 import CrmEmpresaPanel from './CrmEmpresaPanel';
-import { updateEstadoCuenta, getClienteComments, addClienteComment, deleteClienteComment } from '../../services/clientesService';
+import {
+  updateEstadoCuenta,
+  getClienteComments,
+  addClienteComment,
+  deleteClienteComment,
+} from '../../services/clientesService';
 import './ClienteDetail.css';
 
 const getBadgeEstado = (estado) => {
@@ -38,17 +43,17 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
   }, [cliente]);
 
   useEffect(() => {
-  if (!cliente?.id) return;
-  const cargarNotas = async () => {
-    try {
-      const data = await getClienteComments(cliente.id);
-      setNotas(data);
-    } catch (err) {
-      console.error('Error cargando notas:', err);
-    }
-  };
-  cargarNotas();
-}, [cliente?.id]);
+    if (!cliente?.id) return;
+    const cargarNotas = async () => {
+      try {
+        const data = await getClienteComments(cliente.id);
+        setNotas(data);
+      } catch (err) {
+        console.error('Error cargando notas:', err);
+      }
+    };
+    cargarNotas();
+  }, [cliente?.id]);
 
   const handleUpdateEstadoCuenta = async (nuevoEstado) => {
     if (!cliente) return;
@@ -64,24 +69,26 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
   };
 
   const agregarNota = async () => {
-  if (!notaTexto.trim()) return;
-  try {
-    const nueva = await addClienteComment(cliente.id, { comment: notaTexto.trim() });
-    setNotas((prev) => [nueva, ...prev]);
-    setNotaTexto('');
-  } catch (err) {
-    console.error('Error guardando nota:', err);
-  }
-};
+    if (!notaTexto.trim()) return;
+    try {
+      const nueva = await addClienteComment(cliente.id, {
+        comment: notaTexto.trim(),
+      });
+      setNotas((prev) => [nueva, ...prev]);
+      setNotaTexto('');
+    } catch (err) {
+      console.error('Error guardando nota:', err);
+    }
+  };
 
   const eliminarNota = async (id) => {
-  try {
-    await deleteClienteComment(id);
-    setNotas((prev) => prev.filter((n) => n.id !== id));
-  } catch (err) {
-    console.error('Error eliminando nota:', err);
-  }
-};
+    try {
+      await deleteClienteComment(id);
+      setNotas((prev) => prev.filter((n) => n.id !== id));
+    } catch (err) {
+      console.error('Error eliminando nota:', err);
+    }
+  };
 
   const esPrioritario = cliente.prioritario || false;
   // PROTECCIÓN 2: Variable segura para el nombre en todo el detalle (Añadido cliente.name)
@@ -414,7 +421,9 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
                     </div>
                     <span className="activity-time">
                       <i className="bi bi-clock me-1"></i>
-                      {nota.created_at ? new Date(nota.created_at).toLocaleString('es-ES') : ''}
+                      {nota.created_at
+                        ? new Date(nota.created_at).toLocaleString('es-ES')
+                        : ''}
                     </span>
                   </div>
                 </div>
