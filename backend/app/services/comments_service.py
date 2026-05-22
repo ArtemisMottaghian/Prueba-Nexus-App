@@ -68,3 +68,14 @@ async def get_company_comments(db: AsyncSession, company_id: int):
     query = select(CompanyComment).where(CompanyComment.company_id == company_id).order_by(CompanyComment.created_at.desc())
     result = await db.execute(query)
     return result.scalars().all()
+
+# Eliminar comentario
+async def delete_company_comment(db: AsyncSession, comment_id: int):
+    result = await db.execute(select(CompanyComment).where(CompanyComment.id == comment_id))
+    comment = result.scalars().first()
+    if not comment:
+        return False
+    await db.delete(comment)
+    await db.commit()
+    return True
+

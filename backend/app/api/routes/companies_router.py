@@ -193,3 +193,16 @@ async def modify_company_comment(
 @router.get("/{company_id}/comments", response_model=List[CommentResponse])
 async def get_company_comments(company_id: int, db: AsyncSession = Depends(get_db)):
     return await comments_service.get_company_comments(db, company_id)
+
+# -----------------
+# Eliminar comentario de empresa
+# DELETE /api/companies/comments/{comment_id}
+# -----------------
+@router.delete("/comments/{comment_id}", response_model=MessageResponse)
+async def delete_company_comment(
+    comment_id: int, db: AsyncSession = Depends(get_db)
+):
+    deleted = await comments_service.delete_company_comment(db, comment_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Comentario no encontrado")
+    return {"message": "Comentario eliminado correctamente"}
