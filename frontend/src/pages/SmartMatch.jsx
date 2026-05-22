@@ -1,5 +1,21 @@
+import { useState } from 'react';
+import { ENDPOINTS, authFetch } from '../../../services/api';
 import './SmartMatchResults.css';
 export default function SmartMatchResults({ job, candidates, onClose }) {
+    const [addedCandidates, setAddedCandidates] = useState({});
+
+const handleAddToTracking = async (candidate) => {
+  try {
+    await authFetch(ENDPOINTS.recruitment.vacantes.applications(job.id), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ candidate_id: candidate.id }),
+    });
+    setAddedCandidates((prev) => ({ ...prev, [candidate.id]: true }));
+  } catch (err) {
+    console.error('Error añadiendo candidato al seguimiento:', err);
+  }
+};
   const handleOverlayClick = (e) => {
     if (e.target.className === 'smart-match-overlay') {
       onClose();
@@ -61,15 +77,30 @@ export default function SmartMatchResults({ job, candidates, onClose }) {
                     </div>
                   )}
                   <div className="candidate-actions">
-                    <button
-                      className="btn-view-profile-simple"
-                      onClick={() =>
-                        window.open(`/candidatos/${candidate.id}`, '_blank')
-                      }
-                    >
-                      <i className="bi bi-person-badge me-2"></i>Ver Perfil
-                    </button>
-                  </div>
+                      <button
+                        className="btn-view-profile-simple"
+                        onClick={() =>
+                          window.open(`/candidatos/${candidate.id}`, '_blank')
+                        }
+                      >
+                        <i className="bi bi-person-badge me-2"></i>Ver Perfil
+                      </button>
+                      <button
+                        className={`btn-view-profile-simple ${addedCandidates[candidate.id] ? 'btn-added' : ''}`}
+                        onClick={() => handleAddToTracking(candidate)}
+                        disabled={addedCandidates[candidate.id]}
+                      >
+                        {addedCandidates[candidate.id] ? (
+                          <>
+                            <i className="bi bi-check-circle-fill me-2"></i>Añadido
+                          </>
+                        ) : (
+                          <>
+                            <i className="bi bi-person-plus me-2"></i>Añadir a seguimiento
+                          </>
+                        )}
+                      </button>
+                    </div>
                 </div>
               ))}
             </div>
