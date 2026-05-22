@@ -194,8 +194,7 @@ export default function Candidates() {
     }
   };
 
-  const handleToggleFavorite = async (candidateId, currentIsFavorite) => {
-    const newFavoriteStatus = !currentIsFavorite;
+  const handleToggleFavorite = async (candidateId, newFavoriteStatus) => {
     setCandidates((prevCandidates) =>
       prevCandidates.map((candidate) =>
         candidate.id === candidateId
@@ -203,7 +202,6 @@ export default function Candidates() {
           : candidate
       )
     );
-
     try {
       await candidatesService.toggleFavorite(candidateId, newFavoriteStatus);
     } catch (error) {
@@ -211,7 +209,7 @@ export default function Candidates() {
       setCandidates((prevCandidates) =>
         prevCandidates.map((candidate) =>
           candidate.id === candidateId
-            ? { ...candidate, isFavorite: currentIsFavorite }
+            ? { ...candidate, isFavorite: !newFavoriteStatus }
             : candidate
         )
       );
@@ -398,7 +396,7 @@ export default function Candidates() {
             { value: 'GitHub API', label: 'GitHub API' },
           ]}
           locationOptions={locationOptions}
-          industryOptions={industryOptions} // <-- NUEVO: INYECTAMOS LOS SECTORES AQUÍ
+          industryOptions={industryOptions}
           skillsOptions={skillsOptions}
           disponibilidadOptions={DISPONIBILIDAD_OPTIONS}
           experienciaOptions={EXPERIENCIA_OPTIONS}
@@ -501,7 +499,6 @@ export default function Candidates() {
         />
       )}
 
-      {/* ... Paginación y Modales de Crear/Editar se mantienen intactos */}
       {!loading && totalPaginas > 1 && (
         <div className="clientes-pagination" style={{ marginTop: '1rem' }}>
           <span className="clientes-pagination__info">

@@ -33,14 +33,11 @@ export default function SmartMatchResults({ job, candidates, onClose }) {
               </p>
 
               {candidates.map((candidate) => (
-                <div
-                  key={candidate.candidate_id}
-                  className="match-candidate-card"
-                >
+                <div key={candidate.id} className="match-candidate-card">
                   <div className="match-candidate-header">
                     <div className="candidate-info">
                       <span className="candidate-name">
-                        {candidate.name}
+                        {candidate.nombre}
                         {candidate.verified && (
                           <i
                             className="bi bi-patch-check-fill text-info ms-2"
@@ -62,26 +59,26 @@ export default function SmartMatchResults({ job, candidates, onClose }) {
                     <div className="match-score-wrapper">
                       <div className="score-header">
                         <span className="score-label">Afinidad</span>
-                        <span className="score-value">
-                          {candidate.affinity_percentage}%
-                        </span>
+                        <span className="score-value">{candidate.score}%</span>
                       </div>
                       <div className="progress-bar-bg">
                         <div
                           className="progress-bar-fill"
-                          style={{ width: `${candidate.affinity_percentage}%` }}
+                          style={{ width: `${candidate.score}%` }}
                         ></div>
                       </div>
                     </div>
                   </div>
 
-                  {candidate.reason && (
+                  {candidate.reasoning && (
                     <div className="ai-explanation-card">
                       <div className="ai-explanation-header">
                         <i className="bi bi-magic ai-icon"></i>
                         <span>Motivo de compatibilidad (IA)</span>
                       </div>
-                      <p className="ai-explanation-text">{candidate.reason}</p>
+                      <p className="ai-explanation-text">
+                        {candidate.reasoning}
+                      </p>
                     </div>
                   )}
 
@@ -89,10 +86,7 @@ export default function SmartMatchResults({ job, candidates, onClose }) {
                     <button
                       className="btn-view-profile-simple"
                       onClick={() =>
-                        window.open(
-                          `/candidates/${candidate.candidate_id}`,
-                          '_blank'
-                        )
+                        window.open(`/candidates/${candidate.id}`, '_blank')
                       }
                     >
                       <i className="bi bi-person-badge me-2"></i>
