@@ -1,5 +1,5 @@
 import { ENDPOINTS, authFetch } from './api';
-import clientesDummy from '../data/clientesData.json';
+
 
 const ESTADOS_CUENTA_VALIDOS = [
   'lead',
@@ -222,4 +222,28 @@ export const assignUserToCompanies = async (companyIds, userId) => {
     console.error('Error al asignar empresas masivamente:', error);
     throw error;
   }
+};
+
+export const getClienteComments = async (companyId) => {
+  const response = await authFetch(ENDPOINTS.companies.comments(companyId));
+  if (!response.ok) throw new Error('Error al obtener notas');
+  return await response.json();
+};
+
+export const addClienteComment = async (companyId, body) => {
+  const response = await authFetch(ENDPOINTS.companies.comments(companyId), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) throw new Error('Error al guardar nota');
+  return await response.json();
+};
+
+export const deleteClienteComment = async (commentId) => {
+  const response = await authFetch(ENDPOINTS.companies.updateComment(commentId), {
+    method: 'DELETE',
+  });
+  if (!response.ok) throw new Error('Error al eliminar nota');
+  return await response.json();
 };

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import VacancyModal from '../recruitment/vacancies/VacancyModal';
 import CrmEmpresaPanel from './CrmEmpresaPanel';
-import { updateEstadoCuenta } from '../../services/clientesService';
+import { updateEstadoCuenta, getClienteComments, addClienteComment, deleteClienteComment } from '../../services/clientesService';
 import './ClienteDetail.css';
 
 const getBadgeEstado = (estado) => {
@@ -37,6 +37,19 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
     setEmpresaCrm(cliente);
   }, [cliente]);
 
+  useEffect(() => {
+  if (!cliente?.id) return;
+  const cargarNotas = async () => {
+    try {
+      const data = await getClienteComments(cliente.id);
+      setNotas(data);
+    } catch (err) {
+      console.error('Error cargando notas:', err);
+    }
+  };
+  cargarNotas();
+}, [cliente?.id]);
+
   const handleUpdateEstadoCuenta = async (nuevoEstado) => {
     if (!cliente) return;
     setEmpresaCrm((prev) => ({
@@ -50,40 +63,25 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
     }
   };
 
-  const agregarNota = () => {
-    if (!notaTexto.trim()) return;
-    const nueva = {
-      id: Date.now(),
-      texto: notaTexto.trim(),
-      fecha: new Date().toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-    };
+  const agregarNota = async () => {
+  if (!notaTexto.trim()) return;
+  try {
+    const nueva = await addClienteComment(cliente.id, { comment: notaTexto.trim() });
     setNotas((prev) => [nueva, ...prev]);
     setNotaTexto('');
-  };
-
-  const eliminarNota = (id) =>
-    setNotas((prev) => prev.filter((n) => n.id !== id));
-
-  if (!cliente) {
-    return (
-      <div className="clientes-empty-state">
-        <div className="empty-icon-wrapper">
-          <i className="bi bi-building"></i>
-        </div>
-        <h5>Selecciona un cliente</h5>
-        <p className="text-muted">
-          Haz clic en un cliente de la lista para ver sus datos y vacantes
-          asociadas.
-        </p>
-      </div>
-    );
+  } catch (err) {
+    console.error('Error guardando nota:', err);
   }
+};
+
+  const eliminarNota = async (id) => {
+  try {
+    await deleteClienteComment(id);
+    setNotas((prev) => prev.filter((n) => n.id !== id));
+  } catch (err) {
+    console.error('Error eliminando nota:', err);
+  }
+};
 
   const esPrioritario = cliente.prioritario || false;
   // PROTECCIÓN 2: Variable segura para el nombre en todo el detalle (Añadido cliente.name)
@@ -402,7 +400,7 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
                   <div className="nota-dot"></div>
                   <div className="nota-content">
                     <div className="d-flex justify-content-between align-items-start">
-                      <p className="nota-texto mb-1">{nota.texto}</p>
+                      <p className="nota-texto mb-1">{nota.comment}</p>
                       <button
                         className="btn-icon btn-icon-sm ms-2 flex-shrink-0"
                         onClick={() => eliminarNota(nota.id)}
@@ -416,7 +414,7 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
                     </div>
                     <span className="activity-time">
                       <i className="bi bi-clock me-1"></i>
-                      {nota.fecha}
+                      {nota.created_at ? new Date(nota.created_at).toLocaleString('es-ES') : ''}
                     </span>
                   </div>
                 </div>
