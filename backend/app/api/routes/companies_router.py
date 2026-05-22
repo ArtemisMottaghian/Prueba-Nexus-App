@@ -17,6 +17,7 @@ from app.schemas.comments_schemas import CommentCreate, CommentUpdate, CommentRe
 from app.services import comments_service
 from app.schemas.users_schemas import MessageResponse
 from app.models.companies_model import Company
+from app.core.jwt import get_current_user
 
 router = APIRouter()
 
@@ -156,10 +157,15 @@ async def assign_user_to_companies(
 # -----------------
 @router.post("/{company_id}/comments", response_model=CommentResponse)
 async def create_company_comment(
-    company_id: int, body: CommentCreate, db: AsyncSession = Depends(get_db)
+    company_id: int,
+    body: CommentCreate,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
     try:
-        return await comments_service.add_company_comment(db, company_id, body)
+        return await comments_service.add_company_comment(
+            db, company_id, body, user_id=current_user["id"]
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
