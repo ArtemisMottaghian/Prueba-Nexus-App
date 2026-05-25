@@ -17,7 +17,7 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 COOKIES_PATH = os.path.join(CURRENT_DIR, "cookies.json")
 
 # Instancia de Gemini
-api_key = os.getenv("GOOGLE_AI_KEY")
+api_key = os.getenv("GOOGLE_API_KEY")
 if not api_key:
     print("  ERROR CRÍTICO: ¡Python no encuentra la llave! El valor de api_key es 'None'.")
     print("  Revisa que el .env esté en la carpeta 'backend' y la variable se llame GOOGLE_API_KEY.")
