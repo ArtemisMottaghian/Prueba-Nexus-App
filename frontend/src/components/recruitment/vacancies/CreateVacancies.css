@@ -1,5 +1,3 @@
-
-
 /* --- CONTENEDOR PRINCIPAL DEL MODAL --- */
 .custom-create-modal .modal-content {
   background: var(--bg-secondary, #ffffff);
@@ -51,7 +49,7 @@
 .custom-create-modal .form-control,
 .custom-create-modal .form-select,
 .custom-create-modal .input-group-text {
-  background: var(--bg-primary, #f9fafb); 
+  background: var(--bg-primary, #f9fafb);
   border: 1px solid var(--border-color, #d1d5db);
   color: var(--text-primary, #111827);
   border-radius: 10px;

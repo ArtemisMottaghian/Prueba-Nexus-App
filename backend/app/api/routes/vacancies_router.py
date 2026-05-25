@@ -23,7 +23,9 @@ from app.schemas.vacancies_schemas import (
 )
 from app.core.jwt import get_current_user
 from app.models.user_model import User, UserRole
-
+from app.models.job_model import JobApplication
+from app.models.aplication_model import ApplicationStatus
+from sqlalchemy.exc import IntegrityError
 
 router = APIRouter()
 
@@ -337,6 +339,38 @@ async def update_vacancy_note(
     if not updated:
         raise HTTPException(status_code=404, detail="Nota no encontrada")
     return {"message": "Nota actualizada correctamente"}
+
+# -----------------------------------------------------------
+# CREAR APLICACIÓN DE CANDIDATO A VACANTE
+# POST /api/vacancies/{vacancy_id}/applications
+# -----------------------------------------------------------
+@router.post("/{vacancy_id}/applications", response_model=MessageResponse)
+async def create_application(
+    vacancy_id: int,
+    body: dict,
+    db: AsyncSession = Depends(get_db)
+):
+
+
+    candidate_id = body.get("candidate_id")
+    if not candidate_id:
+        raise HTTPException(status_code=400, detail="candidate_id es obligatorio")
+
+    try:
+        new_app = JobApplication(
+            candidate_id=candidate_id,
+            offer_id=vacancy_id,
+            status=ApplicationStatus.proposed
+        )
+        db.add(new_app)
+        await db.commit()
+        return {"message": "Candidato añadido al seguimiento correctamente"}
+    except IntegrityError:
+        await db.rollback()
+        return {"message": "El candidato ya está en seguimiento para esta vacante"}
+
+
+
 
 
 # -----------------------------------------------------------

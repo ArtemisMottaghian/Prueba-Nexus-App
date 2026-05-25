@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import EmailIntegration from './EmailIntegration';
+import { authFetch, ENDPOINTS } from '../../services/api';
 import './MiCuenta.css';
 
 const ROLE_META = {
@@ -53,10 +54,16 @@ export default function MiCuenta() {
   const [pwdMsg, setPwdMsg] = useState(null);
   const [savingPwd, setSaving] = useState(false);
 
-  /* ── Preferencias locales ── */
-  const [notif, setNotif] = useState(
-    () => localStorage.getItem('nexus_notif') !== 'false'
-  );
+  /* ── Notificaciones por email (persiste en backend) ── */
+  const [emailNotif, setEmailNotif] = useState(false);
+  const [savingNotif, setSavingNotif] = useState(false);
+
+  useEffect(() => {
+    authFetch(ENDPOINTS.users.me)
+      .then((r) => r.json())
+      .then((data) => setEmailNotif(data.email_notifications ?? false))
+      .catch(() => {});
+  }, []);
 
   const handlePwdChange = (e) => {
     setPwd((p) => ({ ...p, [e.target.name]: e.target.value }));
@@ -79,18 +86,49 @@ export default function MiCuenta() {
     }
 
     setSaving(true);
-    // TODO: PATCH /api/auth/change-password  (pendiente de backend)
-    await new Promise((r) => setTimeout(r, 700));
-    setSaving(false);
-    setPwd(EMPTY_PWD);
-    setPwdMsg({ type: 'success', text: 'Contraseña actualizada.' });
-    setTimeout(() => setPwdMsg(null), 3500);
+    try {
+      const res = await authFetch(ENDPOINTS.auth.changePassword, {
+        method: 'POST',
+        body: JSON.stringify({
+          current_password: pwd.current,
+          new_password: pwd.next,
+        }),
+      });
+      if (res.ok) {
+        setPwd(EMPTY_PWD);
+        setPwdMsg({
+          type: 'success',
+          text: 'Contraseña actualizada correctamente.',
+        });
+        setTimeout(() => setPwdMsg(null), 3500);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setPwdMsg({
+          type: 'error',
+          text: data.detail || 'Error al actualizar la contraseña.',
+        });
+      }
+    } catch {
+      setPwdMsg({ type: 'error', text: 'Error al conectar con el servidor.' });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const toggleNotif = () => {
-    const next = !notif;
-    setNotif(next);
-    localStorage.setItem('nexus_notif', String(next));
+  const toggleEmailNotif = async () => {
+    const next = !emailNotif;
+    setEmailNotif(next);
+    setSavingNotif(true);
+    try {
+      await authFetch(ENDPOINTS.users.notifications, {
+        method: 'PATCH',
+        body: JSON.stringify({ email_notifications: next }),
+      });
+    } catch {
+      setEmailNotif(!next);
+    } finally {
+      setSavingNotif(false);
+    }
   };
 
   return (
@@ -273,18 +311,19 @@ export default function MiCuenta() {
             <div className="cuenta-pref-row">
               <div className="cuenta-pref-info">
                 <span className="cuenta-pref-name">
-                  <i className="bi bi-bell me-2" />
-                  Notificaciones
+                  <i className="bi bi-envelope-check me-2" />
+                  Notificaciones por email
                 </span>
                 <span className="cuenta-pref-desc">
-                  Avisos sobre actividad en la plataforma
+                  Recibe un email cuando te escriban y estés offline
                 </span>
               </div>
               <button
-                className={`cuenta-toggle ${notif ? 'cuenta-toggle--on' : ''}`}
-                onClick={toggleNotif}
+                className={`cuenta-toggle ${emailNotif ? 'cuenta-toggle--on' : ''} ${savingNotif ? 'cuenta-toggle--saving' : ''}`}
+                onClick={toggleEmailNotif}
                 type="button"
-                aria-label="Toggle notificaciones"
+                disabled={savingNotif}
+                aria-label="Toggle notificaciones por email"
               >
                 <span className="cuenta-toggle-knob" />
               </button>

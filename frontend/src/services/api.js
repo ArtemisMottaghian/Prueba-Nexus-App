@@ -30,6 +30,9 @@ export const ENDPOINTS = {
     googleLogin: `${BASE_URL}/api/login/google/login`,
     googleCallback: `${BASE_URL}/api/login/google/callback`,
     register: `${BASE_URL}/api/auth/register`,
+    forgotPassword: `${BASE_URL}/api/login/forgot-password`,
+    resetPassword: `${BASE_URL}/api/login/reset-password`,
+    changePassword: `${BASE_URL}/api/login/change-password`,
   },
   companies: {
     list: `${BASE_URL}/api/companies/clientes`,
@@ -83,6 +86,9 @@ export const ENDPOINTS = {
       notes: (id) => `${BASE_URL}/api/vacancies/${id}/notes`,
       updateNote: (id, noteId) =>
         `${BASE_URL}/api/vacancies/${id}/notes/${noteId}`,
+      candidateTracking: (id) =>
+        `${BASE_URL}/api/vacancies/${id}/candidate-tracking`,
+      applications: (id) => `${BASE_URL}/api/vacancies/${id}/applications`,
     },
   },
 
@@ -108,6 +114,8 @@ export const ENDPOINTS = {
     detail: (email) => `${BASE_URL}/api/users/${email}`,
     update: (email) => `${BASE_URL}/api/users/${email}`,
     delete: (email) => `${BASE_URL}/api/users/${email}`,
+    me: `${BASE_URL}/api/users/me`,
+    notifications: `${BASE_URL}/api/users/me/notifications`,
   },
 
   calendar: {
@@ -115,5 +123,22 @@ export const ENDPOINTS = {
     create: `${BASE_URL}/api/calendar/`,
     update: (id) => `${BASE_URL}/api/calendar/${id}`,
     delete: (id) => `${BASE_URL}/api/calendar/${id}`,
+  },
+
+  chat: {
+    list: `${BASE_URL}/api/conversations`,
+    create: `${BASE_URL}/api/conversations`,
+    messages: (convId) => `${BASE_URL}/api/conversations/${convId}/messages`,
+    send: (convId) => `${BASE_URL}/api/conversations/${convId}/messages`,
+    markRead: (convId) => `${BASE_URL}/api/conversations/${convId}/read`,
+    offline: `${BASE_URL}/api/conversations/offline`,
+    deleteMessage: (convId, msgId) =>
+      `${BASE_URL}/api/conversations/${convId}/messages/${msgId}`,
+    editMessage: (convId, msgId) =>
+      `${BASE_URL}/api/conversations/${convId}/messages/${msgId}`,
+    unread: `${BASE_URL}/api/conversations/unread`,
+    archive: (convId) => `${BASE_URL}/api/conversations/${convId}/archive`,
+    stream: `${BASE_URL}/api/conversations/stream`,
+    typing: (convId) => `${BASE_URL}/api/conversations/${convId}/typing`,
   },
 };

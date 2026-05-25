@@ -9,13 +9,11 @@ import { usersService } from '../../../services/userManagementService';
 import { useAuth } from '../../../context/AuthContext';
 import CrmEmpresaPanel from '../../crm/CrmEmpresaPanel';
 import SmartMatchResults from './SmartMatchResults';
-import { authFetch } from '../../../services/api';
+import { ENDPOINTS, authFetch } from '../../../services/api';
 import './VacancyModal.css';
 
 /**
  * Estructura la descripción plana de la vacante en secciones con bullets.
- * - Detecta títulos típicos ("Requisitos mínimos:", "Se valorará:", ...).
- * - Convierte los ítems marcados con · en listas.
  */
 function parseDescripcion(texto) {
   if (!texto) return [];
@@ -80,11 +78,9 @@ export default function VacancyModal({
   const [savingNote, setSavingNote] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Edición y borrado de notas de seguimiento
   const [editingNoteIdx, setEditingNoteIdx] = useState(null);
   const [editingNoteText, setEditingNoteText] = useState('');
 
-  // Seguimiento candidato
   const [candidatosList, setCandidatosList] = useState(job?.candidatos || []);
   const [candForm, setCandForm] = useState({
     nombre: '',
@@ -93,7 +89,6 @@ export default function VacancyModal({
     notas: '',
   });
 
-  // Asignación de reclutador (múltiple)
   const [localAsignados, setLocalAsignados] = useState(() => {
     const a = job?.assignedTo;
     if (!a) return [];
@@ -102,7 +97,7 @@ export default function VacancyModal({
   const [hrUsers, setHrUsers] = useState([]);
   const [selectedHrId, setSelectedHrId] = useState('');
 
-  // --- 🤖 ESTADOS Y FUNCIÓN PARA SMART MATCH IA 🤖 ---
+  // --- 🤖 ESTADOS Y FUNCIÓN PARA SMART MATCH IA (VERSIÓN ANDER/GEMINI) 🤖 ---
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [isMatchingLocal, setIsMatchingLocal] = useState(false);
   const [matchResults, setMatchResults] = useState([]);
@@ -112,34 +107,25 @@ export default function VacancyModal({
     setIsMatchingLocal(true);
 
     try {
-      const res = await authFetch(
-        `/api/matching/anthropic/offers/${job.id}/matches?top_n=5&min_skill_overlap=1&use_ai=false`,
-        {
-          method: 'GET',
-        }
-      );
+      // 1. LLAMADA AL ENDPOINT POST DE ANDER
+      const res = await authFetch(ENDPOINTS.ai.matchVacancy(job.id), {
+        method: 'POST',
+      });
 
       if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
 
       const data = await res.json();
 
-      // 1. Accedemos a 'ranked' que es donde el backend envía la lista
-      const rankedCandidates = data.ranked || [];
+      // 2. ANDER DEVUELVE 'top_candidates' (no 'ranked')
+      const topCandidates = data.top_candidates || [];
 
-      // 2. Mapeamos los datos al formato que usa tu interfaz
-      const normalized = rankedCandidates.map((item) => ({
-        id: item.candidate?.id || item.candidate_id,
-        // Combinamos Nombre y Apellido
-        nombre: item.candidate
-          ? `${item.candidate.first_name || ''} ${item.candidate.last_name || ''}`.trim()
-          : 'Candidato desconocido',
-        score: item.score || 0,
-        reasoning: item.reasoning || 'Sin descripción disponible.',
-        matched_skills: item.matched_skills || [],
-        gaps: item.gaps || [],
-        location: item.candidate?.location || 'No especificada',
-        skills: item.candidate?.skills || '',
-        candidate_url: item.candidate?.candidate_url || '',
+      // 3. MAPEO ADAPTADO A LOS CAMPOS DE ANDER
+      const normalized = topCandidates.map((item) => ({
+        id: item.candidate_id,
+        nombre: item.name || 'Candidato desconocido',
+        score: item.affinity_percentage || 0,
+        reasoning: item.reason || 'Sin descripción disponible.',
+        location: 'No especificada', // Fallback
       }));
 
       setMatchResults(normalized);
@@ -152,7 +138,7 @@ export default function VacancyModal({
       setIsMatchingLocal(false);
     }
   };
-  // --------------------------------------------------
+  // --------------------------------------------------------------------------
 
   useEffect(() => {
     if (isNegocio && activeTab === 'detalles') {
@@ -193,12 +179,10 @@ export default function VacancyModal({
     fetchNotes();
   }, [activeTab, job?.id]);
 
-  // Documentos locales
   const [localDocs, setLocalDocs] = useState(job?.documentos || []);
   const [docTipo, setDocTipo] = useState('CV');
   const [draggingOver, setDraggingOver] = useState(false);
 
-  // Contacto empresa — contactos manuales + mensaje + firma
   const [contactosManuales, setContactosManuales] = useState([]);
   const [showFormContacto, setShowFormContacto] = useState(false);
   const [formContacto, setFormContacto] = useState({
@@ -215,7 +199,6 @@ export default function VacancyModal({
   const emailFirma = currentUser?.email || '';
   const firmaAuto = `Un saludo,\n${nombreFirma}${emailFirma ? `\n${emailFirma}` : ''}\nNexus Talent Solutions`;
 
-  // CRM de la EMPRESA asociada a la vacante (Issue #329)
   const [empresaCrm, setEmpresaCrm] = useState(null);
   const [loadingEmpresa, setLoadingEmpresa] = useState(false);
 
@@ -248,7 +231,7 @@ export default function VacancyModal({
     try {
       await vacanciesService.updateVacancy(job.id, { status: localStatus });
     } catch {
-      // Persiste localmente vía Vacancies.jsx (handleUpdateJobStatus ya lo guarda en LS)
+      // Fallback local
     }
     setSaveSuccess(true);
     setTimeout(() => {
@@ -267,7 +250,6 @@ export default function VacancyModal({
     if (!noteText.trim()) return;
     setSavingNote(true);
 
-    // Id local para identificar la nota antes de que el backend le asigne uno
     const localId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     const nuevaNota = {
@@ -284,7 +266,6 @@ export default function VacancyModal({
         job.id,
         nuevaNota.texto
       );
-      // Si el backend responde con un id real, lo guardamos en la nota
       if (notaCreada?.note_id) {
         setLocalSeguimiento((prev) =>
           prev.map((n) =>
@@ -293,7 +274,7 @@ export default function VacancyModal({
         );
       }
     } catch {
-      // Nota añadida localmente, se sincronizará cuando el backend esté disponible
+      // Fallback
     } finally {
       setSavingNote(false);
     }
@@ -315,7 +296,6 @@ export default function VacancyModal({
 
     const nota = localSeguimiento[idx];
 
-    // Actualización optimista (siempre funciona en local)
     setLocalSeguimiento((prev) =>
       prev.map((n, i) =>
         i === idx
@@ -331,12 +311,11 @@ export default function VacancyModal({
     setEditingNoteIdx(null);
     setEditingNoteText('');
 
-    // Sincronizar con backend solo si la nota ya tiene id real
     if (nota?.id) {
       try {
         await vacanciesService.updateNote?.(job.id, nota.id, nuevoTexto);
       } catch {
-        // Cambio persiste en local, se sincronizará cuando el backend esté disponible
+        // Fallback
       }
     }
   };
@@ -350,14 +329,13 @@ export default function VacancyModal({
       try {
         await vacanciesService.deleteNote?.(job.id, nota.id);
       } catch {
-        // Borrado local, se sincronizará cuando el backend esté disponible
+        // Fallback
       }
     }
   };
 
   const handleUpdateEstadoCuenta = async (nuevoEstado) => {
     if (!empresaCrm) return;
-    // Optimistic update: el cambio se refleja inmediatamente
     setEmpresaCrm((prev) => ({ ...prev, estadoCuenta: nuevoEstado }));
     try {
       await updateEstadoCuenta(empresaCrm.id, nuevoEstado);
@@ -479,20 +457,37 @@ export default function VacancyModal({
     });
   };
 
-  const handleAddCandidato = () => {
+  const handleAddCandidato = async () => {
     if (!candForm.nombre.trim()) return;
-    const nuevo = {
-      ...candForm,
-      nombre: candForm.nombre.trim(),
-      fecha: new Date().toLocaleDateString('es-ES'),
-    };
-    setCandidatosList((prev) => [nuevo, ...prev]);
-    setCandForm({
-      nombre: '',
-      fase: 'Enviado CV',
-      resultado: 'Pendiente',
-      notas: '',
-    });
+    try {
+      await authFetch(
+        ENDPOINTS.recruitment.vacantes.candidateTracking(job.id),
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: candForm.nombre.trim(),
+            phase: candForm.fase,
+            result: candForm.resultado,
+            notes: candForm.notas ? [candForm.notas] : [],
+          }),
+        }
+      );
+      const nuevo = {
+        ...candForm,
+        nombre: candForm.nombre.trim(),
+        fecha: new Date().toLocaleDateString('es-ES'),
+      };
+      setCandidatosList((prev) => [nuevo, ...prev]);
+      setCandForm({
+        nombre: '',
+        fase: 'Enviado CV',
+        resultado: 'Pendiente',
+        notas: '',
+      });
+    } catch (err) {
+      console.error('Error guardando seguimiento:', err);
+    }
   };
 
   const getBadgeClass = (status) => {
@@ -670,7 +665,6 @@ export default function VacancyModal({
                     <div className="detail-section">
                       <h4 className="section-title">Información General</h4>
                       <div className="detail-grid">
-                        {/* Sector / Industria */}
                         <div className="detail-field">
                           <div className="detail-icon icon-orange">
                             <i className="bi bi-briefcase"></i>
@@ -685,7 +679,6 @@ export default function VacancyModal({
                           </div>
                         </div>
 
-                        {/* Vacantes Activas */}
                         <div className="detail-field">
                           <div className="detail-icon icon-purple">
                             <i className="bi bi-layers"></i>
@@ -702,7 +695,6 @@ export default function VacancyModal({
                           </div>
                         </div>
 
-                        {/* Ubicación */}
                         <div className="detail-field">
                           <div className="detail-icon icon-blue">
                             <i className="bi bi-geo-alt"></i>
@@ -715,7 +707,6 @@ export default function VacancyModal({
                           </div>
                         </div>
 
-                        {/* Salario */}
                         <div className="detail-field">
                           <div className="detail-icon icon-green">
                             <i className="bi bi-cash-stack"></i>
@@ -728,7 +719,6 @@ export default function VacancyModal({
                           </div>
                         </div>
 
-                        {/* Fuente */}
                         <div className="detail-field">
                           <div className="detail-icon icon-cyan">
                             <i className="bi bi-globe"></i>
@@ -741,7 +731,6 @@ export default function VacancyModal({
                           </div>
                         </div>
 
-                        {/* Tiempo */}
                         <div className="detail-field">
                           <div className="detail-icon icon-gray">
                             <i className="bi bi-clock"></i>
@@ -813,7 +802,6 @@ export default function VacancyModal({
                           )}
                         </h4>
 
-                        {/* Lista de reclutadores asignados — excluye usuarios de negocio/company */}
                         {localAsignados.length > 0 && (
                           <div className="asign-list mb-3">
                             {localAsignados.map((r, idx) => {
@@ -857,7 +845,6 @@ export default function VacancyModal({
                           </div>
                         )}
 
-                        {/* Formulario siempre visible para añadir más */}
                         <div className="asign-recruiter-row">
                           <select
                             className="form-select input-field"
@@ -885,7 +872,6 @@ export default function VacancyModal({
                       </div>
                     )}
 
-                    {/* Vista de asignación para reclutador (solo lectura) */}
                     {isReclutador && localAsignados.length > 0 && (
                       <div className="detail-section">
                         <h4 className="section-title">
@@ -924,7 +910,6 @@ export default function VacancyModal({
 
                     return (
                       <div className="tab-pane fade show active">
-                        {/* ── Contactos ── */}
                         <div className="detail-section">
                           <div className="contact-section-header">
                             <h4 className="section-title mb-0">
@@ -945,7 +930,6 @@ export default function VacancyModal({
                             </button>
                           </div>
 
-                          {/* Formulario contacto manual */}
                           {showFormContacto && (
                             <div className="contact-manual-form">
                               <div
@@ -1029,7 +1013,6 @@ export default function VacancyModal({
                             </div>
                           )}
 
-                          {/* Lista de contactos */}
                           {todosContactos.length > 0 ? (
                             <div className="contact-cards-grid mt-3">
                               {todosContactos.map((c, i) => (
@@ -1117,7 +1100,6 @@ export default function VacancyModal({
                           )}
                         </div>
 
-                        {/* ── Mensaje automático ── */}
                         <div className="detail-section">
                           <h4 className="section-title">
                             <i
@@ -1221,7 +1203,6 @@ export default function VacancyModal({
                     );
                   })()}
 
-                {/* TAB CRM EMPRESA — oculto para reclutador */}
                 {activeTab === 'crm' && !isReclutador && (
                   <div className="tab-pane fade show active">
                     <div className="detail-section">
@@ -1260,7 +1241,6 @@ export default function VacancyModal({
                         Actividad de esta vacante
                       </h4>
 
-                      {/* Formulario para añadir nota */}
                       <div className="add-note-form mb-4">
                         <textarea
                           className="form-control input-field mb-2"
@@ -1395,7 +1375,6 @@ export default function VacancyModal({
                         Seguimiento de candidatos
                       </h4>
 
-                      {/* Formulario añadir candidato */}
                       <div className="cand-tracking-form mb-4">
                         <div className="cand-form-row">
                           <div className="cand-form-field cand-form-field--wide">
@@ -1485,7 +1464,6 @@ export default function VacancyModal({
                         </div>
                       </div>
 
-                      {/* Lista de candidatos */}
                       {candidatosList.length > 0 ? (
                         <div className="cand-tracking-list">
                           {candidatosList.map((c, i) => (
@@ -1557,7 +1535,6 @@ export default function VacancyModal({
                     <div className="detail-section">
                       <h4 className="section-title">Adjuntar documentos</h4>
 
-                      {/* Zona de tipo + drop */}
                       <div className="doc-upload-row mb-3">
                         <select
                           className="form-select input-field doc-tipo-select"
@@ -1601,7 +1578,6 @@ export default function VacancyModal({
                         </label>
                       </div>
 
-                      {/* Lista de documentos */}
                       <h4 className="section-title">
                         Archivos adjuntos{' '}
                         {localDocs.length > 0 && (

@@ -31,7 +31,9 @@
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s ease, transform 0.15s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.15s ease;
   white-space: nowrap;
 }
 
@@ -57,7 +59,7 @@
 /* ── Tabla wrapper ──────────────────────────────── */
 .um-table-wrapper {
   background: var(--clr-surface, #13131f);
-  border: 1px solid var(--clr-border, rgba(124,58,237,0.25));
+  border: 1px solid var(--clr-border, rgba(124, 58, 237, 0.25));
   border-radius: 16px;
   overflow: hidden;
   overflow-x: auto;
@@ -82,12 +84,12 @@
   letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--clr-text-muted, #7a7a9a);
-  border-bottom: 1px solid var(--clr-border, rgba(124,58,237,0.2));
+  border-bottom: 1px solid var(--clr-border, rgba(124, 58, 237, 0.2));
   white-space: nowrap;
 }
 
 .um-table__row {
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   transition: background 0.15s ease;
 }
 
@@ -175,19 +177,19 @@
 .badge-admin {
   background: rgba(124, 58, 237, 0.18);
   color: #b48df5;
-  border: 1px solid rgba(124,58,237,0.4);
+  border: 1px solid rgba(124, 58, 237, 0.4);
 }
 
 .badge-hr {
   background: rgba(0, 212, 255, 0.12);
   color: #00d4ff;
-  border: 1px solid rgba(0,212,255,0.3);
+  border: 1px solid rgba(0, 212, 255, 0.3);
 }
 
 .badge-company {
   background: rgba(34, 197, 94, 0.12);
   color: #4ade80;
-  border: 1px solid rgba(34,197,94,0.3);
+  border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
 /* ── Botón eliminar ─────────────────────────────── */
@@ -206,7 +208,7 @@
 }
 
 .um-btn-delete:hover {
-  background: rgba(248,113,113,0.15);
+  background: rgba(248, 113, 113, 0.15);
   transform: scale(1.05);
 }
 
@@ -242,18 +244,22 @@
 }
 
 @keyframes um-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* ── Modal ──────────────────────────────────────── */
 .um-modal {
   background: var(--clr-surface-2, #1a1a2e);
-  border: 1px solid var(--clr-border, rgba(124,58,237,0.3));
+  border: 1px solid var(--clr-border, rgba(124, 58, 237, 0.3));
   border-radius: 18px;
   width: 100%;
   max-width: 460px;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
   animation: um-slide-up 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
   overflow: hidden;
 }
@@ -263,8 +269,14 @@
 }
 
 @keyframes um-slide-up {
-  from { opacity: 0; transform: translateY(20px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* ── Modal header ───────────────────────────────── */
@@ -290,12 +302,14 @@
   cursor: pointer;
   padding: 4px 6px;
   border-radius: 6px;
-  transition: color 0.2s, background 0.2s;
+  transition:
+    color 0.2s,
+    background 0.2s;
 }
 
 .um-modal__close:hover {
   color: var(--clr-text, #e8e8f0);
-  background: rgba(255,255,255,0.07);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 /* ── Modal body ─────────────────────────────────── */
@@ -332,13 +346,15 @@
 .um-field__input,
 .um-field__select {
   background: var(--clr-surface, #13131f);
-  border: 1px solid var(--clr-border, rgba(124,58,237,0.25));
+  border: 1px solid var(--clr-border, rgba(124, 58, 237, 0.25));
   border-radius: 10px;
   padding: 10px 14px;
   color: var(--clr-text, #e8e8f0);
   font-size: 0.875rem;
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
   width: 100%;
 }
 
@@ -356,12 +372,12 @@
 .um-field__input:focus,
 .um-field__select:focus {
   border-color: var(--clr-purple, #7c3aed);
-  box-shadow: 0 0 0 3px rgba(124,58,237,0.18);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18);
 }
 
 .um-field__input--error {
   border-color: var(--clr-error, #f87171) !important;
-  box-shadow: 0 0 0 3px rgba(248,113,113,0.12) !important;
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.12) !important;
 }
 
 .um-field__error {
@@ -376,18 +392,20 @@
 /* ── Botones del modal ──────────────────────────── */
 .um-btn-cancel {
   background: transparent;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--clr-text-muted, #7a7a9a);
   border-radius: 10px;
   padding: 9px 18px;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: border-color 0.2s, color 0.2s;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
 }
 
 .um-btn-cancel:hover {
-  border-color: rgba(255,255,255,0.3);
+  border-color: rgba(255, 255, 255, 0.3);
   color: var(--clr-text, #e8e8f0);
 }
 
@@ -408,9 +426,9 @@
 }
 
 .um-btn-delete-confirm {
-  background: rgba(248,113,113,0.15);
+  background: rgba(248, 113, 113, 0.15);
   color: #f87171;
-  border: 1px solid rgba(248,113,113,0.4);
+  border: 1px solid rgba(248, 113, 113, 0.4);
   border-radius: 10px;
   padding: 9px 18px;
   font-size: 0.875rem;
@@ -420,7 +438,7 @@
 }
 
 .um-btn-delete-confirm:hover {
-  background: rgba(248,113,113,0.25);
+  background: rgba(248, 113, 113, 0.25);
 }
 
 .um-modal__title--danger {

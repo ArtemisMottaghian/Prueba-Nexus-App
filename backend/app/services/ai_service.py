@@ -134,7 +134,7 @@ def score_candidates_by_skills(
         # --- 3. VERIFICACIÓN Y FAVORITOS ---
         if c.verified:
             score += 15
-        if c.is_favorite:
+        if c.is_favourite:
             score += 5
 
         scored_candidates.append((score, c))

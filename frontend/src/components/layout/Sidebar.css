@@ -76,7 +76,9 @@
     opacity: 0;
     visibility: hidden;
     transform: translateX(-6px);
-    transition: opacity 0.24s ease 0.07s, visibility 0.24s ease 0.07s,
+    transition:
+      opacity 0.24s ease 0.07s,
+      visibility 0.24s ease 0.07s,
       transform 0.24s ease 0.07s;
   }
 
@@ -169,7 +171,10 @@
   color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
   border-radius: 10px;
-  transition: background-color 0.2s ease, color 0.2s ease, padding 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    padding 0.2s ease;
   white-space: nowrap;
   cursor: pointer;
   font-size: 13px;
