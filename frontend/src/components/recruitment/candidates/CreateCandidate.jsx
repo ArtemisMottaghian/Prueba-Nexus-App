@@ -20,7 +20,7 @@ export default function CreateCandidate({ onClose, onSave }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [parsedCandidateId, setParsedCandidateId] = useState(null);
 
-  // Nuevo estado para mostrar errores amigables en la interfaz
+  // Estado para mostrar los errores detallados en el cartel rojo
   const [errorStatus, setErrorStatus] = useState(null);
 
   const fileInputRef = useRef(null);
@@ -33,7 +33,7 @@ export default function CreateCandidate({ onClose, onSave }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setErrorStatus(null);
+    setErrorStatus(null); // Limpiamos errores anteriores antes de enviar
 
     const expNumber = formData.experience
       ? parseInt(formData.experience, 10)
@@ -74,21 +74,44 @@ export default function CreateCandidate({ onClose, onSave }) {
         experience: expNumber,
       });
     } catch (error) {
-      console.error('Error al guardar:', error);
-      setErrorStatus(
-        'No se ha podido guardar el candidato. Revisa los datos e inténtalo de nuevo.'
-      );
+      console.error('Error al guardar el candidato:', error);
+
+      // ─── TRADUCTOR DE ERRORES AL GUARDAR FORMULARIO ───
+      let msg = 'No se ha podido guardar el candidato. Inténtalo de nuevo.';
+
+      if (
+        error.message.includes('already exists') ||
+        error.message.includes('duplicate')
+      ) {
+        msg =
+          '¡Error! Ya existe un candidato registrado con este mismo correo electrónico.';
+      } else if (
+        error.message.includes('422') ||
+        error.message.includes('validation')
+      ) {
+        msg =
+          'Error de validación: Algunos campos no tienen el formato correcto que espera el servidor.';
+      } else if (
+        error.message.includes('403') ||
+        error.message.includes('unauthorized')
+      ) {
+        msg = 'No tienes permisos suficientes para realizar esta acción.';
+      } else {
+        // Si es otro error, mostramos el mensaje que nos escupa el servidor detalladamente
+        msg = `Error del servidor: ${error.message}`;
+      }
+
+      setErrorStatus(msg);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Función de procesamiento con mensajes
   const processCVFile = async (file) => {
     if (!file || file.type !== 'application/pdf') return;
 
     setIsParsing(true);
-    setErrorStatus(null); // Limpiamos errores
+    setErrorStatus(null);
     setCvFileName(file.name);
     setCvExtracted(false);
 
@@ -110,7 +133,7 @@ export default function CreateCandidate({ onClose, onSave }) {
     } catch (err) {
       console.error('Error al procesar el CV:', err);
 
-      // Traductor de errores
+      // ─── TRADUCTOR DE ERRORES AL SUBIR PDF ───
       let msg = 'No hemos podido leer este PDF correctamente.';
       if (
         err.message.includes('already exists') ||
@@ -119,7 +142,9 @@ export default function CreateCandidate({ onClose, onSave }) {
         msg =
           '¡Este candidato ya existe! El email de este PDF ya está en la base de datos.';
       } else if (err.message.includes('413')) {
-        msg = 'El archivo es demasiado grande para procesarlo.';
+        msg = 'El archivo PDF es demasiado grande para procesarlo.';
+      } else {
+        msg = `Error al procesar PDF: ${err.message}`;
       }
 
       setErrorStatus(msg);
@@ -181,7 +206,7 @@ export default function CreateCandidate({ onClose, onSave }) {
 
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
-                {/* ZONA DE ERROR (Cartelito rojo detallado) */}
+                {/* CARTELITO ROJO INTELIGENTE (Muestra el fallo real) */}
                 {errorStatus && (
                   <div
                     className="alert alert-danger d-flex align-items-center animate__animated animate__shakeX"
