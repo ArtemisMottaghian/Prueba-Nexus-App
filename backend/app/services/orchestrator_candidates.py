@@ -7,7 +7,7 @@ from app.core.scraper_candidates_linkedin_config import (
     HEADLESS_MODE,
 )
 from app.services.scrapers.scraper_candidates_github.runner import extract_github
-from app.services.scrapers.scraper_candidates_pdf_google.runner import extract_pdfs_google
+from app.services.scrapers.scraper_candidates_pdf_google.runner import extract_pdfs
 from app.services.scrapers.scraper_candidates_linkedin.runner import extract_linked
 from sqlalchemy.dialects.postgresql import insert
 
@@ -58,7 +58,7 @@ async def gather_raw_candidates() -> list[dict]:
         #    ),
         #),
         ("github", extract_github),
-        ("google_pdfs", extract_pdfs_google),
+        ("google_pdfs", extract_pdfs),
     ]
 
     for name, scraper_func in scrapers:

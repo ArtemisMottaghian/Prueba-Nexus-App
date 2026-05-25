@@ -13,16 +13,82 @@ SECTORES = {
     
 }
 
-KEYWORDS = ["ingeniero software",
-    "desarrollador web",
-    "data analyst",
-    "full stack developer",
-    "DevOps engineer",
-]
+KEYWORDS = [
+        "Abogado",
+        "Jurídico",
+        "Derecho Mercantil",
+        "Compliance",
+        "Litigación",
+        "Asesoría Legal",
+        "Contratos",
+        "Derecho Laboral",
+        "Propiedad Intelectual",
+        "Due Diligence"
+        "Analista Financiero",
+        "Contable",
+        "Auditor",
+        "Banca",
+        "Asesor Financiero",
+        "Controller",
+        "Treasury",
+        "Tesorería",
+        "Planificación Financiera",
+        "Análisis de Riesgos"
+        "Actuario",
+        "Gestor de Siniestros",
+        "Agente de Seguros",
+        "Underwriting",
+        "Tarificación",
+        "Suscripción",
+        "Perito",
+        "Reaseguros",
+        "Gestión de Riesgos"
+        "Desarrollador",
+        "DevOps",
+        "Data Scientist",
+        "Ciberseguridad",
+        "Full Stack",
+        "Cloud Computing",
+        "Machine Learning",
+        "Arquitecto de Sistemas",
+        "QA/Testing",
+        "Administrador de Sistemas"
+        "Key Account Manager",
+        "Comercial",
+        "Director de Ventas",
+        "Sales Manager",
+        "Account Executive",
+        "Business Development",
+        "Prospección",
+        "Gestión de Clientes",
+        "CRM",
+        "Negociación"
+        "Jefe de Almacén",
+        "Supply Chain",
+        "Operaciones",
+        "Gestor Logístico",
+        "Coordinador de Almacén",
+        "Planificación Logística",
+        "Distribución",
+        "Transporte",
+        "Inventory Management",
+        "Lean Manufacturing"
+        "Ingeniero Civil",
+        "Ingeniero Industrial",
+        "Project Manager",
+        "Ingeniero de Procesos",
+        "CAD/BIM",
+        "Gestión de Proyectos",
+        "Planificación",
+        "Control de Calidad",
+        "RRHH de Obra",
+        "Seguridad y Salud"
+    ]
 
 CIUDADES = [
     "Madrid",
     "Barcelona",
-    #"Valencia", "Sevilla", "Malaga", 
-    #"Bilbao", "Zaragoza", "Alicante", "Murcia"
+    "Valencia", "Sevilla", "Malaga", 
+    "Bilbao", "Zaragoza", "Alicante", "Murcia",
+    "Spain", "España"
 ]
