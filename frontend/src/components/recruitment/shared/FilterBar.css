@@ -213,8 +213,6 @@
   gap: 8px;
   margin: 0;
   padding: 0px 0px 16px 0px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }
 /* =========================================
    AJUSTE PARA MÓVILES Y TABLETS
