@@ -66,17 +66,14 @@ export default function CreateCandidate({ onClose, onSave }) {
     try {
       let finalCandidate;
       if (parsedCandidateId) {
-        // Si viene de procesar un PDF, actualizamos el candidato existente
         finalCandidate = await candidatesService.updateCandidate(
           parsedCandidateId,
           finalData
         );
       } else {
-        // Si es una creación manual desde cero, creamos uno nuevo
         finalCandidate = await candidatesService.createCandidate(finalData);
       }
 
-      // Devolvemos el objeto mapeado para mantener la coherencia en la interfaz
       onSave({
         ...finalCandidate,
         name: formData.name.trim(),
@@ -113,6 +110,10 @@ export default function CreateCandidate({ onClose, onSave }) {
             msg = `Error del servidor: ${error.message}`;
           }
         } catch (e) {
+          console.warn(
+            'La respuesta de error no contenía un JSON de validación:',
+            e
+          ); // <-- ¡SOLUCIÓN PARA EL LINTER AQUÍ!
           msg = `Error del servidor: ${error.message || 'Error desconocido'}`;
         }
       }
