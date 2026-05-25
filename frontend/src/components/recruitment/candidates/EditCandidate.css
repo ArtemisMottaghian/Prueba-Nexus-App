@@ -10,7 +10,12 @@
 /* Cabecera del modal */
 .custom-create-modal .modal-header {
   border-bottom: 1px solid var(--border-color, #e9ecef);
-  background-color: rgba(124, 63, 255, 0.03); /* Un toque sutil morado de fondo */
+  background-color: rgba(
+    124,
+    63,
+    255,
+    0.03
+  ); /* Un toque sutil morado de fondo */
   padding: 1.5rem;
 }
 

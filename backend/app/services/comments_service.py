@@ -6,10 +6,10 @@ from app.models.companies_model import CompanyComment
 
 # candidatos
 # Crear comentario
-async def add_candidate_comment(db: AsyncSession, candidate_id: int, data: CommentCreate):
+async def add_candidate_comment(db: AsyncSession, candidate_id: int, data: CommentCreate,user_id: int):
     new_comment = CandidateComment(
         candidate_id=candidate_id,
-        user_id=data.user_id,
+        user_id=user_id,
         comment=data.comment
     )
     db.add(new_comment)
@@ -42,10 +42,10 @@ async def get_candidate_comments(db: AsyncSession, candidate_id: int):
 
 # Empresas
 # Crear comentario
-async def add_company_comment(db: AsyncSession, company_id: int, data: CommentCreate):
+async def add_company_comment(db: AsyncSession, company_id: int, data: CommentCreate, user_id: int):
     new_comment = CompanyComment(
         company_id=company_id,
-        user_id=data.user_id,
+        user_id=user_id,
         comment=data.comment
     )
     db.add(new_comment)
@@ -68,3 +68,14 @@ async def get_company_comments(db: AsyncSession, company_id: int):
     query = select(CompanyComment).where(CompanyComment.company_id == company_id).order_by(CompanyComment.created_at.desc())
     result = await db.execute(query)
     return result.scalars().all()
+
+# Eliminar comentario
+async def delete_company_comment(db: AsyncSession, comment_id: int):
+    result = await db.execute(select(CompanyComment).where(CompanyComment.id == comment_id))
+    comment = result.scalars().first()
+    if not comment:
+        return False
+    await db.delete(comment)
+    await db.commit()
+    return True
+

@@ -79,8 +79,8 @@
 
 /* --- BOTONES DEL FOOTER --- */
 .custom-create-modal .btn-primary {
-  background-color: var(--color-purple-primary, #5B3FFF);
-  border-color: var(--color-purple-primary, #5B3FFF);
+  background-color: var(--color-purple-primary, #5b3fff);
+  border-color: var(--color-purple-primary, #5b3fff);
   border-radius: 10px;
   padding: 8px 20px;
   font-weight: 600;

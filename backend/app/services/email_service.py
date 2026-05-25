@@ -1,4 +1,6 @@
 import os
+import asyncio
+import smtplib
 import base64
 from email.message import EmailMessage
 from backend.app.db.connection import AsyncSessionLocal
@@ -92,6 +94,58 @@ async def send_company_vacancy_email(
         print(f"[CONTENIDO]: {final_body[:100]}...")
 
         return True
+
+
+async def send_chat_notification_email(
+    recipient_email: str,
+    sender_name: str,
+    preview: str,
+) -> None:
+    """Notificación de nuevo mensaje de chat para usuarios offline.
+    Solo envía si SMTP está configurado. Usa asyncio.to_thread para no bloquear.
+    """
+    from app.core.config import settings
+
+    mode = os.getenv("EMAIL_MODE", "mock").lower()
+
+    if mode != "real":
+        print(f"[CHAT EMAIL MOCK] → {recipient_email} | De: {sender_name} | '{preview[:60]}'")
+        return
+
+    if not all([settings.SMTP_HOST, settings.SMTP_USER, settings.SMTP_PASSWORD]):
+        return  # SMTP no configurado — notificaciones silenciosas
+
+    body_html = f"""
+    <div style="font-family:sans-serif;max-width:480px;margin:auto">
+      <h2 style="color:#7c3aed">Nuevo mensaje en Nexus</h2>
+      <p>Tienes un mensaje nuevo de <strong>{sender_name}</strong>:</p>
+      <blockquote style="border-left:3px solid #7c3aed;padding:8px 16px;color:#555">
+        {preview}{'…' if len(preview) >= 100 else ''}
+      </blockquote>
+      <a href="{settings.FRONTEND_URL}/inbox"
+         style="display:inline-block;margin-top:16px;padding:10px 24px;
+                background:#7c3aed;color:white;border-radius:8px;text-decoration:none">
+        Ver en Nexus
+      </a>
+    </div>
+    """
+
+    def _send_sync() -> None:
+        msg = EmailMessage()
+        msg["Subject"] = f"Nuevo mensaje de {sender_name} en Nexus"
+        msg["From"] = settings.SMTP_FROM or settings.SMTP_USER
+        msg["To"] = recipient_email
+        msg.set_content("Tienes un nuevo mensaje en Nexus.")
+        msg.add_alternative(body_html, subtype="html")
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+            server.starttls()
+            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            server.send_message(msg)
+
+    try:
+        await asyncio.to_thread(_send_sync)
+    except Exception as exc:
+        print(f"[CHAT EMAIL ERROR] No se pudo enviar a {recipient_email}: {exc}")
 
 
 async def send_company_vacancy_email_standalone(

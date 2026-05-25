@@ -2,12 +2,14 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import isotipoNexus from '../../assets/isotipo-nexus.svg';
 import './Sidebar.css';
+import { markOffline } from '../../services/chatService';
 
 export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
   const { logout, hasRole, hasAnyRole } = useAuth();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await markOffline();
     logout();
     if (onClose) onClose();
     navigate('/login');

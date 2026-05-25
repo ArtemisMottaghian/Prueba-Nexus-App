@@ -9,7 +9,7 @@ import { CANDIDATE_STATUS_OPTIONS } from '../constants/candidateStatus';
 import { useAuth } from '../context/AuthContext';
 
 import CreateCandidate from '../components/recruitment/candidates/CreateCandidate';
-import EditCandidate from '../components/recruitment/candidates/EditCandidate'; // <-- IMPORTAMOS EL MODAL DE EDITAR
+import EditCandidate from '../components/recruitment/candidates/EditCandidate';
 
 const ITEMS_POR_PAGINA = 10;
 
@@ -52,7 +52,7 @@ export default function Candidates() {
   const [showDescartadas, setShowDescartadas] = useState(false);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [editingCandidate, setEditingCandidate] = useState(null); // <-- ESTADO PARA EDITAR
+  const [editingCandidate, setEditingCandidate] = useState(null);
 
   const apiListQuery = useMemo(
     () =>
@@ -129,7 +129,6 @@ export default function Candidates() {
     setIsCreateModalOpen(false);
   };
 
-  // --- ELIMINAR CANDIDATO ---
   const handleDeleteCandidate = async (candidateId) => {
     const confirmar = window.confirm(
       '⚠️ ¿Estás seguro de que deseas eliminar este candidato definitivamente? Esta acción no se puede deshacer.'
@@ -142,16 +141,14 @@ export default function Candidates() {
       setSelectedCandidates((prev) => prev.filter((id) => id !== candidateId));
     } catch (error) {
       console.error('Error al eliminar el candidato:', error);
-      alert('Hubo un problema al intentar eliminar el candidato.');
+      alert('Hubo un problem al intentar eliminar el candidato.');
     }
   };
 
-  // --- GUARDAR EDICIÓN DE CANDIDATO ---
   const handleSaveEditCandidate = async (candidateId, updatedData) => {
     try {
       await candidatesService.updateCandidate(candidateId, updatedData);
 
-      // ARREGLO: Mapeamos explícitamente para que la tarjeta visual no se líe
       setCandidates((prev) =>
         prev.map((c) => {
           if (c.id === candidateId) {
@@ -174,7 +171,6 @@ export default function Candidates() {
     } catch (error) {
       console.error('Error al editar el candidato', error);
       alert('Hubo un error al actualizar el candidato: ' + error.message);
-      // ARREGLO: Lanzamos el error para avisar al modal de que pare el spinner
       throw error;
     }
   };
@@ -198,8 +194,7 @@ export default function Candidates() {
     }
   };
 
-  const handleToggleFavorite = async (candidateId, currentIsFavorite) => {
-    const newFavoriteStatus = !currentIsFavorite;
+  const handleToggleFavorite = async (candidateId, newFavoriteStatus) => {
     setCandidates((prevCandidates) =>
       prevCandidates.map((candidate) =>
         candidate.id === candidateId
@@ -207,7 +202,6 @@ export default function Candidates() {
           : candidate
       )
     );
-
     try {
       await candidatesService.toggleFavorite(candidateId, newFavoriteStatus);
     } catch (error) {
@@ -215,7 +209,7 @@ export default function Candidates() {
       setCandidates((prevCandidates) =>
         prevCandidates.map((candidate) =>
           candidate.id === candidateId
-            ? { ...candidate, isFavorite: currentIsFavorite }
+            ? { ...candidate, isFavorite: !newFavoriteStatus }
             : candidate
         )
       );
@@ -276,6 +270,13 @@ export default function Candidates() {
     );
   };
 
+  // --- SOLUCIÓN: EXTRAEMOS LOS SECTORES/INDUSTRIAS ÚNICOS DEL BACKEND ---
+  const industryOptions = [
+    ...new Set(
+      candidates.map((c) => c.specialty || c.industry).filter(Boolean)
+    ),
+  ].sort();
+
   const skillsOptions = [
     ...new Set(candidates.map((c) => c.specialty).filter(Boolean)),
   ].sort();
@@ -316,8 +317,10 @@ export default function Candidates() {
         .toLowerCase()
         .includes(term);
 
+    // FILTRADO DE SECTOR CORREGIDO
+    const candidateIndustry = candidate.specialty || candidate.industry;
     const matchEspecialidad =
-      filters.industry === 'All' || candidate.specialty === filters.industry;
+      filters.industry === 'All' || candidateIndustry === filters.industry;
 
     const matchDisponibilidad = (() => {
       if (filters.disponibilidad === 'All') return true;
@@ -393,6 +396,7 @@ export default function Candidates() {
             { value: 'GitHub API', label: 'GitHub API' },
           ]}
           locationOptions={locationOptions}
+          industryOptions={industryOptions}
           skillsOptions={skillsOptions}
           disponibilidadOptions={DISPONIBILIDAD_OPTIONS}
           experienciaOptions={EXPERIENCIA_OPTIONS}
@@ -491,9 +495,10 @@ export default function Candidates() {
           onToggleFavorite={handleToggleFavorite}
           onVerify={canVerifyCandidates ? handleVerify : undefined}
           onDeleteCandidate={handleDeleteCandidate}
-          onEditCandidate={setEditingCandidate} // <--- AQUÍ ESTÁ LA CONEXIÓN CLAVE
+          onEditCandidate={setEditingCandidate}
         />
       )}
+
       {!loading && totalPaginas > 1 && (
         <div className="clientes-pagination" style={{ marginTop: '1rem' }}>
           <span className="clientes-pagination__info">
@@ -567,7 +572,6 @@ export default function Candidates() {
         />
       )}
 
-      {/* RENDERIZAMOS EL MODAL DE EDITAR SI HAY UN CANDIDATO SELECCIONADO */}
       {editingCandidate && (
         <EditCandidate
           candidate={editingCandidate}

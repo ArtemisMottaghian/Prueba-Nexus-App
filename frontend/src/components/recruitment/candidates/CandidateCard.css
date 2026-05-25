@@ -11,7 +11,7 @@
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); 
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
 .vacante-card:hover {
@@ -78,13 +78,13 @@
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .results-title {
     font-size: 1.2rem;
   }
-  
+
   .view-toggle {
-    width: auto; 
+    width: auto;
     align-self: flex-start;
   }
 }

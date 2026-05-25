@@ -17,6 +17,7 @@ from app.schemas.comments_schemas import CommentCreate, CommentUpdate, CommentRe
 from app.services import comments_service
 from app.schemas.users_schemas import MessageResponse
 from app.models.companies_model import Company
+from app.core.jwt import get_current_user
 
 router = APIRouter()
 
@@ -156,10 +157,15 @@ async def assign_user_to_companies(
 # -----------------
 @router.post("/{company_id}/comments", response_model=CommentResponse)
 async def create_company_comment(
-    company_id: int, body: CommentCreate, db: AsyncSession = Depends(get_db)
+    company_id: int,
+    body: CommentCreate,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
     try:
-        return await comments_service.add_company_comment(db, company_id, body)
+        return await comments_service.add_company_comment(
+            db, company_id, body, user_id=current_user["id"]
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -187,3 +193,16 @@ async def modify_company_comment(
 @router.get("/{company_id}/comments", response_model=List[CommentResponse])
 async def get_company_comments(company_id: int, db: AsyncSession = Depends(get_db)):
     return await comments_service.get_company_comments(db, company_id)
+
+# -----------------
+# Eliminar comentario de empresa
+# DELETE /api/companies/comments/{comment_id}
+# -----------------
+@router.delete("/comments/{comment_id}", response_model=MessageResponse)
+async def delete_company_comment(
+    comment_id: int, db: AsyncSession = Depends(get_db)
+):
+    deleted = await comments_service.delete_company_comment(db, comment_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Comentario no encontrado")
+    return {"message": "Comentario eliminado correctamente"}
