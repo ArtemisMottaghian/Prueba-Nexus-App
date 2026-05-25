@@ -1,6 +1,5 @@
 /* ===================================================
    SmartMatchResults.css — Modal NexusAI
-   Usa variables de Bootstrap para respetar modo claro/oscuro
    =================================================== */
 
 /* --- 1. ESTRUCTURA Y OVERLAY --- */
@@ -18,7 +17,7 @@
 
 .smart-match-modal {
   width: 100%;
-  max-width: 550px;
+  max-width: 600px;
   max-height: 85vh;
   background: var(--bs-body-bg);
   border: 1px solid var(--bs-border-color);
@@ -75,7 +74,7 @@
 
 .match-subtitle {
   color: var(--bs-secondary-color);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   margin-bottom: 1.5rem;
 }
 
@@ -96,9 +95,59 @@
   box-shadow: 0 8px 24px rgba(124, 58, 237, 0.1);
 }
 
-/* --- 4. SCORE Y PROGRESO --- */
+/* --- 4. ALINEACIÓN CABECERA CANDIDATO --- */
+.match-candidate-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+  gap: 15px;
+}
+
+.candidate-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.candidate-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--bs-body-color);
+}
+
+.candidate-role {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--bs-secondary-color);
+}
+
+.candidate-location {
+  color: var(--bs-secondary-color);
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+/* --- 5. SCORE Y PROGRESO --- */
+.match-score-wrapper {
+  min-width: 140px;
+}
+
+.score-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+}
+
+.score-label {
+  color: var(--bs-secondary-color);
+  font-weight: 600;
+}
+
 .score-value {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 800;
   color: #7c3aed;
 }
@@ -119,7 +168,7 @@
   box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
 }
 
-/* --- 5. EXPLICACIÓN IA --- */
+/* --- 6. EXPLICACIÓN IA --- */
 .ai-explanation-card {
   background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(216, 180, 254, 0.03));
   border: 1px solid rgba(139, 92, 246, 0.2);
@@ -129,11 +178,76 @@
   backdrop-filter: blur(10px);
 }
 
+.ai-explanation-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: #7c3aed;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
 .ai-icon {
-  font-size: 1rem;
+  font-size: 1.1rem;
   animation: pulse-glow 2s infinite;
 }
 
+.ai-explanation-text {
+  font-size: 0.9rem;
+  color: var(--bs-body-color);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* --- 7. BOTONES DE ACCIÓN --- */
+.candidate-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid var(--bs-border-color);
+  padding-top: 1.25rem;
+}
+
+.btn-view-profile-simple {
+  all: unset;
+  cursor: pointer;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.2s;
+  background-color: transparent;
+  border: 1px solid var(--bs-border-color);
+  color: var(--bs-body-color);
+}
+
+.btn-view-profile-simple:hover:not(:disabled) {
+  background-color: var(--bs-tertiary-bg);
+  border-color: var(--bs-secondary-color);
+}
+
+/* Botón Añadir a seguimiento */
+.btn-view-profile-simple:nth-child(2) {
+  background-color: rgba(124, 58, 237, 0.1);
+  border-color: transparent;
+  color: #7c3aed;
+}
+
+.btn-view-profile-simple:nth-child(2):hover:not(:disabled) {
+  background-color: #7c3aed;
+  color: #ffffff;
+}
+
+/* Botón Añadido (Estado success) */
+.btn-added {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+  border-color: rgba(16, 185, 129, 0.2) !important;
+  color: #10b981 !important;
+  cursor: default !important;
+}
+
+/* --- 8. ESTADO VACÍO (MOCK) --- */
 .empty-match-container {
   display: flex;
   flex-direction: column;
@@ -151,7 +265,7 @@
   color: rgba(124, 58, 237, 0.4);
   margin-bottom: 1.5rem;
   width: 100%;
-  animation: floatingRobot 3s ease-in-out infinite; /
+  animation: floatingRobot 3s ease-in-out infinite;
 }
 
 .empty-match-container h4 {
@@ -192,29 +306,24 @@
   box-shadow: 0 8px 20px rgba(124, 58, 237, 0.2);
 }
 
-/* --- 7. KEYFRAMES (ANIMACIONES) --- */
-
-/* Emergencia del Modal */
+/* --- 9. KEYFRAMES (ANIMACIONES) --- */
 @keyframes modalEmerger {
-  from { opacity: 0; transform: scale(0.95); }
-  to   { opacity: 1; transform: scale(1); }
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* Brillo del icono IA */
 @keyframes pulse-glow {
   0% { text-shadow: 0 0 5px rgba(139, 92, 246, 0.2); }
   50% { text-shadow: 0 0 15px rgba(139, 92, 246, 0.8); }
   100% { text-shadow: 0 0 5px rgba(139, 92, 246, 0.2); }
 }
 
-/* Levitación del Robot */
 @keyframes floatingRobot {
   0%   { transform: translateY(0px); }
   50%  { transform: translateY(-15px); }
   100% { transform: translateY(0px); }
 }
 
-/* Entrada de texto */
 @keyframes fadeInUp {
   from {
     opacity: 0;
