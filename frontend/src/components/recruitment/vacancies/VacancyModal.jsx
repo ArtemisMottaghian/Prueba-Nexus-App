@@ -179,6 +179,32 @@ export default function VacancyModal({
     fetchNotes();
   }, [activeTab, job?.id]);
 
+  useEffect(() => {
+    if (activeTab !== 'candidatos' || !job?.id) return;
+
+    const fetchCandidatos = async () => {
+      try {
+        const res = await authFetch(
+          ENDPOINTS.recruitment.vacantes.candidateTracking(job.id)
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        setCandidatosList(
+          data.map((c) => ({
+            nombre: c.name,
+            fase: c.phase,
+            resultado: c.result || 'Pendiente',
+            notas: c.notes?.[0] || '',
+            fecha: c.date ? new Date(c.date).toLocaleDateString('es-ES') : '',
+          }))
+        );
+      } catch (err) {
+        console.error('Error cargando candidatos:', err);
+      }
+    };
+
+    fetchCandidatos();
+  }, [activeTab, job?.id]);
   const [localDocs, setLocalDocs] = useState(job?.documentos || []);
   const [docTipo, setDocTipo] = useState('CV');
   const [draggingOver, setDraggingOver] = useState(false);
