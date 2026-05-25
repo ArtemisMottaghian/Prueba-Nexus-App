@@ -20,6 +20,7 @@ from app.schemas.candidates_schemas import (
 from app.schemas.comments_schemas import CommentCreate, CommentUpdate, CommentResponse
 from app.services import comments_service
 from app.services.llm_parser import parse_with_gemini
+from app.core.jwt import get_current_user
 
 import traceback
 import uuid
@@ -27,6 +28,7 @@ import io
 import pdfplumber
 import re
 import unicodedata
+
 
 router = APIRouter()
 
@@ -101,7 +103,8 @@ async def read_candidate(candidate_id: int, db: AsyncSession = Depends(get_db)):
 @router.post("", response_model=CandidateOut, status_code=201)
 async def create_candidate(
     payload: CandidateCreate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
     """Crea un nuevo candidato."""
     return await candidates_service.create_candidate(db, payload)
@@ -115,7 +118,8 @@ async def create_candidate(
 async def update_candidate(
     candidate_id: int,
     payload: CandidateUpdate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
     """Actualiza los datos de un candidato."""
     candidate = await candidates_service.update_candidate(db, candidate_id, payload)
@@ -133,7 +137,8 @@ async def update_candidate(
 async def update_candidate_status(
     candidate_id: int,
     payload: CandidateStatusUpdate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
     """Actualiza únicamente el estado de un candidato."""
     candidate = await candidates_service.update_status(db, candidate_id, payload.status)
@@ -148,7 +153,12 @@ async def update_candidate_status(
 # --------------------
 
 @router.delete("/{candidate_id}", response_model=MessageResponse)
-async def delete_candidate(candidate_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_candidate(
+        candidate_id: int,
+        db: AsyncSession = Depends(get_db),
+        current_user: dict = Depends(get_current_user)
+):
+
     """Elimina un candidato del sistema."""
     success = await candidates_service.delete_candidate(db, candidate_id)
     if not success:
@@ -163,7 +173,10 @@ async def delete_candidate(candidate_id: int, db: AsyncSession = Depends(get_db)
 # -----------------
 @router.patch("/{candidate_id}/favorite", response_model=MessageResponse)
 async def mark_favorite(
-    candidate_id: int, body: FavoriteRequest, db: AsyncSession = Depends(get_db)
+    candidate_id: int,
+    body: FavoriteRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
     candidate = await candidates_service.get_candidate_by_id(db, candidate_id)
 
@@ -181,7 +194,10 @@ async def mark_favorite(
 # -----------------
 @router.patch("/{candidate_id}/verify", response_model=MessageResponse)
 async def verify_candidate(
-    candidate_id: int, body: VerifyRequest, db: AsyncSession = Depends(get_db)
+    candidate_id: int,
+    body: VerifyRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
     candidate = await candidates_service.get_candidate_by_id(db, candidate_id)
     if candidate is None:
@@ -199,7 +215,8 @@ async def verify_candidate(
 @router.post("/process_cv", response_model=CandidateOut, status_code=201)
 async def process_cv(
     pdf_file: Optional[UploadFile] = File(None),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
     """Procesa un candidato subiendo su CV en PDF y se guarda en la BD"""
     if not pdf_file:
