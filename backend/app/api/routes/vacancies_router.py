@@ -388,3 +388,27 @@ async def delete_vacancy_note(
     if not deleted:
         raise HTTPException(status_code=404, detail="Nota no encontrada")
     return {"message": "Nota eliminada correctamente"}
+
+# -----------------------------------------------------------
+# ELIMINAR APLICACIÓN DE CANDIDATO A VACANTE
+# DELETE /api/vacancies/{vacancy_id}/applications/{candidate_id}
+# -----------------------------------------------------------
+@router.delete("/{vacancy_id}/applications/{candidate_id}", response_model=MessageResponse)
+async def delete_application(
+    vacancy_id: int,
+    candidate_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    from sqlalchemy import select
+    result = await db.execute(
+        select(JobApplication).where(
+            JobApplication.offer_id == vacancy_id,
+            JobApplication.candidate_id == candidate_id
+        )
+    )
+    app = result.scalar_one_or_none()
+    if not app:
+        raise HTTPException(status_code=404, detail="Aplicación no encontrada")
+    await db.delete(app)
+    await db.commit()
+    return {"message": "Candidato eliminado del seguimiento correctamente"}

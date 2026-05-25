@@ -89,6 +89,8 @@ export const ENDPOINTS = {
       candidateTracking: (id) =>
         `${BASE_URL}/api/vacancies/${id}/candidate-tracking`,
       applications: (id) => `${BASE_URL}/api/vacancies/${id}/applications`,
+      deleteApplication: (vacancyId, candidateId) =>
+        `${BASE_URL}/api/vacancies/${vacancyId}/applications/${candidateId}`,
     },
   },
 

@@ -17,6 +17,19 @@ export default function SmartMatchResults({ job, candidates, onClose }) {
       console.error('Error añadiendo candidato al seguimiento:', err);
     }
   };
+
+  const handleRemoveFromTracking = async (candidate) => {
+    try {
+      await authFetch(
+        ENDPOINTS.recruitment.vacantes.deleteApplication(job.id, candidate.id),
+        { method: 'DELETE' }
+      );
+      setAddedCandidates((prev) => ({ ...prev, [candidate.id]: false }));
+    } catch (err) {
+      console.error('Error eliminando candidato del seguimiento:', err);
+    }
+  };
+
   const handleOverlayClick = (e) => {
     if (e.target.className === 'smart-match-overlay') {
       onClose();
@@ -110,8 +123,11 @@ export default function SmartMatchResults({ job, candidates, onClose }) {
                     </button>
                     <button
                       className={`btn-view-profile-simple ${addedCandidates[candidate.id] ? 'btn-added' : ''}`}
-                      onClick={() => handleAddToTracking(candidate)}
-                      disabled={addedCandidates[candidate.id]}
+                      onClick={() =>
+                        addedCandidates[candidate.id]
+                          ? handleRemoveFromTracking(candidate)
+                          : handleAddToTracking(candidate)
+                      }
                     >
                       {addedCandidates[candidate.id] ? (
                         <>
