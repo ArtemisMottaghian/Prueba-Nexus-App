@@ -503,33 +503,54 @@ async def update_candidate_tracking(
     vacancy_id: int, 
     data: CandidateTrackingCreate,
 ) -> bool:
-    
+    from app.services.candidates_service import search_candidates_by_name
+    from app.models.aplication_model import ApplicationStatus
+
+    # 1. Buscar aplicación existente por nombre
     apps_result = await db.execute(
         select(JobApplication).where(JobApplication.offer_id == vacancy_id)
     )
     applications = apps_result.scalars().all()
 
-    if not applications:
-        return False
-
     app_to_update = None
-    
     for app in applications:
         cand_result = await db.execute(
             select(Candidate).where(Candidate.id == app.candidate_id)
         )
         candidate = cand_result.scalar_one_or_none()
-        
         if candidate:
             full_name = f"{candidate.first_name} {candidate.last_name}".strip()
-            if full_name.lower() == data.name.lower(): 
+            if full_name.lower() == data.name.lower():
                 app_to_update = app
                 break
-                
-    if not app_to_update:
-        return False
 
-    app_to_update.status = data.phase
+    # 2. Si no existe, buscar candidato por nombre y crear JobApplication
+    if not app_to_update:
+        candidates = await search_candidates_by_name(db, data.name)
+        if not candidates:
+            return False
+        candidate = candidates[0]
+        app_to_update = JobApplication(
+            candidate_id=candidate.id,
+            offer_id=vacancy_id,
+            status=ApplicationStatus.proposed
+        )
+        db.add(app_to_update)
+        await db.flush()
+
+    # 3. Actualizar fase y notas
+    PHASE_MAP = {
+        "enviado cv": ApplicationStatus.proposed,
+        "entrevista telefónica": ApplicationStatus.interviewing,
+        "primera entrevista": ApplicationStatus.interviewing,
+        "segunda entrevista": ApplicationStatus.interviewing,
+        "prueba técnica": ApplicationStatus.interviewing,
+        "entrevista final": ApplicationStatus.interviewing,
+        "oferta enviada": ApplicationStatus.offer_sent,
+        "contratado": ApplicationStatus.hired,
+    }
+    mapped_status = PHASE_MAP.get(data.phase.lower(), ApplicationStatus.proposed)
+    app_to_update.status = mapped_status
 
     notas_existentes = []
     if app_to_update.feedback:
@@ -537,18 +558,16 @@ async def update_candidate_tracking(
             notas_existentes = json.loads(app_to_update.feedback)
             if not isinstance(notas_existentes, list):
                 notas_existentes = [str(notas_existentes)]
-
         except json.JSONDecodeError:
             notas_existentes = [app_to_update.feedback]
 
     if data.notes:
         notas_existentes.extend(data.notes)
-    
+
     app_to_update.feedback = json.dumps(notas_existentes, ensure_ascii=False)
-    
+
     db.add(app_to_update)
     await db.commit()
-    
     return True
 
 async def update_vacancy_note(db: AsyncSession, note_id: int, note_data) -> bool:
@@ -561,7 +580,6 @@ async def update_vacancy_note(db: AsyncSession, note_id: int, note_data) -> bool
     note.comments = note_data.texto
     await db.commit()
     return True
-
 
 async def delete_vacancy_note(db: AsyncSession, note_id: int) -> bool:
     result = await db.execute(
