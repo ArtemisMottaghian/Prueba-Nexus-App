@@ -13,7 +13,6 @@ from . import (
     ai_router,
     emails_router,
     matching_router,
-    chat_router,
 )
 
 api_router = APIRouter()
@@ -43,7 +42,6 @@ api_router.include_router(
 api_router.include_router(matching_router.router, prefix="/matching", tags=["Matching"])
 api_router.include_router(ai_router.router, prefix="/ai", tags=["AI Match"])
 api_router.include_router(emails_router.router, prefix="/emails", tags=["Emails"])
-api_router.include_router(chat_router.router, prefix="/conversations", tags=["Chat"])
 
 # api_router.include_router(vacancies_router.router, prefix="/vacancies", tags=["Gestión de Vacantes"], dependencies=[Depends(get_current_user)])
 # api_router.include_router(metrics_router.router, prefix="/metrics", tags=["Métricas"], dependencies=[Depends(get_current_user)])
