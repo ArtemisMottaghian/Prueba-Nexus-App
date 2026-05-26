@@ -336,9 +336,14 @@ async def get_suitable_candidates(db: AsyncSession, vacancy_id: int) -> list[dic
     apps_result = await db.execute(
         select(JobApplication).where(JobApplication.offer_id == vacancy_id)
     )
+    apps_list = apps_result.scalars().all()
     apps_by_candidate = {
         app.candidate_id: app.status.value
-        for app in apps_result.scalars().all()
+        for app in apps_list
+    }
+    apps_id_by_candidate = {
+        app.candidate_id: app.id
+        for app in apps_list
     }
 
     # Calcular score y construir respuesta
@@ -367,6 +372,7 @@ async def get_suitable_candidates(db: AsyncSession, vacancy_id: int) -> list[dic
             "verified": bool(c.verified),
             "match_score": score,
             "application_status": apps_by_candidate.get(c.id),
+            "application_id": apps_id_by_candidate.get(c.id),
         })
     
     output.sort(key=lambda x: (x["match_score"], x["id"]), reverse=True)
