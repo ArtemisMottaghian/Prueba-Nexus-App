@@ -146,7 +146,8 @@ async def main(limit: int, dry_run: bool):
         FROM contacts c
         JOIN companies co ON co.id = c.company_id
         WHERE (c.email IS NULL OR c.email = '')
-        ORDER BY c.id
+        AND c.full_name != 'HR Department'
+    ORDER BY c.id
         LIMIT $1
     """, limit)
 
