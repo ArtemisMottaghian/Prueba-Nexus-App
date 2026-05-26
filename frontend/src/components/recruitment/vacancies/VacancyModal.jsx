@@ -138,6 +138,20 @@ export default function VacancyModal({
       setIsMatchingLocal(false);
     }
   };
+
+  const handleEliminarCandidato = async (candidatoId) => {
+    try {
+      const res = await authFetch(
+        ENDPOINTS.recruitment.vacantes.deleteApplication(job.id, candidatoId),
+        { method: 'DELETE' }
+      );
+      if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+      setCandidatosList((prev) => prev.filter((c) => c.id !== candidatoId));
+    } catch (err) {
+      console.error('Error eliminando candidato:', err);
+    }
+  };
+
   // --------------------------------------------------------------------------
 
   useEffect(() => {
@@ -191,6 +205,7 @@ export default function VacancyModal({
         const data = await res.json();
         setCandidatosList(
           data.map((c) => ({
+            id: c.id,
             nombre: c.name,
             fase: c.phase,
             resultado: c.result || 'Pendiente',
@@ -1492,8 +1507,8 @@ export default function VacancyModal({
 
                       {candidatosList.length > 0 ? (
                         <div className="cand-tracking-list">
-                          {candidatosList.map((c, i) => (
-                            <div key={i} className="cand-tracking-item">
+                          {candidatosList.map((c) => (
+                            <div key={c.id} className="cand-tracking-item">
                               <div className="cand-avatar">
                                 {c.nombre.charAt(0).toUpperCase()}
                               </div>
@@ -1536,6 +1551,13 @@ export default function VacancyModal({
                                     {c.notas}
                                   </div>
                                 )}
+                                <button
+                                  className="btn-icon btn-icon-sm btn-icon-danger"
+                                  title="Eliminar candidato"
+                                  onClick={() => handleEliminarCandidato(c.id)}
+                                >
+                                  <i className="bi bi-trash3"></i>
+                                </button>
                               </div>
                             </div>
                           ))}
