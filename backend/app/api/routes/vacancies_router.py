@@ -393,17 +393,17 @@ async def delete_vacancy_note(
 # ELIMINAR APLICACIÓN DE CANDIDATO A VACANTE
 # DELETE /api/vacancies/{vacancy_id}/applications/{candidate_id}
 # -----------------------------------------------------------
-@router.delete("/{vacancy_id}/applications/{candidate_id}", response_model=MessageResponse)
+@router.delete("/{vacancy_id}/applications/{application_id}", response_model=MessageResponse)
 async def delete_application(
     vacancy_id: int,
-    candidate_id: int,
+    application_id: int,
     db: AsyncSession = Depends(get_db)
 ):
     from sqlalchemy import select
     result = await db.execute(
         select(JobApplication).where(
-            JobApplication.offer_id == vacancy_id,
-            JobApplication.candidate_id == candidate_id
+            JobApplication.id == application_id,
+            JobApplication.offer_id == vacancy_id
         )
     )
     app = result.scalar_one_or_none()
