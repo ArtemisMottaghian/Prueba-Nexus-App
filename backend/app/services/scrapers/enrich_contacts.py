@@ -146,6 +146,7 @@ async def main(limit: int, dry_run: bool):
         FROM contacts c
         JOIN companies co ON co.id = c.company_id
         WHERE (c.email IS NULL OR c.email = '')
+        AND c.last_interaction IS NULL
         ORDER BY c.id
         LIMIT $1
     """, limit)
@@ -205,6 +206,12 @@ async def main(limit: int, dry_run: bool):
             else:
                 print(f"      [—] Sin email disponible")
                 sin_email += 1
+
+            # Marcar como procesado (con o sin email)  ← AQUÍ
+            if not dry_run:
+                await conn.execute("""
+                     UPDATE contacts SET last_interaction = NOW() WHERE id = $1
+                """, contact_id)
 
             # Pausa para no saturar Apollo
             await asyncio.sleep(0.3)
