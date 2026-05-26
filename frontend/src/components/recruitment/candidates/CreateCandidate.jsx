@@ -20,7 +20,7 @@ export default function CreateCandidate({ onClose, onSave }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [parsedCandidateId, setParsedCandidateId] = useState(null);
 
-  // Nuevo estado para mostrar errores amigables en la interfaz
+  // Estado para mostrar los errores detallados de forma humana
   const [errorStatus, setErrorStatus] = useState(null);
 
   const fileInputRef = useRef(null);
@@ -45,8 +45,15 @@ export default function CreateCandidate({ onClose, onSave }) {
           .filter(Boolean)
       : [];
 
+    // Partimos el "Nombre Completo" en Nombre y Apellidos para cumplir con el Backend
+    const nameParts = formData.name.trim().split(' ');
+    const fName = nameParts[0] || '';
+    const lName = nameParts.slice(1).join(' ') || '';
+
+    // Construimos los datos con la estructura exacta que exige FastAPI
     const finalData = {
-      name: formData.name.trim(),
+      first_name: fName,
+      last_name: lName,
       email: formData.email.trim(),
       phone: formData.phone.trim(),
       education: formData.education,
@@ -69,26 +76,59 @@ export default function CreateCandidate({ onClose, onSave }) {
 
       onSave({
         ...finalCandidate,
-        name: finalData.name,
+        name: formData.name.trim(),
         specialty: finalData.specialty,
         experience: expNumber,
       });
     } catch (error) {
-      console.error('Error al guardar:', error);
-      setErrorStatus(
-        'No se ha podido guardar el candidato. Revisa los datos e inténtalo de nuevo.'
-      );
+      console.error('Error al guardar el candidato:', error);
+
+      let msg = 'No se ha podido guardar el candidato. Inténtalo de nuevo.';
+
+      if (
+        error.message.includes('already exists') ||
+        error.message.includes('duplicate')
+      ) {
+        msg =
+          '¡Error! Ya existe un candidato registrado con este mismo correo electrónico.';
+      } else {
+        try {
+          const rawMessage = error.message;
+          if (
+            rawMessage &&
+            (rawMessage.startsWith('[') || rawMessage.startsWith('{'))
+          ) {
+            const parsedErrors = JSON.parse(rawMessage);
+            if (Array.isArray(parsedErrors)) {
+              msg =
+                'Campos incorrectos: ' +
+                parsedErrors
+                  .map((err) => `${err.loc?.[1] || 'campo'}: ${err.msg}`)
+                  .join(' | ');
+            }
+          } else {
+            msg = `Error del servidor: ${error.message}`;
+          }
+        } catch (e) {
+          console.warn(
+            'La respuesta de error no contenía un JSON de validación:',
+            e
+          ); // <-- ¡SOLUCIÓN PARA EL LINTER AQUÍ!
+          msg = `Error del servidor: ${error.message || 'Error desconocido'}`;
+        }
+      }
+
+      setErrorStatus(msg);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Función de procesamiento con mensajes
   const processCVFile = async (file) => {
     if (!file || file.type !== 'application/pdf') return;
 
     setIsParsing(true);
-    setErrorStatus(null); // Limpiamos errores
+    setErrorStatus(null);
     setCvFileName(file.name);
     setCvExtracted(false);
 
@@ -110,7 +150,6 @@ export default function CreateCandidate({ onClose, onSave }) {
     } catch (err) {
       console.error('Error al procesar el CV:', err);
 
-      // Traductor de errores
       let msg = 'No hemos podido leer este PDF correctamente.';
       if (
         err.message.includes('already exists') ||
@@ -119,7 +158,9 @@ export default function CreateCandidate({ onClose, onSave }) {
         msg =
           '¡Este candidato ya existe! El email de este PDF ya está en la base de datos.';
       } else if (err.message.includes('413')) {
-        msg = 'El archivo es demasiado grande para procesarlo.';
+        msg = 'El archivo PDF es demasiado grande para procesarlo.';
+      } else {
+        msg = `Error al procesar PDF: ${err.message}`;
       }
 
       setErrorStatus(msg);
@@ -181,7 +222,7 @@ export default function CreateCandidate({ onClose, onSave }) {
 
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
-                {/* ZONA DE ERROR (Cartelito rojo detallado) */}
+                {/* Cartel de Error Dinámico */}
                 {errorStatus && (
                   <div
                     className="alert alert-danger d-flex align-items-center animate__animated animate__shakeX"
@@ -253,6 +294,7 @@ export default function CreateCandidate({ onClose, onSave }) {
                     cvFileName || errorStatus ? 'mt-3' : 'cv-divider mt-4'
                   }
                 >
+                  {/* Nombre Completo */}
                   <div className="mb-3">
                     <label htmlFor="name" className="form-label fw-semibold">
                       Nombre Completo <span className="text-danger">*</span>
@@ -268,6 +310,7 @@ export default function CreateCandidate({ onClose, onSave }) {
                     />
                   </div>
 
+                  {/* Email y Teléfono */}
                   <div className="row">
                     <div className="col-md-6 mb-3">
                       <label htmlFor="email" className="form-label fw-semibold">
@@ -297,6 +340,7 @@ export default function CreateCandidate({ onClose, onSave }) {
                     </div>
                   </div>
 
+                  {/* Formación y Experiencia */}
                   <div className="row">
                     <div className="col-md-6 mb-3">
                       <label
@@ -347,6 +391,7 @@ export default function CreateCandidate({ onClose, onSave }) {
                     </div>
                   </div>
 
+                  {/* Localización */}
                   <div className="mb-3">
                     <label
                       htmlFor="location"
@@ -364,6 +409,7 @@ export default function CreateCandidate({ onClose, onSave }) {
                     />
                   </div>
 
+                  {/* Habilidades */}
                   <div className="mb-3">
                     <label
                       htmlFor="specialty"
