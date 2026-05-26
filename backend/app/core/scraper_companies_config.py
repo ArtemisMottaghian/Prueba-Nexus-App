@@ -5,7 +5,7 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
 # 2. Extraemos tu clave de IA
-GEMINI_API_KEY = os.getenv("GOOGLE_AI_KEY") 
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") 
 
 # 3. Extraemos las credenciales de la BBDD directamente del .env
 
