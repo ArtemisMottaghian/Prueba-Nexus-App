@@ -391,7 +391,7 @@ async def delete_vacancy_note(
 
 # -----------------------------------------------------------
 # ELIMINAR APLICACIÓN DE CANDIDATO A VACANTE
-# DELETE /api/vacancies/{vacancy_id}/applications/{candidate_id}
+# DELETE /api/vacancies/{vacancy_id}/applications/{application_id}
 # -----------------------------------------------------------
 @router.delete("/{vacancy_id}/applications/{application_id}", response_model=MessageResponse)
 async def delete_application(
