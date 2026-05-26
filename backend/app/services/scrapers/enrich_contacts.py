@@ -146,8 +146,7 @@ async def main(limit: int, dry_run: bool):
         FROM contacts c
         JOIN companies co ON co.id = c.company_id
         WHERE (c.email IS NULL OR c.email = '')
-        AND c.full_name != 'HR Department'
-    ORDER BY c.id
+        ORDER BY c.id
         LIMIT $1
     """, limit)
 
@@ -175,7 +174,7 @@ async def main(limit: int, dry_run: bool):
             apollo_result = None
 
             # Si no tenemos apellido → buscar primero
-            if not last_name:
+            if not last_name or full_name.strip() == "HR Department":
                 search = await apollo_search(session, company_name, domain)
                 if search:
                     first_name = search["first_name"]
