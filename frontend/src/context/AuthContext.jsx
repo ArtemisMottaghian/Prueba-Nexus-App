@@ -1,10 +1,6 @@
-// ============================================
-// AuthContext.jsx
-// Contexto global para autenticación
-// ============================================
-
 import { createContext, useContext, useState, useEffect } from 'react';
 import * as authService from '../services/authService';
+import { authFetch, ENDPOINTS } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -21,107 +17,60 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  /**
-   * Obtiene el token de donde esté almacenado (localStorage o sessionStorage)
-   */
-  const getStoredToken = () => {
-    return localStorage.getItem('token') || sessionStorage.getItem('token');
-  };
-
-  /**
-   * Elimina el token de ambos storages
-   */
-  const clearStoredToken = () => {
-    localStorage.removeItem('token');
-    sessionStorage.removeItem('token');
-  };
-
-  // Al montar el componente, verificar si hay un usuario logueado
+  // Al montar: verificar sesión activa consultando /me con la cookie httpOnly
   useEffect(() => {
-    const initAuth = () => {
-      const token = getStoredToken();
-      if (!token) {
+    const initAuth = async () => {
+      try {
+        const response = await authFetch(ENDPOINTS.users.me);
+        if (response.ok) {
+          const userData = await response.json();
+          setUser({ email: userData.email, role: userData.role, id: userData.id });
+        } else {
+          setUser(null);
+        }
+      } catch {
         setUser(null);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const isValid = authService.isTokenValidFromToken(token);
-      const currentUser = authService.getCurrentUserFromToken(token);
-
-      if (currentUser && isValid) {
-        setUser(currentUser);
-      } else {
-        // Token inválido o expirado
-        clearStoredToken();
-        setUser(null);
-      }
-
-      setLoading(false);
     };
 
     initAuth();
   }, []);
 
   /**
-   * Login con email y contraseña
-   * @param {boolean} rememberMe — si true, persiste en localStorage; si false, solo en sessionStorage
+   * Login con email y contraseña.
+   * rememberMe se mantiene en la firma por compatibilidad con LoginForm;
+   * la duración de la sesión la controla el backend via max_age de la cookie.
    */
   const login = async (email, password, rememberMe = false) => {
     try {
-      const data = await authService.login(email, password);
+      await authService.login(email, password);
 
-      // Guardar token en el storage adecuado
-
-      if (rememberMe) {
-        localStorage.setItem('token', data.access_token);
-      } else {
-        sessionStorage.setItem('token', data.access_token);
-      }
-
-      // Decodificar y establecer usuario
-      const currentUser = authService.getCurrentUserFromToken(
-        data.access_token
-      );
-      setUser(currentUser);
+      // Obtener datos del usuario desde /me (la cookie ya fue fijada por el login)
+      const meResponse = await authFetch(ENDPOINTS.users.me);
+      if (!meResponse.ok) throw new Error('No se pudo obtener información del usuario');
+      const userData = await meResponse.json();
+      setUser({ email: userData.email, role: userData.role, id: userData.id });
 
       return { success: true };
     } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'Error al iniciar sesión',
-      };
+      return { success: false, error: error.message || 'Error al iniciar sesión' };
     }
   };
 
-  /**
-   * Login con Google
-   */
   const loginWithGoogle = () => {
     authService.loginWithGoogle();
   };
 
-  /**
-   * Logout
-   */
-  const logout = () => {
-    authService.logout();
+  const logout = async () => {
+    await authService.logout();
     setUser(null);
   };
 
-  /**
-   * Verificar si el usuario tiene un rol específico
-   */
-  const hasRole = (role) => {
-    return user?.role === role;
-  };
+  const hasRole = (role) => user?.role === role;
 
-  /**
-   * Verificar si el usuario tiene alguno de los roles especificados
-   */
-  const hasAnyRole = (roles) => {
-    return roles.includes(user?.role);
-  };
+  const hasAnyRole = (roles) => roles.includes(user?.role);
 
   const value = {
     user,
