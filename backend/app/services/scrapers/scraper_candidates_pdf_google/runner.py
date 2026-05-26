@@ -1,5 +1,5 @@
 import asyncio
-import os 
+import os
 import json
 import re
 import aiohttp
@@ -7,13 +7,16 @@ import fitz
 from datetime import datetime
 from google import genai
 from dotenv import load_dotenv
+
+from sqlalchemy import select
+from app.models.scraper_keyword_model import ScraperKeyword
 from app.db.session import AsyncSessionLocal
 from .utils import upsert_scraped_candidate
-from app.core.scraper_candidates_pdf_config import MAX_PROFILES_PER_SEARCH, KEYWORDS, CIUDADES
+from app.core.scraper_candidates_pdf_config import MAX_PROFILES_PER_SEARCH
 from .browser import search_brave_pdfs
 
 load_dotenv(override=True)
-client = genai.Client(api_key = os.getenv("GOOGLE_API_KEY"))
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 LIMIT_FILE = "daily_limit.json"
 
@@ -26,7 +29,7 @@ def check_daily_limit() -> tuple[int, str]:
         return 0, today
     
     try:
-        with open (LIMIT_FILE, "r") as f:
+        with open(LIMIT_FILE, "r") as f:
             data = json.load(f)
             if data.get("date") == today:
                 return data.get("count", 0), today
@@ -35,17 +38,15 @@ def check_daily_limit() -> tuple[int, str]:
     except Exception:
         return 0, today
     
-def update_daily_limit(count: int) -> None:
+def update_daily_limit(count:int) -> None:
     today = datetime.now().strftime("%Y-%m-%d")
     with open(LIMIT_FILE, "w") as f:
         json.dump({"date": today, "count": count}, f)
         
-# 1. Buscamos en Linkedin con la API de brave
 async def search_linkedin_url(first_name: str, last_name: str) -> str | None:
     if not first_name or len(first_name) < 2:
         return None
-    
-    print(f"    Buscando LinkedIn con API para {first_name} {last_name}")
+    print(f" Buscando LinkedIn con API para {first_name} {last_name}")
     api_key = os.getenv("BRAVE_API_KEY")
     if not api_key: return None
     
@@ -62,111 +63,127 @@ async def search_linkedin_url(first_name: str, last_name: str) -> str | None:
                     for item in results:
                         url = item.get("url", "")
                         if "linkedin.com/in/" in url:
-                            print(f"    LinkedIn encontrado: {url}")
+                            print(f"LinkedIn encontrado: {url}")
                             return url
-                    print("    La busqueda no devolvio ningún perfil")                
+                    print("La búsqueda no devolvio ningún perfil")
                 else:
-                    print(f"    Error en la API: {resp.status}")
+                    print(f"Error en la API: {resp.status}")
     except Exception as e:
-        print(f"    Error de conexión: {e}")
+        print(f"Error de conexión: {e}")
         
-# 2. Lector IA con Filtro de Calidad
 async def extract_pdf_data(pdf_bytes: bytes, keyword: str) -> dict | None:
     try:
         text = ""
         with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
-            for page in doc: text += page.get_text()
-            
+            for page in doc: 
+                text += page.get_text()
+                
         text = re.sub(r'\s+', ' ', text).strip()
         if len(text) < 100: return None
         
         prompt = f"""
         Actúa como un reclutador experto y analiza este CV.
-
         Estamos buscando específicamente perfiles relacionados con la palabra clave: "{keyword}".
-
         REGLA DE ORO 1 (Ubicación): Solo nos interesan candidatos cuya residencia actual sea en España. 
         Si el currículum indica que vive en otro país (ej: Ecuador, Colombia, Perú, Argentina, México, etc.), devuelve exactamente esto y nada más: {{}}
-        
         REGLA DE ORO 2 (Calidad): El perfil principal del candidato DEBE estar directamente relacionado con "{keyword}". 
         Si la palabra aparece solo como una anécdota, o el perfil principal del candidato no tiene sentido con lo que buscamos, devuelve exactamente esto y nada más: {{}}
-
         Si pasa ambas reglas de oro, devuelve SOLO un JSON estricto con: first_name, last_name, email, phone, location, sector, experience, education, skills, linkedin. 
         Texto: {text[:6000]}
         """
         
-        for intento_gemini in range (3):
+        for intento_gemini in range(3):
             try:
                 response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
                 clean_json = response.text.replace('```json', '').replace('```', '').strip()
                 parsed_data = json.loads(clean_json)
                 
                 if not parsed_data:
-                    print(f"    [FILTRO IA] CV descartado. No cumple requisitos para: {keyword}")
+                    print(f"CV descartado no cumple requisitos para: {keyword}")
                     return None
-
-                print("    Extraído con éxito usando Gemini")
-                if isinstance(parsed_data, list) and len(parsed_data) > 0: return parsed_data[0]
+                
+                print("Extraido con éxito usando Gemini")
+                if isinstance(parsed_data, list) and len(parsed_data) > 0:
+                    return parsed_data[0]
                 return parsed_data if parsed_data else None
-
+            
             except Exception as gemini_error:
                 error_str = str(gemini_error)
-                if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
+                if "429" in error_str or "RESOURSE_EXHAUSTED" in error_str:
                     espera = 40 + (intento_gemini * 10)
-                    print(f"    Limite de gemini alcanzado. Esperando {espera} seg")
+                    print(f"Limite de Gemini alcanzado. Esperando {espera} seg")
                     await asyncio.sleep(espera)
+                    
                 else:
-                    print(f"    Gemini falló por otro error {gemini_error}")
+                    print(f"Gemini falló por otro error: {gemini_error}")
                     break
         return None
+            
     except Exception as e:
-        print(f"    Error general procesando PDF: {e}")
+        print(f"Error general procesando PDF: {e}")
         return None
     
-# 3. Motor principal
-async def extract_pdfs() -> list[dict]:
+# Motor principal adaptado a Base de datos
+async def extract_pdf() -> list[dict]:
     all_extracted_candidates = []
     current_count, today_str = check_daily_limit()
     
     if current_count >= MAX_PROFILES_PER_SEARCH:
-        print(f"[INFO] Límite diario alcanzado ({MAX_PROFILES_PER_SEARCH}/100) para hoy {today_str}")
+        print(f"Limite diario alcanzado ({MAX_PROFILES_PER_SEARCH}/100) para hoy {today_str}")
         return all_extracted_candidates
-        
+    
     print(f"\n--- RECOLECTOR PRO INICIADO: Llevamos {current_count}/{MAX_PROFILES_PER_SEARCH} procesados hoy. ---")
-        
+    
     async with AsyncSessionLocal() as db:
-        keywords = KEYWORDS if isinstance(KEYWORDS, list) else [KEYWORDS]    
-        city_list = CIUDADES if isinstance(CIUDADES, list) and len(CIUDADES) > 0 else [""]
+        # Cargamos desde la tabla scraper_keywords
+        # 1. Traemos las palabras clave activas (type = keyword)
+        kw_query = await db.execute(
+            select(ScraperKeyword.keyword)
+            .where(ScraperKeyword.is_active == True, ScraperKeyword.type == "keyword")
+        )
+        list_keyword = kw_query.scalars().all()
         
-        for kw in keywords:
+        # 2. Traems las ciudades activas (type = city)
+        city_query = await db.execute(
+            select(ScraperKeyword.keyword)
+            .where(ScraperKeyword.is_active == True, ScraperKeyword.type == "city")
+        )
+        city_list = city_query.scalars().all()
+        
+        if not list_keyword:
+            print("No hay 'keywords' activas en al BD. Abortando")
+            return []
+        if not city_list:
+            city_list = [""] # Si no tenemos ciudades, busca de manera global
+            
+            
+        for kw in list_keyword:
             if current_count >= MAX_PROFILES_PER_SEARCH: break
             for c in city_list:
                 if current_count >= MAX_PROFILES_PER_SEARCH: break
                 
                 str_city = f'"{c}" ' if c else ""
                 query = f'filetype:pdf "{kw}" (cv OR "curriculum vitae") {str_city} España -oferta -empleo -requisitos'
-                
                 print(f"\n[BUSCANDO] Query API: {query}")
                 pdfs_in_memory = await search_brave_pdfs(query)
                 
                 if not pdfs_in_memory:
-                    print(f"    [X] La API de Brave no encontro resultados")
+                    print(f"La API de Brave no encontro resultados")
                     continue
                 
                 for pdf_item in pdfs_in_memory:
                     if current_count >= MAX_PROFILES_PER_SEARCH: break
                     
                     try:
-                        # Pasamos la keyword al filtro de Gemini
                         data = await extract_pdf_data(pdf_item["bytes"], kw)
                     except AILimitReachedError:
                         print("Apagado de emergencia la IA ha bloqueado el acceso")
-                        return
+                        return all_extracted_candidates
                     
                     if data and isinstance(data, dict) and data.get('first_name'):
                         linkedin = data.get('linkedin')
                         if linkedin:
-                            print(f"    LinkedIn extraido directamente del CV: {linkedin}")
+                            print(f"LinkedIn extraido directamente del CV: {linkedin}")
                         if not linkedin:
                             linkedin = await search_linkedin_url(data.get('first_name'), data.get('last_name'))
                             
@@ -176,7 +193,7 @@ async def extract_pdfs() -> list[dict]:
                         
                         origen_bd = f"Brave API - {kw}"
                         if c: origen_bd += f" ({c})"
-                        
+
                         candidate_data = {
                             "first_name": data.get('first_name'),
                             "last_name": data.get('last_name'),
@@ -205,10 +222,11 @@ async def extract_pdfs() -> list[dict]:
                         print(f"  -> {data.get('first_name')} añadido a la lista ({current_count}/{MAX_PROFILES_PER_SEARCH})")
                     
                     await asyncio.sleep(5)
-                    
-        if current_count >= MAX_PROFILES_PER_SEARCH:
-            print("\n[FIN] Límite de CV alcanzado por hoy.")
-            return all_extracted_candidates
-        
-if __name__ == "__main__":
-    asyncio.run(extract_pdfs())
+                
+                if current_count >= MAX_PROFILES_PER_SEARCH:
+                    print(f"Límite de CV alcanzado por hoy")
+                    return all_extracted_candidates
+                return all_extracted_candidates
+            
+if __name__ =="__main__":
+    asyncio.run(extract_pdf())

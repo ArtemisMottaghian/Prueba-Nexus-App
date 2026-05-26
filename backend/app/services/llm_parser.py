@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-genai.configure(api_key=os.getenv("GOOGLE_AI_KEY"))
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 async def parse_with_gemini(raw_text: str) -> dict:
     """

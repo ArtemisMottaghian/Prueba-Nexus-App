@@ -21,12 +21,12 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 from datetime import datetime
 from app.core.scraper_companies_config import DB_CONFIG
-GEMINI_API_KEY = os.getenv("GOOGLE_AI_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 os.environ["PGCLIENTENCODING"] = "utf-8"
 
 if not GEMINI_API_KEY:
-    print("[ERROR CRÍTICO] No se ha encontrado GOOGLE_AI_KEY en el .env.")
+    print("[ERROR CRÍTICO] No se ha encontrado GEMINI_API_KEY en el .env.")
 else:
     print("[OK] API KEY de Gemini cargada correctamente.")
     genai.configure(api_key=GEMINI_API_KEY)
