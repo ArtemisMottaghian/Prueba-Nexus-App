@@ -1,8 +1,9 @@
 import asyncio
+import os
 import smtplib
 from email.message import EmailMessage
 
-from fastapi import APIRouter,Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError, jwt
@@ -19,14 +20,30 @@ from app.core.jwt import get_current_user_db
 from app.models.user_model import User
 
 RESET_TOKEN_EXPIRE_MINUTES = 30
+# secure=True solo en producción (HTTPS). En local http://localhost secure=False es necesario.
+_IS_PRODUCTION = os.getenv("ENV", "development") == "production"
+
+
+def _set_auth_cookie(response: Response, access_token: str) -> None:
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=_IS_PRODUCTION,
+        samesite="lax",
+        max_age=settings.ACCESS_TOKEN_EXPIRE_HOURS * 3600,
+        path="/",
+    )
 
 
 router = APIRouter()
 
-@router.post("",response_model=TokenResponse)
+
+@router.post("", response_model=TokenResponse)
 async def login_for_access_token(
+    response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     usuario = await users_service.getUser(db, form_data.username)
 
@@ -40,11 +57,21 @@ async def login_for_access_token(
     token_data = {
         "sub": usuario.email,
         "role": usuario.role.value,
-        "id": usuario.id
+        "id": usuario.id,
     }
     access_token = create_access_token(data=token_data)
 
+    # Fijar cookie httpOnly — el frontend no puede leerla vía JS (protección XSS)
+    _set_auth_cookie(response, access_token)
+
+    # Seguimos devolviendo el token en JSON para compatibilidad con el frontend actual.
+    # Una vez migrado el frontend a cookies, eliminar access_token del body.
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.post("/logout", status_code=204)
+async def logout(response: Response):
+    response.delete_cookie(key="access_token", path="/", samesite="lax")
 
 
 @router.get("/google/login")
@@ -107,16 +134,17 @@ async def google_callback(code: str, db:AsyncSession = Depends(get_db)):
     usuario.google_access_token = tokens["access_token"]
     usuario.google_refresh_token = tokens.get("refresh_token")
     await db.commit()
-    # Generar el mismo JWT que usa el resto de la app
     token_data = {
         "sub": usuario.email,
         "role": usuario.role.value,
-        "id": usuario.id
+        "id": usuario.id,
     }
     access_token = create_access_token(data=token_data)
 
-    frontend_url = f"{settings.FRONTEND_URL}/auth/google/callback?token={access_token}"
-    return RedirectResponse(url=frontend_url)
+    # Cookie httpOnly en lugar de token en la URL (el token en URL queda en logs y historial)
+    redirect = RedirectResponse(url=settings.FRONTEND_URL)
+    _set_auth_cookie(redirect, access_token)
+    return redirect
 
 
 def _create_reset_token(email: str) -> str:
