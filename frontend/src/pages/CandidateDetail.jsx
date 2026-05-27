@@ -60,7 +60,9 @@ export default function CandidateDetail() {
 
             <div className="cd-hero-info">
               <h1 className="cd-name">{candidate.name}</h1>
-              <p className="cd-specialty">{candidate.specialty || 'Specialist'}</p>
+              <p className="cd-specialty">
+                {candidate.specialty || 'Specialist'}
+              </p>
 
               <div className="cd-meta-row">
                 {candidate.location && (
@@ -90,9 +92,7 @@ export default function CandidateDetail() {
                 >
                   <i
                     className={`bi ${
-                      candidate.isAvailable
-                        ? 'bi-check-circle'
-                        : 'bi-x-circle'
+                      candidate.isAvailable ? 'bi-check-circle' : 'bi-x-circle'
                     }`}
                   ></i>
                   {candidate.isAvailable ? 'Available' : 'Not available'}
@@ -107,7 +107,6 @@ export default function CandidateDetail() {
       <div className="cd-body">
         <div className="cd-container">
           <div className="cd-body-layout">
-
             {/* Columna principal */}
             <div className="cd-card">
               <h2 className="cd-section-title">Candidate information</h2>
@@ -133,9 +132,13 @@ export default function CandidateDetail() {
                 </div>
               )}
 
-              {!candidate.experience && !candidate.status && !candidate.time && (
-                <p className="cd-no-data">No additional information available.</p>
-              )}
+              {!candidate.experience &&
+                !candidate.status &&
+                !candidate.time && (
+                  <p className="cd-no-data">
+                    No additional information available.
+                  </p>
+                )}
             </div>
 
             {/* Columna lateral */}
@@ -192,7 +195,6 @@ export default function CandidateDetail() {
                 </ul>
               </div>
             </div>
-
           </div>
         </div>
       </div>
