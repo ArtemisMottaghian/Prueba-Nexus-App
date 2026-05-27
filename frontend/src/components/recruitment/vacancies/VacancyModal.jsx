@@ -1882,6 +1882,30 @@ export default function VacancyModal({
           job={job}
           candidates={matchResults}
           onClose={() => setShowMatchModal(false)}
+          onCandidatoAdded={() => {
+            // Recargar la lista de candidatos
+            const fetchCandidatos = async () => {
+              const res = await authFetch(
+                ENDPOINTS.recruitment.vacantes.candidateTracking(job.id)
+              );
+              if (!res.ok) return;
+              const data = await res.json();
+              setCandidatosList(
+                data.map((c) => ({
+                  id: c.id,
+                  nombre: c.name,
+                  fase: c.phase,
+                  resultado: c.result || 'Pendiente',
+                  notas: c.notes?.[0] || '',
+                  historial: c.notes || [],
+                  fecha: c.date
+                    ? new Date(c.date).toLocaleDateString('es-ES')
+                    : '',
+                }))
+              );
+            };
+            fetchCandidatos();
+          }}
         />
       )}
     </>
