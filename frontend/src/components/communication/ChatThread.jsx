@@ -109,7 +109,11 @@ export function ChatThread({
           type="button"
           className="chat-header__delete"
           onClick={() => {
-            if (window.confirm('¿Eliminar esta conversación? No se puede deshacer.')) {
+            if (
+              window.confirm(
+                '¿Eliminar esta conversación? No se puede deshacer.'
+              )
+            ) {
               onDeleteChat?.(selectedConversation.id);
             }
           }}

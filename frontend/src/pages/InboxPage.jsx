@@ -30,8 +30,6 @@ const InboxPage = () => {
   const [sseActive, setSseActive] = useState(false);
 
   // ─── Refs para evitar stale closures en callbacks y effects ──────────────────
-  // Se usan refs en lugar de estado para leer valores actuales dentro de
-  // intervalos y listeners sin añadirlos como dependencias y evitar re-renders.
   const showArchivedRef = useRef(false);
   const typingTimerRef = useRef(null);
   const selectedChatIdRef = useRef(null);
@@ -51,15 +49,11 @@ const InboxPage = () => {
   }, [showArchived]);
 
   // ─── SSE: recepción de eventos en tiempo real ────────────────────────────────
-  // Abre un stream con el backend. Gestiona: mensajes nuevos, eliminaciones,
-  // ediciones e indicadores de escritura. Se monta una sola vez.
   useEffect(() => {
     const close = openChatStream((event) => {
       if (event.type === 'connected') {
         setSseActive(true);
       } else if (event.type === 'new_message') {
-        // Añade el mensaje a la conversación correspondiente.
-        // Si el chat está activo, marca como leído (unread_count = 0).
         const { conv_id, message } = event;
         setConversations((prev) =>
           prev.map((c) => {
@@ -91,7 +85,6 @@ const InboxPage = () => {
           })
         );
       } else if (event.type === 'message_deleted') {
-        // Marca el mensaje como eliminado sin borrarlo del array
         const { conv_id, message_id } = event;
         setConversations((prev) =>
           prev.map((c) => {
@@ -107,7 +100,6 @@ const InboxPage = () => {
           })
         );
       } else if (event.type === 'message_edited') {
-        // Actualiza el contenido del mensaje editado
         const { conv_id, message } = event;
         setConversations((prev) =>
           prev.map((c) => {
@@ -132,7 +124,6 @@ const InboxPage = () => {
         setConversations((prev) => prev.filter((c) => c.id !== conv_id));
         setSelectedChatId((prev) => (prev === conv_id ? null : prev));
       } else if (event.type === 'typing') {
-        // Muestra el indicador de escritura 3 segundos y luego lo oculta
         setTypingConvId(event.conv_id);
         clearTimeout(typingTimerRef.current);
         typingTimerRef.current = setTimeout(() => setTypingConvId(null), 3000);
@@ -148,25 +139,28 @@ const InboxPage = () => {
   // ─── Carga inicial y recarga al cambiar entre activos/archivados ─────────────
   useEffect(() => {
     let cancelled = false;
-    setIsLoading(true);
-    setError(null);
-    setSelectedChatId(null);
-    setConversations([]);
 
-    getChats(showArchived)
-      .then((data) => {
+    const loadChats = async () => {
+      setIsLoading(true);
+      setError(null);
+      setSelectedChatId(null);
+      setConversations([]);
+
+      try {
+        const data = await getChats(showArchived);
         if (!cancelled) setConversations(data);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error(err);
         if (!cancelled)
           setError(
             'No se pudieron cargar las conversaciones. Comprueba que el servidor esté activo.'
           );
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setIsLoading(false);
-      });
+      }
+    };
+
+    loadChats();
 
     return () => {
       cancelled = true;
@@ -174,8 +168,6 @@ const InboxPage = () => {
   }, [showArchived]);
 
   // ─── Polling periódico ───────────────────────────────────────────────────────
-  // Si SSE está activo: solo refresca online-status cada 15s.
-  // Si SSE no está activo: también recarga mensajes del chat seleccionado cada 4s.
   useEffect(() => {
     const tick = async () => {
       const convId = selectedChatIdRef.current;
@@ -197,7 +189,6 @@ const InboxPage = () => {
             ? { ...c, online: fresh.online, unread_count: fresh.unread_count }
             : c;
 
-          // Solo actualiza mensajes si SSE no está disponible y hay mensajes nuevos
           if (!useSSE && convId && c.id === convId && freshMsgs) {
             const lastKnown = updated.messages[updated.messages.length - 1];
             const lastFetched =
@@ -224,7 +215,6 @@ const InboxPage = () => {
 
   // ─── Handlers de conversación ────────────────────────────────────────────────
 
-  // Selecciona un chat: carga sus mensajes y lo marca como leído
   const handleSelectChat = useCallback(async (convId) => {
     setSelectedChatId(convId);
     if (!convId) return;
@@ -251,7 +241,6 @@ const InboxPage = () => {
     }
   }, []);
 
-  // Envía un mensaje en el chat activo y lo añade al estado local
   const handleSendMessage = useCallback(
     async (content) => {
       if (!selectedChatId) return;
@@ -271,7 +260,6 @@ const InboxPage = () => {
     [selectedChatId]
   );
 
-  // Carga mensajes anteriores (paginación hacia atrás) usando el cursor guardado
   const handleLoadMore = useCallback(async () => {
     const convId = selectedChatIdRef.current;
     if (!convId) return;
@@ -300,7 +288,6 @@ const InboxPage = () => {
     }
   }, []);
 
-  // Elimina un mensaje: llama al backend y actualiza el estado local
   const handleDeleteMessage = useCallback(async (messageId) => {
     const convId = selectedChatIdRef.current;
     if (!convId) return;
@@ -325,7 +312,6 @@ const InboxPage = () => {
     }
   }, []);
 
-  // Edita un mensaje: llama al backend y sustituye el mensaje en el estado local
   const handleEditMessage = useCallback(async (messageId, newContent) => {
     const convId = selectedChatIdRef.current;
     if (!convId) return;
@@ -360,7 +346,6 @@ const InboxPage = () => {
     }
   }, []);
 
-  // Archiva o desarchiva una conversación y la elimina de la vista actual
   const handleArchive = useCallback(async (convId, archived) => {
     try {
       await archiveConversation(convId, archived);
@@ -373,7 +358,6 @@ const InboxPage = () => {
     }
   }, []);
 
-  // Crea una nueva conversación con otro usuario y la selecciona automáticamente
   const handleNewChat = useCallback(
     async (otherUserId) => {
       try {
@@ -390,8 +374,6 @@ const InboxPage = () => {
     [handleSelectChat]
   );
 
-  // FIX: extraído del JSX para no llamar useCallback condicionalmente dentro del return
-  // Notifica al backend que el usuario está escribiendo en el chat activo
   const handleTyping = useCallback(() => {
     if (selectedChatIdRef.current) sendTyping(selectedChatIdRef.current);
   }, []);
