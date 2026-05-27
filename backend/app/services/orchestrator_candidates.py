@@ -59,7 +59,7 @@ async def gather_raw_candidates() -> list[dict]:
         #    ),
         #),
         ("github", extract_github),
-        ("google_pdfs", extract_pdf), 
+        ("google_pdf", extract_pdf),
     ]
 
     for name, scraper_func in scrapers:
