@@ -51,12 +51,16 @@ const InboxPage = () => {
   }, [showArchived]);
 
   // ─── Emitir total de no leídos al Sidebar ────────────────────────────────────
-  // El Sidebar escucha este evento para actualizar el badge en tiempo real,
-  // sin depender de su propio polling independiente de 30s.
+  // El Sidebar escucha este evento para actualizar el badge en tiempo real.
+  // Guardas importantes:
+  // - isLoading: evita emitir 0 mientras conversations=[] (carga inicial/recarga)
+  // - showArchived: las convs archivadas no cuentan en el total real de no leídos
+  //   (get_total_unread del backend solo cuenta is_archived=False)
   useEffect(() => {
+    if (isLoading || showArchived) return;
     const total = conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0);
     window.dispatchEvent(new CustomEvent('chat:unread', { detail: { total } }));
-  }, [conversations]);
+  }, [conversations, isLoading, showArchived]);
 
   // ─── SSE: recepción de eventos en tiempo real ────────────────────────────────
   // Abre un stream con el backend. Gestiona: mensajes nuevos, eliminaciones,
