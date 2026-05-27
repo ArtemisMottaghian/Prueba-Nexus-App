@@ -115,12 +115,18 @@ class CandidateMatchOut(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class TrackingNote(BaseModel):
+    fase: str
+    resultado: Optional[str] = None
+    nota: Optional[str] = ""
+    fecha: Optional[str] = None
+
 class CandidateTrackingOut(BaseModel):
     id: int
-    name: str          
-    phase: str         
-    result: Optional[str] = None  
-    notes: Optional[List[str]] = []     
+    name: str
+    phase: str
+    result: Optional[str] = None
+    notes: Optional[List[TrackingNote]] = []
     date: datetime     
 
     model_config = ConfigDict(from_attributes=True)
