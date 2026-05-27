@@ -14,7 +14,7 @@ import Vacancies from './pages/Vacancies';
 import Calendario from './pages/Calendar';
 import Clientes from './pages/Clientes';
 import Candidates from './pages/Candidates';
-import CandidateDetail from './pages/CandidateDetail';   
+import CandidateDetail from './pages/CandidateDetail';
 import UserManagement from './components/settings/UserManagement';
 import MiCuenta from './components/settings/MiCuenta';
 import InboxPage from './pages/InboxPage';
@@ -65,7 +65,10 @@ function App() {
                           <Route path="/clientes" element={<Clientes />} />
                         </Route>
                         <Route path="/candidatos" element={<Candidates />} />
-                        <Route path="/candidates/:id" element={<CandidateDetail />} />  
+                        <Route
+                          path="/candidates/:id"
+                          element={<CandidateDetail />}
+                        />
                         {/* --- NUEVA RUTA DEL INBOX --- */}
                         <Route path="/inbox" element={<InboxPage />} />
                         <Route path="/cuenta" element={<MiCuenta />} />

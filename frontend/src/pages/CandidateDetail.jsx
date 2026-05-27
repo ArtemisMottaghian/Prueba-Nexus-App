@@ -21,7 +21,7 @@ export default function CandidateDetail() {
   }, [id]);
 
   if (loading) return <p className="p-4">Loading candidate...</p>;
-  if (error)   return <p className="p-4 text-danger">Error: {error}</p>;
+  if (error) return <p className="p-4 text-danger">Error: {error}</p>;
 
   return (
     <div className="container py-4">
@@ -36,16 +36,28 @@ export default function CandidateDetail() {
 
           <ul className="list-unstyled">
             {candidate.location && (
-              <li><i className="bi bi-geo-alt me-2"></i>{candidate.location}</li>
+              <li>
+                <i className="bi bi-geo-alt me-2"></i>
+                {candidate.location}
+              </li>
             )}
             {candidate.experience && (
-              <li><i className="bi bi-briefcase me-2"></i>{candidate.experience}</li>
+              <li>
+                <i className="bi bi-briefcase me-2"></i>
+                {candidate.experience}
+              </li>
             )}
             {candidate.source && (
-              <li><i className="bi bi-link-45deg me-2"></i>{candidate.source}</li>
+              <li>
+                <i className="bi bi-link-45deg me-2"></i>
+                {candidate.source}
+              </li>
             )}
             <li>
-              <i className="bi bi-circle-fill me-2" style={{ fontSize: '0.5rem' }}></i>
+              <i
+                className="bi bi-circle-fill me-2"
+                style={{ fontSize: '0.5rem' }}
+              ></i>
               {candidate.isAvailable ? 'Available' : 'Not available'}
             </li>
           </ul>

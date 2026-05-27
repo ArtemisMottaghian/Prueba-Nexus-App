@@ -11,9 +11,13 @@ export default function Sidebar({ isOpen, onClose }) {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    getTotalUnread().then(setUnreadCount).catch(() => {});
+    getTotalUnread()
+      .then(setUnreadCount)
+      .catch(() => {});
     const interval = setInterval(() => {
-      getTotalUnread().then(setUnreadCount).catch(() => {});
+      getTotalUnread()
+        .then(setUnreadCount)
+        .catch(() => {});
     }, 30000);
     return () => clearInterval(interval);
   }, []);
