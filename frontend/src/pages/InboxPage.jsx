@@ -58,30 +58,51 @@ const InboxPage = () => {
       if (event.type === 'connected') {
         setSseActive(true);
       } else if (event.type === 'new_message') {
-        // Añade el mensaje a la conversación correspondiente.
-        // Si el chat está activo, marca como leído (unread_count = 0).
         const { conv_id, message } = event;
+
+        // Si la conversación no está en la lista actual (ej: estaba archivada y se
+        // acaba de restaurar automáticamente por un mensaje entrante), recargar la
+        // lista activa para incluirla. No hay riesgo de duplicados porque el merge
+        // usa conv.id como clave.
+        if (!conversationsRef.current.some((c) => c.id === conv_id)) {
+          if (!showArchivedRef.current) {
+            getChats(false)
+              .then((fresh) => {
+                setConversations((prev) => {
+                  const prevMap = new Map(prev.map((c) => [c.id, c]));
+                  return fresh.map((f) => {
+                    const existing = prevMap.get(f.id);
+                    return existing
+                      ? { ...existing, online: f.online, unread_count: f.unread_count }
+                      : f;
+                  });
+                });
+              })
+              .catch(() => {});
+          }
+          return;
+        }
+
+        // Conversación conocida: añadir el mensaje al array local.
+        // Si el chat está activo, unread_count = 0.
+        const mapped = {
+          id: message.id,
+          senderId: message.is_mine ? 'me' : 'other',
+          content: message.is_deleted ? '[Mensaje eliminado]' : message.content,
+          timestamp: new Date(message.created_at).toLocaleString('es-ES', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          isDeleted: message.is_deleted,
+          isEdited: message.is_edited ?? false,
+        };
         setConversations((prev) =>
           prev.map((c) => {
             if (c.id !== conv_id) return c;
-            const alreadyExists = c.messages.some((m) => m.id === message.id);
-            if (alreadyExists) return c;
-            const mapped = {
-              id: message.id,
-              senderId: message.is_mine ? 'me' : 'other',
-              content: message.is_deleted
-                ? '[Mensaje eliminado]'
-                : message.content,
-              timestamp: new Date(message.created_at).toLocaleString('es-ES', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              }),
-              isDeleted: message.is_deleted,
-              isEdited: message.is_edited ?? false,
-            };
+            if (c.messages.some((m) => m.id === mapped.id)) return c;
             const isActive = selectedChatIdRef.current === conv_id;
             return {
               ...c,
