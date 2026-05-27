@@ -14,12 +14,14 @@ import Vacancies from './pages/Vacancies';
 import Calendario from './pages/Calendar';
 import Clientes from './pages/Clientes';
 import Candidates from './pages/Candidates';
+import CandidateDetail from './pages/CandidateDetail';   
 import UserManagement from './components/settings/UserManagement';
 import MiCuenta from './components/settings/MiCuenta';
 import InboxPage from './pages/InboxPage';
 // Issue #452 — URL pública de vacante (sin login)
 import VacancyPublicDetail from './components/recruitment/vacancies/VacancyPublicDetail';
 import './index.css';
+
 function App() {
   const [sidebarAbierto, setSidebarAbierto] = useState(false);
 
@@ -32,6 +34,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         {/* Issue #452 — Detalle de vacante para candidatos externos (noindex) */}
         <Route path="/vacante/:id" element={<VacancyPublicDetail />} />
+
         {/* 2. RUTAS PRIVADAS: Todo lo que requiere estar logueado */}
         <Route element={<ProtectedRoute />}>
           <Route
@@ -45,7 +48,6 @@ function App() {
                 <main className="ara-main">
                   <Topbar
                     onMenuToggle={() => setSidebarAbierto((prev) => !prev)}
-                    // Eliminado el onActivityToggle porque ya no hay panel
                   />
                   <div className="ara-content">
                     <div className="content-scroll">
@@ -63,6 +65,7 @@ function App() {
                           <Route path="/clientes" element={<Clientes />} />
                         </Route>
                         <Route path="/candidatos" element={<Candidates />} />
+                        <Route path="/candidates/:id" element={<CandidateDetail />} />  
                         {/* --- NUEVA RUTA DEL INBOX --- */}
                         <Route path="/inbox" element={<InboxPage />} />
                         <Route path="/cuenta" element={<MiCuenta />} />
@@ -80,4 +83,5 @@ function App() {
     </BrowserRouter>
   );
 }
+
 export default App;
