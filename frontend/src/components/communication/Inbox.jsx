@@ -89,14 +89,29 @@ const InboxComponent = ({
     return () => document.removeEventListener('mousedown', onClickOutside);
   }, [showPicker]);
 
+  const unreadTotal = conversations.reduce(
+    (sum, c) => sum + (c.unread_count || 0),
+    0
+  );
+
   return (
     <div className="inbox-container">
       {showSidebar && (
         <aside className="inbox-sidebar">
           <div className="inbox-header">
-            <h2>{showArchived ? 'Archivados' : 'Mensajes'}</h2>
+            <div className="inbox-header-left">
+              <h2>{showArchived ? 'Archivados' : 'Mensajes'}</h2>
+              {!showArchived && unreadTotal > 0 && (
+                <span
+                  className="inbox-unread-chip"
+                  title={`${unreadTotal} mensaje${unreadTotal !== 1 ? 's' : ''} sin leer`}
+                >
+                  {unreadTotal > 99 ? '99+' : unreadTotal}&nbsp;no&nbsp;leído
+                  {unreadTotal !== 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
             <div className="inbox-header-actions">
-              <span className="badge">{conversations.length}</span>
               <button
                 type="button"
                 className={`archive-toggle-btn ${showArchived ? 'archive-toggle-btn--active' : ''}`}
@@ -206,6 +221,7 @@ const InboxComponent = ({
       {showChatPanel && (
         <main className="chat-window">
           <ChatThread
+            key={selectedChatId ?? 'none'}
             selectedConversation={selectedConversation}
             isMobile={isMobile}
             handleBack={handleBack}

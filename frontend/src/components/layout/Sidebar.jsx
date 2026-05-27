@@ -11,6 +11,8 @@ export default function Sidebar({ isOpen, onClose }) {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
+    // Carga inicial y polling de respaldo (cuando InboxPage no está montado,
+    // ej: el usuario está en otra página).
     getTotalUnread()
       .then(setUnreadCount)
       .catch(() => {});
@@ -20,6 +22,14 @@ export default function Sidebar({ isOpen, onClose }) {
         .catch(() => {});
     }, 30000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    // InboxPage emite este evento cada vez que cambia su estado de conversaciones.
+    // Actualiza el badge inmediatamente sin esperar al polling de 30s.
+    const handler = (e) => setUnreadCount(e.detail.total);
+    window.addEventListener('chat:unread', handler);
+    return () => window.removeEventListener('chat:unread', handler);
   }, []);
 
   const handleLogout = async () => {
