@@ -54,6 +54,17 @@ function parseDescripcion(texto) {
   });
 }
 
+const PHASE_LABELS = {
+  proposed: 'Enviado CV',
+  client_interested: 'Cliente interesado',
+  interviewing: 'Entrevista',
+  offer_sent: 'Oferta enviada',
+  hired: 'Contratado',
+  rejected_by_client: 'Rechazado por cliente',
+  rejected_by_candidate: 'Rechazado por candidato',
+  pool: 'En pool',
+};
+
 export default function VacancyModal({
   job,
   onClose,
@@ -246,7 +257,7 @@ export default function VacancyModal({
           data.map((c) => ({
             id: c.id,
             nombre: c.name,
-            fase: c.phase,
+            fase: PHASE_LABELS[c.phase] || c.phase,
             resultado: c.result || 'Pendiente',
             notas: c.notes?.[0]?.nota || '',
             historial: c.notes || [],
@@ -1894,7 +1905,7 @@ export default function VacancyModal({
                 data.map((c) => ({
                   id: c.id,
                   nombre: c.name,
-                  fase: c.phase,
+                  fase: PHASE_LABELS[c.phase] || c.phase,
                   resultado: c.result || 'Pendiente',
                   notas: c.notes?.[0]?.nota || '',
                   historial: c.notes || [],
