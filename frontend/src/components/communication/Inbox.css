@@ -93,6 +93,11 @@
   overflow: hidden;
 }
 
+.user-picker-list {
+  max-height: 260px;
+  overflow-y: auto;
+}
+
 .user-picker-title {
   font-size: 0.75rem;
   font-weight: 600;
@@ -740,6 +745,27 @@
   background: rgba(124, 58, 237, 0.1);
   border-color: var(--clr-purple);
   color: var(--clr-purple-light);
+}
+
+.chat-header__delete {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--clr-border);
+  border-radius: 10px;
+  background: var(--clr-surface);
+  color: var(--clr-text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.chat-header__delete:hover {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: #dc2626;
+  color: #dc2626;
 }
 
 /* Botones de acción del mensaje */

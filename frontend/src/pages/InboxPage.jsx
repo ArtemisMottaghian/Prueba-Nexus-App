@@ -8,6 +8,7 @@ import {
   deleteMessage,
   editMessage,
   archiveConversation,
+  deleteConversation,
   createConversation,
   openChatStream,
   sendTyping,
@@ -126,6 +127,10 @@ const InboxPage = () => {
             };
           })
         );
+      } else if (event.type === 'conversation_deleted') {
+        const { conv_id } = event;
+        setConversations((prev) => prev.filter((c) => c.id !== conv_id));
+        setSelectedChatId((prev) => (prev === conv_id ? null : prev));
       } else if (event.type === 'typing') {
         // Muestra el indicador de escritura 3 segundos y luego lo oculta
         setTypingConvId(event.conv_id);
@@ -141,18 +146,12 @@ const InboxPage = () => {
   }, []);
 
   // ─── Carga inicial y recarga al cambiar entre activos/archivados ─────────────
-  // FIX: los setState de reset se mueven a queueMicrotask para no llamarlos
-  // sincrónicamente en el cuerpo del effect (react-hooks/set-state-in-effect).
   useEffect(() => {
     let cancelled = false;
-
-    queueMicrotask(() => {
-      if (cancelled) return;
-      setIsLoading(true);
-      setError(null);
-      setSelectedChatId(null);
-      setConversations([]);
-    });
+    setIsLoading(true);
+    setError(null);
+    setSelectedChatId(null);
+    setConversations([]);
 
     getChats(showArchived)
       .then((data) => {
@@ -350,6 +349,17 @@ const InboxPage = () => {
     }
   }, []);
 
+  const handleDeleteChat = useCallback(async (convId) => {
+    try {
+      await deleteConversation(convId);
+      setConversations((prev) => prev.filter((c) => c.id !== convId));
+      if (selectedChatIdRef.current === convId) setSelectedChatId(null);
+    } catch (err) {
+      console.error('Error al eliminar conversación:', err);
+      alert('No se pudo eliminar la conversación. Inténtalo de nuevo.');
+    }
+  }, []);
+
   // Archiva o desarchiva una conversación y la elimina de la vista actual
   const handleArchive = useCallback(async (convId, archived) => {
     try {
@@ -415,6 +425,7 @@ const InboxPage = () => {
         onDeleteMessage={handleDeleteMessage}
         onEditMessage={handleEditMessage}
         onArchive={handleArchive}
+        onDeleteChat={handleDeleteChat}
         onLoadMore={handleLoadMore}
         isLoading={isLoading}
         showArchived={showArchived}

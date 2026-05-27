@@ -29,6 +29,7 @@ const InboxComponent = ({
   onDeleteMessage,
   onEditMessage,
   onArchive,
+  onDeleteChat,
   onLoadMore,
   isLoading,
   showArchived,
@@ -124,28 +125,30 @@ const InboxComponent = ({
                     ) : users.length === 0 ? (
                       <p className="user-picker-empty">No hay usuarios</p>
                     ) : (
-                      users.map((u) => (
-                        <div
-                          key={u.id}
-                          className="user-picker-item"
-                          onClick={() => handlePickUser(u.id)}
-                          role="button"
-                          tabIndex={0}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handlePickUser(u.id);
-                          }}
-                        >
-                          <div className="avatar avatar--sm">
-                            {(u.name || u.email).charAt(0).toUpperCase()}
+                      <div className="user-picker-list">
+                        {users.map((u) => (
+                          <div
+                            key={u.id}
+                            className="user-picker-item"
+                            onClick={() => handlePickUser(u.id)}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handlePickUser(u.id);
+                            }}
+                          >
+                            <div className="avatar avatar--sm">
+                              {(u.name || u.email).charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="user-picker-name">
+                                {u.name || u.email}
+                              </p>
+                              <p className="user-picker-role">{u.role}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="user-picker-name">
-                              {u.name || u.email}
-                            </p>
-                            <p className="user-picker-role">{u.role}</p>
-                          </div>
-                        </div>
-                      ))
+                        ))}
+                      </div>
                     )}
                   </div>
                 )}
@@ -210,6 +213,7 @@ const InboxComponent = ({
             onDeleteMessage={onDeleteMessage}
             onEditMessage={onEditMessage}
             onArchive={onArchive}
+            onDeleteChat={onDeleteChat}
             onLoadMore={onLoadMore}
             isArchived={showArchived}
             isTyping={typingConvId === selectedChatId}

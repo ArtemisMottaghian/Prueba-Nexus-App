@@ -14,11 +14,16 @@ class VacancySummary(BaseModel):
     salary_max: Optional[int] = Field(None, ge=0)  # No puede ser negativo
     published_at: Optional[datetime] = None
     portal_id: Optional[int] = None
-    status: OfferStatus
+    status: Optional[OfferStatus] = None
     is_favourite: bool = False
     sector: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+    @field_validator('is_favourite', mode='before')
+    @classmethod
+    def coerce_is_favourite(cls, v):
+        return bool(v) if v is not None else False
 
     @field_validator('salary_max')
     @classmethod
