@@ -597,3 +597,60 @@ async def delete_vacancy_note(db: AsyncSession, note_id: int) -> bool:
     await db.delete(note)
     await db.commit()
     return True
+
+async def update_application_by_id(
+    db: AsyncSession,
+    vacancy_id: int,
+    application_id: int,
+    phase: str,
+    result: str,
+    note: str = None,
+) -> bool:
+    from app.models.aplication_model import ApplicationStatus
+    from datetime import datetime, timezone
+
+    result_app = await db.execute(
+        select(JobApplication).where(
+            JobApplication.id == application_id,
+            JobApplication.offer_id == vacancy_id
+        )
+    )
+    app = result_app.scalar_one_or_none()
+    if not app:
+        return False
+
+    PHASE_MAP = {
+        "enviado cv": ApplicationStatus.proposed,
+        "entrevista telefónica": ApplicationStatus.interviewing,
+        "primera entrevista": ApplicationStatus.interviewing,
+        "segunda entrevista": ApplicationStatus.interviewing,
+        "prueba técnica": ApplicationStatus.interviewing,
+        "entrevista final": ApplicationStatus.interviewing,
+        "oferta enviada": ApplicationStatus.offer_sent,
+        "contratado": ApplicationStatus.hired,
+    }
+    app.status = PHASE_MAP.get(phase.lower(), ApplicationStatus.proposed)
+
+    # Cargar historial existente
+    historial = []
+    if app.feedback:
+        try:
+            historial = json.loads(app.feedback)
+            if not isinstance(historial, list):
+                historial = [{"nota": str(historial), "fase": phase, "fecha": ""}]
+        except json.JSONDecodeError:
+            historial = [{"nota": app.feedback, "fase": phase, "fecha": ""}]
+
+    # Añadir nueva entrada
+    nueva_entrada = {
+        "fase": phase,
+        "resultado": result,
+        "nota": note or "",
+        "fecha": datetime.now(timezone.utc).strftime("%d/%m/%Y"),
+    }
+    historial.append(nueva_entrada)
+    app.feedback = json.dumps(historial, ensure_ascii=False)
+
+    db.add(app)
+    await db.commit()
+    return True

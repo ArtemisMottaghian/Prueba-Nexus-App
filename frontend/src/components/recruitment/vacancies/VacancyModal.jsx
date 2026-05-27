@@ -160,19 +160,19 @@ export default function VacancyModal({
 
   const handleGuardarEdicion = async (c) => {
     try {
-      await authFetch(
-        ENDPOINTS.recruitment.vacantes.candidateTracking(job.id),
+      const res = await authFetch(
+        `${ENDPOINTS.recruitment.vacantes.applications(job.id)}/${c.id}`,
         {
-          method: 'POST',
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: c.nombre,
             phase: editForm.fase,
             result: editForm.resultado,
-            notes: editForm.nota ? [editForm.nota] : [],
+            note: editForm.nota,
           }),
         }
       );
+      if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
       setCandidatosList((prev) =>
         prev.map((x) =>
           x.id === c.id
@@ -249,6 +249,7 @@ export default function VacancyModal({
             fase: c.phase,
             resultado: c.result || 'Pendiente',
             notas: c.notes?.[0] || '',
+            historial: c.notes || [],
             fecha: c.date ? new Date(c.date).toLocaleDateString('es-ES') : '',
           }))
         );
@@ -1603,6 +1604,31 @@ export default function VacancyModal({
                                   <div className="cand-notas">
                                     <i className="bi bi-chat-left-text me-1"></i>
                                     {c.notas}
+                                  </div>
+                                )}
+
+                                {c.historial && c.historial.length > 0 && (
+                                  <div className="cand-historial">
+                                    {c.historial.map((h, idx) => (
+                                      <div
+                                        key={idx}
+                                        className="cand-historial-item"
+                                      >
+                                        <span className="cand-historial-fase">
+                                          {h.fase || h}
+                                        </span>
+                                        {h.fecha && (
+                                          <span className="cand-historial-fecha">
+                                            {h.fecha}
+                                          </span>
+                                        )}
+                                        {h.nota && (
+                                          <span className="cand-historial-nota">
+                                            {h.nota}
+                                          </span>
+                                        )}
+                                      </div>
+                                    ))}
                                   </div>
                                 )}
 

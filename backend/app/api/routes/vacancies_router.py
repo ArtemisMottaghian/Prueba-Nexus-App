@@ -390,6 +390,31 @@ async def delete_vacancy_note(
     return {"message": "Nota eliminada correctamente"}
 
 # -----------------------------------------------------------
+# ACTUALIZAR APLICACIÓN DE CANDIDATO (fase, resultado, nota)
+# PATCH /api/vacancies/{vacancy_id}/applications/{application_id}
+# -----------------------------------------------------------
+@router.patch("/{vacancy_id}/applications/{application_id}", response_model=MessageResponse)
+async def update_application(
+    vacancy_id: int,
+    application_id: int,
+    body: dict,
+    db: AsyncSession = Depends(get_db)
+):
+    updated = await vacancies_service.update_application_by_id(
+        db,
+        vacancy_id=vacancy_id,
+        application_id=application_id,
+        phase=body.get("phase", "Enviado CV"),
+        result=body.get("result", "Pendiente"),
+        note=body.get("note", ""),
+    )
+    if not updated:
+        raise HTTPException(status_code=404, detail="Aplicación no encontrada")
+    return {"message": "Aplicación actualizada correctamente"}
+
+
+
+# -----------------------------------------------------------
 # ELIMINAR APLICACIÓN DE CANDIDATO A VACANTE
 # DELETE /api/vacancies/{vacancy_id}/applications/{application_id}
 # -----------------------------------------------------------
