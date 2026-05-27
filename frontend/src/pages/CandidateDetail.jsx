@@ -109,25 +109,25 @@ export default function CandidateDetail() {
           <div className="cd-body-layout">
             {/* Columna principal */}
             <div className="cd-card">
-              <h2 className="cd-section-title">Candidate information</h2>
+              <h2 className="cd-section-title">Información Candidato</h2>
 
               {candidate.experience && (
                 <div className="cd-field-block">
-                  <p className="cd-field-label">Experience</p>
+                  <p className="cd-field-label">Experiencia</p>
                   <p className="cd-field-value">{candidate.experience}</p>
                 </div>
               )}
 
               {candidate.status && (
                 <div className="cd-field-block">
-                  <p className="cd-field-label">Status</p>
+                  <p className="cd-field-label">Estado</p>
                   <p className="cd-field-value">{candidate.status}</p>
                 </div>
               )}
 
               {candidate.time && (
                 <div className="cd-field-block">
-                  <p className="cd-field-label">Time</p>
+                  <p className="cd-field-label">Fecha</p>
                   <p className="cd-field-value">{candidate.time}</p>
                 </div>
               )}
@@ -144,7 +144,7 @@ export default function CandidateDetail() {
             {/* Columna lateral */}
             <div className="cd-side-col">
               <div className="cd-card cd-info-card">
-                <h2 className="cd-section-title">Details</h2>
+                <h2 className="cd-section-title">Detalles</h2>
                 <ul className="cd-info-list">
                   {candidate.location && (
                     <li>
@@ -152,7 +152,7 @@ export default function CandidateDetail() {
                         <i className="bi bi-geo-alt"></i>
                       </div>
                       <div>
-                        <p className="cd-info-label">Location</p>
+                        <p className="cd-info-label">Localización</p>
                         <p className="cd-info-value">{candidate.location}</p>
                       </div>
                     </li>
@@ -163,7 +163,7 @@ export default function CandidateDetail() {
                         <i className="bi bi-link-45deg"></i>
                       </div>
                       <div>
-                        <p className="cd-info-label">Source</p>
+                        <p className="cd-info-label">Origen</p>
                         <p className="cd-info-value">{candidate.source}</p>
                       </div>
                     </li>
@@ -173,7 +173,7 @@ export default function CandidateDetail() {
                       <i className="bi bi-person-check"></i>
                     </div>
                     <div>
-                      <p className="cd-info-label">Availability</p>
+                      <p className="cd-info-label">Disponibilidad</p>
                       <span
                         className={`cd-status-badge ${
                           candidate.isAvailable
