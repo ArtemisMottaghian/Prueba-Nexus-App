@@ -538,19 +538,16 @@ async def archive_conversation(
 
 async def delete_conversation(db: AsyncSession, conv_id: int, user_id: int) -> None:
     await _get_participant_or_403(db, conv_id, user_id)
-    conv = await db.get(Conversation, conv_id)
-    if not conv:
-        raise HTTPException(status_code=404, detail="Conversación no encontrada")
-    all_result = await db.execute(
-        select(ConversationParticipant.user_id).where(
-            ConversationParticipant.conversation_id == conv_id
+    await db.execute(
+        sql_delete(ConversationParticipant).where(
+            and_(
+                ConversationParticipant.conversation_id == conv_id,
+                ConversationParticipant.user_id == user_id,
+            )
         )
     )
-    all_ids = all_result.scalars().all()
-    await db.execute(sql_delete(Conversation).where(Conversation.id == conv_id))
     await db.commit()
-    for pid in all_ids:
-        _push_to_user(pid, {"type": "conversation_deleted", "conv_id": conv_id})
+    _push_to_user(user_id, {"type": "conversation_deleted", "conv_id": conv_id})
 
 
 async def mark_offline(db: AsyncSession, user_id: int) -> None:
