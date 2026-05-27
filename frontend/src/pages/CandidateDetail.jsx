@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ENDPOINTS, authFetch } from '../services/api';
+import '../components/recruitment/candidates/CandidateDetail.css';
 
 export default function CandidateDetail() {
   const { id } = useParams();
