@@ -248,7 +248,7 @@ export default function VacancyModal({
             nombre: c.name,
             fase: c.phase,
             resultado: c.result || 'Pendiente',
-            notas: c.notes?.[0] || '',
+            notas: c.notes?.[0]?.nota || '',
             historial: c.notes || [],
             fecha: c.date ? new Date(c.date).toLocaleDateString('es-ES') : '',
           }))
@@ -1896,7 +1896,7 @@ export default function VacancyModal({
                   nombre: c.name,
                   fase: c.phase,
                   resultado: c.result || 'Pendiente',
-                  notas: c.notes?.[0] || '',
+                  notas: c.notes?.[0]?.nota || '',
                   historial: c.notes || [],
                   fecha: c.date
                     ? new Date(c.date).toLocaleDateString('es-ES')
