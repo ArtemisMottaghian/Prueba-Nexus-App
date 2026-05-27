@@ -50,6 +50,14 @@ const InboxPage = () => {
     showArchivedRef.current = showArchived;
   }, [showArchived]);
 
+  // ─── Emitir total de no leídos al Sidebar ────────────────────────────────────
+  // El Sidebar escucha este evento para actualizar el badge en tiempo real,
+  // sin depender de su propio polling independiente de 30s.
+  useEffect(() => {
+    const total = conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0);
+    window.dispatchEvent(new CustomEvent('chat:unread', { detail: { total } }));
+  }, [conversations]);
+
   // ─── SSE: recepción de eventos en tiempo real ────────────────────────────────
   // Abre un stream con el backend. Gestiona: mensajes nuevos, eliminaciones,
   // ediciones e indicadores de escritura. Se monta una sola vez.
@@ -84,7 +92,8 @@ const InboxPage = () => {
         }
 
         // Conversación conocida: añadir el mensaje al array local.
-        // Si el chat está activo, unread_count = 0.
+        // Si el chat está activo, unread_count = 0 y se actualiza last_read_at en
+        // el backend para que el próximo poll también devuelva 0.
         const mapped = {
           id: message.id,
           senderId: message.is_mine ? 'me' : 'other',
@@ -99,11 +108,15 @@ const InboxPage = () => {
           isDeleted: message.is_deleted,
           isEdited: message.is_edited ?? false,
         };
+        const isActive = selectedChatIdRef.current === conv_id;
+        if (isActive) {
+          // Mantener DB en sync: sin esto el polling (15s) devolvería unread_count > 0
+          markAsRead(conv_id).catch(() => {});
+        }
         setConversations((prev) =>
           prev.map((c) => {
             if (c.id !== conv_id) return c;
             if (c.messages.some((m) => m.id === mapped.id)) return c;
-            const isActive = selectedChatIdRef.current === conv_id;
             return {
               ...c,
               messages: [...c.messages, mapped],
@@ -232,7 +245,10 @@ const InboxPage = () => {
         return freshConvs.map((fresh) => {
           const existing = prevMap.get(fresh.id);
           if (!existing) return fresh; // conversación nueva del servidor
-          let updated = { ...existing, online: fresh.online, unread_count: fresh.unread_count };
+          // Si esta conv está activa no sobreescribir unread_count con el valor del
+          // backend: el usuario la está leyendo ahora mismo, siempre es 0.
+          const freshUnread = (convId && fresh.id === convId) ? 0 : fresh.unread_count;
+          let updated = { ...existing, online: fresh.online, unread_count: freshUnread };
           // Solo actualiza mensajes si SSE no está disponible y hay mensajes nuevos
           if (!useSSE && convId && existing.id === convId && freshMsgs) {
             const lastKnown = updated.messages[updated.messages.length - 1];
@@ -258,6 +274,9 @@ const InboxPage = () => {
   // Selecciona un chat: carga sus mensajes y lo marca como leído
   const handleSelectChat = useCallback(async (convId) => {
     setSelectedChatId(convId);
+    // Actualizar el ref síncronamente para que el SSE handler vea el conv activo
+    // de inmediato, sin esperar al useEffect([selectedChatId]) que corre post-render.
+    selectedChatIdRef.current = convId;
     if (!convId) return;
     try {
       const [{ messages, next_cursor, has_more }] = await Promise.all([
