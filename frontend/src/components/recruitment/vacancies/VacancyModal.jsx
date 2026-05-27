@@ -82,6 +82,12 @@ export default function VacancyModal({
   const [editingNoteText, setEditingNoteText] = useState('');
 
   const [candidatosList, setCandidatosList] = useState(job?.candidatos || []);
+  const [expandedCandId, setExpandedCandId] = useState(null);
+  const [editForm, setEditForm] = useState({
+    fase: '',
+    resultado: '',
+    nota: '',
+  });
   const [candForm, setCandForm] = useState({
     nombre: '',
     fase: 'Enviado CV',
@@ -149,6 +155,39 @@ export default function VacancyModal({
       setCandidatosList((prev) => prev.filter((c) => c.id !== candidatoId));
     } catch (err) {
       console.error('Error eliminando candidato:', err);
+    }
+  };
+
+  const handleGuardarEdicion = async (c) => {
+    try {
+      await authFetch(
+        ENDPOINTS.recruitment.vacantes.candidateTracking(job.id),
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: c.nombre,
+            phase: editForm.fase,
+            result: editForm.resultado,
+            notes: editForm.nota ? [editForm.nota] : [],
+          }),
+        }
+      );
+      setCandidatosList((prev) =>
+        prev.map((x) =>
+          x.id === c.id
+            ? {
+                ...x,
+                fase: editForm.fase,
+                resultado: editForm.resultado,
+                notas: editForm.nota,
+              }
+            : x
+        )
+      );
+      setExpandedCandId(null);
+    } catch (err) {
+      console.error('Error guardando edición:', err);
     }
   };
 
@@ -1513,7 +1552,22 @@ export default function VacancyModal({
                                 {c.nombre.charAt(0).toUpperCase()}
                               </div>
                               <div className="cand-body">
-                                <div className="cand-body-top">
+                                <div
+                                  className="cand-body-top"
+                                  style={{ cursor: 'pointer' }}
+                                  onClick={() => {
+                                    if (expandedCandId === c.id) {
+                                      setExpandedCandId(null);
+                                    } else {
+                                      setExpandedCandId(c.id);
+                                      setEditForm({
+                                        fase: c.fase,
+                                        resultado: c.resultado,
+                                        nota: c.notas || '',
+                                      });
+                                    }
+                                  }}
+                                >
                                   <span className="cand-nombre">
                                     {c.nombre}
                                   </span>
@@ -1551,13 +1605,99 @@ export default function VacancyModal({
                                     {c.notas}
                                   </div>
                                 )}
-                                <button
-                                  className="btn-icon btn-icon-sm btn-icon-danger"
-                                  title="Eliminar candidato"
-                                  onClick={() => handleEliminarCandidato(c.id)}
-                                >
-                                  <i className="bi bi-trash3"></i>
-                                </button>
+
+                                {expandedCandId === c.id && (
+                                  <div className="cand-edit-panel">
+                                    <div className="cand-edit-row">
+                                      <select
+                                        className="cand-edit-select"
+                                        value={editForm.fase}
+                                        onChange={(e) =>
+                                          setEditForm((f) => ({
+                                            ...f,
+                                            fase: e.target.value,
+                                          }))
+                                        }
+                                      >
+                                        {[
+                                          'Enviado CV',
+                                          'Entrevista telefónica',
+                                          'Primera entrevista',
+                                          'Segunda entrevista',
+                                          'Prueba técnica',
+                                          'Entrevista final',
+                                          'Oferta enviada',
+                                          'Contratado',
+                                        ].map((f) => (
+                                          <option key={f} value={f}>
+                                            {f}
+                                          </option>
+                                        ))}
+                                      </select>
+                                      <select
+                                        className="cand-edit-select"
+                                        value={editForm.resultado}
+                                        onChange={(e) =>
+                                          setEditForm((f) => ({
+                                            ...f,
+                                            resultado: e.target.value,
+                                          }))
+                                        }
+                                      >
+                                        {[
+                                          'Pendiente',
+                                          'Positivo',
+                                          'Negativo',
+                                          'En espera',
+                                        ].map((r) => (
+                                          <option key={r} value={r}>
+                                            {r}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                    <textarea
+                                      className="cand-edit-textarea"
+                                      placeholder="Añadir nota..."
+                                      value={editForm.nota}
+                                      onChange={(e) =>
+                                        setEditForm((f) => ({
+                                          ...f,
+                                          nota: e.target.value,
+                                        }))
+                                      }
+                                    />
+                                    <div className="cand-edit-actions">
+                                      <button
+                                        className="btn-guardar-edit"
+                                        onClick={() => handleGuardarEdicion(c)}
+                                      >
+                                        <i className="bi bi-floppy me-1"></i>
+                                        Guardar
+                                      </button>
+                                      <button
+                                        className="btn-icon btn-icon-sm btn-icon-danger"
+                                        title="Eliminar candidato"
+                                        onClick={() =>
+                                          handleEliminarCandidato(c.id)
+                                        }
+                                      >
+                                        <i className="bi bi-trash3"></i>
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                                {expandedCandId !== c.id && (
+                                  <button
+                                    className="btn-icon btn-icon-sm btn-icon-danger"
+                                    title="Eliminar candidato"
+                                    onClick={() =>
+                                      handleEliminarCandidato(c.id)
+                                    }
+                                  >
+                                    <i className="bi bi-trash3"></i>
+                                  </button>
+                                )}
                               </div>
                             </div>
                           ))}
