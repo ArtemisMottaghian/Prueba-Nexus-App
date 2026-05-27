@@ -206,6 +206,7 @@ const InboxComponent = ({
       {showChatPanel && (
         <main className="chat-window">
           <ChatThread
+            key={selectedChatId ?? 'none'}
             selectedConversation={selectedConversation}
             isMobile={isMobile}
             handleBack={handleBack}

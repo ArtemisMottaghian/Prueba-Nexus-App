@@ -17,13 +17,22 @@ export function ChatThread({
 }) {
   const messagesEndRef = useRef(null);
   const editInputRef = useRef(null);
+  const prevLastMsgIdRef = useRef(null);
   const [editingMsgId, setEditingMsgId] = useState(null);
   const [editDraft, setEditDraft] = useState('');
   const [editError, setEditError] = useState('');
 
   useEffect(() => {
-    if (!editingMsgId) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (editingMsgId) return;
+    const msgs = selectedConversation?.messages;
+    const lastId = msgs?.[msgs.length - 1]?.id ?? null;
+    if (lastId !== null && lastId !== prevLastMsgIdRef.current) {
+      const wasEmpty = prevLastMsgIdRef.current === null;
+      prevLastMsgIdRef.current = lastId;
+      // Scroll instantáneo en carga inicial, suave en mensaje nuevo
+      messagesEndRef.current?.scrollIntoView({ behavior: wasEmpty ? 'auto' : 'smooth' });
+    } else {
+      prevLastMsgIdRef.current = lastId;
     }
   }, [selectedConversation?.messages, editingMsgId]);
 

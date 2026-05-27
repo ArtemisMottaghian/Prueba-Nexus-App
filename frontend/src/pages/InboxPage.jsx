@@ -190,29 +190,39 @@ const InboxPage = () => {
 
       const [freshConvs, freshMsgs] = await Promise.all(fetches);
 
-      setConversations((prev) =>
-        prev.map((c) => {
-          const fresh = freshConvs?.find((f) => f.id === c.id);
-          const updated = fresh
-            ? { ...c, online: fresh.online, unread_count: fresh.unread_count }
-            : c;
-
+      setConversations((prev) => {
+        if (!freshConvs) {
+          // Sin lista fresca: solo actualizar mensajes del chat activo si SSE no está disponible
+          if (!useSSE && convId && freshMsgs) {
+            return prev.map((c) => {
+              if (c.id !== convId) return c;
+              const lastKnown = c.messages[c.messages.length - 1];
+              const lastFetched = freshMsgs.messages[freshMsgs.messages.length - 1];
+              if (lastFetched && (!lastKnown || lastKnown.id !== lastFetched.id)) {
+                return { ...c, messages: freshMsgs.messages };
+              }
+              return c;
+            });
+          }
+          return prev;
+        }
+        // freshConvs es la fuente de verdad: añade conversaciones nuevas y actualiza las existentes
+        const prevMap = new Map(prev.map((c) => [c.id, c]));
+        return freshConvs.map((fresh) => {
+          const existing = prevMap.get(fresh.id);
+          if (!existing) return fresh; // conversación nueva del servidor
+          let updated = { ...existing, online: fresh.online, unread_count: fresh.unread_count };
           // Solo actualiza mensajes si SSE no está disponible y hay mensajes nuevos
-          if (!useSSE && convId && c.id === convId && freshMsgs) {
+          if (!useSSE && convId && existing.id === convId && freshMsgs) {
             const lastKnown = updated.messages[updated.messages.length - 1];
-            const lastFetched =
-              freshMsgs.messages[freshMsgs.messages.length - 1];
-            if (
-              lastFetched &&
-              (!lastKnown || lastKnown.id !== lastFetched.id)
-            ) {
-              return { ...updated, messages: freshMsgs.messages };
+            const lastFetched = freshMsgs.messages[freshMsgs.messages.length - 1];
+            if (lastFetched && (!lastKnown || lastKnown.id !== lastFetched.id)) {
+              updated = { ...updated, messages: freshMsgs.messages };
             }
           }
-
           return updated;
-        })
-      );
+        });
+      });
     };
 
     const interval = setInterval(
