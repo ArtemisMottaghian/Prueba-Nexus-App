@@ -30,7 +30,9 @@ export function ChatThread({
       const wasEmpty = prevLastMsgIdRef.current === null;
       prevLastMsgIdRef.current = lastId;
       // Scroll instantáneo en carga inicial, suave en mensaje nuevo
-      messagesEndRef.current?.scrollIntoView({ behavior: wasEmpty ? 'auto' : 'smooth' });
+      messagesEndRef.current?.scrollIntoView({
+        behavior: wasEmpty ? 'auto' : 'smooth',
+      });
     } else {
       prevLastMsgIdRef.current = lastId;
     }
@@ -118,7 +120,11 @@ export function ChatThread({
           type="button"
           className="chat-header__delete"
           onClick={() => {
-            if (window.confirm('¿Eliminar esta conversación? No se puede deshacer.')) {
+            if (
+              window.confirm(
+                '¿Eliminar esta conversación? No se puede deshacer.'
+              )
+            ) {
               onDeleteChat?.(selectedConversation.id);
             }
           }}

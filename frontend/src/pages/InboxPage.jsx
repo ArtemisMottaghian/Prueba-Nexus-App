@@ -58,7 +58,10 @@ const InboxPage = () => {
   //   (get_total_unread del backend solo cuenta is_archived=False)
   useEffect(() => {
     if (isLoading || showArchived) return;
-    const total = conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0);
+    const total = conversations.reduce(
+      (sum, c) => sum + (c.unread_count || 0),
+      0
+    );
     window.dispatchEvent(new CustomEvent('chat:unread', { detail: { total } }));
   }, [conversations, isLoading, showArchived]);
 
@@ -85,7 +88,11 @@ const InboxPage = () => {
                   return fresh.map((f) => {
                     const existing = prevMap.get(f.id);
                     return existing
-                      ? { ...existing, online: f.online, unread_count: f.unread_count }
+                      ? {
+                          ...existing,
+                          online: f.online,
+                          unread_count: f.unread_count,
+                        }
                       : f;
                   });
                 });
@@ -235,8 +242,12 @@ const InboxPage = () => {
             return prev.map((c) => {
               if (c.id !== convId) return c;
               const lastKnown = c.messages[c.messages.length - 1];
-              const lastFetched = freshMsgs.messages[freshMsgs.messages.length - 1];
-              if (lastFetched && (!lastKnown || lastKnown.id !== lastFetched.id)) {
+              const lastFetched =
+                freshMsgs.messages[freshMsgs.messages.length - 1];
+              if (
+                lastFetched &&
+                (!lastKnown || lastKnown.id !== lastFetched.id)
+              ) {
                 return { ...c, messages: freshMsgs.messages };
               }
               return c;
@@ -251,13 +262,22 @@ const InboxPage = () => {
           if (!existing) return fresh; // conversación nueva del servidor
           // Si esta conv está activa no sobreescribir unread_count con el valor del
           // backend: el usuario la está leyendo ahora mismo, siempre es 0.
-          const freshUnread = (convId && fresh.id === convId) ? 0 : fresh.unread_count;
-          let updated = { ...existing, online: fresh.online, unread_count: freshUnread };
+          const freshUnread =
+            convId && fresh.id === convId ? 0 : fresh.unread_count;
+          let updated = {
+            ...existing,
+            online: fresh.online,
+            unread_count: freshUnread,
+          };
           // Solo actualiza mensajes si SSE no está disponible y hay mensajes nuevos
           if (!useSSE && convId && existing.id === convId && freshMsgs) {
             const lastKnown = updated.messages[updated.messages.length - 1];
-            const lastFetched = freshMsgs.messages[freshMsgs.messages.length - 1];
-            if (lastFetched && (!lastKnown || lastKnown.id !== lastFetched.id)) {
+            const lastFetched =
+              freshMsgs.messages[freshMsgs.messages.length - 1];
+            if (
+              lastFetched &&
+              (!lastKnown || lastKnown.id !== lastFetched.id)
+            ) {
               updated = { ...updated, messages: freshMsgs.messages };
             }
           }

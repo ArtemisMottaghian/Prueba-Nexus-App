@@ -13,9 +13,13 @@ export default function Sidebar({ isOpen, onClose }) {
   useEffect(() => {
     // Carga inicial y polling de respaldo (cuando InboxPage no está montado,
     // ej: el usuario está en otra página).
-    getTotalUnread().then(setUnreadCount).catch(() => {});
+    getTotalUnread()
+      .then(setUnreadCount)
+      .catch(() => {});
     const interval = setInterval(() => {
-      getTotalUnread().then(setUnreadCount).catch(() => {});
+      getTotalUnread()
+        .then(setUnreadCount)
+        .catch(() => {});
     }, 30000);
     return () => clearInterval(interval);
   }, []);
