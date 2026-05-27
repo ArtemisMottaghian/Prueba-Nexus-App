@@ -9,6 +9,7 @@ export function ChatThread({
   onDeleteMessage,
   onEditMessage,
   onArchive,
+  onDeleteChat,
   onLoadMore,
   isArchived,
   isTyping,
@@ -103,6 +104,19 @@ export function ChatThread({
           aria-label={archiveTitle}
         >
           <i className={`bi ${archiveIcon}`} aria-hidden />
+        </button>
+        <button
+          type="button"
+          className="chat-header__delete"
+          onClick={() => {
+            if (window.confirm('¿Eliminar esta conversación? No se puede deshacer.')) {
+              onDeleteChat?.(selectedConversation.id);
+            }
+          }}
+          title="Eliminar conversación"
+          aria-label="Eliminar conversación"
+        >
+          <i className="bi bi-trash3" aria-hidden />
         </button>
       </header>
 

@@ -139,6 +139,7 @@ export const ENDPOINTS = {
     editMessage: (convId, msgId) =>
       `${BASE_URL}/api/conversations/${convId}/messages/${msgId}`,
     unread: `${BASE_URL}/api/conversations/unread`,
+    delete: (convId) => `${BASE_URL}/api/conversations/${convId}`,
     archive: (convId) => `${BASE_URL}/api/conversations/${convId}/archive`,
     stream: `${BASE_URL}/api/conversations/stream`,
     typing: (convId) => `${BASE_URL}/api/conversations/${convId}/typing`,

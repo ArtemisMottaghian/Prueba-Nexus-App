@@ -1,12 +1,22 @@
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import isotipoNexus from '../../assets/isotipo-nexus.svg';
 import './Sidebar.css';
-import { markOffline } from '../../services/chatService';
+import { markOffline, getTotalUnread } from '../../services/chatService';
 
 export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
   const { logout, hasRole, hasAnyRole } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    getTotalUnread().then(setUnreadCount).catch(() => {});
+    const interval = setInterval(() => {
+      getTotalUnread().then(setUnreadCount).catch(() => {});
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = async () => {
     await markOffline();
@@ -82,6 +92,11 @@ export default function Sidebar({ isOpen, onClose }) {
                 <NavLink to="/inbox" className="sidebar-item" onClick={onClose}>
                   <i className="bi bi-envelope"></i>
                   <span className="sidebar-text">Inbox</span>
+                  {unreadCount > 0 && (
+                    <span className="sidebar-unread-badge">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
                 </NavLink>
                 <NavLink
                   to="/calendar"

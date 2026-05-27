@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from typing import AsyncGenerator, Optional
 
 from fastapi import HTTPException
-from sqlalchemy import select, update, func, and_, or_
+from sqlalchemy import select, update, delete as sql_delete, func, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, aliased
 
@@ -534,6 +534,23 @@ async def archive_conversation(
         .values(is_archived=archived)
     )
     await db.commit()
+
+
+async def delete_conversation(db: AsyncSession, conv_id: int, user_id: int) -> None:
+    await _get_participant_or_403(db, conv_id, user_id)
+    conv = await db.get(Conversation, conv_id)
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversación no encontrada")
+    all_result = await db.execute(
+        select(ConversationParticipant.user_id).where(
+            ConversationParticipant.conversation_id == conv_id
+        )
+    )
+    all_ids = all_result.scalars().all()
+    await db.execute(sql_delete(Conversation).where(Conversation.id == conv_id))
+    await db.commit()
+    for pid in all_ids:
+        _push_to_user(pid, {"type": "conversation_deleted", "conv_id": conv_id})
 
 
 async def mark_offline(db: AsyncSession, user_id: int) -> None:
