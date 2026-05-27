@@ -416,16 +416,21 @@ async def get_candidate_tracking(db: AsyncSession, vacancy_id: int) -> list[dict
     for app in applications:
         c = candidates_dict.get(app.candidate_id)
         if not c:
-            continue  
-        
+            continue
+
         notas_array = []
         if app.feedback:
             try:
-                notas_array = json.loads(app.feedback)
-                if not isinstance(notas_array, list):
-                    notas_array = [str(notas_array)]
+                parsed = json.loads(app.feedback)
+                if isinstance(parsed, list):
+                    # Filtramos solo los elementos que sean dicts válidos
+                    notas_array = [n for n in parsed if isinstance(n, dict)]
+                elif isinstance(parsed, dict):
+                    notas_array = [parsed]
+                # Si es string u otro tipo, lo ignoramos
             except json.JSONDecodeError:
-                notas_array = [app.feedback]
+                # Feedback corrupto o texto plano — ignoramos
+                notas_array = []
 
         output.append({
             "id": app.id, 
