@@ -337,7 +337,7 @@ export default function Calendario() {
               Conecta tu cuenta de Google para ver y gestionar eventos.{' '}
               <button
                 className="btn btn-sm btn-warning"
-                onClick={loginWithGoogleCalenda}
+                onClick={loginWithGoogleCalendar}
               >
                 Conectar ahora
               </button>
