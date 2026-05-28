@@ -54,6 +54,17 @@ function parseDescripcion(texto) {
   });
 }
 
+const PHASE_LABELS = {
+  proposed: 'Enviado CV',
+  client_interested: 'Cliente interesado',
+  interviewing: 'Entrevista',
+  offer_sent: 'Oferta enviada',
+  hired: 'Contratado',
+  rejected_by_client: 'Rechazado por cliente',
+  rejected_by_candidate: 'Rechazado por candidato',
+  pool: 'En pool',
+};
+
 export default function VacancyModal({
   job,
   onClose,
@@ -82,6 +93,12 @@ export default function VacancyModal({
   const [editingNoteText, setEditingNoteText] = useState('');
 
   const [candidatosList, setCandidatosList] = useState(job?.candidatos || []);
+  const [expandedCandId, setExpandedCandId] = useState(null);
+  const [editForm, setEditForm] = useState({
+    fase: '',
+    resultado: '',
+    nota: '',
+  });
   const [candForm, setCandForm] = useState({
     nombre: '',
     fase: 'Enviado CV',
@@ -138,6 +155,53 @@ export default function VacancyModal({
       setIsMatchingLocal(false);
     }
   };
+
+  const handleEliminarCandidato = async (candidatoId) => {
+    try {
+      const res = await authFetch(
+        ENDPOINTS.recruitment.vacantes.deleteApplication(job.id, candidatoId),
+        { method: 'DELETE' }
+      );
+      if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+      setCandidatosList((prev) => prev.filter((c) => c.id !== candidatoId));
+    } catch (err) {
+      console.error('Error eliminando candidato:', err);
+    }
+  };
+
+  const handleGuardarEdicion = async (c) => {
+    try {
+      const res = await authFetch(
+        `${ENDPOINTS.recruitment.vacantes.applications(job.id)}/${c.id}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phase: editForm.fase,
+            result: editForm.resultado,
+            note: editForm.nota,
+          }),
+        }
+      );
+      if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+      setCandidatosList((prev) =>
+        prev.map((x) =>
+          x.id === c.id
+            ? {
+                ...x,
+                fase: editForm.fase,
+                resultado: editForm.resultado,
+                notas: editForm.nota,
+              }
+            : x
+        )
+      );
+      setExpandedCandId(null);
+    } catch (err) {
+      console.error('Error guardando edición:', err);
+    }
+  };
+
   // --------------------------------------------------------------------------
 
   useEffect(() => {
@@ -179,6 +243,34 @@ export default function VacancyModal({
     fetchNotes();
   }, [activeTab, job?.id]);
 
+  useEffect(() => {
+    if (activeTab !== 'candidatos' || !job?.id) return;
+
+    const fetchCandidatos = async () => {
+      try {
+        const res = await authFetch(
+          ENDPOINTS.recruitment.vacantes.candidateTracking(job.id)
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        setCandidatosList(
+          data.map((c) => ({
+            id: c.id,
+            nombre: c.name,
+            fase: PHASE_LABELS[c.phase] || c.phase,
+            resultado: c.result || 'Pendiente',
+            notas: c.notes?.[0]?.nota || '',
+            historial: c.notes || [],
+            fecha: c.date ? new Date(c.date).toLocaleDateString('es-ES') : '',
+          }))
+        );
+      } catch (err) {
+        console.error('Error cargando candidatos:', err);
+      }
+    };
+
+    fetchCandidatos();
+  }, [activeTab, job?.id]);
   const [localDocs, setLocalDocs] = useState(job?.documentos || []);
   const [docTipo, setDocTipo] = useState('CV');
   const [draggingOver, setDraggingOver] = useState(false);
@@ -1466,13 +1558,28 @@ export default function VacancyModal({
 
                       {candidatosList.length > 0 ? (
                         <div className="cand-tracking-list">
-                          {candidatosList.map((c, i) => (
-                            <div key={i} className="cand-tracking-item">
+                          {candidatosList.map((c) => (
+                            <div key={c.id} className="cand-tracking-item">
                               <div className="cand-avatar">
                                 {c.nombre.charAt(0).toUpperCase()}
                               </div>
                               <div className="cand-body">
-                                <div className="cand-body-top">
+                                <div
+                                  className="cand-body-top"
+                                  style={{ cursor: 'pointer' }}
+                                  onClick={() => {
+                                    if (expandedCandId === c.id) {
+                                      setExpandedCandId(null);
+                                    } else {
+                                      setExpandedCandId(c.id);
+                                      setEditForm({
+                                        fase: c.fase,
+                                        resultado: c.resultado,
+                                        nota: c.notas || '',
+                                      });
+                                    }
+                                  }}
+                                >
                                   <span className="cand-nombre">
                                     {c.nombre}
                                   </span>
@@ -1509,6 +1616,124 @@ export default function VacancyModal({
                                     <i className="bi bi-chat-left-text me-1"></i>
                                     {c.notas}
                                   </div>
+                                )}
+
+                                {c.historial && c.historial.length > 0 && (
+                                  <div className="cand-historial">
+                                    {c.historial.map((h, idx) => (
+                                      <div
+                                        key={idx}
+                                        className="cand-historial-item"
+                                      >
+                                        <span className="cand-historial-fase">
+                                          {h.fase || h}
+                                        </span>
+                                        {h.fecha && (
+                                          <span className="cand-historial-fecha">
+                                            {h.fecha}
+                                          </span>
+                                        )}
+                                        {h.nota && (
+                                          <span className="cand-historial-nota">
+                                            {h.nota}
+                                          </span>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {expandedCandId === c.id && (
+                                  <div className="cand-edit-panel">
+                                    <div className="cand-edit-row">
+                                      <select
+                                        className="cand-edit-select"
+                                        value={editForm.fase}
+                                        onChange={(e) =>
+                                          setEditForm((f) => ({
+                                            ...f,
+                                            fase: e.target.value,
+                                          }))
+                                        }
+                                      >
+                                        {[
+                                          'Enviado CV',
+                                          'Entrevista telefónica',
+                                          'Primera entrevista',
+                                          'Segunda entrevista',
+                                          'Prueba técnica',
+                                          'Entrevista final',
+                                          'Oferta enviada',
+                                          'Contratado',
+                                        ].map((f) => (
+                                          <option key={f} value={f}>
+                                            {f}
+                                          </option>
+                                        ))}
+                                      </select>
+                                      <select
+                                        className="cand-edit-select"
+                                        value={editForm.resultado}
+                                        onChange={(e) =>
+                                          setEditForm((f) => ({
+                                            ...f,
+                                            resultado: e.target.value,
+                                          }))
+                                        }
+                                      >
+                                        {[
+                                          'Pendiente',
+                                          'Positivo',
+                                          'Negativo',
+                                          'En espera',
+                                        ].map((r) => (
+                                          <option key={r} value={r}>
+                                            {r}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                    <textarea
+                                      className="cand-edit-textarea"
+                                      placeholder="Añadir nota..."
+                                      value={editForm.nota}
+                                      onChange={(e) =>
+                                        setEditForm((f) => ({
+                                          ...f,
+                                          nota: e.target.value,
+                                        }))
+                                      }
+                                    />
+                                    <div className="cand-edit-actions">
+                                      <button
+                                        className="btn-guardar-edit"
+                                        onClick={() => handleGuardarEdicion(c)}
+                                      >
+                                        <i className="bi bi-floppy me-1"></i>
+                                        Guardar
+                                      </button>
+                                      <button
+                                        className="btn-icon btn-icon-sm btn-icon-danger"
+                                        title="Eliminar candidato"
+                                        onClick={() =>
+                                          handleEliminarCandidato(c.id)
+                                        }
+                                      >
+                                        <i className="bi bi-trash3"></i>
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                                {expandedCandId !== c.id && (
+                                  <button
+                                    className="btn-icon btn-icon-sm btn-icon-danger"
+                                    title="Eliminar candidato"
+                                    onClick={() =>
+                                      handleEliminarCandidato(c.id)
+                                    }
+                                  >
+                                    <i className="bi bi-trash3"></i>
+                                  </button>
                                 )}
                               </div>
                             </div>
@@ -1668,6 +1893,30 @@ export default function VacancyModal({
           job={job}
           candidates={matchResults}
           onClose={() => setShowMatchModal(false)}
+          onCandidatoAdded={() => {
+            // Recargar la lista de candidatos
+            const fetchCandidatos = async () => {
+              const res = await authFetch(
+                ENDPOINTS.recruitment.vacantes.candidateTracking(job.id)
+              );
+              if (!res.ok) return;
+              const data = await res.json();
+              setCandidatosList(
+                data.map((c) => ({
+                  id: c.id,
+                  nombre: c.name,
+                  fase: PHASE_LABELS[c.phase] || c.phase,
+                  resultado: c.result || 'Pendiente',
+                  notas: c.notes?.[0]?.nota || '',
+                  historial: c.notes || [],
+                  fecha: c.date
+                    ? new Date(c.date).toLocaleDateString('es-ES')
+                    : '',
+                }))
+              );
+            };
+            fetchCandidatos();
+          }}
         />
       )}
     </>

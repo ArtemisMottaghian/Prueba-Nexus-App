@@ -2,7 +2,12 @@ import { useState } from 'react';
 import { ENDPOINTS, authFetch } from '../../../services/api';
 import './SmartMatchResults.css';
 
-export default function SmartMatchResults({ job, candidates, onClose }) {
+export default function SmartMatchResults({
+  job,
+  candidates,
+  onClose,
+  onCandidatoAdded,
+}) {
   const [addedCandidates, setAddedCandidates] = useState({});
 
   const handleAddToTracking = async (candidate) => {
@@ -13,10 +18,24 @@ export default function SmartMatchResults({ job, candidates, onClose }) {
         body: JSON.stringify({ candidate_id: candidate.id }),
       });
       setAddedCandidates((prev) => ({ ...prev, [candidate.id]: true }));
+      if (onCandidatoAdded) onCandidatoAdded();
     } catch (err) {
       console.error('Error añadiendo candidato al seguimiento:', err);
     }
   };
+
+  const handleRemoveFromTracking = async (candidate) => {
+    try {
+      await authFetch(
+        ENDPOINTS.recruitment.vacantes.deleteApplication(job.id, candidate.id),
+        { method: 'DELETE' }
+      );
+      setAddedCandidates((prev) => ({ ...prev, [candidate.id]: false }));
+    } catch (err) {
+      console.error('Error eliminando candidato del seguimiento:', err);
+    }
+  };
+
   const handleOverlayClick = (e) => {
     if (e.target.className === 'smart-match-overlay') {
       onClose();
@@ -110,8 +129,11 @@ export default function SmartMatchResults({ job, candidates, onClose }) {
                     </button>
                     <button
                       className={`btn-view-profile-simple ${addedCandidates[candidate.id] ? 'btn-added' : ''}`}
-                      onClick={() => handleAddToTracking(candidate)}
-                      disabled={addedCandidates[candidate.id]}
+                      onClick={() =>
+                        addedCandidates[candidate.id]
+                          ? handleRemoveFromTracking(candidate)
+                          : handleAddToTracking(candidate)
+                      }
                     >
                       {addedCandidates[candidate.id] ? (
                         <>

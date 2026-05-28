@@ -36,8 +36,9 @@ export default [
         'warn',
         { allowConstantExport: true },
       ],
-      'react/prop-types': 'off', // Quita el rojo de las props
-      'prettier/prettier': ['error', { endOfLine: 'auto' }], // Quita el error de "Delete CR"
+      'react/prop-types': 'off',
+      'prettier/prettier': ['error', { endOfLine: 'auto' }],
+      'react-hooks/set-state-in-effect': 'off',
     },
   },
   eslintConfigPrettier,

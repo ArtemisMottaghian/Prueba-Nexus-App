@@ -94,6 +94,8 @@ async def get_or_create_conversation(
     if not other:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
+    # Busca la conversación entre ambos usuarios sin importar si está archivada.
+    # Solo puede existir UNA conversación 1:1 por pareja — nunca se crean duplicados.
     subq = (
         select(ConversationParticipant.conversation_id)
         .where(ConversationParticipant.user_id == other_user_id)
@@ -108,10 +110,25 @@ async def get_or_create_conversation(
                 Conversation.id.in_(subq),
             )
         )
+        .order_by(Conversation.id.asc())  # si hay duplicados históricos, usar la más antigua
     )
     result = await db.execute(stmt)
     conv = result.scalars().first()
+
     if conv:
+        # Si el usuario la tenía archivada/oculta, restaurarla al abrirla de nuevo
+        await db.execute(
+            update(ConversationParticipant)
+            .where(
+                and_(
+                    ConversationParticipant.conversation_id == conv.id,
+                    ConversationParticipant.user_id == user_id,
+                    ConversationParticipant.is_archived.is_(True),
+                )
+            )
+            .values(is_archived=False)
+        )
+        await db.commit()
         return conv
 
     conv = Conversation()
@@ -335,8 +352,10 @@ async def _notify_recipients(
     msg_out: MessageOut,
     plain_content: str,
 ) -> None:
-    recipients = await db.execute(
-        select(User)
+    # Incluye TODOS los participantes (también archivados): un mensaje entrante
+    # restaura la conversación para quien la tenía oculta.
+    result = await db.execute(
+        select(User, ConversationParticipant)
         .join(ConversationParticipant, ConversationParticipant.user_id == User.id)
         .where(
             and_(
@@ -345,8 +364,29 @@ async def _notify_recipients(
             )
         )
     )
+    rows = result.all()
+    if not rows:
+        return
+
     sender = await db.get(User, sender_id)
     sender_name = (sender.name or sender.email) if sender else "Alguien"
+
+    # IDs de destinatarios que tenían la conversación archivada/oculta
+    was_archived = {user.id for user, cp in rows if cp.is_archived}
+
+    # Restaurar automáticamente: recibir un mensaje reabre la conversación
+    if was_archived:
+        await db.execute(
+            update(ConversationParticipant)
+            .where(
+                and_(
+                    ConversationParticipant.conversation_id == conv_id,
+                    ConversationParticipant.user_id.in_(was_archived),
+                )
+            )
+            .values(is_archived=False)
+        )
+        await db.commit()
 
     recipient_msg = msg_out.model_copy(update={"is_mine": False})
     event = {
@@ -355,7 +395,7 @@ async def _notify_recipients(
         "message": recipient_msg.model_dump(mode="json"),
     }
 
-    for user in recipients.scalars().all():
+    for user, _cp in rows:
         _push_to_user(user.id, event)
         if user.email_notifications and not _is_online(user.last_seen_at):
             asyncio.create_task(
@@ -534,6 +574,22 @@ async def archive_conversation(
         .values(is_archived=archived)
     )
     await db.commit()
+
+
+async def delete_conversation(db: AsyncSession, conv_id: int, user_id: int) -> None:
+    await _get_participant_or_403(db, conv_id, user_id)
+    await db.execute(
+        update(ConversationParticipant)
+        .where(
+            and_(
+                ConversationParticipant.conversation_id == conv_id,
+                ConversationParticipant.user_id == user_id,
+            )
+        )
+        .values(is_archived=True)
+    )
+    await db.commit()
+    _push_to_user(user_id, {"type": "conversation_deleted", "conv_id": conv_id})
 
 
 async def mark_offline(db: AsyncSession, user_id: int) -> None:

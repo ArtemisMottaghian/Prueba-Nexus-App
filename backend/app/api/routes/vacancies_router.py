@@ -329,3 +329,52 @@ async def delete_vacancy_note(
     if not deleted:
         raise HTTPException(status_code=404, detail="Nota no encontrada")
     return {"message": "Nota eliminada correctamente"}
+
+
+# -----------------------------------------------------------
+# ACTUALIZAR APLICACIÓN DE CANDIDATO (fase, resultado, nota)
+# PATCH /api/vacancies/{vacancy_id}/applications/{application_id}
+# -----------------------------------------------------------
+@router.patch("/{vacancy_id}/applications/{application_id}", response_model=MessageResponse)
+async def update_application(
+    vacancy_id: int,
+    application_id: int,
+    body: dict,
+    db: AsyncSession = Depends(get_db)
+):
+    updated = await vacancies_service.update_application_by_id(
+        db,
+        vacancy_id=vacancy_id,
+        application_id=application_id,
+        phase=body.get("phase", "Enviado CV"),
+        result=body.get("result", "Pendiente"),
+        note=body.get("note", ""),
+    )
+    if not updated:
+        raise HTTPException(status_code=404, detail="Aplicación no encontrada")
+    return {"message": "Aplicación actualizada correctamente"}
+
+
+# -----------------------------------------------------------
+# ELIMINAR APLICACIÓN DE CANDIDATO A VACANTE
+# DELETE /api/vacancies/{vacancy_id}/applications/{application_id}
+# -----------------------------------------------------------
+@router.delete("/{vacancy_id}/applications/{application_id}", response_model=MessageResponse)
+async def delete_application(
+    vacancy_id: int,
+    application_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    from sqlalchemy import select
+    result = await db.execute(
+        select(JobApplication).where(
+            JobApplication.id == application_id,
+            JobApplication.offer_id == vacancy_id
+        )
+    )
+    app = result.scalar_one_or_none()
+    if not app:
+        raise HTTPException(status_code=404, detail="Aplicación no encontrada")
+    await db.delete(app)
+    await db.commit()
+    return {"message": "Candidato eliminado del seguimiento correctamente"}

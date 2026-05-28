@@ -1,5 +1,4 @@
 import { ENDPOINTS, authFetch } from './api';
-import clientesDummy from '../data/clientesData.json';
 
 const ESTADOS_CUENTA_VALIDOS = [
   'lead',
@@ -80,7 +79,6 @@ const mapToBackend = (client) => ({
   account_owner: client.responsable,
 });
 
-const getClientesDummy = () => clientesDummy.map(mapToFrontend);
 export const getClientes = async (entityType = 'confirmed_client') => {
   try {
     const separator = ENDPOINTS.companies.list.includes('?') ? '&' : '?';
@@ -96,18 +94,8 @@ export const getClientes = async (entityType = 'confirmed_client') => {
     const data = await response.json();
     return data.map(mapToFrontend);
   } catch (error) {
-    console.warn(
-      'Backend offline o fallando, usando datos de prueba...',
-      error
-    );
-
-    const dummyData = getClientesDummy();
-    if (entityType) {
-      return dummyData
-        .filter((c) => c.entity_type === entityType)
-        .map(mapToFrontend);
-    }
-    return dummyData;
+    console.error('Error al obtener clientes:', error);
+    throw error;
   }
 };
 
@@ -118,9 +106,8 @@ export const getClienteById = async (id) => {
     const data = await response.json();
     return mapToFrontend(data);
   } catch (error) {
-    console.warn('Backend offline, buscando cliente en dummy...', error);
-    const encontrado = clientesDummy.find((c) => String(c.id) === String(id));
-    return encontrado ? mapToFrontend(encontrado) : null;
+    console.error('Error al obtener cliente:', error);
+    throw error;
   }
 };
 
@@ -134,11 +121,8 @@ export const getClienteByNombre = async (nombre) => {
       null
     );
   } catch (error) {
-    console.warn('Fallback a dummy en getClienteByNombre', error);
-    const encontrado = clientesDummy.find(
-      (c) => String(c.nombre).toLowerCase().trim() === target
-    );
-    return encontrado ? mapToFrontend(encontrado) : null;
+    console.error('Error al buscar cliente por nombre:', error);
+    throw error;
   }
 };
 

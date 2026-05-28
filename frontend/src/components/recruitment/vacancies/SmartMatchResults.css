@@ -46,7 +46,9 @@
   color: #7c3aed;
 }
 
-.header-title i { font-size: 1.3rem; }
+.header-title i {
+  font-size: 1.3rem;
+}
 
 .header-title h3 {
   margin: 0;
@@ -64,7 +66,9 @@
   transition: color 0.2s;
 }
 
-.btn-close-custom:hover { color: #ef4444; }
+.btn-close-custom:hover {
+  color: #ef4444;
+}
 
 /* --- 3. CUERPO Y TARJETAS --- */
 .smart-match-body {
@@ -79,14 +83,17 @@
 }
 
 .match-candidate-card {
-  background: var(--bs-tertiary-bg, rgba(0,0,0,0.03));
+  background: var(--bs-tertiary-bg, rgba(0, 0, 0, 0.03));
   border: 1px solid var(--bs-border-color);
   border-radius: 12px;
   padding: 1.25rem;
   margin-bottom: 1.25rem;
   display: flex;
   flex-direction: column;
-  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .match-candidate-card:hover {
@@ -170,7 +177,11 @@
 
 /* --- 6. EXPLICACIÓN IA --- */
 .ai-explanation-card {
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(216, 180, 254, 0.03));
+  background: linear-gradient(
+    135deg,
+    rgba(124, 58, 237, 0.08),
+    rgba(216, 180, 254, 0.03)
+  );
   border: 1px solid rgba(139, 92, 246, 0.2);
   border-radius: 10px;
   padding: 1rem;
@@ -251,7 +262,7 @@
 .empty-match-container {
   display: flex;
   flex-direction: column;
-  align-items: center;    
+  align-items: center;
   justify-content: center;
   text-align: center;
   padding: 3rem 1rem;
@@ -261,7 +272,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 4rem;        
+  font-size: 4rem;
   color: rgba(124, 58, 237, 0.4);
   margin-bottom: 1.5rem;
   width: 100%;
@@ -282,7 +293,7 @@
   margin: 0 auto 2rem;
   line-height: 1.6;
   animation: fadeInUp 0.6s ease-out forwards;
-  animation-delay: 0.1s; 
+  animation-delay: 0.1s;
 }
 
 .btn-simple-nexus {
@@ -308,20 +319,38 @@
 
 /* --- 9. KEYFRAMES (ANIMACIONES) --- */
 @keyframes modalEmerger {
-  from { opacity: 0; transform: scale(0.95) translateY(10px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 @keyframes pulse-glow {
-  0% { text-shadow: 0 0 5px rgba(139, 92, 246, 0.2); }
-  50% { text-shadow: 0 0 15px rgba(139, 92, 246, 0.8); }
-  100% { text-shadow: 0 0 5px rgba(139, 92, 246, 0.2); }
+  0% {
+    text-shadow: 0 0 5px rgba(139, 92, 246, 0.2);
+  }
+  50% {
+    text-shadow: 0 0 15px rgba(139, 92, 246, 0.8);
+  }
+  100% {
+    text-shadow: 0 0 5px rgba(139, 92, 246, 0.2);
+  }
 }
 
 @keyframes floatingRobot {
-  0%   { transform: translateY(0px); }
-  50%  { transform: translateY(-15px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 @keyframes fadeInUp {

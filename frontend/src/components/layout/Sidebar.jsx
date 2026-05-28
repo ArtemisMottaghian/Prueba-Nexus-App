@@ -1,12 +1,36 @@
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import isotipoNexus from '../../assets/isotipo-nexus.svg';
 import './Sidebar.css';
-import { markOffline } from '../../services/chatService';
+import { markOffline, getTotalUnread } from '../../services/chatService';
 
 export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
   const { logout, hasRole, hasAnyRole } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    // Carga inicial y polling de respaldo (cuando InboxPage no está montado,
+    // ej: el usuario está en otra página).
+    getTotalUnread()
+      .then(setUnreadCount)
+      .catch(() => {});
+    const interval = setInterval(() => {
+      getTotalUnread()
+        .then(setUnreadCount)
+        .catch(() => {});
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    // InboxPage emite este evento cada vez que cambia su estado de conversaciones.
+    // Actualiza el badge inmediatamente sin esperar al polling de 30s.
+    const handler = (e) => setUnreadCount(e.detail.total);
+    window.addEventListener('chat:unread', handler);
+    return () => window.removeEventListener('chat:unread', handler);
+  }, []);
 
   const handleLogout = async () => {
     await markOffline();
@@ -82,6 +106,11 @@ export default function Sidebar({ isOpen, onClose }) {
                 <NavLink to="/inbox" className="sidebar-item" onClick={onClose}>
                   <i className="bi bi-envelope"></i>
                   <span className="sidebar-text">Inbox</span>
+                  {unreadCount > 0 && (
+                    <span className="sidebar-unread-badge">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
                 </NavLink>
                 <NavLink
                   to="/calendar"

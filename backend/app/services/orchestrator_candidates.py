@@ -1,5 +1,9 @@
+import os
 import asyncio
 from typing import Any
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
 
 from app.core.scraper_candidates_linkedin_config import (
     SECTORS,
@@ -7,7 +11,7 @@ from app.core.scraper_candidates_linkedin_config import (
     HEADLESS_MODE,
 )
 from app.services.scrapers.scraper_candidates_github.runner import extract_github
-from app.services.scrapers.scraper_candidates_pdf_google.runner import extract_pdfs
+from app.services.scrapers.scraper_candidates_pdf_google.runner import extract_pdf
 from app.services.scrapers.scraper_candidates_linkedin.runner import extract_linked
 from sqlalchemy.dialects.postgresql import insert
 
@@ -19,8 +23,6 @@ from app.services.scrapers.scraper_candidates_github.utils import upsert_scraped
 from datetime import datetime, timezone
 from sqlalchemy import select
 from app.models.candidate_portal_model import CandidatePortal
-
-
 
 
 async def update_candidate_portal_last_run(name: str, status: str = "ok") -> None:
@@ -46,19 +48,18 @@ async def gather_raw_candidates() -> list[dict]:
     raw_candidates = []
 
     # Lista de scrapers a ejecutar
-    # NOTA: Usamos lambda para pre-cargar los argumentos de LinkedIn
     scrapers = [
-        # (
-        #    "linkedin",
+        #    (
+        #     "linkedin",
         #     lambda: extract_linked(
-        #         #keywords=KEYWORDS,
+        #        keywords=KEYWORDS,
         #        sectors=SECTORS,
         #       locations=LOCATIONS,
         #      headless=HEADLESS_MODE,
         #    ),
         #),
         ("github", extract_github),
-        ("google_pdfs", extract_pdfs),
+        ("google_pdf", extract_pdf),
     ]
 
     for name, scraper_func in scrapers:
@@ -81,38 +82,23 @@ async def gather_raw_candidates() -> list[dict]:
 def validate_candidates(raw_candidates: list[dict[str, Any]]) -> list[CandidateCreate]:
     """
     Valida los candidatos crudos contra el esquema estricto de Pydantic.
-
-    Args:
-        raw_candidates (list[dict[str, Any]]): Lista de candidatos crudos extraídos.
-
-    Returns:
-        list[CandidateCreate]: Lista de candidatos validados como objetos Pydantic.
     """
-
     valid_candidates = []
 
     for raw in raw_candidates:
         try:
             validated_candidates = CandidateCreate(**raw)
             valid_candidates.append(validated_candidates)
-
         except Exception as e:
             continue
 
-    print(f"Total de {len(valid_candidates)} ofertas validadas.")
+    print(f"Total de {len(valid_candidates)} candidatos validados.")
 
     return valid_candidates
 
 async def save_candidates_to_db(valid_candidates: list[CandidateCreate] ) -> None:
     """
     Guarda los candidatos validados en la base de datos.
-    Si el candidato ya existe (mismo email), simplemente lo ignora.
-
-    Args:
-        valid_candidates (list[CandidateCreate]): Lista de candidatos validados.
-
-    Returns:
-        None
     """
     cambios_count = 0
     
@@ -120,10 +106,7 @@ async def save_candidates_to_db(valid_candidates: list[CandidateCreate] ) -> Non
         print("\nNo hay candidatos válidos para guardar en la base de datos.")
         return
 
-    new_count = 0
-
     async with AsyncSessionLocal() as session:
-        
         for candidate in valid_candidates:
             data = candidate.model_dump()
 
@@ -140,14 +123,9 @@ async def save_candidates_to_db(valid_candidates: list[CandidateCreate] ) -> Non
                     
     print(f"\n Operación finalizada: {cambios_count} candidatos nuevos o actualizados en DB.")
 
+
 async def run_candidate_scrapers():
-    """
-        Orquestador principal. Coordina la extracción, validación y persistencia.
-
-        Returns:
-            None
-        """
-
+    """Orquestador principal."""
     raw_candidates = await gather_raw_candidates()
     if not raw_candidates:
         return

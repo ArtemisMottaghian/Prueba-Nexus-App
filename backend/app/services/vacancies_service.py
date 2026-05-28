@@ -3,7 +3,6 @@ from fastapi import HTTPException
 from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
 import json
 
 from app.models.user_model import User, UserRole
@@ -16,6 +15,7 @@ from app.models.leadStatus_model import LeadStatus
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy import delete
 from app.models.assignments_model import VacancyAssignment
+from sqlalchemy.orm import joinedload, selectinload
 
 from datetime import datetime, timezone
 from app.db.session import AsyncSessionLocal
@@ -31,7 +31,7 @@ async def get_vacancies_list(db: AsyncSession, status: Optional[str] = None) -> 
     """Obtiene todas las vacantes filtradas opcionalmente por estado."""
 
     try:
-        query = select(JobOffer)
+        query = select(JobOffer).options(selectinload(JobOffer.company))
         # Filtro si nos pasan un estado
         if status:
             query = query.where(JobOffer.status == status)
@@ -60,7 +60,6 @@ async def get_vacancy_by_id(db: AsyncSession, vacancy_id: int) -> Optional[JobOf
 async def get_vacancy_detail(db: AsyncSession, vacancy_id: int) -> Optional[JobOffer]:
     """Obtiene una vacante por su ID con la relación company cargada."""
     try:
-        from sqlalchemy.orm import selectinload
         query = (
             select(JobOffer)
             .options(selectinload(JobOffer.company))
@@ -81,7 +80,7 @@ async def get_vacancies_filtered(
 ) -> List[JobOffer]:
     """Obtiene vacantes filtradas por estado, sector y ubicación."""
     try:
-        query = select(JobOffer)
+        query = select(JobOffer).options(selectinload(JobOffer.company))
         if status:
             query = query.where(JobOffer.status == status)
         if sector:
@@ -336,9 +335,14 @@ async def get_suitable_candidates(db: AsyncSession, vacancy_id: int) -> list[dic
     apps_result = await db.execute(
         select(JobApplication).where(JobApplication.offer_id == vacancy_id)
     )
+    apps_list = apps_result.scalars().all()
     apps_by_candidate = {
         app.candidate_id: app.status.value
-        for app in apps_result.scalars().all()
+        for app in apps_list
+    }
+    apps_id_by_candidate = {
+        app.candidate_id: app.id
+        for app in apps_list
     }
 
     # Calcular score y construir respuesta
@@ -367,6 +371,7 @@ async def get_suitable_candidates(db: AsyncSession, vacancy_id: int) -> list[dic
             "verified": bool(c.verified),
             "match_score": score,
             "application_status": apps_by_candidate.get(c.id),
+            "application_id": apps_id_by_candidate.get(c.id),
         })
     
     output.sort(key=lambda x: (x["match_score"], x["id"]), reverse=True)
@@ -410,16 +415,21 @@ async def get_candidate_tracking(db: AsyncSession, vacancy_id: int) -> list[dict
     for app in applications:
         c = candidates_dict.get(app.candidate_id)
         if not c:
-            continue  
-        
+            continue
+
         notas_array = []
         if app.feedback:
             try:
-                notas_array = json.loads(app.feedback)
-                if not isinstance(notas_array, list):
-                    notas_array = [str(notas_array)]
+                parsed = json.loads(app.feedback)
+                if isinstance(parsed, list):
+                    # Filtramos solo los elementos que sean dicts válidos
+                    notas_array = [n for n in parsed if isinstance(n, dict)]
+                elif isinstance(parsed, dict):
+                    notas_array = [parsed]
+                # Si es string u otro tipo, lo ignoramos
             except json.JSONDecodeError:
-                notas_array = [app.feedback]
+                # Feedback corrupto o texto plano — ignoramos
+                notas_array = []
 
         output.append({
             "id": app.id, 
@@ -503,33 +513,54 @@ async def update_candidate_tracking(
     vacancy_id: int, 
     data: CandidateTrackingCreate,
 ) -> bool:
-    
+    from app.services.candidates_service import search_candidates_by_name
+    from app.models.aplication_model import ApplicationStatus
+
+    # 1. Buscar aplicación existente por nombre
     apps_result = await db.execute(
         select(JobApplication).where(JobApplication.offer_id == vacancy_id)
     )
     applications = apps_result.scalars().all()
 
-    if not applications:
-        return False
-
     app_to_update = None
-    
     for app in applications:
         cand_result = await db.execute(
             select(Candidate).where(Candidate.id == app.candidate_id)
         )
         candidate = cand_result.scalar_one_or_none()
-        
         if candidate:
             full_name = f"{candidate.first_name} {candidate.last_name}".strip()
-            if full_name.lower() == data.name.lower(): 
+            if full_name.lower() == data.name.lower():
                 app_to_update = app
                 break
-                
-    if not app_to_update:
-        return False
 
-    app_to_update.status = data.phase
+    # 2. Si no existe, buscar candidato por nombre y crear JobApplication
+    if not app_to_update:
+        candidates = await search_candidates_by_name(db, data.name)
+        if not candidates:
+            return False
+        candidate = candidates[0]
+        app_to_update = JobApplication(
+            candidate_id=candidate.id,
+            offer_id=vacancy_id,
+            status=ApplicationStatus.proposed
+        )
+        db.add(app_to_update)
+        await db.flush()
+
+    # 3. Actualizar fase y notas
+    PHASE_MAP = {
+        "enviado cv": ApplicationStatus.proposed,
+        "entrevista telefónica": ApplicationStatus.interviewing,
+        "primera entrevista": ApplicationStatus.interviewing,
+        "segunda entrevista": ApplicationStatus.interviewing,
+        "prueba técnica": ApplicationStatus.interviewing,
+        "entrevista final": ApplicationStatus.interviewing,
+        "oferta enviada": ApplicationStatus.offer_sent,
+        "contratado": ApplicationStatus.hired,
+    }
+    mapped_status = PHASE_MAP.get(data.phase.lower(), ApplicationStatus.proposed)
+    app_to_update.status = mapped_status
 
     notas_existentes = []
     if app_to_update.feedback:
@@ -537,18 +568,16 @@ async def update_candidate_tracking(
             notas_existentes = json.loads(app_to_update.feedback)
             if not isinstance(notas_existentes, list):
                 notas_existentes = [str(notas_existentes)]
-
         except json.JSONDecodeError:
             notas_existentes = [app_to_update.feedback]
 
     if data.notes:
         notas_existentes.extend(data.notes)
-    
+
     app_to_update.feedback = json.dumps(notas_existentes, ensure_ascii=False)
-    
+
     db.add(app_to_update)
     await db.commit()
-    
     return True
 
 async def update_vacancy_note(db: AsyncSession, note_id: int, note_data) -> bool:
@@ -562,7 +591,6 @@ async def update_vacancy_note(db: AsyncSession, note_id: int, note_data) -> bool
     await db.commit()
     return True
 
-
 async def delete_vacancy_note(db: AsyncSession, note_id: int) -> bool:
     result = await db.execute(
         select(TrackingHistory).where(TrackingHistory.id == note_id)
@@ -571,5 +599,62 @@ async def delete_vacancy_note(db: AsyncSession, note_id: int) -> bool:
     if not note:
         return False
     await db.delete(note)
+    await db.commit()
+    return True
+
+async def update_application_by_id(
+    db: AsyncSession,
+    vacancy_id: int,
+    application_id: int,
+    phase: str,
+    result: str,
+    note: str = None,
+) -> bool:
+    from app.models.aplication_model import ApplicationStatus
+    from datetime import datetime, timezone
+
+    result_app = await db.execute(
+        select(JobApplication).where(
+            JobApplication.id == application_id,
+            JobApplication.offer_id == vacancy_id
+        )
+    )
+    app = result_app.scalar_one_or_none()
+    if not app:
+        return False
+
+    PHASE_MAP = {
+        "enviado cv": ApplicationStatus.proposed,
+        "entrevista telefónica": ApplicationStatus.interviewing,
+        "primera entrevista": ApplicationStatus.interviewing,
+        "segunda entrevista": ApplicationStatus.interviewing,
+        "prueba técnica": ApplicationStatus.interviewing,
+        "entrevista final": ApplicationStatus.interviewing,
+        "oferta enviada": ApplicationStatus.offer_sent,
+        "contratado": ApplicationStatus.hired,
+    }
+    app.status = PHASE_MAP.get(phase.lower(), ApplicationStatus.proposed)
+
+    # Cargar historial existente
+    historial = []
+    if app.feedback:
+        try:
+            historial = json.loads(app.feedback)
+            if not isinstance(historial, list):
+                historial = [{"nota": str(historial), "fase": phase, "fecha": ""}]
+        except json.JSONDecodeError:
+            historial = [{"nota": app.feedback, "fase": phase, "fecha": ""}]
+
+    # Añadir nueva entrada
+    nueva_entrada = {
+        "fase": phase,
+        "resultado": result,
+        "nota": note or "",
+        "fecha": datetime.now(timezone.utc).strftime("%d/%m/%Y"),
+    }
+    historial.append(nueva_entrada)
+    app.feedback = json.dumps(historial, ensure_ascii=False)
+
+    db.add(app)
     await db.commit()
     return True

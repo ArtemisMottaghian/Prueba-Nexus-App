@@ -48,6 +48,25 @@
   background: linear-gradient(to bottom, var(--clr-surface), transparent);
 }
 
+.inbox-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.inbox-unread-chip {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--clr-purple-light);
+  background: rgba(124, 58, 237, 0.15);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: 12px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
 .inbox-header-actions {
   display: flex;
   align-items: center;
@@ -80,6 +99,46 @@
   border-color: var(--clr-purple);
 }
 
+/* Botón de toggle archivados — misma familia que new-chat-btn */
+.archive-toggle-btn {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--clr-border);
+  background: var(--clr-surface-2);
+  color: var(--clr-text-muted);
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+}
+
+.archive-toggle-btn:hover {
+  background: rgba(124, 58, 237, 0.12);
+  border-color: var(--clr-purple);
+  color: var(--clr-purple-light);
+}
+
+.archive-toggle-btn:focus-visible {
+  outline: 2px solid var(--clr-purple);
+  outline-offset: 2px;
+}
+
+/* Estado activo: vista de archivados seleccionada */
+.archive-toggle-btn--active {
+  background: rgba(124, 58, 237, 0.15);
+  border-color: rgba(124, 58, 237, 0.5);
+  color: var(--clr-purple-light);
+}
+
+.archive-toggle-btn--active:hover {
+  background: rgba(124, 58, 237, 0.28);
+  border-color: var(--clr-purple);
+}
+
 .user-picker {
   position: absolute;
   top: calc(100% + 8px);
@@ -91,6 +150,11 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   z-index: 100;
   overflow: hidden;
+}
+
+.user-picker-list {
+  max-height: 260px;
+  overflow-y: auto;
 }
 
 .user-picker-title {
@@ -439,6 +503,18 @@
     font-size: 0.6875rem;
   }
 
+  .inbox-unread-chip {
+    font-size: 0.625rem;
+    padding: 1px 6px;
+  }
+
+  .archive-toggle-btn,
+  .new-chat-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+  }
+
   .conversation-item {
     padding: 0.6rem 0.7rem;
     gap: 0.6rem;
@@ -669,13 +745,27 @@
   animation: typing-bounce 1.2s infinite ease-in-out;
 }
 
-.typing-dots span:nth-child(1) { animation-delay: 0s; }
-.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+.typing-dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+.typing-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.typing-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
 
 @keyframes typing-bounce {
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-  30%            { transform: translateY(-4px); opacity: 1; }
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
 }
 
 /* Unread badge */
@@ -740,6 +830,27 @@
   background: rgba(124, 58, 237, 0.1);
   border-color: var(--clr-purple);
   color: var(--clr-purple-light);
+}
+
+.chat-header__delete {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--clr-border);
+  border-radius: 10px;
+  background: var(--clr-surface);
+  color: var(--clr-text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.chat-header__delete:hover {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: #dc2626;
+  color: #dc2626;
 }
 
 /* Botones de acción del mensaje */
