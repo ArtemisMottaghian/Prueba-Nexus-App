@@ -990,3 +990,73 @@
 .seguimiento-card:hover .seguimiento-card-header .btn-icon {
   opacity: 1;
 }
+.cand-edit-panel {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+.cand-edit-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+.cand-edit-select {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.cand-edit-textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  resize: vertical;
+  min-height: 60px;
+}
+.cand-edit-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.btn-guardar-edit {
+  background: #7c3aed;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.btn-guardar-edit:hover {
+  background: #6d28d9;
+}
+.cand-historial {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-left: 2px solid #7c3aed;
+  padding-left: 10px;
+}
+.cand-historial-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  color: #6b7280;
+}
+.cand-historial-fase {
+  font-weight: 600;
+  color: #374151;
+}
+.cand-historial-fecha {
+  color: #9ca3af;
+}
+.cand-historial-nota {
+  font-style: italic;
+}

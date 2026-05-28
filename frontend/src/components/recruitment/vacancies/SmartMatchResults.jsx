@@ -2,7 +2,12 @@ import { useState } from 'react';
 import { ENDPOINTS, authFetch } from '../../../services/api';
 import './SmartMatchResults.css';
 
-export default function SmartMatchResults({ job, candidates, onClose }) {
+export default function SmartMatchResults({
+  job,
+  candidates,
+  onClose,
+  onCandidatoAdded,
+}) {
   const [addedCandidates, setAddedCandidates] = useState({});
 
   const handleAddToTracking = async (candidate) => {
@@ -13,6 +18,7 @@ export default function SmartMatchResults({ job, candidates, onClose }) {
         body: JSON.stringify({ candidate_id: candidate.id }),
       });
       setAddedCandidates((prev) => ({ ...prev, [candidate.id]: true }));
+      if (onCandidatoAdded) onCandidatoAdded();
     } catch (err) {
       console.error('Error añadiendo candidato al seguimiento:', err);
     }

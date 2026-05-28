@@ -161,6 +161,15 @@ async def archive_conversation(
     await chat_service.archive_conversation(db, conv_id, current_user.id, body.archived)
 
 
+@router.delete("/{conv_id}", status_code=204)
+async def delete_conversation(
+    conv_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_db),
+):
+    await chat_service.delete_conversation(db, conv_id, current_user.id)
+
+
 @router.delete("/{conv_id}/messages/{message_id}", status_code=204)
 async def delete_message(
     conv_id: int,

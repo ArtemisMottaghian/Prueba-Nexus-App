@@ -196,6 +196,13 @@ export async function archiveConversation(convId, archived) {
   if (!res.ok) throw new Error('Error al archivar conversación');
 }
 
+export async function deleteConversation(convId) {
+  const res = await authFetch(ENDPOINTS.chat.delete(convId), {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Error al eliminar conversación');
+}
+
 export async function deleteMessage(convId, messageId) {
   const res = await authFetch(ENDPOINTS.chat.deleteMessage(convId, messageId), {
     method: 'DELETE',
