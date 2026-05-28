@@ -8,7 +8,7 @@ import random
 import urllib.parse
 import re
 import traceback
-from backend.app.db.session import AsyncSessionLocal
+from app.db.session import AsyncSessionLocal
 from bs4 import BeautifulSoup
 from sqlalchemy import text
 warnings.filterwarnings("ignore", category=FutureWarning)
