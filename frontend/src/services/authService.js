@@ -67,6 +67,10 @@ export const loginWithGoogle = () => {
   window.location.href = `${API_URL}/api/login/google/login`;
 };
 
+export const loginWithGoogleCalendar = () => {
+  window.location.href = `${API_URL}/api/emails/google/calendar/login`;
+};
+
 /**
  * Decodifica el JWT para obtener los datos del usuario
  * @param {string} token
