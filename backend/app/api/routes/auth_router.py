@@ -1,6 +1,7 @@
 import asyncio
-import smtplib
 from email.message import EmailMessage
+
+from app.services.email_service import _smtp_send_message
 
 from fastapi import APIRouter,Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
@@ -147,13 +148,7 @@ async def _send_reset_email(to_email: str, token: str):
     </div>
     """, subtype="html")
 
-    def _smtp_send():
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
-            server.starttls()
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            server.send_message(msg)
-
-    await asyncio.to_thread(_smtp_send)
+    await asyncio.to_thread(_smtp_send_message, msg)
 
 
 async def _send_reset_email_silent(to_email: str, token: str):

@@ -13,6 +13,25 @@ from googleapiclient.discovery import build
 from app.models.email_template_model import EmailTemplate, EmailTemplateSlug
 from app.models.user_model import User
 
+_SMTP_TIMEOUT = 30  # segundos
+
+
+def _smtp_send_message(msg: EmailMessage) -> None:
+    """Envía un EmailMessage usando SSL (465) o STARTTLS (cualquier otro puerto).
+    Bloquea el hilo — llamar siempre desde asyncio.to_thread.
+    """
+    from app.core.config import settings
+
+    if settings.SMTP_PORT == 465:
+        with smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT, timeout=_SMTP_TIMEOUT) as server:
+            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            server.send_message(msg)
+    else:
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=_SMTP_TIMEOUT) as server:
+            server.starttls()
+            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            server.send_message(msg)
+
 
 async def send_company_vacancy_email(
     db: AsyncSession, user: User, company_email: str, company_name: str, job_title: str
@@ -55,7 +74,6 @@ async def send_company_vacancy_email(
     mode = os.getenv("EMAIL_MODE", "mock").lower()
 
     if mode == "real":
-
         if not user.google_refresh_token:
             print(
                 f"[ERROR] El usuario {user.email} no tiene cuenta de Gmail vinculada."
@@ -109,7 +127,9 @@ async def send_chat_notification_email(
     mode = os.getenv("EMAIL_MODE", "mock").lower()
 
     if mode != "real":
-        print(f"[CHAT EMAIL MOCK] → {recipient_email} | De: {sender_name} | '{preview[:60]}'")
+        print(
+            f"[CHAT EMAIL MOCK] → {recipient_email} | De: {sender_name} | '{preview[:60]}'"
+        )
         return
 
     if not all([settings.SMTP_HOST, settings.SMTP_USER, settings.SMTP_PASSWORD]):
@@ -120,7 +140,7 @@ async def send_chat_notification_email(
       <h2 style="color:#7c3aed">Nuevo mensaje en Nexus</h2>
       <p>Tienes un mensaje nuevo de <strong>{sender_name}</strong>:</p>
       <blockquote style="border-left:3px solid #7c3aed;padding:8px 16px;color:#555">
-        {preview}{'…' if len(preview) >= 100 else ''}
+        {preview}{"…" if len(preview) >= 100 else ""}
       </blockquote>
       <a href="{settings.FRONTEND_URL}/inbox"
          style="display:inline-block;margin-top:16px;padding:10px 24px;
@@ -137,10 +157,7 @@ async def send_chat_notification_email(
         msg["To"] = recipient_email
         msg.set_content("Tienes un nuevo mensaje en Nexus.")
         msg.add_alternative(body_html, subtype="html")
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
-            server.starttls()
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            server.send_message(msg)
+        _smtp_send_message(msg)
 
     try:
         await asyncio.to_thread(_send_sync)
