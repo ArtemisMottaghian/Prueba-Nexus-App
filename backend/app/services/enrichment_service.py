@@ -151,6 +151,49 @@ async def extract_corporate_email(
 
     return fallback_data
 
+async def save_contact_to_apollo_crm(full_name: str, email: str, title: str, company: str, domain: str = None) -> str | None:
+    """
+    Guarda explícitamente el contacto extraído en tu agenda personal de Apollo.
+    """
+    url = "https://api.apollo.io/v1/contacts"
+    headers = {
+        "Cache-Control": "no-cache",
+        "Content-Type": "application/json",
+        "x-api-key": settings.APOLLO_API_KEY
+    }
+    
+    # Separamos nombre y apellidos para que Apollo los ordene bien
+    parts = full_name.strip().split(" ", 1)
+    first_name = parts[0] if parts else ""
+    last_name = parts[1] if len(parts) > 1 else ""
+
+    payload = {
+        "first_name": first_name,
+        "last_name": last_name,
+        "email": email,
+        "title": title,
+        "organization_name": company,
+        "label_names": ["Nexus App Automático"] 
+    }
+    
+    if domain:
+        payload["website_url"] = domain
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(url, json=payload, headers=headers)
+            if resp.status_code == 200:
+                data = resp.json()
+                contact_id = data.get("contact", {}).get("id")
+                print(f"      [APOLLO CRM] 💾 ¡Contacto guardado en tu cuenta! (ID: {contact_id})")
+                return contact_id
+            else:
+                error_data = await resp.aread()
+                print(f"      [APOLLO CRM ERROR] No se pudo guardar en agenda: {error_data.decode('utf-8')}")
+                return None
+    except Exception as e:
+        print(f"      [APOLLO CRM EXCEPCIÓN] {e}")
+        return None
 
 async def search_and_extract_recruiter(
     company_name: str, domain: Optional[str] = None, known_name: Optional[str] = None
@@ -279,22 +322,26 @@ async def search_and_extract_recruiter(
         )
 
     # Finalmente, disparamos a Apollo con toda la artillería pesada
-    print(
-        f"      [APOLLO] Ejecutando extracción de email corporativo para {full_name}..."
-    )
-    final_data = await extract_corporate_email(
-        full_name, company_name, domain, person_id, fallback_data
-    )
-
+    print(f"      [APOLLO] Ejecutando extracción B2B final para {full_name}...")
+    final_data = await extract_corporate_email(full_name, company_name, domain, person_id, fallback_data)
+    
     if final_data.get("email"):
-        print(
-            f"      ✅ [ÉXITO APOLLO] ¡Email corporativo extraído!: {final_data['email']}"
+        print(f"      ✅ [ÉXITO APOLLO] ¡Email corporativo extraído!: {final_data['email']}")
+        
+        # 🟢 NUEVO: Lo empujamos a tu CRM de Apollo
+        apollo_contact_id = await save_contact_to_apollo_crm(
+            full_name=final_data["nombre"],
+            email=final_data["email"],
+            title=final_data["titulo"],
+            company=company_name,
+            domain=domain
         )
+        # Guardamos este ID por si la función de la secuencia lo necesita luego
+        final_data["apollo_contact_id"] = apollo_contact_id
+        
     else:
-        print(
-            f"      ⚠️ [INFO APOLLO] El perfil existe, pero no tiene correo corporativo asociado en la BBDD."
-        )
-
+        print(f"      ⚠️ [INFO APOLLO] El perfil alternativo existe, pero no tiene correo corporativo asociado.")
+        
     return final_data
 
 
