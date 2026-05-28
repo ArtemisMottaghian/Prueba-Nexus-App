@@ -250,7 +250,7 @@ export default function Calendario() {
 
       const res = await authFetch(deleteUrl, { method: 'DELETE' });
 
-      if (!res.ok) {
+      if (!res.ok && res.status !== 401) {
         throw new Error(
           'El servidor no pudo eliminar el evento en Google Calendar'
         );
