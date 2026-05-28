@@ -20,6 +20,15 @@ class VacancySummary(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    @model_validator(mode="before")
+    @classmethod
+    def resolve_company_name(cls, data):
+        if hasattr(data, 'company_name') and not data.company_name:
+            company = getattr(data, 'company', None)
+            if company:
+                data.company_name = company.name
+        return data
+
     @field_validator('is_favourite', mode='before')
     @classmethod
     def coerce_is_favourite(cls, v):

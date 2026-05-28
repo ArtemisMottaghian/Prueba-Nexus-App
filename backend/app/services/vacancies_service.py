@@ -3,7 +3,6 @@ from fastapi import HTTPException
 from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
 import json
 
 from app.models.user_model import User, UserRole
@@ -16,6 +15,7 @@ from app.models.leadStatus_model import LeadStatus
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy import delete
 from app.models.assignments_model import VacancyAssignment
+from sqlalchemy.orm import joinedload, selectinload
 
 from datetime import datetime, timezone
 from app.db.session import AsyncSessionLocal
@@ -31,7 +31,7 @@ async def get_vacancies_list(db: AsyncSession, status: Optional[str] = None) -> 
     """Obtiene todas las vacantes filtradas opcionalmente por estado."""
 
     try:
-        query = select(JobOffer)
+        query = select(JobOffer).options(selectinload(JobOffer.company))
         # Filtro si nos pasan un estado
         if status:
             query = query.where(JobOffer.status == status)
@@ -60,7 +60,6 @@ async def get_vacancy_by_id(db: AsyncSession, vacancy_id: int) -> Optional[JobOf
 async def get_vacancy_detail(db: AsyncSession, vacancy_id: int) -> Optional[JobOffer]:
     """Obtiene una vacante por su ID con la relación company cargada."""
     try:
-        from sqlalchemy.orm import selectinload
         query = (
             select(JobOffer)
             .options(selectinload(JobOffer.company))
@@ -81,7 +80,7 @@ async def get_vacancies_filtered(
 ) -> List[JobOffer]:
     """Obtiene vacantes filtradas por estado, sector y ubicación."""
     try:
-        query = select(JobOffer)
+        query = select(JobOffer).options(selectinload(JobOffer.company))
         if status:
             query = query.where(JobOffer.status == status)
         if sector:
