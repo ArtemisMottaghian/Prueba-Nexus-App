@@ -317,7 +317,10 @@ export default function Calendario() {
             >
               <i className="bi bi-trash3 me-1"></i> Limpiar Locales
             </button>
-            <button className="btn-primary-custom" onClick={loginWithGoogleCalenda}>
+            <button
+              className="btn-primary-custom"
+              onClick={loginWithGoogleCalendar}
+            >
               <i className="bi bi-globe me-1"></i> Sincronizar con Google
             </button>
           </div>
