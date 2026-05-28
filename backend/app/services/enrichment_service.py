@@ -53,7 +53,6 @@ async def search_brave_for_lastname(first_name: str, company_name: str) -> str:
     url = "https://api.search.brave.com/res/v1/web/search"
     headers = {"Accept": "application/json", "X-Subscription-Token": brave_key}
 
-    # Búsqueda súper dirigida: Nombre + Empresa + "LinkedIn" + España
     query = f'"{first_name}" "{company_name}" "LinkedIn" España'
 
     try:
@@ -67,15 +66,10 @@ async def search_brave_for_lastname(first_name: str, company_name: str) -> str:
 
                 for res in results:
                     title = res.get("title", "")
-                    # Buscamos que sea un resultado real de LinkedIn
                     if "LinkedIn" in title or "linkedin.com" in res.get("url", ""):
-                        # Los títulos de LinkedIn suelen ser: "Nombre Apellido - Cargo - Empresa | LinkedIn"
-                        # Partimos por los separadores comunes para quedarnos solo con el nombre
                         clean_title = (
                             title.split("-")[0].split("|")[0].split("–")[0].strip()
                         )
-
-                        # Verificamos que el nombre original esté dentro y que haya más de una palabra (apellidos)
                         if (
                             first_name.lower() in clean_title.lower()
                             and len(clean_title.split()) > 1
@@ -107,10 +101,8 @@ async def extract_corporate_email(
         "x-api-key": settings.APOLLO_API_KEY,
     }
 
-    # Inyectamos Nombre, Empresa y, si lo tenemos, el ID interno de Apollo.
     payload = {"name": full_name, "organization_name": company_name}
 
-    # Pasar el ID de Apollo aumenta drásticamente la probabilidad de que gasten el crédito y entreguen el correo
     if person_id:
         payload["id"] = person_id
 
@@ -126,7 +118,6 @@ async def extract_corporate_email(
                 person = data.get("person", {})
 
                 if person:
-                    # Inyectamos en nuestro diccionario el correo corporativo (B2B)
                     if person.get("id"):
                         fallback_data["id"] = person.get("id")
                     if person.get("email"):
@@ -139,7 +130,7 @@ async def extract_corporate_email(
                         fallback_data["telefono"] = person.get("sanitized_phone")
 
                     if person.get("name") and len(person.get("name")) > len(
-                        fallback_data["nombre"]
+                        fallback_data.get("nombre", "")
                     ):
                         fallback_data["nombre"] = person.get("name")
             else:
@@ -151,18 +142,19 @@ async def extract_corporate_email(
 
     return fallback_data
 
+
 async def save_contact_to_apollo_crm(full_name: str, email: str, title: str, company: str, domain: str = None) -> str | None:
     """
     Guarda explícitamente el contacto extraído en tu agenda personal de Apollo.
+    Solo necesita la API KEY.
     """
     url = "https://api.apollo.io/v1/contacts"
     headers = {
         "Cache-Control": "no-cache",
         "Content-Type": "application/json",
-        "x-api-key": settings.APOLLO_API_KEY
+        "x-api-key": settings.APOLLO_API_KEY,
     }
     
-    # Separamos nombre y apellidos para que Apollo los ordene bien
     parts = full_name.strip().split(" ", 1)
     first_name = parts[0] if parts else ""
     last_name = parts[1] if len(parts) > 1 else ""
@@ -195,10 +187,15 @@ async def save_contact_to_apollo_crm(full_name: str, email: str, title: str, com
         print(f"      [APOLLO CRM EXCEPCIÓN] {e}")
         return None
 
+
 async def search_and_extract_recruiter(
     company_name: str, domain: Optional[str] = None, known_name: Optional[str] = None
 ) -> dict:
-    """Lógica unificada con OSINT de Brave y extracción B2B de Apollo."""
+    """Lógica unificada con OSINT de Brave, extracción B2B y guardado en CRM."""
+
+    final_result = {}
+    person_id = None
+    full_name = known_name.strip() if known_name else ""
 
     # ==========================================
     # VÍA A: Ya tenemos el nombre completo del Scraper
@@ -211,102 +208,159 @@ async def search_and_extract_recruiter(
             "nombre": known_name.strip(),
             "email": None,
             "linkedin": None,
-            "titulo": None,
+            "titulo": "Recruiter",
             "telefono": None,
         }
-        return await extract_corporate_email(
+        
+        via_a_data = await extract_corporate_email(
             known_name.strip(), company_name, domain, None, fallback_data
         )
+        
+        if via_a_data.get("email"):
+            final_result = via_a_data
+        else:
+            print(f"      ⚠️ [INFO APOLLO] Apollo no tiene el email de {known_name}. Cambiando a VÍA B...")
+            full_name = "" 
 
     # ==========================================
     # VÍA B: Buscar al HR y apoyarnos en Brave si faltan apellidos
     # ==========================================
-    print(f"      [APOLLO] VÍA B: Buscando RRHH en {company_name}...")
+    if not final_result.get("email"):
+        print(f"      [APOLLO] VÍA B: Buscando RRHH en {company_name}...")
 
-    headers = {
-        "Cache-Control": "no-cache",
-        "Content-Type": "application/json",
-        "x-api-key": settings.APOLLO_API_KEY,
-    }
-    search_url = "https://api.apollo.io/v1/mixed_people/api_search"
+        headers = {
+            "Cache-Control": "no-cache",
+            "Content-Type": "application/json",
+            "x-api-key": settings.APOLLO_API_KEY,
+        }
+        search_url = "https://api.apollo.io/v1/mixed_people/api_search"
 
-    hr_titles = [
-        "Recruiter",
-        "HR",
-        "Talent Acquisition",
-        "Human Resources",
-        "Selección",
-        "People",
-        "Recursos Humanos",
-        "Talent",
-        "Headhunter",
-        "Tech Recruiter",
-        "IT Recruiter",
-        "HRBP",
-        "HR Business Partner",
-        "People Operations",
-        "Talent Sourcer",
-        "Director of Talent",
-        "TA Specialist",
-        "Adquisición de Talento",
-        "Digital Recruiter",
-        "HR Operations",
-        "Talent Manager",
-    ]
+        # Tu lista de palabras clave intacta y visible
+        hr_titles = [
+            "Recruiter",
+            "HR",
+            "Talent Acquisition",
+            "Human Resources",
+            "Selección",
+            "People",
+            "Recursos Humanos",
+            "Talent",
+            "Headhunter",
+            "Tech Recruiter",
+            "IT Recruiter",
+            "HRBP",
+            "HR Business Partner",
+            "People Operations",
+            "Talent Sourcer",
+            "Director of Talent",
+            "TA Specialist",
+            "Adquisición de Talento",
+            "Digital Recruiter",
+            "HR Operations",
+            "Talent Manager",
+        ]
 
-    payload = {"person_locations": ["Spain"], "person_titles": hr_titles, "per_page": 1}
+        payload = {"person_locations": ["Spain"], "person_titles": hr_titles, "per_page": 1}
 
-    c_domain = clean_company_domain(domain)
-    if c_domain:
-        payload["q_organization_domains"] = c_domain
-    else:
-        payload["q_organization_name"] = company_name
+        c_domain = clean_company_domain(domain)
+        if c_domain:
+            payload["q_organization_domains"] = c_domain
+        else:
+            payload["q_organization_name"] = company_name
 
-    fallback_data = {}
-    full_name = known_name.strip() if known_name else ""
-    person_id = None
+        fallback_data = {}
+        
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                resp = await client.post(search_url, json=payload, headers=headers)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    people = data.get("people", [])
 
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(search_url, json=payload, headers=headers)
-            if resp.status_code == 200:
-                data = resp.json()
-                people = data.get("people", [])
+                    if people:
+                        p = people[0]
+                        first = p.get("first_name") or ""
+                        last = p.get("last_name") or ""
+                        full_name = p.get("name") or f"{first} {last}".strip()
+                        person_id = p.get("id")
 
-                if people:
-                    p = people[0]
-                    first = p.get("first_name") or ""
-                    last = p.get("last_name") or ""
-                    full_name = p.get("name") or f"{first} {last}".strip()
-                    person_id = p.get("id")
+                        fallback_data = {
+                            "id": person_id,
+                            "nombre": full_name,
+                            "email": p.get("email"),
+                            "linkedin": p.get("linkedin_url"),
+                            "titulo": p.get("title"),
+                            "telefono": None,
+                        }
+                        print(
+                            f"      [DEBUG RAW APOLLO] Cazado en BD: {full_name} | ID: {person_id}"
+                        )
+                    else:
+                        print(
+                            f"      [APOLLO] 0 resultados en Search para perfiles de RRHH en esta empresa."
+                        )
+        except Exception as e:
+            print(f"      [ERROR APOLLO SEARCH] {e}")
 
-                    fallback_data = {
-                        "id": person_id,
-                        "nombre": full_name,
-                        "email": p.get("email"),
-                        "linkedin": p.get("linkedin_url"),
-                        "titulo": p.get("title"),
-                        "telefono": None,
-                    }
-                    print(
-                        f"      [DEBUG RAW APOLLO] Cazado en BD: {full_name} | ID: {person_id}"
-                    )
-                else:
-                    print(
-                        f"      [APOLLO] 0 resultados en Search para perfiles de RRHH en esta empresa."
-                    )
-                    return {}
+        # Comprobamos si Search nos lo dio directo
+        if fallback_data.get("email"):
+            print(
+                f"      ✅ [ÉXITO APOLLO] ¡Email extraído directamente desde Search!: {fallback_data['email']}"
+            )
+            final_result = fallback_data
+            
+        # Si NO hay email, pero sí hay nombre, lanzamos Brave + Match
+        elif fallback_data.get("nombre"):
+            # AQUÍ ESTÁ EL INTERVENTOR OSINT (Brave Search)
+            if len(full_name.split()) == 1:
+                print(
+                    f"      [OSINT] El perfil solo tiene el nombre '{full_name}'. Investigando en Brave..."
+                )
+                full_name = await search_brave_for_lastname(full_name, company_name)
+                fallback_data["nombre"] = full_name 
+
+            print(f"      [APOLLO] Ejecutando extracción B2B final para {full_name}...")
+            final_result = await extract_corporate_email(full_name, company_name, domain, person_id, fallback_data)
+            
+            if final_result.get("email"):
+                print(f"      ✅ [ÉXITO APOLLO] ¡Email corporativo extraído!: {final_result['email']}")
             else:
-                return {}
-    except Exception as e:
-        print(f"      [ERROR APOLLO SEARCH] {e}")
-        return {}
+                print(f"      ⚠️ [INFO APOLLO] El perfil alternativo existe, pero no tiene correo corporativo asociado.")
 
-    if fallback_data.get("email"):
-        print(
-            f"      ✅ [ÉXITO APOLLO] ¡Email extraído directamente desde Search!: {fallback_data['email']}"
+    # ==========================================
+    # 🧪 MODO PRUEBA: INYECCIÓN DE EMAILS ARATECH
+    # ==========================================
+    # Si después de intentar todas las vías (Apollo Search, Brave, Match) no hay email:
+    if not final_result.get("email"):
+        import random
+        correos_prueba = ["ander.vilarino@ara-tech.es", "miguel.herrero@ara-tech.es"]
+        email_elegido = random.choice(correos_prueba)
+        
+        # Nos aseguramos de que haya un nombre para que el CRM no dé error
+        nombre_seguro = final_result.get("nombre") or full_name or known_name or "Reclutador Prueba"
+        
+        print(f"      [MODO PRUEBA] Perfil sin email. Asignando correo de rescate: {email_elegido}")
+        
+        final_result["email"] = email_elegido
+        final_result["nombre"] = nombre_seguro
+        final_result["titulo"] = final_result.get("titulo") or "Tester HR"
+
+    # ==========================================
+    # PASO FINAL: GUARDADO EN CRM (Para la secuencia posterior)
+    # ==========================================
+    if final_result.get("email"):
+        apollo_contact_id = await save_contact_to_apollo_crm(
+            full_name=final_result.get("nombre", ""),
+            email=final_result.get("email"),
+            title=final_result.get("titulo", "Recruiter"),
+            company=company_name,
+            domain=domain
         )
-        return fallback_data
+        final_result["apollo_contact_id"] = apollo_contact_id
+        return final_result
+
+    # Si todo falla, devolvemos al menos el nombre original
+    return {"nombre": known_name}
 
     # ==========================================
     # EL INTERVENTOR OSINT (Brave Search)
