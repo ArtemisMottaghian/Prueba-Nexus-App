@@ -155,7 +155,7 @@ async def process_and_save_offers(valid_offers: list[ScrapedJobOffer]):
                             insert(Company)
                             .values(
                                 name=company_name,
-                                original_offer_id=None,
+                                original_offer_id=None, 
                                 cif=enriched_company_data.get("cif"),
                                 website=company_domain,
                                 sector=enriched_company_data.get("sector"),
@@ -203,7 +203,11 @@ async def process_and_save_offers(valid_offers: list[ScrapedJobOffer]):
                                 recruiter_linkedin = apollo_data.get("linkedin")
                             if apollo_data.get("titulo"):
                                 recruiter_job_title = apollo_data.get("titulo")
-                            if apollo_data.get("id"):
+                                
+                            # Capturamos el ID del CRM
+                            if apollo_data.get("apollo_contact_id"):
+                                apollo_id = apollo_data.get("apollo_contact_id")
+                            elif apollo_data.get("id"):
                                 apollo_id = apollo_data.get("id")
 
                     # ==========================================
@@ -290,6 +294,7 @@ async def process_and_save_offers(valid_offers: list[ScrapedJobOffer]):
                     nuevas_guardadas += 1
                     print(f" -> [ÉXITO] Oferta guardada en PostgreSQL.")
 
+                    # PASO 4: INYECTAR EN LA SECUENCIA AUTOMÁTICA
                     if recruiter_email and apollo_id:
                         await add_contact_to_apollo_sequence(apollo_id)
 
@@ -306,11 +311,12 @@ async def add_contact_to_apollo_sequence(apollo_contact_id: str) -> bool:
     """Añade un contacto a la secuencia de Apollo de forma asíncrona."""
     api_key = os.getenv("APOLLO_API_KEY")
     sequence_id = os.getenv("APOLLO_SEQUENCE_ID")
+    email_account_id = os.getenv("APOLLO_EMAIL_ACCOUNT_ID") 
     test_mode = os.getenv("TEST_MODE", "True") == "True"
 
-    if not api_key or not sequence_id:
+    if not api_key or not sequence_id or not email_account_id:
         print(
-            "      [AVISO] Faltan claves de Apollo (API_KEY o SEQUENCE_ID) en el .env"
+            "      [AVISO] Faltan claves de Apollo (API_KEY, SEQUENCE_ID o EMAIL_ACCOUNT_ID) en el .env"
         )
         return False
 
@@ -322,11 +328,24 @@ async def add_contact_to_apollo_sequence(apollo_contact_id: str) -> bool:
         return True
 
     url = f"https://api.apollo.io/v1/emailer_campaigns/{sequence_id}/add_contact_ids"
-    payload = {"api_key": api_key, "contact_ids": [apollo_contact_id]}
+    
+    # 🔥 CAMBIO 1: La API KEY ahora va obligatoriamente en los HEADERS
+    headers = {
+        "Content-Type": "application/json",
+        "x-api-key": api_key
+    }
+    
+    # 🔥 CAMBIO 2: Limpiamos el payload (ya no lleva la api_key)
+    payload = {
+        "emailer_campaign_id": sequence_id,
+        "contact_ids": [apollo_contact_id],
+        "send_email_from_email_account_id": email_account_id
+    }
 
     async with aiohttp.ClientSession() as session:
         try:
-            async with session.post(url, json=payload) as resp:
+            # 🔥 CAMBIO 3: Le pasamos los headers a la petición
+            async with session.post(url, json=payload, headers=headers) as resp:
                 if resp.status == 200:
                     print(
                         f"      [APOLLO] ✅ Contacto inyectado en secuencia correctamente."

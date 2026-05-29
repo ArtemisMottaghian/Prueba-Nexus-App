@@ -26,6 +26,10 @@ export const loginWithGoogle = () => {
   window.location.href = `${API_URL}/api/login/google/login`;
 };
 
+export const loginWithGoogleCalendar = () => {
+  window.location.href = `${API_URL}/api/emails/google/calendar/login`;
+};
+
 export const logout = async () => {
   try {
     await fetch(ENDPOINTS.auth.logout, {
@@ -39,6 +43,7 @@ export const logout = async () => {
   sessionStorage.removeItem('token');
   window.location.href = '/login';
 };
+
 
 export const decodeToken = (token) => {
   if (!token || typeof token !== 'string') return null;

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { authFetch, ENDPOINTS } from '../../services/api';
-import { loginWithGoogle } from '../../services/authService';
+import { loginWithGoogleCalendar } from '../../services/authService';
 import './CalendarGrid.css';
 
 // Colores unificados con la paleta de la aplicación
@@ -250,7 +250,7 @@ export default function Calendario() {
 
       const res = await authFetch(deleteUrl, { method: 'DELETE' });
 
-      if (!res.ok) {
+      if (!res.ok && res.status !== 401) {
         throw new Error(
           'El servidor no pudo eliminar el evento en Google Calendar'
         );
@@ -317,7 +317,10 @@ export default function Calendario() {
             >
               <i className="bi bi-trash3 me-1"></i> Limpiar Locales
             </button>
-            <button className="btn-primary-custom" onClick={loginWithGoogle}>
+            <button
+              className="btn-primary-custom"
+              onClick={loginWithGoogleCalendar}
+            >
               <i className="bi bi-globe me-1"></i> Sincronizar con Google
             </button>
           </div>
@@ -334,7 +337,7 @@ export default function Calendario() {
               Conecta tu cuenta de Google para ver y gestionar eventos.{' '}
               <button
                 className="btn btn-sm btn-warning"
-                onClick={loginWithGoogle}
+                onClick={loginWithGoogleCalendar}
               >
                 Conectar ahora
               </button>
