@@ -24,7 +24,11 @@ export const AuthProvider = ({ children }) => {
         const response = await authFetch(ENDPOINTS.users.me);
         if (response.ok) {
           const userData = await response.json();
-          setUser({ email: userData.email, role: userData.role, id: userData.id });
+          setUser({
+            email: userData.email,
+            role: userData.role,
+            id: userData.id,
+          });
         } else {
           setUser(null);
         }
@@ -49,13 +53,17 @@ export const AuthProvider = ({ children }) => {
 
       // Obtener datos del usuario desde /me (la cookie ya fue fijada por el login)
       const meResponse = await authFetch(ENDPOINTS.users.me);
-      if (!meResponse.ok) throw new Error('No se pudo obtener información del usuario');
+      if (!meResponse.ok)
+        throw new Error('No se pudo obtener información del usuario');
       const userData = await meResponse.json();
       setUser({ email: userData.email, role: userData.role, id: userData.id });
 
       return { success: true };
     } catch (error) {
-      return { success: false, error: error.message || 'Error al iniciar sesión' };
+      return {
+        success: false,
+        error: error.message || 'Error al iniciar sesión',
+      };
     }
   };
 

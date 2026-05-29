@@ -44,7 +44,6 @@ export const logout = async () => {
   window.location.href = '/login';
 };
 
-
 export const decodeToken = (token) => {
   if (!token || typeof token !== 'string') return null;
   try {
