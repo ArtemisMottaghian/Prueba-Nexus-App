@@ -13,13 +13,12 @@ function resolveApiOrigin() {
 const BASE_URL = resolveApiOrigin();
 
 export function authFetch(url, options = {}) {
-  const token = localStorage.getItem('token');
   return fetch(url, {
     ...options,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...options.headers,
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
 }
@@ -27,6 +26,7 @@ export function authFetch(url, options = {}) {
 export const ENDPOINTS = {
   auth: {
     login: `${BASE_URL}/api/login`,
+    logout: `${BASE_URL}/api/login/logout`,
     googleLogin: `${BASE_URL}/api/login/google/login`,
     googleCallback: `${BASE_URL}/api/login/google/callback`,
     register: `${BASE_URL}/api/auth/register`,

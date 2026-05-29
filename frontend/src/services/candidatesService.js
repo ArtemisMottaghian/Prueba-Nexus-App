@@ -34,15 +34,12 @@ function buildListUrl(query = {}) {
 export const candidatesService = {
   // Subir CV en PDF: el backend extrae los datos con Gemini y crea el candidato
   processCV: async (pdfFile) => {
-    const token = localStorage.getItem('token');
     const formData = new FormData();
     formData.append('pdf_file', pdfFile);
 
     const response = await fetch(ENDPOINTS.recruitment.candidatos.processCV, {
       method: 'POST',
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
+      credentials: 'include',
       body: formData,
     });
 
