@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }) => {
    * rememberMe se mantiene en la firma por compatibilidad con LoginForm;
    * la duración de la sesión la controla el backend via max_age de la cookie.
    */
-  const login = async (email, password, rememberMe = false) => {
+  const login = async (email, password) => {
     try {
       await authService.login(email, password);
 
