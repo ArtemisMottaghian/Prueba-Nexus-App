@@ -72,7 +72,7 @@ async def login_for_access_token(
 
 @router.post("/logout", status_code=204)
 async def logout(response: Response):
-    response.delete_cookie(key="access_token", path="/", samesite="lax")
+    response.delete_cookie(key="access_token", path="/", samesite="lax", secure=_IS_PRODUCTION)
 
 
 @router.get("/google/login")
