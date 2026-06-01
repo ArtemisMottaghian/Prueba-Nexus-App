@@ -109,6 +109,7 @@ export default function VacancyModal({
   // --- ESTADOS BUSCADOR DE CANDIDATOS ---
   const [candidatoSearch, setCandidatoSearch] = useState('');
   const [candidatosSugeridos, setCandidatosSugeridos] = useState([]);
+  const [searchTimeout, setSearchTimeout] = useState(null);
 
   const [localAsignados, setLocalAsignados] = useState(() => {
     const a = job?.assignedTo;
@@ -554,25 +555,43 @@ export default function VacancyModal({
     });
   };
 
-  // --- BUSCADOR LIVE: filtra sobre candidatosList ya cargada ---
+  // --- BUSCADOR LIVE: busca en todos los candidatos del sistema ---
   const handleCandidatoSearchChange = (e) => {
     const query = e.target.value;
     setCandidatoSearch(query);
-    // Limpiar el nombre del form si el usuario borra el campo
+
     if (!query.trim()) {
       setCandForm((f) => ({ ...f, nombre: '' }));
       setCandidatosSugeridos([]);
+      if (searchTimeout) clearTimeout(searchTimeout);
       return;
     }
-    const filtrados = candidatosList.filter((c) =>
-      c.nombre.toLowerCase().includes(query.toLowerCase())
-    );
-    setCandidatosSugeridos(filtrados);
+
+    // Debounce de 300ms para no llamar en cada tecla
+    if (searchTimeout) clearTimeout(searchTimeout);
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await authFetch(
+          ENDPOINTS.recruitment.candidatos.search(query)
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        // El endpoint devuelve array directo o { results: [] }
+        setCandidatosSugeridos(
+          Array.isArray(data) ? data : data.results || []
+        );
+      } catch (err) {
+        console.error('Error buscando candidatos:', err);
+        setCandidatosSugeridos([]);
+      }
+    }, 300);
+    setSearchTimeout(timeout);
   };
 
   const handleSeleccionarCandidato = (c) => {
-    setCandidatoSearch(c.nombre);
-    setCandForm((f) => ({ ...f, nombre: c.nombre }));
+    const nombre = c.name || c.nombre || '';
+    setCandidatoSearch(nombre);
+    setCandForm((f) => ({ ...f, nombre }));
     setCandidatosSugeridos([]);
   };
 
@@ -599,12 +618,7 @@ export default function VacancyModal({
       };
       setCandidatosList((prev) => [nuevo, ...prev]);
       // Reset form y buscador
-      setCandForm({
-        nombre: '',
-        fase: 'Enviado CV',
-        resultado: 'Pendiente',
-        notas: '',
-      });
+      setCandForm({ nombre: '', fase: 'Enviado CV', resultado: 'Pendiente', notas: '' });
       setCandidatoSearch('');
       setCandidatosSugeridos([]);
     } catch (err) {
@@ -1499,6 +1513,7 @@ export default function VacancyModal({
 
                       <div className="cand-tracking-form mb-4">
                         <div className="cand-form-row">
+
                           {/* ---- BUSCADOR LIVE DE CANDIDATOS ---- */}
                           <div
                             className="cand-form-field cand-form-field--wide"
@@ -1532,16 +1547,14 @@ export default function VacancyModal({
                                   <li
                                     key={c.id || c.nombre}
                                     className="cand-search-item"
-                                    onClick={() =>
-                                      handleSeleccionarCandidato(c)
-                                    }
+                                    onClick={() => handleSeleccionarCandidato(c)}
                                   >
                                     <span className="cand-search-name">
                                       {c.nombre}
                                     </span>
-                                    {c.fase && (
+                                    {(c.location || c.email) && (
                                       <span className="cand-search-meta">
-                                        {c.fase}
+                                        {c.location || c.email}
                                       </span>
                                     )}
                                   </li>
