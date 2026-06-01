@@ -577,9 +577,7 @@ export default function VacancyModal({
         if (!res.ok) return;
         const data = await res.json();
         // El endpoint devuelve array directo o { results: [] }
-        setCandidatosSugeridos(
-          Array.isArray(data) ? data : data.results || []
-        );
+        setCandidatosSugeridos(Array.isArray(data) ? data : data.results || []);
       } catch (err) {
         console.error('Error buscando candidatos:', err);
         setCandidatosSugeridos([]);
@@ -618,7 +616,12 @@ export default function VacancyModal({
       };
       setCandidatosList((prev) => [nuevo, ...prev]);
       // Reset form y buscador
-      setCandForm({ nombre: '', fase: 'Enviado CV', resultado: 'Pendiente', notas: '' });
+      setCandForm({
+        nombre: '',
+        fase: 'Enviado CV',
+        resultado: 'Pendiente',
+        notas: '',
+      });
       setCandidatoSearch('');
       setCandidatosSugeridos([]);
     } catch (err) {
@@ -1513,7 +1516,6 @@ export default function VacancyModal({
 
                       <div className="cand-tracking-form mb-4">
                         <div className="cand-form-row">
-
                           {/* ---- BUSCADOR LIVE DE CANDIDATOS ---- */}
                           <div
                             className="cand-form-field cand-form-field--wide"
@@ -1547,7 +1549,9 @@ export default function VacancyModal({
                                   <li
                                     key={c.id || c.nombre}
                                     className="cand-search-item"
-                                    onClick={() => handleSeleccionarCandidato(c)}
+                                    onClick={() =>
+                                      handleSeleccionarCandidato(c)
+                                    }
                                   >
                                     <span className="cand-search-name">
                                       {c.nombre}
