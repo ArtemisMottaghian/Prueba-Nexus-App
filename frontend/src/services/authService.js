@@ -26,8 +26,12 @@ export const loginWithGoogle = () => {
   window.location.href = `${API_URL}/api/login/google/login`;
 };
 
-export const loginWithGoogleCalendar = () => {
-  window.location.href = `${API_URL}/api/emails/google/calendar/login`;
+export const loginWithGoogleCalendar = async () => {
+  const res = await fetch(`${API_URL}/api/emails/google/calendar/login`, {
+    credentials: 'include',
+  });
+  const data = await res.json();
+  window.location.href = data.url;
 };
 
 export const logout = async () => {
