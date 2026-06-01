@@ -184,8 +184,14 @@ async def process_and_save_offers(valid_offers: list[ScrapedJobOffer]):
                     apollo_id = None
 
                     if not recruiter_email and company_name:
+                        # 🔥 MODIFICACIÓN CLAVE: Extraemos el título de la vacante y se lo pasamos a Apollo
+                        titulo_vacante = offer_dict.get("title")
+                        
                         apollo_data = await search_and_extract_recruiter(
-                            company_name, company_domain, recruiter_name
+                            company_name=company_name, 
+                            domain=company_domain, 
+                            known_name=recruiter_name,
+                            offer_title=titulo_vacante # <-- ¡Aquí está la magia!
                         )
 
                         if apollo_data:
