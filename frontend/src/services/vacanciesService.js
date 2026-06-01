@@ -313,10 +313,7 @@ export const vacanciesService = {
 
   assignHr: async (hrId, vacancyIds) => {
     try {
-      const currentToken = localStorage.getItem('token');
-
       const cleanHrId = parseInt(hrId, 10);
-
       const cleanVacancyIds = Array.isArray(vacancyIds)
         ? vacancyIds.map((id) => parseInt(id, 10))
         : [parseInt(vacancyIds, 10)];
@@ -325,10 +322,6 @@ export const vacanciesService = {
         ENDPOINTS.recruitment.vacantes.assignHr,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${currentToken}`,
-          },
           body: JSON.stringify({
             hr_id: cleanHrId,
             vacancy_ids: cleanVacancyIds,
@@ -348,21 +341,13 @@ export const vacanciesService = {
 
   unassignHr: async (hrId, vacancyIds) => {
     try {
-      const currentToken = localStorage.getItem('token');
-
       const idsString = Array.isArray(vacancyIds)
         ? vacancyIds.join(',')
         : vacancyIds;
 
       const url = ENDPOINTS.recruitment.vacantes.unassignHr(hrId, idsString);
 
-      const response = await fetch(url, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${currentToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await authFetch(url, { method: 'DELETE' });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));

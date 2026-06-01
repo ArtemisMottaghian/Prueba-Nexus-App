@@ -500,6 +500,63 @@
   align-items: center;
 }
 
+/* ── Buscador live de candidatos ─────────────────────────── */
+
+.cand-search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: var(--bg-card, var(--bg-primary));
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  margin-top: 4px;
+  padding: 4px 0;
+  list-style: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.cand-search-item {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.cand-search-item:hover {
+  background: var(--bg-hover, rgba(124, 63, 255, 0.07));
+}
+
+.cand-search-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cand-search-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.cand-search-empty {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: var(--bg-card, var(--bg-primary));
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  margin-top: 4px;
+  font-style: italic;
+}
+
 /* ── Tab Contacto ──────────────────────────────────────── */
 
 /* Grid de tarjetas de contacto (varios contactos detectados por IA) */
@@ -937,6 +994,7 @@
   padding: 10px 16px;
   margin-bottom: 16px;
 }
+
 .vacancy-description-block {
   margin-bottom: 1.25rem;
 }
@@ -974,6 +1032,7 @@
 .vacancy-description-list li::marker {
   color: var(--color-purple-secondary, #6b4eff);
 }
+
 .seguimiento-card-header {
   display: flex;
   justify-content: space-between;
@@ -990,6 +1049,7 @@
 .seguimiento-card:hover .seguimiento-card-header .btn-icon {
   opacity: 1;
 }
+
 .cand-edit-panel {
   margin-top: 10px;
   display: flex;
