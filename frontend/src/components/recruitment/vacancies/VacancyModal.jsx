@@ -106,6 +106,10 @@ export default function VacancyModal({
     notas: '',
   });
 
+  // --- ESTADOS BUSCADOR DE CANDIDATOS ---
+  const [candidatoSearch, setCandidatoSearch] = useState('');
+  const [candidatosSugeridos, setCandidatosSugeridos] = useState([]);
+
   const [localAsignados, setLocalAsignados] = useState(() => {
     const a = job?.assignedTo;
     if (!a) return [];
@@ -271,6 +275,7 @@ export default function VacancyModal({
 
     fetchCandidatos();
   }, [activeTab, job?.id]);
+
   const [localDocs, setLocalDocs] = useState(job?.documentos || []);
   const [docTipo, setDocTipo] = useState('CV');
   const [draggingOver, setDraggingOver] = useState(false);
@@ -549,6 +554,28 @@ export default function VacancyModal({
     });
   };
 
+  // --- BUSCADOR LIVE: filtra sobre candidatosList ya cargada ---
+  const handleCandidatoSearchChange = (e) => {
+    const query = e.target.value;
+    setCandidatoSearch(query);
+    // Limpiar el nombre del form si el usuario borra el campo
+    if (!query.trim()) {
+      setCandForm((f) => ({ ...f, nombre: '' }));
+      setCandidatosSugeridos([]);
+      return;
+    }
+    const filtrados = candidatosList.filter((c) =>
+      c.nombre.toLowerCase().includes(query.toLowerCase())
+    );
+    setCandidatosSugeridos(filtrados);
+  };
+
+  const handleSeleccionarCandidato = (c) => {
+    setCandidatoSearch(c.nombre);
+    setCandForm((f) => ({ ...f, nombre: c.nombre }));
+    setCandidatosSugeridos([]);
+  };
+
   const handleAddCandidato = async () => {
     if (!candForm.nombre.trim()) return;
     try {
@@ -571,12 +598,15 @@ export default function VacancyModal({
         fecha: new Date().toLocaleDateString('es-ES'),
       };
       setCandidatosList((prev) => [nuevo, ...prev]);
+      // Reset form y buscador
       setCandForm({
         nombre: '',
         fase: 'Enviado CV',
         resultado: 'Pendiente',
         notas: '',
       });
+      setCandidatoSearch('');
+      setCandidatosSugeridos([]);
     } catch (err) {
       console.error('Error guardando seguimiento:', err);
     }
@@ -1469,26 +1499,67 @@ export default function VacancyModal({
 
                       <div className="cand-tracking-form mb-4">
                         <div className="cand-form-row">
-                          <div className="cand-form-field cand-form-field--wide">
+                          {/* ---- BUSCADOR LIVE DE CANDIDATOS ---- */}
+                          <div
+                            className="cand-form-field cand-form-field--wide"
+                            style={{ position: 'relative' }}
+                          >
                             <label className="field-label">
-                              Nombre del candidato
+                              Buscar candidato
                             </label>
-                            <input
-                              type="text"
-                              className="form-control input-field"
-                              placeholder="Ej: Ana García"
-                              value={candForm.nombre}
-                              onChange={(e) =>
-                                setCandForm((f) => ({
-                                  ...f,
-                                  nombre: e.target.value,
-                                }))
-                              }
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleAddCandidato();
-                              }}
-                            />
+                            <div className="search-input-group">
+                              <i className="bi bi-search search-icon"></i>
+                              <input
+                                type="text"
+                                className="search-control"
+                                placeholder="Escribe un nombre..."
+                                value={candidatoSearch}
+                                onChange={handleCandidatoSearchChange}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && candForm.nombre)
+                                    handleAddCandidato();
+                                  if (e.key === 'Escape')
+                                    setCandidatosSugeridos([]);
+                                }}
+                                autoComplete="off"
+                              />
+                            </div>
+
+                            {/* Dropdown de sugerencias */}
+                            {candidatosSugeridos.length > 0 && (
+                              <ul className="cand-search-dropdown">
+                                {candidatosSugeridos.map((c) => (
+                                  <li
+                                    key={c.id || c.nombre}
+                                    className="cand-search-item"
+                                    onClick={() =>
+                                      handleSeleccionarCandidato(c)
+                                    }
+                                  >
+                                    <span className="cand-search-name">
+                                      {c.nombre}
+                                    </span>
+                                    {c.fase && (
+                                      <span className="cand-search-meta">
+                                        {c.fase}
+                                      </span>
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+
+                            {/* Sin resultados */}
+                            {candidatoSearch &&
+                              candForm.nombre !== candidatoSearch &&
+                              candidatosSugeridos.length === 0 && (
+                                <div className="cand-search-empty">
+                                  Sin resultados — se añadirá como nombre nuevo
+                                </div>
+                              )}
                           </div>
+                          {/* ---- FIN BUSCADOR ---- */}
+
                           <div className="cand-form-field">
                             <label className="field-label">
                               Tipo de entrevista / Fase
