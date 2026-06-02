@@ -576,8 +576,24 @@ export default function VacancyModal({
         );
         if (!res.ok) return;
         const data = await res.json();
-        // El endpoint devuelve array directo o { results: [] }
-        setCandidatosSugeridos(Array.isArray(data) ? data : data.results || []);
+        const raw = Array.isArray(data) ? data : data.results || [];
+
+        // Filtrar localmente por nombre, email, ubicación o sector
+        const q = query.toLowerCase();
+        const filtrados = raw.filter((c) => {
+          const nombre = (c.name || c.nombre || '').toLowerCase();
+          const email = (c.email || '').toLowerCase();
+          const location = (c.location || c.ubicacion || '').toLowerCase();
+          const sector = (c.sector || c.industry || '').toLowerCase();
+          return (
+            nombre.includes(q) ||
+            email.includes(q) ||
+            location.includes(q) ||
+            sector.includes(q)
+          );
+        });
+
+        setCandidatosSugeridos(filtrados);
       } catch (err) {
         console.error('Error buscando candidatos:', err);
         setCandidatosSugeridos([]);
@@ -1547,18 +1563,27 @@ export default function VacancyModal({
                               <ul className="cand-search-dropdown">
                                 {candidatosSugeridos.map((c) => (
                                   <li
-                                    key={c.id || c.nombre}
+                                    key={c.id || c.name || c.nombre}
                                     className="cand-search-item"
                                     onClick={() =>
                                       handleSeleccionarCandidato(c)
                                     }
                                   >
                                     <span className="cand-search-name">
-                                      {c.nombre}
+                                      {c.name || c.nombre}
                                     </span>
-                                    {(c.location || c.email) && (
+                                    {(c.location ||
+                                      c.ubicacion ||
+                                      c.email ||
+                                      c.sector) && (
                                       <span className="cand-search-meta">
-                                        {c.location || c.email}
+                                        {[
+                                          c.location || c.ubicacion,
+                                          c.sector || c.industry,
+                                          c.email,
+                                        ]
+                                          .filter(Boolean)
+                                          .join(' · ')}
                                       </span>
                                     )}
                                   </li>
