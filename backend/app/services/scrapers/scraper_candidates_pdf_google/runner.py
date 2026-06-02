@@ -5,7 +5,7 @@ import re
 import aiohttp
 import fitz
 from datetime import datetime
-from google import genai
+from google import genai  
 from dotenv import load_dotenv
 
 from sqlalchemy import select
@@ -16,6 +16,8 @@ from app.core.scraper_candidates_pdf_config import MAX_PROFILES_PER_SEARCH
 from .browser import search_brave_pdfs
 
 load_dotenv(override=True)
+
+# Inicializamos el cliente moderno de Gemini con la clave de tu .env
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 LIMIT_FILE = "daily_limit.json"
@@ -38,7 +40,7 @@ def check_daily_limit() -> tuple[int, str]:
     except Exception:
         return 0, today
     
-def update_daily_limit(count:int) -> None:
+def update_daily_limit(count: int) -> None:
     today = datetime.now().strftime("%Y-%m-%d")
     with open(LIMIT_FILE, "w") as f:
         json.dump({"date": today, "count": count}, f)
@@ -65,7 +67,7 @@ async def search_linkedin_url(first_name: str, last_name: str) -> str | None:
                         if "linkedin.com/in/" in url:
                             print(f"LinkedIn encontrado: {url}")
                             return url
-                    print("La búsqueda no devolvio ningún perfil")
+                    print("La búsqueda no devolvió ningún perfil")
                 else:
                     print(f"Error en la API: {resp.status}")
     except Exception as e:
@@ -92,8 +94,9 @@ async def extract_pdf_data(pdf_bytes: bytes, keyword: str) -> dict | None:
         Texto: {text[:6000]}
         """
         
-        for intento_gemini in range(3):
+        for intento_gemini in range(4):
             try:
+                # Llamada oficial con el SDK moderno 'google-genai'
                 response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
                 clean_json = response.text.replace('```json', '').replace('```', '').strip()
                 parsed_data = json.loads(clean_json)
@@ -102,21 +105,27 @@ async def extract_pdf_data(pdf_bytes: bytes, keyword: str) -> dict | None:
                     print(f"CV descartado no cumple requisitos para: {keyword}")
                     return None
                 
-                print("Extraido con éxito usando Gemini")
+                print("Extraído con éxito usando Gemini (Plan Gratuito)")
                 if isinstance(parsed_data, list) and len(parsed_data) > 0:
                     return parsed_data[0]
                 return parsed_data if parsed_data else None
             
             except Exception as gemini_error:
                 error_str = str(gemini_error)
-                if "429" in error_str or "RESOURSE_EXHAUSTED" in error_str:
-                    espera = 40 + (intento_gemini * 10)
-                    print(f"Limite de Gemini alcanzado. Esperando {espera} seg")
+                
+                # Control inteligente de saturación (503) o límites de velocidad (429)
+                if "503" in error_str or "UNAVAILABLE" in error_str:
+                    espera = 10 + (intento_gemini * 5)
+                    print(f"⚠️ Servidor de Gemini saturado (503). Reintentando en {espera} segundos...")
                     await asyncio.sleep(espera)
-                    
+                elif "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
+                    espera = 30 + (intento_gemini * 15)
+                    print(f"🛑 Límite de velocidad excedido (429). Esperando {espera} segundos...")
+                    await asyncio.sleep(espera)
                 else:
-                    print(f"Gemini falló por otro error: {gemini_error}")
+                    print(f"❌ Gemini falló por otro error: {gemini_error}")
                     break
+                    
         return None
             
     except Exception as e:
@@ -129,21 +138,18 @@ async def extract_pdf() -> list[dict]:
     current_count, today_str = check_daily_limit()
     
     if current_count >= MAX_PROFILES_PER_SEARCH:
-        print(f"Limite diario alcanzado ({MAX_PROFILES_PER_SEARCH}/100) para hoy {today_str}")
+        print(f"Límite diario alcanzado ({MAX_PROFILES_PER_SEARCH}/100) para hoy {today_str}")
         return all_extracted_candidates
     
-    print(f"\n--- RECOLECTOR PRO INICIADO: Llevamos {current_count}/{MAX_PROFILES_PER_SEARCH} procesados hoy. ---")
+    print(f"\n--- RECOLECTOR PRO INICIADO CON GEMINI: Llevamos {current_count}/{MAX_PROFILES_PER_SEARCH} procesados hoy. ---")
     
     async with AsyncSessionLocal() as db:
-        # Cargamos desde la tabla scraper_keywords
-        # 1. Traemos las palabras clave activas (type = keyword)
         kw_query = await db.execute(
             select(ScraperKeyword.keyword)
             .where(ScraperKeyword.is_active == True, ScraperKeyword.type == "keyword")
         )
         list_keyword = kw_query.scalars().all()
         
-        # 2. Traems las ciudades activas (type = city)
         city_query = await db.execute(
             select(ScraperKeyword.keyword)
             .where(ScraperKeyword.is_active == True, ScraperKeyword.type == "city")
@@ -151,11 +157,10 @@ async def extract_pdf() -> list[dict]:
         city_list = city_query.scalars().all()
         
         if not list_keyword:
-            print("No hay 'keywords' activas en al BD. Abortando")
+            print("No hay 'keywords' activas en la BD. Abortando")
             return []
         if not city_list:
-            city_list = [""] # Si no tenemos ciudades, busca de manera global
-            
+            city_list = [""]
             
         for kw in list_keyword:
             if current_count >= MAX_PROFILES_PER_SEARCH: break
@@ -168,22 +173,28 @@ async def extract_pdf() -> list[dict]:
                 pdfs_in_memory = await search_brave_pdfs(query)
                 
                 if not pdfs_in_memory:
-                    print(f"La API de Brave no encontro resultados")
+                    print(f"La API de Brave no encontró resultados")
                     continue
                 
                 for pdf_item in pdfs_in_memory:
                     if current_count >= MAX_PROFILES_PER_SEARCH: break
                     
+                    # ⏳ CONTROL ESTRICTO (MAX 5 RPM): 
+                    # Forzamos una pausa de 12 segundos exactos antes de cada llamada a Gemini.
+                    # Esto asegura un flujo máximo de 5 peticiones por minuto.
+                    print("⏳ Respiro de seguridad regulado (Garantizando un máx de 5 RPM)...")
+                    await asyncio.sleep(12)
+                    
                     try:
                         data = await extract_pdf_data(pdf_item["bytes"], kw)
                     except AILimitReachedError:
-                        print("Apagado de emergencia la IA ha bloqueado el acceso")
+                        print("Apagado de emergencia, la IA ha bloqueado el acceso")
                         return all_extracted_candidates
                     
                     if data and isinstance(data, dict) and data.get('first_name'):
                         linkedin = data.get('linkedin')
                         if linkedin:
-                            print(f"LinkedIn extraido directamente del CV: {linkedin}")
+                            print(f"LinkedIn extraído directamente del CV: {linkedin}")
                         if not linkedin:
                             linkedin = await search_linkedin_url(data.get('first_name'), data.get('last_name'))
                             
@@ -221,12 +232,13 @@ async def extract_pdf() -> list[dict]:
                             
                         print(f"  -> {data.get('first_name')} añadido a la lista ({current_count}/{MAX_PROFILES_PER_SEARCH})")
                     
-                    await asyncio.sleep(5)
+                    # Añadimos un pequeño colchón extra de 2 segundos al final del ciclo para blindar el ritmo
+                    await asyncio.sleep(2)
                 
                 if current_count >= MAX_PROFILES_PER_SEARCH:
                     print(f"Límite de CV alcanzado por hoy")
                     return all_extracted_candidates
-                return all_extracted_candidates
+        return all_extracted_candidates
             
-if __name__ =="__main__":
+if __name__ == "__main__":
     asyncio.run(extract_pdf())
