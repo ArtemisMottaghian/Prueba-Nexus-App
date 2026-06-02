@@ -179,7 +179,7 @@ def build_gemini_prompt(vacancy: JobOffer, top_candidates: list[Candidate]) -> s
     Y compárala con nuestra lista de candidatos (pre-filtrados y ordenados matemáticamente):
     {candidates_text}
     
-    Devuelve un top 3 de los candidatos más compatibles.
+    Devuelve un top 8 de los candidatos más compatibles.
     IMPORTANTE: El campo 'reason' debe estar redactado en español detallando exactamente por qué el candidato hace buen "match" con la oferta.
     OBLIGATORIO: Si el candidato tiene 'HR Notes' (notas de los reclutadores), debes mencionarlas e integrarlas en tu justificación para dar contexto interno.
     """
@@ -276,7 +276,7 @@ async def calculate_vacancy_match(db: AsyncSession, vacancy_id: int) -> dict:
     # 🟡 OPCIÓN B: MOCK DE RESPUESTA (Desarrollo / Ahorro de Tokens)
     # IMPORTANTE: Comenta este bloque completo si has activado la OPCIÓN A.
     fake_results = []
-    for score, candidate in top_candidates_with_scores[:3]:
+    for score, candidate in top_candidates_with_scores[:8]:
         fake_results.append(
             {
                 "candidate_id": candidate.id,
