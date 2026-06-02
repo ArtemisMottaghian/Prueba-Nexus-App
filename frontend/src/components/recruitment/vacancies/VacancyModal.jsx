@@ -109,7 +109,7 @@ export default function VacancyModal({
   // --- ESTADOS BUSCADOR DE CANDIDATOS ---
   const [candidatoSearch, setCandidatoSearch] = useState('');
   const [candidatosSugeridos, setCandidatosSugeridos] = useState([]);
-  const [searchTimeout, setSearchTimeout] = useState(null);
+  const [todosLosCandidatos, setTodosLosCandidatos] = useState([]);
 
   const [localAsignados, setLocalAsignados] = useState(() => {
     const a = job?.assignedTo;
@@ -208,6 +208,21 @@ export default function VacancyModal({
   };
 
   // --------------------------------------------------------------------------
+
+  // Cargar todos los candidatos del sistema al montar el modal
+  useEffect(() => {
+    const fetchTodosCandidatos = async () => {
+      try {
+        const res = await authFetch(ENDPOINTS.recruitment.candidatos.list);
+        if (!res.ok) return;
+        const data = await res.json();
+        setTodosLosCandidatos(Array.isArray(data) ? data : data.results || []);
+      } catch (err) {
+        console.error('Error cargando candidatos del sistema:', err);
+      }
+    };
+    fetchTodosCandidatos();
+  }, []);
 
   useEffect(() => {
     if (isNegocio && activeTab === 'detalles') {
@@ -563,43 +578,30 @@ export default function VacancyModal({
     if (!query.trim()) {
       setCandForm((f) => ({ ...f, nombre: '' }));
       setCandidatosSugeridos([]);
-      if (searchTimeout) clearTimeout(searchTimeout);
       return;
     }
 
-    // Debounce de 300ms para no llamar en cada tecla
-    if (searchTimeout) clearTimeout(searchTimeout);
-    const timeout = setTimeout(async () => {
-      try {
-        const res = await authFetch(
-          ENDPOINTS.recruitment.candidatos.search(query)
-        );
-        if (!res.ok) return;
-        const data = await res.json();
-        const raw = Array.isArray(data) ? data : data.results || [];
+    // Filtrar localmente sobre todos los candidatos ya cargados
+    const q = query.toLowerCase();
+    const filtrados = todosLosCandidatos.filter((c) => {
+      const nombre = (c.name || c.nombre || '').toLowerCase();
+      const email = (c.email || '').toLowerCase();
+      const location = (c.location || c.ubicacion || '').toLowerCase();
+      const sector = (
+        c.sector ||
+        c.industry ||
+        c.specialty ||
+        ''
+      ).toLowerCase();
+      return (
+        nombre.includes(q) ||
+        email.includes(q) ||
+        location.includes(q) ||
+        sector.includes(q)
+      );
+    });
 
-        // Filtrar localmente por nombre, email, ubicación o sector
-        const q = query.toLowerCase();
-        const filtrados = raw.filter((c) => {
-          const nombre = (c.name || c.nombre || '').toLowerCase();
-          const email = (c.email || '').toLowerCase();
-          const location = (c.location || c.ubicacion || '').toLowerCase();
-          const sector = (c.sector || c.industry || '').toLowerCase();
-          return (
-            nombre.includes(q) ||
-            email.includes(q) ||
-            location.includes(q) ||
-            sector.includes(q)
-          );
-        });
-
-        setCandidatosSugeridos(filtrados);
-      } catch (err) {
-        console.error('Error buscando candidatos:', err);
-        setCandidatosSugeridos([]);
-      }
-    }, 300);
-    setSearchTimeout(timeout);
+    setCandidatosSugeridos(filtrados.slice(0, 10));
   };
 
   const handleSeleccionarCandidato = (c) => {
