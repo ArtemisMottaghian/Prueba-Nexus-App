@@ -1547,15 +1547,20 @@ export default function VacancyModal({
                               <ul className="cand-search-dropdown">
                                 {candidatosSugeridos.map((c) => (
                                   <li
-                                    key={c.id || c.name}
+                                    key={c.id || c.nombre}
                                     className="cand-search-item"
                                     onClick={() =>
                                       handleSeleccionarCandidato(c)
                                     }
                                   >
                                     <span className="cand-search-name">
-                                      {c.name || c.nombre}
+                                      {c.nombre}
                                     </span>
+                                    {(c.location || c.email) && (
+                                      <span className="cand-search-meta">
+                                        {c.location || c.email}
+                                      </span>
+                                    )}
                                   </li>
                                 ))}
                               </ul>
