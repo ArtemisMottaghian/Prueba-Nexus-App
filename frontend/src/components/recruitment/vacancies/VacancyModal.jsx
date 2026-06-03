@@ -71,7 +71,6 @@ export default function VacancyModal({
   onUpdateStatus,
   onToggleFavorite,
   onAsignarVacante,
-  currentUser,
   isNegocio,
 }) {
   const { hasRole } = useAuth();
