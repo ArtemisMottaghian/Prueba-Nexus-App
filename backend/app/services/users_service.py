@@ -3,6 +3,7 @@ from sqlalchemy.future import select
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from fastapi import HTTPException
 
+from sqlalchemy.orm import selectinload
 from app.models.user_model import User
 from app.schemas.users_schemas import NewUser, UserUpdate
 from app.core.security import hash_password
@@ -80,7 +81,12 @@ async def update_user(db: AsyncSession, email: str, datos: UserUpdate) -> Option
 #eliminar usuario
 async def delete_user(db: AsyncSession, email: str) -> bool:
     try:
-        usuario = await getUser(db, email)
+        resultado = await db.execute(
+            select(User)
+            .where(User.email == email)
+            .options(selectinload(User.conversations))
+        )
+        usuario = resultado.scalars().first()
         if not usuario:
             return False
 
