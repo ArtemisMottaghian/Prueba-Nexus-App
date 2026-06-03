@@ -205,6 +205,13 @@ async def extract_pdf() -> list[dict]:
                         origen_bd = f"Brave API - {kw}"
                         if c: origen_bd += f" ({c})"
 
+                        # 🛠️ NUEVO: Función de limpieza para quitar corchetes de las listas
+                        def limpiar_lista(valor):
+                            if not valor: return None
+                            if isinstance(valor, list):
+                                return ", ".join(str(v) for v in valor)
+                            return str(valor)
+
                         candidate_data = {
                             "first_name": data.get('first_name'),
                             "last_name": data.get('last_name'),
@@ -212,11 +219,11 @@ async def extract_pdf() -> list[dict]:
                             "phone": data.get('phone'),
                             "location": data.get('location'),
                             "source": origen_bd,
-                            "experience": str(data.get('experience')) if data.get('experience') else None,
-                            "education": str(data.get('education')) if data.get('education') else None,
+                            "experience": limpiar_lista(data.get('experience')),
+                            "education": limpiar_lista(data.get('education')),
                             "candidate_url": linkedin,
                             "cv_url": pdf_item['url'], 
-                            "skills": str(data.get('skills')) if data.get('skills') else None,
+                            "skills": limpiar_lista(data.get('skills')),
                             "status": "active"
                         }
                         

@@ -20,7 +20,7 @@ from app.schemas.candidates_schemas import (
 )
 from app.schemas.comments_schemas import CommentCreate, CommentUpdate, CommentResponse
 from app.services import comments_service
-from app.services.llm_parser import parse_with_gemini
+from app.services.llm_parser import parse_with_code
 
 import traceback
 import uuid
@@ -168,7 +168,7 @@ async def verify_candidate(
 async def process_cv(
     pdf_file: Optional[UploadFile] = File(None),
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    #current_user: dict = Depends(get_current_user),
 ):
     """Procesa un candidato subiendo su CV en PDF y se guarda en la BD"""
     if not pdf_file:
@@ -188,7 +188,7 @@ async def process_cv(
         if not raw_text or not raw_text.strip():
             raise HTTPException(status_code=400, detail="No se pudo extraer el texto del documento PDF.")
 
-        candidate_json = await parse_with_gemini(raw_text)
+        candidate_json = await parse_with_code(raw_text)
 
         email_extraido = candidate_json.get("email", "")
         if not email_extraido or "@" not in email_extraido:
