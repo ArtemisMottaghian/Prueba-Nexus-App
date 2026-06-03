@@ -20,7 +20,7 @@ async def parse_with_code(raw_text: str) -> dict:
     email_val = email_match.group(0).lower() if email_match else ""
     phone_val = phone_match.group(0).strip() if phone_match else ""
     
-    # 🔥 TRUCO MAGICO: Borramos el email y el teléfono del texto principal 
+    # Borramos el email y el teléfono del texto principal 
     # para que no se cuelen luego en los bloques de Educación o Experiencia
     text_sin_datos_contacto = text_clean
     if email_match:
