@@ -1178,20 +1178,22 @@ export default function VacancyModal({
                                   className={`contact-card ${c.manual ? 'contact-card--manual' : ''}`}
                                 >
                                   <div className="contact-avatar">
-                                    {(c.nombre || '?').charAt(0).toUpperCase()}
+                                    {(c.nombre || c.full_name || '?')
+                                      .charAt(0)
+                                      .toUpperCase()}
                                   </div>
                                   <div className="contact-info">
                                     <div className="contact-nombre">
-                                      {c.nombre || '—'}
+                                      {c.nombre || c.full_name || '—'}
                                       {c.manual && (
                                         <span className="contact-manual-badge">
                                           Manual
                                         </span>
                                       )}
                                     </div>
-                                    {c.cargo && (
+                                    {(c.cargo || c.job_title) && (
                                       <div className="contact-cargo">
-                                        {c.cargo}
+                                        {c.cargo || c.job_title}
                                       </div>
                                     )}
                                     <div className="contact-data-row">
