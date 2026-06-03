@@ -43,6 +43,7 @@ const mapVacancyData = (v) => {
     description: v.job_description,
     salaryMin: v.salary_min,
     salaryMax: v.salary_max,
+    contactos: v.contactos || [],
     assignedTo: v.assigned_recruiters
       ? v.assigned_recruiters.map((r) => ({
           id: r.id,
