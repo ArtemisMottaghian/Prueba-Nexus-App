@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 import json
 
+from app.models.companies_model import Company
 from app.models.user_model import User, UserRole
 from app.schemas.users_schemas import UserType
 from app.models.job_model import JobOffer, JobPortal, JobApplication
@@ -58,11 +59,13 @@ async def get_vacancy_by_id(db: AsyncSession, vacancy_id: int) -> Optional[JobOf
 
 
 async def get_vacancy_detail(db: AsyncSession, vacancy_id: int) -> Optional[JobOffer]:
-    """Obtiene una vacante por su ID con la relación company cargada."""
+    """Obtiene una vacante por su ID con la relación company y contactos cargada."""
     try:
         query = (
             select(JobOffer)
-            .options(selectinload(JobOffer.company))
+            .options(
+                selectinload(JobOffer.company).selectinload(Company.contacts)
+            )
             .where(JobOffer.id == vacancy_id)
         )
         result = await db.execute(query)
