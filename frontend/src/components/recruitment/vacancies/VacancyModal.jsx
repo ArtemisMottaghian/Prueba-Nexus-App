@@ -898,6 +898,27 @@ export default function VacancyModal({
                           </div>
                         </div>
                       </div>
+                      {job.offer_url && (
+                        <div className="detail-field">
+                          <div className="detail-icon icon-blue">
+                            <i className="bi bi-link-45deg"></i>
+                          </div>
+                          <div>
+                            <div className="field-label">
+                              URL oferta original
+                            </div>
+                            <div className="field-value">
+                              <a
+                                href={job.offer_url}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                Ver oferta en {job.source || 'portal'}
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="detail-section">
