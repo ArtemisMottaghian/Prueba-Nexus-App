@@ -44,6 +44,16 @@ class VacancySummary(BaseModel):
         return v
 
 
+class ContactOut(BaseModel):
+    id: int
+    full_name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    job_title: Optional[str] = None
+    linkedin_url: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
 
 # Schema extendido para el detalle
 # Hereda del resumen y le añade el resto de campos
@@ -57,11 +67,13 @@ class VacancyDetail(VacancySummary):
     sector: Optional[str] = Field(None, max_length=255)
     portal_id: Optional[int] = None
     company_id: Optional[int] = None
+    contactos: Optional[List[ContactOut]] = []
 
     @model_validator(mode="before")
     @classmethod
     def resolve_company_fields(cls, data):
         company = getattr(data, "company", None)
+        contactos = list(company.contacts) if company and hasattr(company, "contacts") else []
         result = {
             "id": data.id,
             "title": data.title,
@@ -79,6 +91,7 @@ class VacancyDetail(VacancySummary):
             "published_at": data.published_at,
             "status": data.status,
             "is_favourite": data.is_favourite,
+            "contactos": contactos,
         }
         return result
 

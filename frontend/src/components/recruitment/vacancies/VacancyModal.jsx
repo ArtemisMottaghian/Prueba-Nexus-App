@@ -898,6 +898,27 @@ export default function VacancyModal({
                           </div>
                         </div>
                       </div>
+                      {job.offer_url && (
+                        <div className="detail-field">
+                          <div className="detail-icon icon-blue">
+                            <i className="bi bi-link-45deg"></i>
+                          </div>
+                          <div>
+                            <div className="field-label">
+                              URL oferta original
+                            </div>
+                            <div className="field-value">
+                              <a
+                                href={job.offer_url}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                Ver oferta en {job.source || 'portal'}
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="detail-section">
@@ -1050,6 +1071,11 @@ export default function VacancyModal({
                   (() => {
                     const contactosAPI = job.contactos?.length
                       ? job.contactos
+                          .filter((c) => c.email)
+                          .filter(
+                            (c, i, arr) =>
+                              arr.findIndex((x) => x.email === c.email) === i
+                          )
                       : job.contactEmail || job.contactPhone || job.contactName
                         ? [
                             {
@@ -1178,20 +1204,22 @@ export default function VacancyModal({
                                   className={`contact-card ${c.manual ? 'contact-card--manual' : ''}`}
                                 >
                                   <div className="contact-avatar">
-                                    {(c.nombre || '?').charAt(0).toUpperCase()}
+                                    {(c.nombre || c.full_name || '?')
+                                      .charAt(0)
+                                      .toUpperCase()}
                                   </div>
                                   <div className="contact-info">
                                     <div className="contact-nombre">
-                                      {c.nombre || '—'}
+                                      {c.nombre || c.full_name || '—'}
                                       {c.manual && (
                                         <span className="contact-manual-badge">
                                           Manual
                                         </span>
                                       )}
                                     </div>
-                                    {c.cargo && (
+                                    {(c.cargo || c.job_title) && (
                                       <div className="contact-cargo">
-                                        {c.cargo}
+                                        {c.cargo || c.job_title}
                                       </div>
                                     )}
                                     <div className="contact-data-row">
