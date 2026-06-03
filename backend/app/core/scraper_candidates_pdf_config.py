@@ -1,6 +1,6 @@
 # Configuramos si vemos el navegador o no para cambiarlo solo teenemos que poner en lugar de False True
 HEADLESS_MODE = True
-MAX_PROFILES_PER_SEARCH = 12
+MAX_PROFILES_PER_SEARCH = 15
 
 SECTORES = {
     "LEGAL": ["Abogado", "Jurídico", "Derecho Mercantil", "Compliance"],
