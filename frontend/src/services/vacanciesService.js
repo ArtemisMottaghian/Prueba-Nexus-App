@@ -3,9 +3,9 @@ import { ENDPOINTS, authFetch } from './api';
 const getPortalName = (id) => {
   const numId = Number(id);
 
-  if (numId === 1) return 'LinkedIn';
+  if (numId === 3) return 'LinkedIn';
   if (numId === 2) return 'InfoJobs';
-  if (numId === 3) return 'Adzuna';
+  if (numId === 1) return 'Adzuna';
   return 'Otro';
 };
 
