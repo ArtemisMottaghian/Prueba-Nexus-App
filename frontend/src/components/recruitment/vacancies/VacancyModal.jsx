@@ -71,7 +71,6 @@ export default function VacancyModal({
   onUpdateStatus,
   onToggleFavorite,
   onAsignarVacante,
-  currentUser,
   isNegocio,
 }) {
   const { hasRole } = useAuth();
@@ -119,17 +118,23 @@ export default function VacancyModal({
   const [hrUsers, setHrUsers] = useState([]);
   const [selectedHrId, setSelectedHrId] = useState('');
 
-  // --- 🤖 ESTADOS Y FUNCIÓN PARA SMART MATCH IA (VERSIÓN ANDER/GEMINI) 🤖 ---
+  // --- 🤖 ESTADOS SMART MATCH IA ---
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [isMatchingLocal, setIsMatchingLocal] = useState(false);
   const [matchResults, setMatchResults] = useState([]);
+
+  // --- ESTADOS EMAIL OUTREACH ---
+  const [outreachEmail, setOutreachEmail] = useState('');
+  const [outreachCompany, setOutreachCompany] = useState('');
+  const [outreachJobTitle, setOutreachJobTitle] = useState('');
+  const [sendingOutreach, setSendingOutreach] = useState(false);
+  const [outreachSuccess, setOutreachSuccess] = useState(false);
 
   const handleSmartMatchClick = async (e) => {
     e.stopPropagation();
     setIsMatchingLocal(true);
 
     try {
-      // 1. LLAMADA AL ENDPOINT POST DE ANDER
       const res = await authFetch(ENDPOINTS.ai.matchVacancy(job.id), {
         method: 'POST',
       });
@@ -137,17 +142,14 @@ export default function VacancyModal({
       if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
 
       const data = await res.json();
-
-      // 2. ANDER DEVUELVE 'top_candidates' (no 'ranked')
       const topCandidates = data.top_candidates || [];
 
-      // 3. MAPEO ADAPTADO A LOS CAMPOS DE ANDER
       const normalized = topCandidates.map((item) => ({
         id: item.candidate_id,
         nombre: item.name || 'Candidato desconocido',
         score: item.affinity_percentage || 0,
         reasoning: item.reason || 'Sin descripción disponible.',
-        location: 'No especificada', // Fallback
+        location: 'No especificada',
       }));
 
       setMatchResults(normalized);
@@ -207,7 +209,36 @@ export default function VacancyModal({
     }
   };
 
-  // --------------------------------------------------------------------------
+  // --- EMAIL OUTREACH ---
+  const handleSendOutreachEmail = async () => {
+    setSendingOutreach(true);
+    setOutreachSuccess(false);
+
+    try {
+      // TODO: reemplazar por el endpoint real cuando backend lo tenga listo
+      // await authFetch(ENDPOINTS.outreach.sendEmail, {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     to_email: outreachEmail,
+      //     company_name: outreachCompany,
+      //     job_title: outreachJobTitle,
+      //     template_slug: 'prospect_vacancy',
+      //     vacancy_id: job.id,
+      //   }),
+      // });
+
+      // Mock visual: simula delay de envío
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+
+      setOutreachSuccess(true);
+      setTimeout(() => setOutreachSuccess(false), 4000);
+    } catch (err) {
+      console.error('Error enviando email de outreach:', err);
+    } finally {
+      setSendingOutreach(false);
+    }
+  };
 
   // Cargar todos los candidatos del sistema al montar el modal
   useEffect(() => {
@@ -304,13 +335,6 @@ export default function VacancyModal({
     email: '',
     telefono: '',
   });
-  const [mensajeGenerado, setMensajeGenerado] = useState('');
-  const [generandoMensaje, setGenerandoMensaje] = useState(false);
-  const [mensajeCopied, setMensajeCopied] = useState(false);
-  const nombreFirma =
-    currentUser?.name || currentUser?.username || 'Equipo Nexus Talent';
-  const emailFirma = currentUser?.email || '';
-  const firmaAuto = `Un saludo,\n${nombreFirma}${emailFirma ? `\n${emailFirma}` : ''}\nNexus Talent Solutions`;
 
   const [empresaCrm, setEmpresaCrm] = useState(null);
   const [loadingEmpresa, setLoadingEmpresa] = useState(false);
@@ -550,27 +574,7 @@ export default function VacancyModal({
     setContactosManuales((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const handleGenerarMensaje = (contacto) => {
-    setGenerandoMensaje(true);
-    setMensajeGenerado('');
-    const nombre = contacto?.nombre || 'Responsable de selección';
-    const empresa = job.companyName || 'su empresa';
-    const puesto = job.title || 'el puesto';
-    const cuerpo = `Hola ${nombre},\n\nMe pongo en contacto contigo porque hemos identificado que ${empresa} está buscando un/a ${puesto}.\n\nContamos con candidatos/as especializados/as en este perfil que podrían encajar perfectamente en vuestra búsqueda. Estaría encantado/a de compartir algunos perfiles sin ningún compromiso.\n\n¿Tendríais unos minutos esta semana para una breve llamada?\n\nQuedo a vuestra disposición.`;
-    setTimeout(() => {
-      setMensajeGenerado(`${cuerpo}\n\n${firmaAuto}`);
-      setGenerandoMensaje(false);
-    }, 600);
-  };
-
-  const handleCopiarMensaje = () => {
-    navigator.clipboard.writeText(mensajeGenerado).then(() => {
-      setMensajeCopied(true);
-      setTimeout(() => setMensajeCopied(false), 2000);
-    });
-  };
-
-  // --- BUSCADOR LIVE: busca en todos los candidatos del sistema ---
+  // --- BUSCADOR LIVE ---
   const handleCandidatoSearchChange = (e) => {
     const query = e.target.value;
     setCandidatoSearch(query);
@@ -581,7 +585,6 @@ export default function VacancyModal({
       return;
     }
 
-    // Filtrar localmente sobre todos los candidatos ya cargados
     const q = query.toLowerCase();
     const filtrados = todosLosCandidatos.filter((c) => {
       const nombre = (c.name || c.nombre || '').toLowerCase();
@@ -633,7 +636,6 @@ export default function VacancyModal({
         fecha: new Date().toLocaleDateString('es-ES'),
       };
       setCandidatosList((prev) => [nuevo, ...prev]);
-      // Reset form y buscador
       setCandForm({
         nombre: '',
         fase: 'Enviado CV',
@@ -817,6 +819,7 @@ export default function VacancyModal({
               </div>
 
               <div className="tab-content">
+                {/* TAB DETALLES */}
                 {activeTab === 'detalles' && (
                   <div className="tab-pane fade show active">
                     <div className="detail-section">
@@ -1093,6 +1096,7 @@ export default function VacancyModal({
 
                     return (
                       <div className="tab-pane fade show active">
+                        {/* CONTACTOS */}
                         <div className="detail-section">
                           <div className="contact-section-header">
                             <h4 className="section-title mb-0">
@@ -1243,29 +1247,19 @@ export default function VacancyModal({
                                       )}
                                     </div>
                                   </div>
-                                  <div className="d-flex flex-column gap-1">
+                                  {c.manual && (
                                     <button
-                                      className="btn btn-primary-custom btn-sm contact-msg-btn"
-                                      onClick={() => handleGenerarMensaje(c)}
-                                      disabled={generandoMensaje}
+                                      className="btn-icon btn-icon-sm btn-icon-danger"
+                                      onClick={() =>
+                                        handleEliminarContactoManual(
+                                          i - contactosAPI.length
+                                        )
+                                      }
+                                      title="Eliminar contacto"
                                     >
-                                      <i className="bi bi-magic me-1"></i>
-                                      Mensaje
+                                      <i className="bi bi-trash3"></i>
                                     </button>
-                                    {c.manual && (
-                                      <button
-                                        className="btn-icon btn-icon-sm btn-icon-danger"
-                                        onClick={() =>
-                                          handleEliminarContactoManual(
-                                            i - contactosAPI.length
-                                          )
-                                        }
-                                        title="Eliminar contacto"
-                                      >
-                                        <i className="bi bi-trash3"></i>
-                                      </button>
-                                    )}
-                                  </div>
+                                  )}
                                 </div>
                               ))}
                             </div>
@@ -1285,109 +1279,116 @@ export default function VacancyModal({
                           )}
                         </div>
 
+                        {/* EMAIL OUTREACH */}
                         <div className="detail-section">
                           <h4 className="section-title">
                             <i
-                              className="bi bi-magic me-2"
+                              className="bi bi-envelope-arrow-up me-2"
                               style={{ color: 'var(--color-purple-secondary)' }}
                             ></i>
-                            Mensaje de contacto automático
+                            Enviar email de contacto
                           </h4>
 
-                          {!mensajeGenerado && !generandoMensaje && (
-                            <div className="msg-placeholder">
-                              <i className="bi bi-chat-square-dots"></i>
-                              <p>
-                                Selecciona un contacto y pulsa{' '}
-                                <strong>Mensaje</strong> para que se redacte un
-                                primer contacto personalizado con tu firma.
-                              </p>
-                              {todosContactos.length === 0 && (
-                                <button
-                                  className="btn btn-primary-custom btn-sm mt-2"
-                                  onClick={() => handleGenerarMensaje(null)}
-                                  disabled={generandoMensaje}
-                                >
-                                  <i className="bi bi-magic me-2"></i>Generar
-                                  mensaje genérico
-                                </button>
+                          <div className="email-outreach-form">
+                            <div
+                              className="cand-form-row"
+                              style={{ gridTemplateColumns: '1fr 1fr' }}
+                            >
+                              <div className="cand-form-field">
+                                <label className="field-label">
+                                  Email de contacto *
+                                </label>
+                                <input
+                                  type="email"
+                                  className="form-control input-field"
+                                  placeholder="contacto@empresa.com"
+                                  value={outreachEmail}
+                                  onChange={(e) =>
+                                    setOutreachEmail(e.target.value)
+                                  }
+                                />
+                              </div>
+                              <div className="cand-form-field">
+                                <label className="field-label">
+                                  Nombre de la compañía *
+                                </label>
+                                <input
+                                  type="text"
+                                  className="form-control input-field"
+                                  placeholder="Ej: Acme Corp"
+                                  value={outreachCompany}
+                                  onChange={(e) =>
+                                    setOutreachCompany(e.target.value)
+                                  }
+                                />
+                              </div>
+                              <div
+                                className="cand-form-field"
+                                style={{ gridColumn: '1 / -1' }}
+                              >
+                                <label className="field-label">
+                                  Título del puesto *
+                                </label>
+                                <input
+                                  type="text"
+                                  className="form-control input-field"
+                                  placeholder="Ej: Backend Developer"
+                                  value={outreachJobTitle}
+                                  onChange={(e) =>
+                                    setOutreachJobTitle(e.target.value)
+                                  }
+                                />
+                              </div>
+                            </div>
+
+                            <div className="d-flex align-items-center gap-3 mt-3">
+                              <button
+                                className="btn btn-primary-custom btn-sm"
+                                onClick={handleSendOutreachEmail}
+                                disabled={
+                                  sendingOutreach ||
+                                  !outreachEmail.trim() ||
+                                  !outreachCompany.trim() ||
+                                  !outreachJobTitle.trim()
+                                }
+                              >
+                                {sendingOutreach ? (
+                                  <>
+                                    <span
+                                      className="spinner-border spinner-border-sm me-2"
+                                      role="status"
+                                    />
+                                    Enviando...
+                                  </>
+                                ) : (
+                                  <>
+                                    <i className="bi bi-send-fill me-2"></i>
+                                    Enviar email
+                                  </>
+                                )}
+                              </button>
+
+                              {outreachSuccess && (
+                                <span className="text-success small d-flex align-items-center gap-1">
+                                  <i className="bi bi-check-circle-fill"></i>
+                                  Email enviado correctamente
+                                </span>
                               )}
                             </div>
-                          )}
 
-                          {generandoMensaje && (
-                            <div className="text-center py-3 text-muted small">
-                              <div
-                                className="spinner-border spinner-border-sm me-2"
-                                role="status"
-                              ></div>
-                              Generando mensaje...
-                            </div>
-                          )}
-
-                          {mensajeGenerado && !generandoMensaje && (
-                            <div className="msg-generated">
-                              <div className="msg-generated-header">
-                                <span className="msg-generated-label">
-                                  <i className="bi bi-check-circle-fill text-success me-2"></i>
-                                  Mensaje listo
-                                </span>
-                                <button
-                                  className="btn-icon btn-icon-sm"
-                                  onClick={handleCopiarMensaje}
-                                  title="Copiar al portapapeles"
-                                >
-                                  {mensajeCopied ? (
-                                    <i className="bi bi-check2 text-success"></i>
-                                  ) : (
-                                    <i className="bi bi-clipboard"></i>
-                                  )}
-                                </button>
-                              </div>
-                              <textarea
-                                className="form-control msg-textarea"
-                                rows={10}
-                                value={mensajeGenerado}
-                                onChange={(e) =>
-                                  setMensajeGenerado(e.target.value)
-                                }
-                              />
-                              <div className="msg-generated-actions">
-                                <button
-                                  className="btn btn-secondary-custom btn-sm"
-                                  onClick={() =>
-                                    handleGenerarMensaje(
-                                      todosContactos[0] || null
-                                    )
-                                  }
-                                >
-                                  <i className="bi bi-arrow-clockwise me-1"></i>
-                                  Regenerar
-                                </button>
-                                <button
-                                  className="btn btn-primary-custom btn-sm"
-                                  onClick={handleCopiarMensaje}
-                                >
-                                  {mensajeCopied ? (
-                                    <>
-                                      <i className="bi bi-check2 me-1"></i>
-                                      ¡Copiado!
-                                    </>
-                                  ) : (
-                                    <>
-                                      <i className="bi bi-clipboard me-1"></i>
-                                      Copiar
-                                    </>
-                                  )}
-                                </button>
-                              </div>
-                            </div>
-                          )}
+                            <p className="text-muted small mt-2 mb-0">
+                              <i className="bi bi-info-circle me-1"></i>
+                              Se usará la plantilla{' '}
+                              <strong>prospect_vacancy</strong> con los datos
+                              introducidos.
+                            </p>
+                          </div>
                         </div>
                       </div>
                     );
                   })()}
 
+                {/* TAB CRM */}
                 {activeTab === 'crm' && !isReclutador && (
                   <div className="tab-pane fade show active">
                     <div className="detail-section">
@@ -1419,6 +1420,7 @@ export default function VacancyModal({
                   </div>
                 )}
 
+                {/* TAB SEGUIMIENTO */}
                 {activeTab === 'seguimiento' && !isReclutador && (
                   <div className="tab-pane fade show active">
                     <div className="detail-section">
@@ -1553,6 +1555,7 @@ export default function VacancyModal({
                   </div>
                 )}
 
+                {/* TAB CANDIDATOS */}
                 {activeTab === 'candidatos' && (
                   <div className="tab-pane fade show active">
                     <div className="detail-section">
@@ -1562,7 +1565,7 @@ export default function VacancyModal({
 
                       <div className="cand-tracking-form mb-4">
                         <div className="cand-form-row">
-                          {/* ---- BUSCADOR LIVE DE CANDIDATOS ---- */}
+                          {/* BUSCADOR LIVE */}
                           <div
                             className="cand-form-field cand-form-field--wide"
                             style={{ position: 'relative' }}
@@ -1588,7 +1591,6 @@ export default function VacancyModal({
                               />
                             </div>
 
-                            {/* Dropdown de sugerencias */}
                             {candidatosSugeridos.length > 0 && (
                               <ul className="cand-search-dropdown">
                                 {candidatosSugeridos.map((c) => (
@@ -1621,7 +1623,6 @@ export default function VacancyModal({
                               </ul>
                             )}
 
-                            {/* Sin resultados */}
                             {candidatoSearch &&
                               candForm.nombre !== candidatoSearch &&
                               candidatosSugeridos.length === 0 && (
@@ -1630,7 +1631,6 @@ export default function VacancyModal({
                                 </div>
                               )}
                           </div>
-                          {/* ---- FIN BUSCADOR ---- */}
 
                           <div className="cand-form-field">
                             <label className="field-label">
@@ -1898,6 +1898,7 @@ export default function VacancyModal({
                   </div>
                 )}
 
+                {/* TAB DOCUMENTOS */}
                 {activeTab === 'documentos' && (
                   <div className="tab-pane fade show active">
                     <div className="detail-section">
@@ -2030,14 +2031,14 @@ export default function VacancyModal({
           </div>
         </div>
       </div>
-      {/* MODAL DE RESULTADOS DE IA */}
+
+      {/* MODAL SMART MATCH */}
       {showMatchModal && (
         <SmartMatchResults
           job={job}
           candidates={matchResults}
           onClose={() => setShowMatchModal(false)}
           onCandidatoAdded={() => {
-            // Recargar la lista de candidatos
             const fetchCandidatos = async () => {
               const res = await authFetch(
                 ENDPOINTS.recruitment.vacantes.candidateTracking(job.id)
