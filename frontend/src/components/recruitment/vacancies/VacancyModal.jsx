@@ -1050,6 +1050,11 @@ export default function VacancyModal({
                   (() => {
                     const contactosAPI = job.contactos?.length
                       ? job.contactos
+                          .filter((c) => c.email)
+                          .filter(
+                            (c, i, arr) =>
+                              arr.findIndex((x) => x.email === c.email) === i
+                          )
                       : job.contactEmail || job.contactPhone || job.contactName
                         ? [
                             {
