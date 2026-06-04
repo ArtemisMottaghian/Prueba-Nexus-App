@@ -1,35 +1,62 @@
 /* CreateCandidate.css */
 
-/* --- CONTENEDOR DEL MODAL --- */
+/* --- FORZAR ALTURA MÁXIMA Y SCROLL — la solución real --- */
+.custom-create-modal.modal {
+  display: flex !important;
+  align-items: center;
+}
+
+.custom-create-modal .modal-dialog {
+  max-height: calc(100dvh - 48px);
+  margin: 24px auto;
+  display: flex;
+  flex-direction: column;
+}
+
 .custom-create-modal .modal-content {
   background: var(--bg-primary);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15); /* Sombra un poco más profunda para que "flote" */
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
   color: var(--text-primary);
-  overflow: hidden; /* Para que las esquinas del header/footer respeten el radius */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;         /* Crítico para que flex funcione dentro del dialog */
+  max-height: calc(100dvh - 48px);
+  overflow: hidden;
 }
 
-/* --- HEADER Y FOOTER --- */
+/* Header: fijo arriba, nunca se comprime */
 .custom-create-modal .modal-header {
   border-bottom: 1px solid var(--border-color);
   padding: 20px 24px;
+  flex-shrink: 0;
 }
 
+/* Body: scroll aquí, solo aquí */
+.custom-create-modal .modal-body {
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Footer: fijo abajo, nunca se comprime ni desaparece */
 .custom-create-modal .modal-footer {
   border-top: 1px solid var(--border-color);
-  background: var(--bg-primary); /* Quitamos el bg-light de Bootstrap */
+  background: var(--bg-primary);
   padding: 16px 24px;
+  flex-shrink: 0;
 }
 
+/* --- TÍTULOS --- */
 .custom-create-modal .modal-title {
   font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-/* --- ESTILOS DE LOS INPUTS Y SELECTS --- */
+/* --- LABELS --- */
 .custom-create-modal .form-label {
   font-size: 14px;
   font-weight: 600;
@@ -37,18 +64,18 @@
   margin-bottom: 8px;
 }
 
+/* --- INPUTS, SELECTS, INPUT-GROUP --- */
 .custom-create-modal .form-control,
 .custom-create-modal .form-select,
 .custom-create-modal .input-group-text {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  border-radius: 10px; /* Misma curvatura que tus detail-icon */
+  border-radius: 10px;
   padding: 10px 14px;
   transition: all 0.3s ease;
 }
 
-/* Texto de ayuda debajo de los inputs */
 .custom-create-modal .form-text {
   color: var(--text-primary);
   opacity: 0.7;
@@ -56,28 +83,25 @@
   margin-top: 6px;
 }
 
-/* --- ESTADOS INTERACTIVOS (HOVER Y FOCUS) --- */
 .custom-create-modal .form-control:hover,
 .custom-create-modal .form-select:hover {
   background: var(--bg-primary);
 }
 
-/* Replicamos el brillo morado que tienen tus tarjetas al hacer hover */
 .custom-create-modal .form-control:focus,
 .custom-create-modal .form-select:focus {
   background: var(--bg-primary);
   border-color: var(--color-purple-primary);
-  box-shadow: 0 0 0 4px rgba(91, 63, 255, 0.15); /* Halo morado suave */
+  box-shadow: 0 0 0 4px rgba(91, 63, 255, 0.15);
   outline: none;
 }
 
-/* --- ESTILIZACIÓN DEL SELECT CUANDO ESTÁ ABIERTO --- */
 .custom-create-modal select option {
   background: var(--bg-secondary);
   color: var(--text-primary);
 }
 
-/* --- BOTONES DEL FOOTER --- */
+/* --- BOTONES --- */
 .custom-create-modal .btn-primary {
   background-color: var(--color-purple-primary, #5b3fff);
   border-color: var(--color-purple-primary, #5b3fff);

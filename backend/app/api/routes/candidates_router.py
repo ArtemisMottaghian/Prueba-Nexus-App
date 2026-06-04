@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
-
+from fastapi.responses import FileResponse
 from app.db.connection import get_db
 from app.core.jwt import get_current_user
 from app.services import candidates_service
@@ -20,7 +20,7 @@ from app.schemas.candidates_schemas import (
 )
 from app.schemas.comments_schemas import CommentCreate, CommentUpdate, CommentResponse
 from app.services import comments_service
-from app.services.llm_parser import parse_with_gemini
+from app.services.llm_parser import parse_with_code
 
 import traceback
 import uuid
@@ -28,8 +28,13 @@ import io
 import pdfplumber
 import re
 import unicodedata
+import os
 
 router = APIRouter()
+
+# 🛠️ Definimos y creamos la carpeta donde se guardarán los PDFs manuales y automáticos
+CV_STORAGE_DIR = os.path.join(os.getcwd(), "stored_cvs")
+os.makedirs(CV_STORAGE_DIR, exist_ok=True)
 
 
 @router.get("", response_model=List[CandidateFrontendOut])
@@ -42,6 +47,11 @@ async def read_candidates(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    """
+    Obtiene la lista completa de candidatos.
+    Permite filtrar los resultados por ubicación, habilidades, estado, fuente de origen y si han sido verificados.
+    Se utiliza principalmente para renderizar la tabla principal de candidatos en el Frontend.
+    """
     return await candidates_service.get_all_candidates(db, location, skills, status, source, verified)
 
 
@@ -51,6 +61,11 @@ async def search_candidates(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    """
+    Buscador específico de candidatos por nombre o apellido.
+    Requiere un mínimo de 3 caracteres para realizar la búsqueda.
+    Ideal para barras de búsqueda rápida en la interfaz.
+    """
     candidates = await candidates_service.search_candidates_by_name(db, name)
     if not candidates:
         raise HTTPException(status_code=404, detail="No se encontraron candidatos con ese nombre")
@@ -62,6 +77,11 @@ async def get_scraper_status(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    """
+    Devuelve las estadísticas actuales del motor de scraping.
+    Informa sobre cuántos perfiles se han extraído mediante el scraper automático
+    para mostrarlo en el panel de control.
+    """
     return await candidates_service.get_scraper_status(db)
 
 
@@ -70,6 +90,11 @@ async def get_candidate_locations(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    """
+    Extrae una lista única de todas las ubicaciones (ciudades/países) 
+    registradas actualmente en la base de datos de candidatos.
+    Útil para rellenar los selectores de los filtros en el Frontend.
+    """
     return await candidates_service.get_location_options(db)
 
 
@@ -79,6 +104,10 @@ async def read_candidate(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    """
+    Obtiene todos los detalles de un candidato específico mediante su ID.
+    Se utiliza al hacer clic en un candidato para abrir su vista detallada o perfil.
+    """
     candidate = await candidates_service.get_candidate_by_id(db, candidate_id)
     if not candidate:
         raise HTTPException(status_code=404, detail="Candidato no encontrado")
@@ -91,6 +120,10 @@ async def create_candidate(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    """
+    Crea un candidato manualmente en la base de datos enviando sus datos en formato JSON.
+    Se utiliza cuando se rellena un formulario de creación manual en lugar de subir un PDF.
+    """
     return await candidates_service.create_candidate(db, payload)
 
 
@@ -101,6 +134,10 @@ async def update_candidate(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    """
+    Actualiza parcialmente los datos de un candidato existente.
+    Permite modificar campos como el teléfono, ubicación o experiencia desde su ficha.
+    """
     candidate = await candidates_service.update_candidate(db, candidate_id, payload)
     if not candidate:
         raise HTTPException(status_code=404, detail="Candidato no encontrado")
@@ -114,6 +151,10 @@ async def update_candidate_status(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    """
+    Actualiza exclusivamente el estado (status) de un candidato.
+    Ejemplo: Cambiarlo de 'active' a 'hired' o 'rejected' en el flujo de selección.
+    """
     candidate = await candidates_service.update_status(db, candidate_id, payload.status)
     if not candidate:
         raise HTTPException(status_code=404, detail="Candidato no encontrado")
@@ -126,6 +167,9 @@ async def delete_candidate(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    """
+    Elimina permanentemente a un candidato de la base de datos.
+    """
     success = await candidates_service.delete_candidate(db, candidate_id)
     if not success:
         raise HTTPException(status_code=404, detail="Candidato no encontrado")
@@ -139,6 +183,10 @@ async def mark_favorite(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    """
+    Marca o desmarca a un candidato como favorito (destacado).
+    Se acciona normalmente con un icono de estrella en la interfaz.
+    """
     candidate = await candidates_service.get_candidate_by_id(db, candidate_id)
     if candidate is None:
         raise HTTPException(status_code=404, detail="El candidato no existe")
@@ -155,6 +203,10 @@ async def verify_candidate(
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    """
+    Marca a un candidato como 'Verificado' tras comprobar manualmente que sus datos son reales.
+    Útil para diferenciar candidatos revisados de los recién extraídos por el scraper.
+    """
     candidate = await candidates_service.get_candidate_by_id(db, candidate_id)
     if candidate is None:
         raise HTTPException(status_code=404, detail="El candidato no existe")
@@ -168,9 +220,15 @@ async def verify_candidate(
 async def process_cv(
     pdf_file: Optional[UploadFile] = File(None),
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
+    #current_user: dict = Depends(get_current_user),
 ):
-    """Procesa un candidato subiendo su CV en PDF y se guarda en la BD"""
+    """
+    Endpoint principal de subida manual de Currículums.
+    Realiza tres acciones clave:
+    1. Lee el PDF subido desde el Frontend y extrae su texto.
+    2. Utiliza reglas de código puro (Regex y Heurística) para extraer Nombre, Email, Experiencia, etc.
+    3. Guarda el archivo PDF físicamente en el servidor (/stored_cvs/) y registra al candidato en la BBDD.
+    """
     if not pdf_file:
         raise HTTPException(status_code=400, detail="Debes subir un archivo PDF con el CV.")
 
@@ -188,7 +246,7 @@ async def process_cv(
         if not raw_text or not raw_text.strip():
             raise HTTPException(status_code=400, detail="No se pudo extraer el texto del documento PDF.")
 
-        candidate_json = await parse_with_gemini(raw_text)
+        candidate_json = await parse_with_code(raw_text)
 
         email_extraido = candidate_json.get("email", "")
         if not email_extraido or "@" not in email_extraido:
@@ -221,6 +279,21 @@ async def process_cv(
         if len(ln_final) < 2:
             ln_final = "Desconocido"
 
+        # Lógica para guardar el archivo físico en la carpeta
+        safe_f = re.sub(r'[^a-z0-9]', '', fn_final.lower())
+        safe_l = re.sub(r'[^a-z0-9]', '', ln_final.lower())
+        unique_id = uuid.uuid4().hex[:8]
+        filename = f"{safe_f}_{safe_l}_{unique_id}.pdf"
+        file_path = os.path.join(CV_STORAGE_DIR, filename)
+        
+        try:
+            with open(file_path, "wb") as f:
+                f.write(file_bytes)
+            cv_url_bd = f"/stored_cvs/{filename}"
+        except Exception as e:
+            print(f"⚠️ Error al guardar el PDF físico: {e}")
+            cv_url_bd = None
+
         candidate_payload = CandidateCreate(
             first_name=fn_final,
             last_name=ln_final,
@@ -232,6 +305,7 @@ async def process_cv(
             education=candidate_json.get("education", ""),
             skills=candidate_json.get("skills", ""),
             candidate_url=None,
+            cv_url=cv_url_bd, 
             status="active",
         )
 
@@ -243,3 +317,21 @@ async def process_cv(
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error interno procesando el candidato: {str(e)}")
+
+
+@router.get("/download-cv/{filename}")
+async def download_cv(filename: str):
+    """
+    Endpoint para que el Frontend descargue el PDF original del candidato.
+    Recibe el nombre del archivo (ej: carlos_perez_a1b2c3d4.pdf) y devuelve el archivo físico 
+    desde la carpeta de almacenamiento seguro del servidor (/stored_cvs/).
+    """
+    if ".." in filename or "/" in filename or "\\" in filename:
+        raise HTTPException(status_code=400, detail="Nombre de archivo inválido.")
+        
+    file_path = os.path.join(CV_STORAGE_DIR, filename)
+    
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="El archivo PDF no existe en el servidor.")
+        
+    return FileResponse(file_path, media_type="application/pdf")

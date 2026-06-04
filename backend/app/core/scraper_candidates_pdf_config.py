@@ -9,8 +9,7 @@ SECTORES = {
     "TECNOLOGICO": ["Desarrollador", "DevOps", "Data Scientist", "Ciberseguridad"],
     "VENTAS": ["Key Account Manager", "Comercial", "Director de Ventas"],
     "LOGISTICA": ["Jefe de Almacén", "Supply Chain", "Operaciones"],
-    "INGENIERIA": ["Ingeniero Civil", "Ingeniero Industrial", "Project Manager"],
-    
+    "INGENIERIA": ["Ingeniero Civil", "Ingeniero Industrial", "Project Manager"],    
 }
 
 KEYWORDS = [

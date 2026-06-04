@@ -48,11 +48,42 @@ async def gather_raw_offers() -> list[dict]:
 def validate_and_filter_offers(raw_offers: list[dict]) -> list[ScrapedJobOffer]:
     valid_offers = []
     today = datetime.now(timezone.utc)
+    
+    # 🔥 LISTA NEGRA DE CONSULTORAS DE RRHH, HEADHUNTING Y ETTS
+    BLACKLISTED_COMPANIES = [
+        # Empresas originales y firmas clave
+        "aratalent", "adecco", "randstad", "manpower", "hays", 
+        "page personnel", "michael page", "robert walters", 
+        "spring professional", "talent search people", 
+        "grupo crit", "grupo nortempo", "nortempo", "synergie", 
+        "eurofirms", "sibils consulting",
+        
+        # Agencias de Headhunting y Selección Especializada
+        "walters people", "robert half", "experis", "antal international", 
+        "catenon", "bros group", "claire joster", "badenoch + clark", 
+        "hudson", "oliver james", "frank recruitment group", "nigel frank", 
+        "jefferson frank", "wyser",
+        
+        # ETTs y Plataformas de Contratación masiva
+        "jobandtalent", "kelly services", "gi group", "iman temporing", 
+        "grupo ctc", "selectiva", "isgf", "ananda",
+        
+        # Consultoras Organizativas de RRHH y Talento
+        "lhh", "korn ferry", "mercer", "cegos", "aon"
+    ]
 
     for offer in raw_offers:
         try:
             validated_offer = ScrapedJobOffer(**offer)
             if not validated_offer.company_name:
+                continue
+                
+            # 🔥 NUEVO FILTRO: Comprobamos si la empresa está en la lista negra
+            company_name_lower = validated_offer.company_name.lower()
+            es_consultora = any(blacklisted in company_name_lower for blacklisted in BLACKLISTED_COMPANIES)
+            
+            if es_consultora:
+                print(f"      [FILTRO ETT] Descartando oferta de competidor/consultora: {validated_offer.company_name}")
                 continue
 
             public_date = validated_offer.published_at
@@ -184,14 +215,13 @@ async def process_and_save_offers(valid_offers: list[ScrapedJobOffer]):
                     apollo_id = None
 
                     if not recruiter_email and company_name:
-                        # 🔥 MODIFICACIÓN CLAVE: Extraemos el título de la vacante y se lo pasamos a Apollo
                         titulo_vacante = offer_dict.get("title")
                         
                         apollo_data = await search_and_extract_recruiter(
                             company_name=company_name, 
                             domain=company_domain, 
                             known_name=recruiter_name,
-                            offer_title=titulo_vacante # <-- ¡Aquí está la magia!
+                            offer_title=titulo_vacante
                         )
 
                         if apollo_data:
@@ -210,7 +240,6 @@ async def process_and_save_offers(valid_offers: list[ScrapedJobOffer]):
                             if apollo_data.get("titulo"):
                                 recruiter_job_title = apollo_data.get("titulo")
                                 
-                            # Capturamos el ID del CRM
                             if apollo_data.get("apollo_contact_id"):
                                 apollo_id = apollo_data.get("apollo_contact_id")
                             elif apollo_data.get("id"):
@@ -219,6 +248,10 @@ async def process_and_save_offers(valid_offers: list[ScrapedJobOffer]):
                     # ==========================================
                     # PASO 3: GUARDADO FINAL EN BD
                     # ==========================================
+                    if recruiter_email and "@ara-tech.es" in recruiter_email.lower():
+                        print(f"      🛡️ [SEGURIDAD] Bloqueado correo de prueba inyectado: {recruiter_email}")
+                        recruiter_email = None
+    
                     if (
                         recruiter_name or recruiter_email or recruiter_linkedin
                     ) and company_id:
@@ -326,7 +359,6 @@ async def add_contact_to_apollo_sequence(apollo_contact_id: str) -> bool:
         )
         return False
 
-    # 🛑 PROTECCIÓN DE PRUEBAS
     if test_mode:
         print(
             f"      [MODO PRUEBA] Simulando: Inyectando Contacto de Apollo ID {apollo_contact_id} en Secuencia {sequence_id}"
@@ -335,13 +367,11 @@ async def add_contact_to_apollo_sequence(apollo_contact_id: str) -> bool:
 
     url = f"https://api.apollo.io/v1/emailer_campaigns/{sequence_id}/add_contact_ids"
     
-    # 🔥 CAMBIO 1: La API KEY ahora va obligatoriamente en los HEADERS
     headers = {
         "Content-Type": "application/json",
         "x-api-key": api_key
     }
     
-    # 🔥 CAMBIO 2: Limpiamos el payload (ya no lleva la api_key)
     payload = {
         "emailer_campaign_id": sequence_id,
         "contact_ids": [apollo_contact_id],
@@ -350,7 +380,6 @@ async def add_contact_to_apollo_sequence(apollo_contact_id: str) -> bool:
 
     async with aiohttp.ClientSession() as session:
         try:
-            # 🔥 CAMBIO 3: Le pasamos los headers a la petición
             async with session.post(url, json=payload, headers=headers) as resp:
                 if resp.status == 200:
                     print(
