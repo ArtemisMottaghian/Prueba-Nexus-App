@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { ENDPOINTS } from '../../../services/api';
 import './VacancyPublicDetail.css';
@@ -82,6 +82,11 @@ export default function VacancyPublicDetail() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formStatus, setFormStatus] = useState(null);
   const [errorStatus, setErrorStatus] = useState(null);
+  const [cvFileName, setCvFileName] = useState('');
+  const [isParsing, setIsParsing] = useState(false);
+  const [cvExtracted, setCvExtracted] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
 
   // ── Issue #452: inyectar <meta name="robots" content="noindex, nofollow">
   // para que Google no indexe estas ofertas y la competencia no las detecte.
@@ -160,20 +165,41 @@ export default function VacancyPublicDetail() {
 
   const secciones = parseDescripcion(job.description);
 
+  const processCVFile = async (file) => {
+    if (!file || file.type !== 'application/pdf') return;
+    setIsParsing(true);
+    setErrorStatus(null);
+    setCvFileName(file.name);
+    setCvExtracted(false);
+    try {
+      const formDataCV = new FormData();
+      formDataCV.append('pdf_file', file);
+      const res = await fetch('/api/candidates/process_cv', {
+        method: 'POST',
+        body: formDataCV,
+      });
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      const data = await res.json();
+      setFormData({
+        name: `${data.first_name || ''} ${data.last_name || ''}`.trim(),
+        email: data.email || '',
+        phone: data.phone || '',
+        education: data.education || '',
+        location: data.location || '',
+        experience: data.experience || '',
+        specialty: data.specialty || data.skills || '',
+      });
+      setCvExtracted(true);
+    } catch (err) {
+      setErrorStatus(`Error al procesar PDF: ${err.message}`);
+      setCvFileName('');
+    } finally {
+      setIsParsing(false);
+    }
+  };
+
   return (
     <div className="vpd-shell">
-      {/* ── HEADER ─────────────────────────────────── */}
-      <header className="vpd-header">
-        <div className="vpd-header-inner">
-          <span className="vpd-logo-brand">
-            Nexus<span>AI</span>
-          </span>
-          <a href="#vpd-apply" className="vpd-apply-btn-header">
-            Inscribirme en la oferta
-          </a>
-        </div>
-      </header>
-
       {/* ── HERO ───────────────────────────────────── */}
       <section className="vpd-hero">
         <div className="vpd-container">
@@ -346,6 +372,72 @@ export default function VacancyPublicDetail() {
                 </div>
               ) : (
                 <>
+                  {/* Zona subida CV */}
+                  {!cvFileName ? (
+                    <div
+                      className={`vpd-cv-zone ${isDragging ? 'vpd-cv-zone--drag' : ''}`}
+                      onClick={() => fileInputRef.current?.click()}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setIsDragging(true);
+                      }}
+                      onDragLeave={() => setIsDragging(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsDragging(false);
+                        processCVFile(e.dataTransfer.files?.[0]);
+                      }}
+                    >
+                      <i className="bi bi-file-earmark-pdf vpd-cv-icon"></i>
+                      <span className="vpd-cv-label">
+                        Subir CV en PDF para autocompletar
+                      </span>
+                      <span className="vpd-cv-hint">
+                        Haz clic o arrastra aquí el archivo
+                      </span>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="application/pdf"
+                        style={{ display: 'none' }}
+                        onChange={(e) => processCVFile(e.target.files?.[0])}
+                      />
+                    </div>
+                  ) : isParsing ? (
+                    <div className="vpd-cv-parsing">
+                      <div className="vpd-cv-spinner"></div>
+                      <span>
+                        Extrayendo datos de <strong>{cvFileName}</strong>...
+                      </span>
+                    </div>
+                  ) : cvExtracted ? (
+                    <div className="vpd-cv-success">
+                      <i className="bi bi-check-circle-fill"></i>
+                      <span>
+                        Datos extraídos — Revisa los campos antes de guardar.
+                      </span>
+                      <button
+                        onClick={() => {
+                          setCvFileName('');
+                          setCvExtracted(false);
+                          setFormData({
+                            name: '',
+                            email: '',
+                            phone: '',
+                            education: '',
+                            location: '',
+                            experience: '',
+                            specialty: '',
+                          });
+                          if (fileInputRef.current)
+                            fileInputRef.current.value = '';
+                        }}
+                      >
+                        <i className="bi bi-x-lg"></i>
+                      </button>
+                    </div>
+                  ) : null}
+
                   {errorStatus && (
                     <div className="vpd-form-error">
                       <i className="bi bi-exclamation-triangle-fill"></i>
