@@ -19,8 +19,6 @@ export default function CreateCandidate({ onClose, onSave }) {
   const [isDragging, setIsDragging] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [parsedCandidateId, setParsedCandidateId] = useState(null);
-
-  // Estado para mostrar los errores detallados de forma humana
   const [errorStatus, setErrorStatus] = useState(null);
 
   const fileInputRef = useRef(null);
@@ -45,12 +43,10 @@ export default function CreateCandidate({ onClose, onSave }) {
           .filter(Boolean)
       : [];
 
-    // Partimos el "Nombre Completo" en Nombre y Apellidos para cumplir con el Backend
     const nameParts = formData.name.trim().split(' ');
     const fName = nameParts[0] || '';
     const lName = nameParts.slice(1).join(' ') || '';
 
-    // Construimos los datos con la estructura exacta que exige FastAPI
     const finalData = {
       first_name: fName,
       last_name: lName,
@@ -113,7 +109,7 @@ export default function CreateCandidate({ onClose, onSave }) {
           console.warn(
             'La respuesta de error no contenía un JSON de validación:',
             e
-          ); // <-- ¡SOLUCIÓN PARA EL LINTER AQUÍ!
+          );
           msg = `Error del servidor: ${error.message || 'Error desconocido'}`;
         }
       }
@@ -208,7 +204,11 @@ export default function CreateCandidate({ onClose, onSave }) {
         tabIndex="-1"
         role="dialog"
       >
-        <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        {/* 
+          CAMBIO CLAVE: eliminado "modal-dialog-scrollable" — interfería con nuestro
+          flex propio. El scroll lo gestiona ahora el CSS en .modal-body.
+        */}
+        <div className="modal-dialog modal-dialog-centered modal-lg">
           <div className="modal-content">
             <div className="modal-header">
               <h4 className="modal-title fw-bold">Añadir Nuevo Candidato</h4>
@@ -220,9 +220,9 @@ export default function CreateCandidate({ onClose, onSave }) {
               ></button>
             </div>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
               <div className="modal-body">
-                {/* Cartel de Error Dinámico */}
+                {/* Banner de error */}
                 {errorStatus && (
                   <div
                     className="alert alert-danger d-flex align-items-center animate__animated animate__shakeX"
@@ -233,7 +233,7 @@ export default function CreateCandidate({ onClose, onSave }) {
                   </div>
                 )}
 
-                {/* Zona de Carga de PDF */}
+                {/* Zona de carga de PDF */}
                 {!cvFileName ? (
                   <div
                     className={`cv-upload-zone ${isDragging ? 'cv-upload-zone--drag' : ''}`}
@@ -294,7 +294,6 @@ export default function CreateCandidate({ onClose, onSave }) {
                     cvFileName || errorStatus ? 'mt-3' : 'cv-divider mt-4'
                   }
                 >
-                  {/* Nombre Completo */}
                   <div className="mb-3">
                     <label htmlFor="name" className="form-label fw-semibold">
                       Nombre Completo <span className="text-danger">*</span>
@@ -310,7 +309,6 @@ export default function CreateCandidate({ onClose, onSave }) {
                     />
                   </div>
 
-                  {/* Email y Teléfono */}
                   <div className="row">
                     <div className="col-md-6 mb-3">
                       <label htmlFor="email" className="form-label fw-semibold">
@@ -340,7 +338,6 @@ export default function CreateCandidate({ onClose, onSave }) {
                     </div>
                   </div>
 
-                  {/* Formación y Experiencia */}
                   <div className="row">
                     <div className="col-md-6 mb-3">
                       <label
@@ -391,7 +388,6 @@ export default function CreateCandidate({ onClose, onSave }) {
                     </div>
                   </div>
 
-                  {/* Localización */}
                   <div className="mb-3">
                     <label
                       htmlFor="location"
@@ -409,7 +405,6 @@ export default function CreateCandidate({ onClose, onSave }) {
                     />
                   </div>
 
-                  {/* Habilidades */}
                   <div className="mb-3">
                     <label
                       htmlFor="specialty"
@@ -430,7 +425,7 @@ export default function CreateCandidate({ onClose, onSave }) {
                 </div>
               </div>
 
-              <div className="modal-footer bg-light">
+              <div className="modal-footer">
                 <button
                   type="button"
                   className="btn btn-outline-secondary"
