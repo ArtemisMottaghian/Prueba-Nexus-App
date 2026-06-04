@@ -205,6 +205,17 @@ export default function VacancyPublicDetail() {
 
   return (
     <div className="vpd-shell">
+      {/* ── HEADER */}
+      <header className="vpd-header">
+        <div className="vpd-header-inner">
+          <span className="vpd-logo-brand">
+            Nexus<span>AI</span>
+          </span>
+          <a href="#vpd-apply" className="vpd-apply-btn-header">
+            Inscribirme en la oferta
+          </a>
+        </div>
+      </header>
       {/* ── HERO ───────────────────────────────────── */}
       <section className="vpd-hero">
         <div className="vpd-container">
