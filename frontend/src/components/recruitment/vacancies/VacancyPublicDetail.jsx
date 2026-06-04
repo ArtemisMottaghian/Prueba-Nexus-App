@@ -184,9 +184,11 @@ export default function VacancyPublicDetail() {
         name: `${data.first_name || ''} ${data.last_name || ''}`.trim(),
         email: data.email || '',
         phone: data.phone || '',
-        education: data.education || '',
+        education:
+          typeof data.education === 'object' ? '' : data.education || '',
         location: data.location || '',
-        experience: data.experience || '',
+        experience:
+          typeof data.experience === 'object' ? '' : data.experience || '',
         specialty:
           data.specialty ||
           (Array.isArray(data.skills) ? data.skills.join(', ') : data.skills) ||
