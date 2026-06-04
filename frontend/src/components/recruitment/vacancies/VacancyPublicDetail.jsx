@@ -187,7 +187,10 @@ export default function VacancyPublicDetail() {
         education: data.education || '',
         location: data.location || '',
         experience: data.experience || '',
-        specialty: data.specialty || data.skills || '',
+        specialty:
+          data.specialty ||
+          (Array.isArray(data.skills) ? data.skills.join(', ') : data.skills) ||
+          '',
       });
       setCvExtracted(true);
     } catch (err) {
