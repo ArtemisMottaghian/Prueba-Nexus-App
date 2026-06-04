@@ -5,6 +5,7 @@ from fastapi.responses import FileResponse
 from app.db.connection import get_db
 from app.core.jwt import get_current_user
 from app.services import candidates_service
+
 from app.schemas.candidates_schemas import (
     CandidateFrontendOut,
     CandidateStatus,
@@ -15,6 +16,7 @@ from app.schemas.candidates_schemas import (
     CandidateOut,
     MessageResponse,
     FavoriteRequest,
+    CandidatePublicCreate,
     CandidateScraperStatusOut,
     VerifyRequest,
 )
@@ -338,11 +340,24 @@ async def download_cv(filename: str):
 
 @router.post("/public", response_model=CandidateOut, status_code=201)
 async def create_candidate_public(
-    payload: CandidateCreate,
+    payload: CandidatePublicCreate,
     db: AsyncSession = Depends(get_db),
 ):
-    """
-    Endpoint público para que candidatos se inscriban desde la página pública de una vacante.
-    No requiere autenticación.
-    """
-    return await candidates_service.create_candidate(db, payload)
+    email = payload.email if payload.email and "@" in payload.email \
+        else f"publico.{uuid.uuid4().hex[:8]}@scraping.com"
+
+    phone = payload.phone if payload.phone else "000000000"
+
+    candidate_data = CandidateCreate(
+        first_name=payload.first_name,
+        last_name=payload.last_name,
+        email=email,
+        phone=phone,
+        location=payload.location or "España",
+        source=payload.source or "Vacante pública",
+        experience=str(payload.experience) if payload.experience else None,
+        education=payload.education or None,
+        skills=payload.specialty or payload.skills or None,
+        status=CandidateStatus.active,
+    )
+    return await candidates_service.create_candidate(db, candidate_data)
