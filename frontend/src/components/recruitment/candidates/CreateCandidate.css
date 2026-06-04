@@ -1,8 +1,16 @@
 /* CreateCandidate.css */
 
-/* --- CONTENEDOR DEL MODAL --- */
+/* --- FORZAR ALTURA MÁXIMA Y SCROLL — la solución real --- */
+.custom-create-modal.modal {
+  display: flex !important;
+  align-items: center;
+}
+
 .custom-create-modal .modal-dialog {
-  max-height: calc(100vh - 60px); /* Espacio para que el modal no ocupe toda la pantalla */
+  max-height: calc(100dvh - 48px);
+  margin: 24px auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .custom-create-modal .modal-content {
@@ -12,31 +20,28 @@
   border-radius: 16px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
   color: var(--text-primary);
-  /* overflow: hidden ELIMINADO — rompía el scroll de Bootstrap */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;         /* Crítico para que flex funcione dentro del dialog */
+  max-height: calc(100dvh - 48px);
+  overflow: hidden;
 }
 
-/* Bootstrap modal-dialog-scrollable ya maneja el scroll del body,
-   pero necesitamos que el modal-content tenga altura máxima definida */
-.custom-create-modal .modal-dialog.modal-dialog-scrollable {
-  max-height: calc(100vh - 56px);
-}
-
-.custom-create-modal .modal-dialog.modal-dialog-scrollable .modal-content {
-  max-height: 100%;
-  overflow: hidden; /* Solo aquí, para que Bootstrap pueda hacer scroll en modal-body */
-}
-
-.custom-create-modal .modal-dialog.modal-dialog-scrollable .modal-body {
-  overflow-y: auto;
-}
-
-/* --- HEADER Y FOOTER — siempre visibles --- */
+/* Header: fijo arriba, nunca se comprime */
 .custom-create-modal .modal-header {
   border-bottom: 1px solid var(--border-color);
   padding: 20px 24px;
   flex-shrink: 0;
 }
 
+/* Body: scroll aquí, solo aquí */
+.custom-create-modal .modal-body {
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Footer: fijo abajo, nunca se comprime ni desaparece */
 .custom-create-modal .modal-footer {
   border-top: 1px solid var(--border-color);
   background: var(--bg-primary);
@@ -44,13 +49,14 @@
   flex-shrink: 0;
 }
 
+/* --- TÍTULOS --- */
 .custom-create-modal .modal-title {
   font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-/* --- ESTILOS DE LOS INPUTS Y SELECTS --- */
+/* --- LABELS --- */
 .custom-create-modal .form-label {
   font-size: 14px;
   font-weight: 600;
@@ -58,6 +64,7 @@
   margin-bottom: 8px;
 }
 
+/* --- INPUTS, SELECTS, INPUT-GROUP --- */
 .custom-create-modal .form-control,
 .custom-create-modal .form-select,
 .custom-create-modal .input-group-text {
@@ -76,7 +83,6 @@
   margin-top: 6px;
 }
 
-/* --- ESTADOS INTERACTIVOS (HOVER Y FOCUS) --- */
 .custom-create-modal .form-control:hover,
 .custom-create-modal .form-select:hover {
   background: var(--bg-primary);
@@ -90,13 +96,12 @@
   outline: none;
 }
 
-/* --- ESTILIZACIÓN DEL SELECT CUANDO ESTÁ ABIERTO --- */
 .custom-create-modal select option {
   background: var(--bg-secondary);
   color: var(--text-primary);
 }
 
-/* --- BOTONES DEL FOOTER --- */
+/* --- BOTONES --- */
 .custom-create-modal .btn-primary {
   background-color: var(--color-purple-primary, #5b3fff);
   border-color: var(--color-purple-primary, #5b3fff);
