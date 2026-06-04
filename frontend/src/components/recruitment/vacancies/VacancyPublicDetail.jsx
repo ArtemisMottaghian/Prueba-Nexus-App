@@ -46,15 +46,17 @@ function parseDescripcion(texto) {
 // Mapea la respuesta del endpoint público al modelo de UI
 // ────────────────────────────────────────────────────────────
 function mapPublicVacancy(v) {
+  const str = (val) =>
+    typeof val === 'string' ? val : val ? String(val) : null;
   return {
     id: v.id,
-    title: v.title || 'Oferta de empleo',
-    companyName: v.company_name || null,
-    location: v.location || 'No especificada',
-    sector: v.sector || null,
+    title: str(v.title) || 'Oferta de empleo',
+    companyName: str(v.company_name) || null,
+    location: str(v.location) || 'No especificada',
+    sector: str(v.sector) || null,
     salaryMin: v.salary_min || null,
     salaryMax: v.salary_max || null,
-    description: v.job_description || null,
+    description: str(v.job_description) || null,
     publishedAt: v.published_at
       ? new Date(v.published_at).toLocaleDateString('es-ES')
       : null,
