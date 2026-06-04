@@ -125,6 +125,8 @@ export default function VacancyModal({
 
   // --- ESTADOS EMAIL OUTREACH ---
   const [outreachEmail, setOutreachEmail] = useState('');
+  const [outreachEmailManual, setOutreachEmailManual] = useState('');
+  const [outreachEmailMode, setOutreachEmailMode] = useState('select'); // 'select' | 'manual'
   const [outreachCompany, setOutreachCompany] = useState(
     job?.companyName || ''
   );
@@ -216,12 +218,15 @@ export default function VacancyModal({
     setSendingOutreach(true);
     setOutreachSuccess(false);
 
+    const emailToSend =
+      outreachEmailMode === 'manual' ? outreachEmailManual : outreachEmail;
+
     try {
       const res = await authFetch('/api/emails/send-prospect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          company_email: outreachEmail,
+          company_email: emailToSend,
           company_name: outreachCompany,
           job_title: outreachJobTitle,
         }),
@@ -1298,10 +1303,20 @@ export default function VacancyModal({
                                 </label>
                                 <select
                                   className="form-select input-field"
-                                  value={outreachEmail}
-                                  onChange={(e) =>
-                                    setOutreachEmail(e.target.value)
+                                  value={
+                                    outreachEmailMode === 'manual'
+                                      ? '__manual__'
+                                      : outreachEmail
                                   }
+                                  onChange={(e) => {
+                                    if (e.target.value === '__manual__') {
+                                      setOutreachEmailMode('manual');
+                                      setOutreachEmail('');
+                                    } else {
+                                      setOutreachEmailMode('select');
+                                      setOutreachEmail(e.target.value);
+                                    }
+                                  }}
                                 >
                                   <option value="">
                                     Selecciona un contacto...
@@ -1315,7 +1330,22 @@ export default function VacancyModal({
                                           : c.email}
                                       </option>
                                     ))}
+                                  <option value="__manual__">
+                                    ✏️ Introducir manualmente
+                                  </option>
                                 </select>
+                                {outreachEmailMode === 'manual' && (
+                                  <input
+                                    type="email"
+                                    className="form-control input-field mt-2"
+                                    placeholder="correo@empresa.com"
+                                    value={outreachEmailManual}
+                                    onChange={(e) =>
+                                      setOutreachEmailManual(e.target.value)
+                                    }
+                                    autoFocus
+                                  />
+                                )}
                               </div>
                               <div className="cand-form-field">
                                 <label className="field-label">
@@ -1356,7 +1386,9 @@ export default function VacancyModal({
                                 onClick={handleSendOutreachEmail}
                                 disabled={
                                   sendingOutreach ||
-                                  !outreachEmail ||
+                                  (outreachEmailMode === 'manual'
+                                    ? !outreachEmailManual.trim()
+                                    : !outreachEmail) ||
                                   !outreachCompany.trim() ||
                                   !outreachJobTitle.trim()
                                 }
