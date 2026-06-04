@@ -1,6 +1,10 @@
 /* CreateCandidate.css */
 
 /* --- CONTENEDOR DEL MODAL --- */
+.custom-create-modal .modal-dialog {
+  max-height: calc(100vh - 60px); /* Espacio para que el modal no ocupe toda la pantalla */
+}
+
 .custom-create-modal .modal-content {
   background: var(--bg-primary);
   backdrop-filter: blur(12px);
@@ -8,30 +12,36 @@
   border-radius: 16px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
   color: var(--text-primary);
-  /* overflow: hidden ELIMINADO — rompía el scroll interno de Bootstrap */
-  max-height: 90vh;       /* Limita la altura al 90% de la pantalla */
-  display: flex;
-  flex-direction: column; /* Header y footer fijos, body scrollable */
+  /* overflow: hidden ELIMINADO — rompía el scroll de Bootstrap */
 }
 
-/* El body es el único que hace scroll */
-.custom-create-modal .modal-body {
+/* Bootstrap modal-dialog-scrollable ya maneja el scroll del body,
+   pero necesitamos que el modal-content tenga altura máxima definida */
+.custom-create-modal .modal-dialog.modal-dialog-scrollable {
+  max-height: calc(100vh - 56px);
+}
+
+.custom-create-modal .modal-dialog.modal-dialog-scrollable .modal-content {
+  max-height: 100%;
+  overflow: hidden; /* Solo aquí, para que Bootstrap pueda hacer scroll en modal-body */
+}
+
+.custom-create-modal .modal-dialog.modal-dialog-scrollable .modal-body {
   overflow-y: auto;
-  flex: 1;
 }
 
-/* --- HEADER Y FOOTER --- */
+/* --- HEADER Y FOOTER — siempre visibles --- */
 .custom-create-modal .modal-header {
   border-bottom: 1px solid var(--border-color);
   padding: 20px 24px;
-  flex-shrink: 0; /* Evita que el header se comprima */
+  flex-shrink: 0;
 }
 
 .custom-create-modal .modal-footer {
   border-top: 1px solid var(--border-color);
   background: var(--bg-primary);
   padding: 16px 24px;
-  flex-shrink: 0; /* Evita que el footer se comprima o desaparezca */
+  flex-shrink: 0;
 }
 
 .custom-create-modal .modal-title {
@@ -59,7 +69,6 @@
   transition: all 0.3s ease;
 }
 
-/* Texto de ayuda debajo de los inputs */
 .custom-create-modal .form-text {
   color: var(--text-primary);
   opacity: 0.7;
