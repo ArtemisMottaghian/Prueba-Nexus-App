@@ -499,7 +499,11 @@ export default function VacancyPublicDetail() {
                     <div className="vpd-form-field">
                       <label>FORMACIÓN / TITULACIÓN</label>
                       <select
-                        value={formData.education}
+                        value={
+                          typeof formData.education === 'string'
+                            ? formData.education
+                            : ''
+                        }
                         onChange={(e) =>
                           setFormData({
                             ...formData,
@@ -551,7 +555,11 @@ export default function VacancyPublicDetail() {
                     <label>HERRAMIENTAS Y HABILIDADES ESPECÍFICAS</label>
                     <input
                       type="text"
-                      value={formData.specialty}
+                      value={
+                        Array.isArray(formData.specialty)
+                          ? formData.specialty.join(', ')
+                          : formData.specialty || ''
+                      }
                       onChange={(e) =>
                         setFormData({ ...formData, specialty: e.target.value })
                       }
