@@ -69,6 +69,11 @@ export default function VacancyPublicDetail() {
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+  nombre: '', email: '', telefono: '', localizacion: '', skills: ''
+});
+const [formStatus, setFormStatus] = useState(null); // 'sending' | 'ok' | 'error'
 
   // ── Issue #452: inyectar <meta name="robots" content="noindex, nofollow">
   // para que Google no indexe estas ofertas y la competencia no las detecte.
@@ -290,13 +295,10 @@ export default function VacancyPublicDetail() {
                 Envíanos tu candidatura y nos pondremos en contacto contigo lo
                 antes posible.
               </p>
-              <a
-                href={`mailto:talento@ara-tech.es?subject=${mailSubject}&body=${mailBody}`}
-                className="vpd-cta-btn"
-              >
+               <button className="vpd-cta-btn" onClick={() => setShowForm(true)}>
                 <i className="bi bi-envelope-fill"></i>
                 Enviar candidatura
-              </a>
+              </button>
               <p className="vpd-cta-note">
                 Gestionada por <strong>Nexus Talent Solutions</strong>
               </p>
@@ -318,6 +320,85 @@ export default function VacancyPublicDetail() {
           </p>
         </div>
       </footer>
-    </div>
-  );
-}
+
+      {showForm && (
+        <div className="vpd-modal-overlay" onClick={() => setShowForm(false)}>
+          <div className="vpd-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="vpd-modal-header">
+              <h3>Enviar candidatura</h3>
+              <button className="vpd-modal-close" onClick={() => setShowForm(false)}>
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+            <div className="vpd-modal-body">
+              {formStatus === 'ok' ? (
+                <div className="vpd-form-success">
+                  <i className="bi bi-check-circle-fill"></i>
+                  <p>¡Candidatura enviada correctamente!</p>
+                  <p>Nos pondremos en contacto contigo pronto.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="vpd-form-field">
+                    <label>NOMBRE COMPLETO *</label>
+                    <input
+                      type="text"
+                      value={formData.nombre}
+                      onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                      placeholder="Tu nombre completo"
+                    />
+                  </div>
+                  <div className="vpd-form-row">
+                    <div className="vpd-form-field">
+                      <label>EMAIL</label>
+                      <input
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        placeholder="tu@email.com"
+                      />
+                    </div>
+                    <div className="vpd-form-field">
+                      <label>TELÉFONO</label>
+                      <input
+                        type="text"
+                        value={formData.telefono}
+                        onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                        placeholder="6XX XXX XXX"
+                      />
+                    </div>
+                  </div>
+                  <div className="vpd-form-field">
+                    <label>LOCALIZACIÓN</label>
+                    <input
+                      type="text"
+                      value={formData.localizacion}
+                      onChange={(e) => setFormData({ ...formData, localizacion: e.target.value })}
+                      placeholder="Ciudad, País"
+                    />
+                  </div>
+                  <div className="vpd-form-field">
+                    <label>HABILIDADES Y HERRAMIENTAS</label>
+                    <input
+                      type="text"
+                      value={formData.skills}
+                      onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+                      placeholder="Ej: React, Node, SQL..."
+                    />
+                  </div>
+                  <div className="vpd-form-actions">
+                    <button className="vpd-btn-cancel" onClick={() => setShowForm(false)}>
+                      Cancelar
+                    </button>
+                    <button
+                      className="vpd-btn-submit"
+                      disabled={!formData.nombre || formStatus === 'sending'}
+                      onClick={async () => {
+                        setFormStatus('sending');
+                        try {
+                          const res = await fetch(`/api/candidates/public`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              first_name: formData.nombre.split(' ')[0],
+                              last_name: formData.nombre.split(' ').slice(1).jo
