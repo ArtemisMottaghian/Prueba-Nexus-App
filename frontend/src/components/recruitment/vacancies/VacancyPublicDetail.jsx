@@ -71,9 +71,13 @@ export default function VacancyPublicDetail() {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-  nombre: '', email: '', telefono: '', localizacion: '', skills: ''
-});
-const [formStatus, setFormStatus] = useState(null); // 'sending' | 'ok' | 'error'
+    nombre: '',
+    email: '',
+    telefono: '',
+    localizacion: '',
+    skills: '',
+  });
+  const [formStatus, setFormStatus] = useState(null); // 'sending' | 'ok' | 'error'
 
   // ── Issue #452: inyectar <meta name="robots" content="noindex, nofollow">
   // para que Google no indexe estas ofertas y la competencia no las detecte.
@@ -295,7 +299,7 @@ const [formStatus, setFormStatus] = useState(null); // 'sending' | 'ok' | 'error
                 Envíanos tu candidatura y nos pondremos en contacto contigo lo
                 antes posible.
               </p>
-               <button className="vpd-cta-btn" onClick={() => setShowForm(true)}>
+              <button className="vpd-cta-btn" onClick={() => setShowForm(true)}>
                 <i className="bi bi-envelope-fill"></i>
                 Enviar candidatura
               </button>
@@ -326,7 +330,10 @@ const [formStatus, setFormStatus] = useState(null); // 'sending' | 'ok' | 'error
           <div className="vpd-modal" onClick={(e) => e.stopPropagation()}>
             <div className="vpd-modal-header">
               <h3>Enviar candidatura</h3>
-              <button className="vpd-modal-close" onClick={() => setShowForm(false)}>
+              <button
+                className="vpd-modal-close"
+                onClick={() => setShowForm(false)}
+              >
                 <i className="bi bi-x-lg"></i>
               </button>
             </div>
@@ -344,7 +351,9 @@ const [formStatus, setFormStatus] = useState(null); // 'sending' | 'ok' | 'error
                     <input
                       type="text"
                       value={formData.nombre}
-                      onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, nombre: e.target.value })
+                      }
                       placeholder="Tu nombre completo"
                     />
                   </div>
@@ -354,7 +363,9 @@ const [formStatus, setFormStatus] = useState(null); // 'sending' | 'ok' | 'error
                       <input
                         type="email"
                         value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, email: e.target.value })
+                        }
                         placeholder="tu@email.com"
                       />
                     </div>
@@ -363,7 +374,9 @@ const [formStatus, setFormStatus] = useState(null); // 'sending' | 'ok' | 'error
                       <input
                         type="text"
                         value={formData.telefono}
-                        onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, telefono: e.target.value })
+                        }
                         placeholder="6XX XXX XXX"
                       />
                     </div>
@@ -373,7 +386,12 @@ const [formStatus, setFormStatus] = useState(null); // 'sending' | 'ok' | 'error
                     <input
                       type="text"
                       value={formData.localizacion}
-                      onChange={(e) => setFormData({ ...formData, localizacion: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          localizacion: e.target.value,
+                        })
+                      }
                       placeholder="Ciudad, País"
                     />
                   </div>
@@ -382,12 +400,17 @@ const [formStatus, setFormStatus] = useState(null); // 'sending' | 'ok' | 'error
                     <input
                       type="text"
                       value={formData.skills}
-                      onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, skills: e.target.value })
+                      }
                       placeholder="Ej: React, Node, SQL..."
                     />
                   </div>
                   <div className="vpd-form-actions">
-                    <button className="vpd-btn-cancel" onClick={() => setShowForm(false)}>
+                    <button
+                      className="vpd-btn-cancel"
+                      onClick={() => setShowForm(false)}
+                    >
                       Cancelar
                     </button>
                     <button
@@ -401,4 +424,35 @@ const [formStatus, setFormStatus] = useState(null); // 'sending' | 'ok' | 'error
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                               first_name: formData.nombre.split(' ')[0],
-                              last_name: formData.nombre.split(' ').slice(1).jo
+                              last_name:
+                                formData.nombre.split(' ').slice(1).join(' ') ||
+                                '-',
+                              email:
+                                formData.email || `${Date.now()}@nexus.local`,
+                              phone: formData.telefono,
+                              location: formData.localizacion,
+                              skills: formData.skills,
+                              source: `Vacante pública #${id}`,
+                            }),
+                          });
+                          if (res.ok) setFormStatus('ok');
+                          else setFormStatus('error');
+                        } catch {
+                          setFormStatus('error');
+                        }
+                      }}
+                    >
+                      {formStatus === 'sending'
+                        ? 'Enviando...'
+                        : 'Guardar Candidato'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
