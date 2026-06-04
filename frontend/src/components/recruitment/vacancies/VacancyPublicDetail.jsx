@@ -609,7 +609,13 @@ export default function VacancyPublicDetail() {
                           else {
                             const err = await res.json();
                             setErrorStatus(
-                              err.detail || 'Error al enviar la candidatura.'
+                              typeof err.detail === 'string'
+                                ? err.detail
+                                : Array.isArray(err.detail)
+                                  ? err.detail
+                                      .map((e) => e.msg || JSON.stringify(e))
+                                      .join(', ')
+                                  : 'Error al enviar la candidatura.'
                             );
                           }
                         } catch {
