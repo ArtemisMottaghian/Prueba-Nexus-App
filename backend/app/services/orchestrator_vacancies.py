@@ -49,12 +49,27 @@ def validate_and_filter_offers(raw_offers: list[dict]) -> list[ScrapedJobOffer]:
     valid_offers = []
     today = datetime.now(timezone.utc)
     
-    # 🔥 LISTA NEGRA DE CONSULTORAS Y ETTS
+    # 🔥 LISTA NEGRA DE COMPETIDORES: RRHH, HEADHUNTING Y ETTS
     BLACKLISTED_COMPANIES = [
+        # Originales (RRHH)
         "aratalent", "adecco", "randstad", "manpower", "hays", 
         "page personnel", "michael page", "robert walters", 
-        "spring professional", "talent search people", "between technology", 
-        "inetum", "grupo crit", "grupo nortempo", "nortempo", "synergie", "eurofirms"
+        "spring professional", "talent search people", 
+        "grupo crit", "grupo nortempo", "nortempo", "synergie", 
+        "eurofirms", "sibils consulting",
+        
+        # Headhunting y Selección Especializada
+        "walters people", "robert half", "experis", "antal international", 
+        "catenon", "bros group", "claire joster", "badenoch + clark", 
+        "hudson", "oliver james", "frank recruitment group", "nigel frank", 
+        "jefferson frank", "wyser",
+        
+        # ETTs y Plataformas de Contratación
+        "jobandtalent", "kelly services", "gi group", "iman temporing", 
+        "grupo ctc", "selectiva", "isgf", "ananda",
+        
+        # Consultoras Organizativas de RRHH
+        "lhh", "korn ferry", "mercer", "cegos", "aon"
     ]
 
     for offer in raw_offers:

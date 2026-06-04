@@ -4,6 +4,7 @@ import json
 import re
 import aiohttp
 import fitz
+import uuid  # NUEVO: Para crear nombres de archivo únicos
 from datetime import datetime
 from google import genai  
 from dotenv import load_dotenv
@@ -17,10 +18,14 @@ from .browser import search_brave_pdfs
 
 load_dotenv(override=True)
 
-# Inicializamos el cliente moderno de Gemini con la clave de tu .env
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 LIMIT_FILE = "daily_limit.json"
+# 🛠️ NUEVO: Definimos la carpeta donde se guardarán los PDFs
+CV_STORAGE_DIR = os.path.join(os.getcwd(), "stored_cvs")
+
+# Aseguramos que la carpeta existe al arrancar
+os.makedirs(CV_STORAGE_DIR, exist_ok=True)
 
 class AILimitReachedError(Exception):
     pass
@@ -96,7 +101,6 @@ async def extract_pdf_data(pdf_bytes: bytes, keyword: str) -> dict | None:
         
         for intento_gemini in range(4):
             try:
-                # Llamada oficial con el SDK moderno 'google-genai'
                 response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
                 clean_json = response.text.replace('```json', '').replace('```', '').strip()
                 parsed_data = json.loads(clean_json)
@@ -112,8 +116,6 @@ async def extract_pdf_data(pdf_bytes: bytes, keyword: str) -> dict | None:
             
             except Exception as gemini_error:
                 error_str = str(gemini_error)
-                
-                # Control inteligente de saturación (503) o límites de velocidad (429)
                 if "503" in error_str or "UNAVAILABLE" in error_str:
                     espera = 10 + (intento_gemini * 5)
                     print(f"⚠️ Servidor de Gemini saturado (503). Reintentando en {espera} segundos...")
@@ -132,7 +134,6 @@ async def extract_pdf_data(pdf_bytes: bytes, keyword: str) -> dict | None:
         print(f"Error general procesando PDF: {e}")
         return None
     
-# Motor principal adaptado a Base de datos
 async def extract_pdf() -> list[dict]:
     all_extracted_candidates = []
     current_count, today_str = check_daily_limit()
@@ -179,9 +180,6 @@ async def extract_pdf() -> list[dict]:
                 for pdf_item in pdfs_in_memory:
                     if current_count >= MAX_PROFILES_PER_SEARCH: break
                     
-                    # ⏳ CONTROL ESTRICTO (MAX 5 RPM): 
-                    # Forzamos una pausa de 12 segundos exactos antes de cada llamada a Gemini.
-                    # Esto asegura un flujo máximo de 5 peticiones por minuto.
                     print("⏳ Respiro de seguridad regulado (Garantizando un máx de 5 RPM)...")
                     await asyncio.sleep(12)
                     
@@ -205,12 +203,30 @@ async def extract_pdf() -> list[dict]:
                         origen_bd = f"Brave API - {kw}"
                         if c: origen_bd += f" ({c})"
 
-                        # 🛠️ NUEVO: Función de limpieza para quitar corchetes de las listas
                         def limpiar_lista(valor):
                             if not valor: return None
                             if isinstance(valor, list):
                                 return ", ".join(str(v) for v in valor)
                             return str(valor)
+
+                        # 🛠️ NUEVO: Guardar el archivo PDF físicamente
+                        # Generamos un nombre único: carlos_perez_a1b2c3d4.pdf
+                        safe_f = re.sub(r'[^a-z0-9]', '', f_name)
+                        safe_l = re.sub(r'[^a-z0-9]', '', l_name)
+                        unique_id = uuid.uuid4().hex[:8]
+                        filename = f"{safe_f}_{safe_l}_{unique_id}.pdf"
+                        file_path = os.path.join(CV_STORAGE_DIR, filename)
+                        
+                        try:
+                            with open(file_path, "wb") as f:
+                                f.write(pdf_item["bytes"])
+                            print(f"💾 PDF guardado en disco: {filename}")
+                            # Guardamos la ruta relativa para la base de datos
+                            cv_url_bd = f"/stored_cvs/{filename}"
+                        except Exception as e:
+                            print(f"⚠️ Error al guardar el PDF físico: {e}")
+                            # Fallback de seguridad: guardamos la URL original de Brave
+                            cv_url_bd = pdf_item['url']
 
                         candidate_data = {
                             "first_name": data.get('first_name'),
@@ -222,7 +238,7 @@ async def extract_pdf() -> list[dict]:
                             "experience": limpiar_lista(data.get('experience')),
                             "education": limpiar_lista(data.get('education')),
                             "candidate_url": linkedin,
-                            "cv_url": pdf_item['url'], 
+                            "cv_url": cv_url_bd, # 🔥 AQUÍ SE GUARDA LA RUTA DEL ARCHIVO
                             "skills": limpiar_lista(data.get('skills')),
                             "status": "active"
                         }
@@ -239,7 +255,6 @@ async def extract_pdf() -> list[dict]:
                             
                         print(f"  -> {data.get('first_name')} añadido a la lista ({current_count}/{MAX_PROFILES_PER_SEARCH})")
                     
-                    # Añadimos un pequeño colchón extra de 2 segundos al final del ciclo para blindar el ritmo
                     await asyncio.sleep(2)
                 
                 if current_count >= MAX_PROFILES_PER_SEARCH:

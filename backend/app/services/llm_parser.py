@@ -79,7 +79,7 @@ async def parse_with_code(raw_text: str) -> dict:
     print("✅ Extracción por código finalizada")
     return {
         "first_name": first_name,
-        "last_name": last_name if last_name else "(Extraído sin IA)",
+        "last_name": last_name,
         "email": email_val,
         "phone": phone_val,
         "location": "España",

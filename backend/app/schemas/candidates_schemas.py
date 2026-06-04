@@ -19,7 +19,10 @@ class CandidateBase(BaseModel):
     email: EmailStr  # valida formato de correo
     phone: Optional[str] = Field(None, pattern=r"^\+?[\d\s\-]{7,20}$")
     candidate_url: Optional[HttpUrl] = None  # Valida que sea una URL válida
-    cv_url: Optional[HttpUrl] = None
+    
+    # 🔥 ARREGLO AQUÍ: Cambiamos HttpUrl por str para que acepte "/stored_cvs/..."
+    cv_url: Optional[str] = None 
+    
     skills: Optional[str] = Field(None)
     notes: Optional[str] = Field(None, max_length=1000)
     status: Optional[CandidateStatus] = CandidateStatus.active
@@ -43,7 +46,10 @@ class CandidateUpdate(BaseModel):
         None, pattern=r"^\+?[\d\s\-]{7,20}$"
     )  # Formato internacional de teléfono
     candidate_url: Optional[HttpUrl] = None  # Valida que sea una URL válida
-    cv_url: Optional[HttpUrl] = None
+    
+    # 🔥 ARREGLO AQUÍ TAMBIÉN: Para que no de error al actualizar candidatos
+    cv_url: Optional[str] = None 
+    
     skills: Optional[str] = Field(None)
     notes: Optional[str] = Field(None, max_length=1000)
     status: Optional[CandidateStatus] = None
