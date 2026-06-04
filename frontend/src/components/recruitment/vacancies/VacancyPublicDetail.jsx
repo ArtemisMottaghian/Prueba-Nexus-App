@@ -524,7 +524,7 @@ export default function VacancyPublicDetail() {
                       <label>AÑOS DE EXPERIENCIA</label>
                       <input
                         type="number"
-                        value={formData.experience}
+                        value={String(formData.experience || '')}
                         min="0"
                         onChange={(e) =>
                           setFormData({
