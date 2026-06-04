@@ -1612,14 +1612,14 @@ export default function VacancyModal({
                             style={{ position: 'relative' }}
                           >
                             <label className="field-label">
-                              Buscar candidato
+                              Buscar candidato por nombre/habilidad/ciudad
                             </label>
                             <div className="search-input-group">
                               <i className="bi bi-search search-icon"></i>
                               <input
                                 type="text"
                                 className="search-control"
-                                placeholder="Escribe un nombre..."
+                                placeholder="Ej. Pedro Gómez, python, C++, ..."
                                 value={candidatoSearch}
                                 onChange={handleCandidatoSearchChange}
                                 onKeyDown={(e) => {
