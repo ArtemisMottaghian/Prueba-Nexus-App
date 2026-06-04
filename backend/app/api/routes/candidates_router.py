@@ -335,3 +335,14 @@ async def download_cv(filename: str):
         raise HTTPException(status_code=404, detail="El archivo PDF no existe en el servidor.")
         
     return FileResponse(file_path, media_type="application/pdf")
+
+@router.post("/public", response_model=CandidateOut, status_code=201)
+async def create_candidate_public(
+    payload: CandidateCreate,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Endpoint público para que candidatos se inscriban desde la página pública de una vacante.
+    No requiere autenticación.
+    """
+    return await candidates_service.create_candidate(db, payload)
