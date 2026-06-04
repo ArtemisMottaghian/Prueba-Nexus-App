@@ -155,10 +155,6 @@ export default function VacancyPublicDetail() {
   }
 
   const secciones = parseDescripcion(job.description);
-  const mailSubject = encodeURIComponent(`Candidatura: ${job.title}`);
-  const mailBody = encodeURIComponent(
-    `Hola,\n\nMe pongo en contacto para postularme a la oferta "${job.title}"${job.companyName ? ` en ${job.companyName}` : ''}.\n\nAdjunto mi CV y quedo a vuestra disposición.\n\nSaludos.`
-  );
 
   return (
     <div className="vpd-shell">
