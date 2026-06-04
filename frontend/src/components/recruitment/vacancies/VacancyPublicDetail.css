@@ -672,3 +672,31 @@
   font-size: 0.95rem;
   color: #1e293b;
 }
+.vpd-form-error {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.875rem;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vpd-form-field select {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  color: #1e293b;
+  outline: none;
+  font-family: inherit;
+  background: #fff;
+  transition: border-color 0.2s;
+}
+
+.vpd-form-field select:focus {
+  border-color: #7c3fff;
+  box-shadow: 0 0 0 3px rgba(124, 63, 255, 0.1);
+}

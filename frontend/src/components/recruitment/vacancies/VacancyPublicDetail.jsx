@@ -71,13 +71,17 @@ export default function VacancyPublicDetail() {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    nombre: '',
+    name: '',
     email: '',
-    telefono: '',
-    localizacion: '',
-    skills: '',
+    phone: '',
+    education: '',
+    location: '',
+    experience: '',
+    specialty: '',
   });
-  const [formStatus, setFormStatus] = useState(null); // 'sending' | 'ok' | 'error'
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formStatus, setFormStatus] = useState(null);
+  const [errorStatus, setErrorStatus] = useState(null);
 
   // ── Issue #452: inyectar <meta name="robots" content="noindex, nofollow">
   // para que Google no indexe estas ofertas y la competencia no las detecte.
@@ -342,13 +346,19 @@ export default function VacancyPublicDetail() {
                 </div>
               ) : (
                 <>
+                  {errorStatus && (
+                    <div className="vpd-form-error">
+                      <i className="bi bi-exclamation-triangle-fill"></i>
+                      {errorStatus}
+                    </div>
+                  )}
                   <div className="vpd-form-field">
                     <label>NOMBRE COMPLETO *</label>
                     <input
                       type="text"
-                      value={formData.nombre}
+                      value={formData.name}
                       onChange={(e) =>
-                        setFormData({ ...formData, nombre: e.target.value })
+                        setFormData({ ...formData, name: e.target.value })
                       }
                       placeholder="Tu nombre completo"
                     />
@@ -369,11 +379,52 @@ export default function VacancyPublicDetail() {
                       <label>TELÉFONO</label>
                       <input
                         type="text"
-                        value={formData.telefono}
+                        value={formData.phone}
                         onChange={(e) =>
-                          setFormData({ ...formData, telefono: e.target.value })
+                          setFormData({ ...formData, phone: e.target.value })
                         }
                         placeholder="6XX XXX XXX"
+                      />
+                    </div>
+                  </div>
+                  <div className="vpd-form-row">
+                    <div className="vpd-form-field">
+                      <label>FORMACIÓN / TITULACIÓN</label>
+                      <select
+                        value={formData.education}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            education: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="">Selecciona una opción...</option>
+                        <option value="Bootcamp">Bootcamp</option>
+                        <option value="FP Grado Medio">FP Grado Medio</option>
+                        <option value="FP Grado Superior">
+                          FP Grado Superior
+                        </option>
+                        <option value="Grado Universitario">
+                          Grado Universitario
+                        </option>
+                        <option value="Máster">Máster</option>
+                        <option value="Autodidacta">Autodidacta</option>
+                      </select>
+                    </div>
+                    <div className="vpd-form-field">
+                      <label>AÑOS DE EXPERIENCIA</label>
+                      <input
+                        type="number"
+                        value={formData.experience}
+                        min="0"
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            experience: e.target.value,
+                          })
+                        }
+                        placeholder="0"
                       />
                     </div>
                   </div>
@@ -381,23 +432,20 @@ export default function VacancyPublicDetail() {
                     <label>LOCALIZACIÓN</label>
                     <input
                       type="text"
-                      value={formData.localizacion}
+                      value={formData.location}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          localizacion: e.target.value,
-                        })
+                        setFormData({ ...formData, location: e.target.value })
                       }
                       placeholder="Ciudad, País"
                     />
                   </div>
                   <div className="vpd-form-field">
-                    <label>HABILIDADES Y HERRAMIENTAS</label>
+                    <label>HERRAMIENTAS Y HABILIDADES ESPECÍFICAS</label>
                     <input
                       type="text"
-                      value={formData.skills}
+                      value={formData.specialty}
                       onChange={(e) =>
-                        setFormData({ ...formData, skills: e.target.value })
+                        setFormData({ ...formData, specialty: e.target.value })
                       }
                       placeholder="Ej: React, Node, SQL..."
                     />
@@ -411,36 +459,51 @@ export default function VacancyPublicDetail() {
                     </button>
                     <button
                       className="vpd-btn-submit"
-                      disabled={!formData.nombre || formStatus === 'sending'}
+                      disabled={!formData.name.trim() || isSubmitting}
                       onClick={async () => {
-                        setFormStatus('sending');
+                        setIsSubmitting(true);
+                        setErrorStatus(null);
+                        const nameParts = formData.name.trim().split(' ');
                         try {
-                          const res = await fetch(`/api/candidates/public`, {
+                          const res = await fetch('/api/candidates/public', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                              first_name: formData.nombre.split(' ')[0],
-                              last_name:
-                                formData.nombre.split(' ').slice(1).join(' ') ||
-                                '-',
+                              first_name: nameParts[0] || '',
+                              last_name: nameParts.slice(1).join(' ') || '-',
                               email:
                                 formData.email || `${Date.now()}@nexus.local`,
-                              phone: formData.telefono,
-                              location: formData.localizacion,
-                              skills: formData.skills,
+                              phone: formData.phone || '000000000',
+                              location: formData.location || 'España',
+                              education: formData.education || '',
+                              experience: parseInt(formData.experience) || 0,
+                              specialty: formData.specialty || '',
+                              skills: formData.specialty
+                                ? formData.specialty
+                                    .split(',')
+                                    .map((s) => s.trim())
+                                    .filter(Boolean)
+                                : [],
                               source: `Vacante pública #${id}`,
                             }),
                           });
                           if (res.ok) setFormStatus('ok');
-                          else setFormStatus('error');
+                          else {
+                            const err = await res.json();
+                            setErrorStatus(
+                              err.detail || 'Error al enviar la candidatura.'
+                            );
+                          }
                         } catch {
-                          setFormStatus('error');
+                          setErrorStatus(
+                            'Error de conexión. Inténtalo de nuevo.'
+                          );
+                        } finally {
+                          setIsSubmitting(false);
                         }
                       }}
                     >
-                      {formStatus === 'sending'
-                        ? 'Enviando...'
-                        : 'Guardar Candidato'}
+                      {isSubmitting ? 'Enviando...' : 'Guardar Candidato'}
                     </button>
                   </div>
                 </>
