@@ -215,21 +215,17 @@ export default function VacancyModal({
     setOutreachSuccess(false);
 
     try {
-      // TODO: reemplazar por el endpoint real cuando backend lo tenga listo
-      // await authFetch(ENDPOINTS.outreach.sendEmail, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     to_email: outreachEmail,
-      //     company_name: outreachCompany,
-      //     job_title: outreachJobTitle,
-      //     template_slug: 'prospect_vacancy',
-      //     vacancy_id: job.id,
-      //   }),
-      // });
+      const res = await authFetch('/api/emails/send-prospect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company_email: outreachEmail,
+          company_name: outreachCompany,
+          job_title: outreachJobTitle,
+        }),
+      });
 
-      // Mock visual: simula delay de envío
-      await new Promise((resolve) => setTimeout(resolve, 1200));
+      if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
 
       setOutreachSuccess(true);
       setTimeout(() => setOutreachSuccess(false), 4000);
