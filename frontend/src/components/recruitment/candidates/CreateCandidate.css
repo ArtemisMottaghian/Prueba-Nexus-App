@@ -6,21 +6,32 @@
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15); /* Sombra un poco más profunda para que "flote" */
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
   color: var(--text-primary);
-  overflow: hidden; /* Para que las esquinas del header/footer respeten el radius */
+  /* overflow: hidden ELIMINADO — rompía el scroll interno de Bootstrap */
+  max-height: 90vh;       /* Limita la altura al 90% de la pantalla */
+  display: flex;
+  flex-direction: column; /* Header y footer fijos, body scrollable */
+}
+
+/* El body es el único que hace scroll */
+.custom-create-modal .modal-body {
+  overflow-y: auto;
+  flex: 1;
 }
 
 /* --- HEADER Y FOOTER --- */
 .custom-create-modal .modal-header {
   border-bottom: 1px solid var(--border-color);
   padding: 20px 24px;
+  flex-shrink: 0; /* Evita que el header se comprima */
 }
 
 .custom-create-modal .modal-footer {
   border-top: 1px solid var(--border-color);
-  background: var(--bg-primary); /* Quitamos el bg-light de Bootstrap */
+  background: var(--bg-primary);
   padding: 16px 24px;
+  flex-shrink: 0; /* Evita que el footer se comprima o desaparezca */
 }
 
 .custom-create-modal .modal-title {
@@ -43,7 +54,7 @@
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  border-radius: 10px; /* Misma curvatura que tus detail-icon */
+  border-radius: 10px;
   padding: 10px 14px;
   transition: all 0.3s ease;
 }
@@ -62,12 +73,11 @@
   background: var(--bg-primary);
 }
 
-/* Replicamos el brillo morado que tienen tus tarjetas al hacer hover */
 .custom-create-modal .form-control:focus,
 .custom-create-modal .form-select:focus {
   background: var(--bg-primary);
   border-color: var(--color-purple-primary);
-  box-shadow: 0 0 0 4px rgba(91, 63, 255, 0.15); /* Halo morado suave */
+  box-shadow: 0 0 0 4px rgba(91, 63, 255, 0.15);
   outline: none;
 }
 
