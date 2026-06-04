@@ -169,6 +169,18 @@ class FavoriteRequest(BaseModel):
 
 class VerifyRequest(BaseModel):
     verified: bool
+class CandidatePublicCreate(BaseModel):
+    first_name: str = Field(..., min_length=2, max_length=50)
+    last_name: str = Field(..., min_length=2, max_length=50)
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    location: Optional[str] = None
+    source: Optional[str] = None
+    experience: Optional[str] = None
+    education: Optional[str] = None
+    specialty: Optional[str] = None
+    skills: Optional[list] = None
+    status: Optional[CandidateStatus] = CandidateStatus.active
 
 
 if __name__ == "__main__":
