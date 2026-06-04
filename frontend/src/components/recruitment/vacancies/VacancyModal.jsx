@@ -125,8 +125,10 @@ export default function VacancyModal({
 
   // --- ESTADOS EMAIL OUTREACH ---
   const [outreachEmail, setOutreachEmail] = useState('');
-  const [outreachCompany, setOutreachCompany] = useState('');
-  const [outreachJobTitle, setOutreachJobTitle] = useState('');
+  const [outreachCompany, setOutreachCompany] = useState(
+    job?.companyName || ''
+  );
+  const [outreachJobTitle, setOutreachJobTitle] = useState(job?.title || '');
   const [sendingOutreach, setSendingOutreach] = useState(false);
   const [outreachSuccess, setOutreachSuccess] = useState(false);
 
@@ -1294,15 +1296,26 @@ export default function VacancyModal({
                                 <label className="field-label">
                                   Email de contacto *
                                 </label>
-                                <input
-                                  type="email"
-                                  className="form-control input-field"
-                                  placeholder="contacto@empresa.com"
+                                <select
+                                  className="form-select input-field"
                                   value={outreachEmail}
                                   onChange={(e) =>
                                     setOutreachEmail(e.target.value)
                                   }
-                                />
+                                >
+                                  <option value="">
+                                    Selecciona un contacto...
+                                  </option>
+                                  {todosContactos
+                                    .filter((c) => c.email)
+                                    .map((c, i) => (
+                                      <option key={i} value={c.email}>
+                                        {c.nombre || c.full_name
+                                          ? `${c.nombre || c.full_name} — ${c.email}`
+                                          : c.email}
+                                      </option>
+                                    ))}
+                                </select>
                               </div>
                               <div className="cand-form-field">
                                 <label className="field-label">
@@ -1343,7 +1356,7 @@ export default function VacancyModal({
                                 onClick={handleSendOutreachEmail}
                                 disabled={
                                   sendingOutreach ||
-                                  !outreachEmail.trim() ||
+                                  !outreachEmail ||
                                   !outreachCompany.trim() ||
                                   !outreachJobTitle.trim()
                                 }
