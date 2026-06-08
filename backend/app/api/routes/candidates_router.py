@@ -338,6 +338,37 @@ async def download_cv(filename: str):
         
     return FileResponse(file_path, media_type="application/pdf")
 
+@router.post("/extract_cv", status_code=200)
+async def extract_cv(
+    pdf_file: Optional[UploadFile] = File(None),
+):
+    """
+    Extrae datos de un CV en PDF sin guardar en BD.
+    Usado por el formulario público de candidatura.
+    """
+    if not pdf_file:
+        raise HTTPException(status_code=400, detail="Debes subir un archivo PDF.")
+    if not pdf_file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="El archivo debe ser un PDF válido.")
+
+    try:
+        file_bytes = await pdf_file.read()
+        with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+            raw_text = "\n".join([page.extract_text() for page in pdf.pages if page.extract_text()])
+
+        if not raw_text or not raw_text.strip():
+            raise HTTPException(status_code=400, detail="No se pudo extraer el texto del PDF.")
+
+        candidate_json = await parse_with_code(raw_text)
+        return candidate_json
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error procesando el PDF: {str(e)}")
+
+
 @router.post("/public", response_model=CandidateOut, status_code=201)
 async def create_candidate_public(
     payload: CandidatePublicCreate,

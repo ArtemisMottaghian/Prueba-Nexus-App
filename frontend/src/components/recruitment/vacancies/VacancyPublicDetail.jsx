@@ -176,7 +176,7 @@ export default function VacancyPublicDetail() {
     try {
       const formDataCV = new FormData();
       formDataCV.append('pdf_file', file);
-      const res = await fetch('/api/candidates/process_cv', {
+      const res = await fetch('/api/candidates/extract_cv', {
         method: 'POST',
         body: formDataCV,
       });
