@@ -588,20 +588,15 @@ export default function VacancyPublicDetail() {
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                               first_name: nameParts[0] || '',
-                              last_name: nameParts.slice(1).join(' ') || '-',
-                              email:
-                                formData.email || `${Date.now()}@nexus.local`,
-                              phone: formData.phone || '000000000',
-                              location: formData.location || 'España',
+                              last_name: nameParts.slice(1).join(' ') || '',
+                              email: formData.email || '',
+                              phone: formData.phone || '',
+                              location: formData.location || '',
                               education: formData.education || '',
-                              experience: parseInt(formData.experience) || 0,
+                              experience: String(
+                                parseInt(formData.experience) || 0
+                              ),
                               specialty: formData.specialty || '',
-                              skills: formData.specialty
-                                ? formData.specialty
-                                    .split(',')
-                                    .map((s) => s.trim())
-                                    .filter(Boolean)
-                                : [],
                               source: `Vacante pública #${id}`,
                             }),
                           });
