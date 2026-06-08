@@ -34,11 +34,21 @@ async def parse_with_code(raw_text: str) -> dict:
     last_name = ""
     
     if lines:
-        parts = lines[0].split(maxsplit=1)
-        first_name = parts[0].capitalize()
-        if len(parts) > 1:
-            if "curriculum" not in parts[1].lower() and "cv" not in parts[1].lower():
-                last_name = parts[1].title()
+        NOISE_PREFIXES = ["contactar", "contact", "ver perfil", "linkedin", "http", "www", "tel", "email", "phone"]
+
+        name_line = ""
+        for line in lines[:5]:  # solo miramos las primeras 5 líneas
+            lower = line.lower()
+            if not any(lower.startswith(p) for p in NOISE_PREFIXES):
+                name_line = line
+                break
+
+        if name_line:
+            parts = name_line.split(maxsplit=1)
+            first_name = parts[0].capitalize()
+            if len(parts) > 1:
+                if "curriculum" not in parts[1].lower() and "cv" not in parts[1].lower():
+                    last_name = parts[1].title()
 
     # 3. EXTRACCIÓN DE BLOQUES
     text_upper = text_sin_datos_contacto.upper()
