@@ -348,9 +348,16 @@ async def create_candidate_public(
 
     phone = payload.phone if payload.phone else "000000000"
 
+    first_name = (payload.first_name or "").strip()
+    last_name = (payload.last_name or "").strip()
+    if len(first_name) < 2:
+        first_name = "Candidato"
+    if len(last_name) < 2:
+        last_name = first_name
+
     candidate_data = CandidateCreate(
-        first_name=payload.first_name,
-        last_name=payload.last_name,
+        first_name=first_name,
+        last_name=last_name,
         email=email,
         phone=phone,
         location=payload.location or "España",
