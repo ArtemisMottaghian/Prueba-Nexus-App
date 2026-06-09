@@ -67,16 +67,21 @@ const mapToFrontend = (client) => ({
     : client.vacantes || [],
 });
 
+const statusMap = {
+  lead: 'new',
+  contactada: 'contacted',
+  en_negociacion: 'negotiating',
+  cliente: 'converted',
+};
+
 const mapToBackend = (client) => ({
   name: client.nombre,
   sector: client.sector,
-  primary_contact: client.contactoPrincipal,
-  email: client.email,
-  phone: client.telefono,
   cif: client.cif,
   address: client.direccion,
-  lead_status: client.estadoCuenta,
-  account_owner: client.responsable,
+  email: client.email,
+  phone: client.telefono,
+  lead_status: statusMap[client.estadoCuenta] || 'new',
 });
 
 export const getClientes = async (entityType = 'confirmed_client') => {
@@ -150,13 +155,6 @@ export const updateCliente = async (id, cliente) => {
 
 export const updateEstadoCuenta = async (id, nuevoEstado) => {
   const estado = normalizarEstadoCuenta(nuevoEstado);
-
-  const statusMap = {
-    lead: 'new',
-    contactada: 'contacted',
-    en_negociacion: 'negotiating',
-    cliente: 'converted',
-  };
 
   const payload = {
     lead_status: statusMap[estado] || 'new',
