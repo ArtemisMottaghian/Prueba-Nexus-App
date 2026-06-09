@@ -28,6 +28,7 @@ class CompanyBase(BaseModel):
     notes: Optional[str] = None
     email: Optional[str] = Field(None, max_length=255)
     phone: Optional[str] = Field(None, max_length=50)
+    entity_type: Optional[str] = None
 
 
 # ── Schema de Creación
