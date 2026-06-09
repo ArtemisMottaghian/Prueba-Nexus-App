@@ -26,6 +26,8 @@ class CompanyBase(BaseModel):
     source_id: Optional[int] = None  # Portal de origen (InfoJobs, LinkedIn...)
     original_offer_id: Optional[int] = None # Vacante que originó el contacto
     notes: Optional[str] = None
+    email: Optional[str] = Field(None, max_length=255)
+    phone: Optional[str] = Field(None, max_length=50)
 
 
 # ── Schema de Creación
@@ -45,6 +47,8 @@ class CompanyUpdate(BaseModel):
     lead_status: Optional[LeadStatus] = None
     notes: Optional[str] = None
     entity_type: Optional[str] = None
+    email: Optional[str] = Field(None, max_length=255)
+    phone: Optional[str] = Field(None, max_length=50)
 
 
 

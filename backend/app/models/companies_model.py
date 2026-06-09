@@ -37,6 +37,8 @@ class Company(Base):
     website = Column(String(255))
     linkedin_url = Column(String(255))
     address = Column(String(500))
+    email = Column(String(255), nullable=True)
+    phone = Column(String(50), nullable=True)
 
     lead_status = Column(
         Enum(LeadStatus, name="lead_status"), server_default=LeadStatus.new.value
