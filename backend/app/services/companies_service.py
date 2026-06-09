@@ -68,9 +68,14 @@ async def create_company(db: AsyncSession, company_data: CompanyCreate) -> Compa
             linkedin_url=company_data.linkedin_url,
             address=company_data.address,
             lead_status=company_data.lead_status,
+            entity_type=company_data.entity_type or (
+                'confirmed_client' if company_data.lead_status and company_data.lead_status.value == 'converted' else None
+            ),
             source_id=company_data.source_id,
             original_offer_id=company_data.original_offer_id,
             notes=company_data.notes,
+            email=company_data.email,
+            phone=company_data.phone,
         )
         db.add(new_company)
         await db.commit()
