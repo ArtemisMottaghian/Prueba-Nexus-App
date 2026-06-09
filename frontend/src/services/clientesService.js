@@ -81,6 +81,7 @@ const mapToBackend = (client) => ({
   address: client.direccion,
   email: client.email,
   phone: client.telefono,
+  primary_contact: client.contactoPrincipal,
   lead_status: statusMap[client.estadoCuenta] || 'new',
   entity_type:
     client.estadoCuenta === 'cliente' ? 'confirmed_client' : undefined,
