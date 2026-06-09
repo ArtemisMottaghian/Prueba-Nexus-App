@@ -188,7 +188,10 @@ export default function Clientes() {
 
     try {
       if (modalAbierto === 'nuevo') {
-        const nuevo = await createCliente(form);
+        const nuevo = await createCliente({
+          ...form,
+          estadoCuenta: 'confirmed_client',
+        });
         setClientes((prev) => [...prev, nuevo]);
       } else {
         const actualizado = await updateCliente(clienteEditando.id, form);
