@@ -17,6 +17,7 @@ class LeadStatus(str, Enum):
 # Campos comunes compartidos por Create y Response.
 class CompanyBase(BaseModel):
     name: str = Field(..., max_length=255, description="Nombre de la empresa")
+    primary_contact: Optional[str] = Field(None, max_length=255)
     cif: Optional[str] = Field(None, max_length=50)
     sector: Optional[str] = Field(None, max_length=255)
     website: Optional[str] = Field(None, max_length=255)
@@ -40,6 +41,7 @@ class CompanyCreate(CompanyBase):
 # Todos los campos opcionales para PATCH /api/companies/{id}.
 class CompanyUpdate(BaseModel):
     name: Optional[str] = Field(None, max_length=255)
+    primary_contact: Optional[str] = Field(None, max_length=255)
     cif: Optional[str] = Field(None, max_length=50)
     sector: Optional[str] = Field(None, max_length=255)
     website: Optional[str] = Field(None, max_length=255)

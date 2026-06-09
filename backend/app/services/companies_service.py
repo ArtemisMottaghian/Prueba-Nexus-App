@@ -76,6 +76,7 @@ async def create_company(db: AsyncSession, company_data: CompanyCreate) -> Compa
             notes=company_data.notes,
             email=company_data.email,
             phone=company_data.phone,
+            primary_contact=company_data.primary_contact,
         )
         db.add(new_company)
         await db.commit()

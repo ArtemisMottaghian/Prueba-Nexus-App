@@ -30,6 +30,7 @@ class Company(Base):
 
     id = Column(BigInteger, primary_key=True, index=True)
     name = Column(String(255), unique=True, nullable=False)
+    primary_contact = Column(String(255), nullable=True)
     company_description = Column(Text)
     entity_type = Column(String(50), nullable=True)
     cif = Column(String(50))
