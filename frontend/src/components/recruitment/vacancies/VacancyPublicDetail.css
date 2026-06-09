@@ -170,6 +170,7 @@
   grid-template-columns: 1fr 340px;
   gap: 28px;
   align-items: start;
+  min-height: calc(100vh - 200px);
 }
 
 /* Card base */
