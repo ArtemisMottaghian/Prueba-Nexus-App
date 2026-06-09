@@ -805,6 +805,6 @@
 }
 
 .vpd-side-col {
-  max-height: calc(100vh - 100px);
-  overflow-y: auto;
+  position: sticky;
+  top: 80px;
 }
