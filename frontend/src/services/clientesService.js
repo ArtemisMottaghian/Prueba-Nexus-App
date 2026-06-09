@@ -82,6 +82,8 @@ const mapToBackend = (client) => ({
   email: client.email,
   phone: client.telefono,
   lead_status: statusMap[client.estadoCuenta] || 'new',
+  entity_type:
+    client.estadoCuenta === 'cliente' ? 'confirmed_client' : undefined,
 });
 
 export const getClientes = async (entityType = 'confirmed_client') => {
