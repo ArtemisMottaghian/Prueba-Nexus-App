@@ -176,7 +176,7 @@ export default function VacancyPublicDetail() {
     try {
       const formDataCV = new FormData();
       formDataCV.append('pdf_file', file);
-      const res = await fetch('/api/candidates/extract_cv', {
+      const res = await fetch(ENDPOINTS.recruitment.candidatos.extractCV, {
         method: 'POST',
         body: formDataCV,
       });
@@ -583,7 +583,9 @@ export default function VacancyPublicDetail() {
                         setErrorStatus(null);
                         const nameParts = formData.name.trim().split(' ');
                         try {
-                          const res = await fetch('/api/candidates/public', {
+                          const res = await fetch(
+                            ENDPOINTS.recruitment.candidatos.public,
+                            {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({

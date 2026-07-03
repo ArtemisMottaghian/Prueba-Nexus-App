@@ -100,6 +100,17 @@ class VacancyFiltered(VacancySummary):
     location: Optional[str] = None
     sector: Optional[str] = None
 
+# Schema para crear una vacante manualmente desde la app
+class VacancyCreate(BaseModel):
+    title: str = Field(..., min_length=2, max_length=255)
+    company_name: str = Field(..., min_length=1, max_length=255)  # obligatorio
+    published_at: datetime  # obligatorio
+    location: Optional[str] = Field(None, max_length=255)
+    sector: Optional[str] = Field(None, max_length=255)
+    source: Optional[str] = Field(None, max_length=50)
+    salary_min: Optional[int] = Field(None, ge=0)
+    salary_max: Optional[int] = Field(None, ge=0)
+
 # Schema para marcar como favorita
 class FavouriteRequest(BaseModel):
     favourite: bool

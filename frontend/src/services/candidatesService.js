@@ -1,20 +1,50 @@
 import { ENDPOINTS, authFetch } from './api';
 
+// Construye el nombre completo evitando palabras repetidas.
+// Soluciona la duplicación del nombre cuando el parseo del CV deja el nombre completo tanto en first_name como en last_name.
+const buildFullName = (c) => {
+  const raw =
+    c.name && c.name.trim()
+      ? c.name.trim()
+      : `${c.first_name || ''} ${c.last_name || ''}`.trim();
+  const seen = new Set();
+  return raw
+    .split(/\s+/)
+    .filter((word) => {
+      if (!word) return false;
+      const key = word.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .join(' ');
+};
+
+// Formatea la fecha con "/" (ej. 8/4/2026)
+const formatFecha = (raw) => {
+  if (!raw) return 'Reciente';
+  const d = new Date(raw);
+  return isNaN(d.getTime())
+    ? String(raw).replaceAll('-', '/')
+    : d.toLocaleDateString('es-ES');
+};
+
 const mapCandidateData = (c) => ({
   id: c.id,
-  name: c.name || `${c.first_name || ''} ${c.last_name || ''}`.trim(),
+  name: buildFullName(c),
   specialty: c.specialty || 'N/A',
   location: c.location || 'Remoto',
   status: c.status,
   source: c.source || 'N/A',
   experience: c.experience || 'N/A',
+  education: c.education || null,
   email: c.email || null,
   isAvailable: c.is_available ?? c.isAvailable ?? false,
   isFavorite: c.is_favourite ?? c.isFavourite ?? false,
   verified: c.verified ?? false,
-  time: c.created_at
-    ? new Date(c.created_at).toLocaleDateString()
-    : c.time || 'Reciente',
+  cvUrl: c.cv_url || null,
+  rawDate: c.created_at || c.time || null,
+  time: formatFecha(c.created_at || c.time),
 });
 
 function buildListUrl(query = {}) {
@@ -235,7 +265,7 @@ export const candidatesService = {
   // --- CREAR CANDIDATO MANUALMENTE ---
   createCandidate: async (candidateData) => {
     try {
-      const response = await authFetch('/api/candidates', {
+      const response = await authFetch(ENDPOINTS.recruitment.candidatos.list, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -259,7 +289,9 @@ export const candidatesService = {
   // --- EDITAR CANDIDATO EXISTENTE ---
   updateCandidate: async (id, candidateData) => {
     try {
-      const response = await authFetch(`/api/candidates/${id}`, {
+      const response = await authFetch(
+        ENDPOINTS.recruitment.candidatos.detail(id),
+        {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -276,7 +308,9 @@ export const candidatesService = {
       // Si hay texto, lo parseamos, si está vacío (FastAPI no devuelve nada), devolvemos null
       const data = text ? JSON.parse(text) : null;
 
-      return data;
+      // Devolvemos los datos ya mapeados (incluye cvUrl) para que la ficha
+      // muestre el CV al instante, sin necesidad de refrescar la página.
+      return data ? mapCandidateData(data) : null;
     } catch (error) {
       console.error(`Error en updateCandidate para el ID ${id}:`, error);
       throw error;

@@ -41,4 +41,6 @@ downloaded_files/
 backend/debug_bing.png
 backend/nohup.out
 
-.env
+.envbackend/stored_cvs/
+
+backend/stored_cvs/

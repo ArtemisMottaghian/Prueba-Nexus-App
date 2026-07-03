@@ -15,6 +15,16 @@ export default function VacancyCard({
   if (job.status === 'En proceso') badgeClass = 'badge-en-proceso';
   if (job.status === 'Descartada') badgeClass = 'badge-descartada';
 
+  // Salario: se muestra SIEMPRE (aunque falte) para que todas las tarjetas
+  // tengan la misma estructura. Formateado en es-ES con separador de miles.
+  const fmtEuro = (n) => `${new Intl.NumberFormat('es-ES').format(n)} €`;
+  const hasSalary = Boolean(job.salaryMin || job.salaryMax);
+  let salaryText = 'No especificado';
+  if (job.salaryMin && job.salaryMax)
+    salaryText = `${fmtEuro(job.salaryMin)} - ${fmtEuro(job.salaryMax)}`;
+  else if (job.salaryMin) salaryText = `Desde ${fmtEuro(job.salaryMin)}`;
+  else if (job.salaryMax) salaryText = `Hasta ${fmtEuro(job.salaryMax)}`;
+
   const handleCheckboxClick = (e) => {
     e.stopPropagation();
     onSelect(job.id);
@@ -84,27 +94,39 @@ export default function VacancyCard({
 
   return (
     <div className="vacante-card" onClick={onClick}>
-      <div className="card-header-row">
-        <div className="header-left">
-          <input
-            className="form-check-input checkbox-lg"
-            type="checkbox"
-            checked={isSelected || false}
-            onChange={handleCheckboxClick}
-            onClick={handleChildClick}
-          />
-          <select
-            className={`form-select form-select-sm select-status-inline ${badgeClass}`}
-            value={job.status}
-            onChange={handleStatusChange}
-            onClick={handleChildClick}
-          >
-            <option value="Nueva">Nueva</option>
-            <option value="Contactada">Contactada</option>
-            <option value="En proceso">En proceso</option>
-            <option value="Descartada">Descartada</option>
-          </select>
-        </div>
+      <div
+        className="card-header-row"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'auto 1fr auto',
+          alignItems: 'center',
+          gap: '8px',
+        }}
+      >
+        <input
+          className="form-check-input checkbox-lg"
+          type="checkbox"
+          checked={isSelected || false}
+          onChange={handleCheckboxClick}
+          onClick={handleChildClick}
+          style={{ flexShrink: 0, width: '18px', height: '18px' }}
+        />
+        <select
+          className={`form-select form-select-sm select-status-inline ${badgeClass}`}
+          value={job.status}
+          onChange={handleStatusChange}
+          onClick={handleChildClick}
+          style={{
+            textAlignLast: 'center',
+            justifySelf: 'center',
+            minWidth: '90px',
+          }}
+        >
+          <option value="Nueva">Nueva</option>
+          <option value="Contactada">Contactada</option>
+          <option value="En proceso">En proceso</option>
+          <option value="Descartada">Descartada</option>
+        </select>
 
         <div className="header-right-actions d-flex align-items-center gap-2">
           <button className="btn-favorite-star" onClick={handleFavoriteClick}>
@@ -148,18 +170,14 @@ export default function VacancyCard({
           </span>
         </div>
 
-        {(job.salaryMin || job.salaryMax) && (
-          <div className="detail-item">
-            <div className="detail-icon icon-green">
-              <i className="bi bi-cash-stack"></i>
-            </div>
-            <span className="detail-text">
-              {job.salaryMin && job.salaryMax
-                ? `${job.salaryMin} - ${job.salaryMax}`
-                : `${job.salaryMin || job.salaryMax}`}
-            </span>
+        <div className="detail-item">
+          <div className="detail-icon icon-green">
+            <i className="bi bi-cash-stack"></i>
           </div>
-        )}
+          <span className={`detail-text ${hasSalary ? '' : 'detail-empty'}`}>
+            {salaryText}
+          </span>
+        </div>
       </div>
 
       {job.assignedTo &&

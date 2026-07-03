@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,6 +17,7 @@ from app.schemas.comments_schemas import CommentCreate, CommentUpdate, CommentRe
 from app.services import comments_service
 from app.schemas.users_schemas import MessageResponse
 from app.models.companies_model import Company
+from app.models.job_model import JobOffer
 from app.core.jwt import get_current_user
 
 router = APIRouter()
@@ -48,7 +49,8 @@ async def get_clientes(
     """
     query = select(Company)
 
-    if entity_type:
+    # entity_type="all" (o vacío) devuelve todas las empresas (clientes + pendientes)
+    if entity_type and entity_type != "all":
         query = query.where(Company.entity_type == entity_type)
 
     query = query.order_by(Company.created_at.desc())
@@ -56,7 +58,38 @@ async def get_clientes(
     result = await db.execute(query)
     clients = result.scalars().all()
 
-    return clients
+    # Contamos las ofertas (vacantes) por empresa para mostrar el número real
+    counts_result = await db.execute(
+        select(JobOffer.company_id, func.count(JobOffer.id)).group_by(
+            JobOffer.company_id
+        )
+    )
+    counts = {cid: total for cid, total in counts_result.all()}
+
+    return [
+        {
+            "id": c.id,
+            "name": c.name,
+            "sector": c.sector,
+            "primary_contact": c.primary_contact,
+            "email": c.email,
+            "phone": c.phone,
+            "cif": c.cif,
+            "address": c.address,
+            "website": c.website,
+            "linkedin_url": c.linkedin_url,
+            "company_description": c.company_description,
+            "lead_status": (
+                c.lead_status.value
+                if hasattr(c.lead_status, "value")
+                else c.lead_status
+            ),
+            "entity_type": c.entity_type,
+            "created_at": c.created_at,
+            "open_positions": counts.get(c.id, 0),
+        }
+        for c in clients
+    ]
 
 
 # -----------------
@@ -92,6 +125,36 @@ async def get_company(company_id: int, db: AsyncSession = Depends(get_db)):
         return await companies_service.get_company_by_id(db, company_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error interno del servidor")
+
+
+# -----------------
+# Obtener las ofertas (vacantes) de una empresa
+# GET /api/companies/{company_id}/vacants
+# -----------------
+@router.get("/{company_id}/vacants")
+async def get_company_vacancies(
+    company_id: int, db: AsyncSession = Depends(get_db)
+):
+    """
+    Devuelve todas las ofertas vinculadas a una empresa, para poder
+    agruparlas dentro de su ficha de cliente.
+    """
+    result = await db.execute(
+        select(JobOffer)
+        .where(JobOffer.company_id == company_id)
+        .order_by(JobOffer.published_at.desc().nullslast())
+    )
+    offers = result.scalars().all()
+    return [
+        {
+            "id": o.id,
+            "title": o.title,
+            "status": o.status.value if hasattr(o.status, "value") else o.status,
+            "location": o.location,
+            "published_at": o.published_at,
+        }
+        for o in offers
+    ]
 
 
 # -----------------

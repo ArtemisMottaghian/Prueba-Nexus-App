@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CANDIDATE_STATUS_SELECT_OPTIONS } from '../../../constants/candidateStatus';
+import { ENDPOINTS } from '../../../services/api';
 import './CandidateModal.css';
 
 export default function CandidateModal({
@@ -486,6 +487,28 @@ export default function CandidateModal({
                           <span className="doc-count">{localDocs.length}</span>
                         )}
                       </h4>
+                      {candidate?.cvUrl && (
+                        <a
+                          href={ENDPOINTS.recruitment.candidatos.downloadCV(
+                            candidate.cvUrl.split('/').pop()
+                          )}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="doc-item"
+                          style={{ textDecoration: 'none' }}
+                        >
+                          <div className="doc-icon">
+                            <i className="bi bi-file-earmark-pdf text-danger"></i>
+                          </div>
+                          <div className="flex-grow-1">
+                            <div className="doc-name">CV del candidato (PDF)</div>
+                            <div className="doc-meta">
+                              <span className="doc-tipo-badge">CV</span>
+                            </div>
+                          </div>
+                          <i className="bi bi-download"></i>
+                        </a>
+                      )}
                       {localDocs.length > 0 ? (
                         <div className="doc-list">
                           {localDocs.map((doc, i) => (
@@ -524,10 +547,12 @@ export default function CandidateModal({
                           ))}
                         </div>
                       ) : (
-                        <div className="tab-empty">
-                          <i className="bi bi-file-earmark"></i>
-                          <p>No hay documentos adjuntos todavía.</p>
-                        </div>
+                        !candidate?.cvUrl && (
+                          <div className="tab-empty">
+                            <i className="bi bi-file-earmark"></i>
+                            <p>No hay documentos adjuntos todavía.</p>
+                          </div>
+                        )
                       )}
                     </div>
                   </div>

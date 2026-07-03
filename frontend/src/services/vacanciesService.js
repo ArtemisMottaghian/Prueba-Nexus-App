@@ -32,12 +32,14 @@ const mapVacancyData = (v) => {
     companyName: v.company_name,
     company_id: v.company_id,
     industry: v.sector || 'N/A',
+    familia: v.familia || null,
+    subcategoria: v.subcategoria || null,
     location: v.location || 'No especificada',
     status: translatedStatus,
     source: getPortalName(v.portal_id),
     isFavorite: v.is_favourite || false,
     time: v.published_at
-      ? new Date(v.published_at).toLocaleDateString()
+      ? new Date(v.published_at).toLocaleDateString('es-ES')
       : 'Sin fecha',
     rawDate: v.published_at || v.scraped_at || null,
     description: v.job_description,
@@ -85,6 +87,47 @@ export const vacanciesService = {
     } catch (error) {
       console.error('Error al obtener la lista de vacantes:', error);
       throw error;
+    }
+  },
+
+  // Crear una vacante manualmente (persiste en la BD)
+  createVacancy: async (payload) => {
+    const response = await authFetch(ENDPOINTS.recruitment.vacantes.create, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      let msg = `Error HTTP: ${response.status}`;
+      try {
+        const err = await response.json();
+        if (err?.detail) {
+          msg =
+            typeof err.detail === 'string'
+              ? err.detail
+              : JSON.stringify(err.detail);
+        }
+      } catch {
+        /* respuesta sin cuerpo */
+      }
+      throw new Error(msg);
+    }
+    return mapVacancyData(await response.json());
+  },
+
+  // Lista de nombres de empresas ya registradas (para el selector con dedup)
+  getCompanies: async () => {
+    try {
+      const response = await authFetch(ENDPOINTS.companies.all);
+      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      const data = await response.json();
+      return data
+        .map((c) => c.name || c.nombre || c.company_name)
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b));
+    } catch (error) {
+      console.error('Error al obtener empresas:', error);
+      return [];
     }
   },
 
@@ -176,6 +219,28 @@ export const vacanciesService = {
       console.error(`Error al aplicar acción masiva ${actionName}:`, error);
       throw error;
     }
+  },
+
+  // Eliminar una vacante (borrado real en la BD)
+  deleteVacancy: async (id) => {
+    const response = await authFetch(ENDPOINTS.recruitment.vacantes.bulkActions, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vacancy_ids: [id], action: 'delete' }),
+    });
+    if (!response.ok) {
+      let msg = `Error HTTP: ${response.status}`;
+      try {
+        const e = await response.json();
+        if (e?.detail) {
+          msg = typeof e.detail === 'string' ? e.detail : JSON.stringify(e.detail);
+        }
+      } catch {
+        /* sin cuerpo */
+      }
+      throw new Error(msg);
+    }
+    return response.status === 204 ? null : await response.json();
   },
 
   // 7. Actualizar el estado de una vacante de forma individual
@@ -360,6 +425,18 @@ export const vacanciesService = {
     } catch (error) {
       console.error(`Error al desasignar RRHH (DELETE):`, error);
       throw error;
+    }
+  },
+
+  // Devuelve la taxonomía { familia: [subcategorías] } para los filtros
+  getTaxonomy: async () => {
+    try {
+      const response = await authFetch(ENDPOINTS.recruitment.vacantes.taxonomy);
+      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error al obtener la taxonomía:', error);
+      return {};
     }
   },
 

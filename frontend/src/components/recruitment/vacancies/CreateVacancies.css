@@ -10,7 +10,7 @@
 }
 
 /* Sombra más profunda en modo oscuro, igual que tus tarjetas */
-[data-theme='dark'] .custom-create-modal .modal-content {
+[data-bs-theme='dark'] .custom-create-modal .modal-content {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   background: var(--bg-secondary, #1f2937);
 }
@@ -27,7 +27,7 @@
   padding: 1rem 1.25rem;
 }
 
-[data-theme='dark'] .custom-create-modal .modal-footer {
+[data-bs-theme='dark'] .custom-create-modal .modal-footer {
   background: var(--bg-secondary, #1f2937);
 }
 
@@ -59,9 +59,9 @@
 }
 
 /* Fondo de inputs en modo oscuro */
-[data-theme='dark'] .custom-create-modal .form-control,
-[data-theme='dark'] .custom-create-modal .form-select,
-[data-theme='dark'] .custom-create-modal .input-group-text {
+[data-bs-theme='dark'] .custom-create-modal .form-control,
+[data-bs-theme='dark'] .custom-create-modal .form-select,
+[data-bs-theme='dark'] .custom-create-modal .input-group-text {
   background: var(--bg-primary, #111827);
   color: var(--text-primary, #f9fafb);
 }
@@ -85,7 +85,7 @@
   margin-top: 6px;
 }
 
-[data-theme='dark'] .custom-create-modal .form-text {
+[data-bs-theme='dark'] .custom-create-modal .form-text {
   color: var(--text-secondary, #9ca3af);
 }
 
@@ -127,6 +127,6 @@
   background: rgba(124, 58, 237, 0.05);
 }
 
-[data-theme='dark'] .custom-create-modal .btn-outline-secondary {
+[data-bs-theme='dark'] .custom-create-modal .btn-outline-secondary {
   color: var(--text-secondary, #d1d5db);
 }

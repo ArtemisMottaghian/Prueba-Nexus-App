@@ -1,0 +1,647 @@
+// se identifican los sectores y subcategorías en vacantes y candidatos
+
+// minúsculas y sin acentos, para comparar sin problemas.
+const normalizar = (texto) => {
+  if (!texto) return '';
+  return String(texto)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '');
+};
+
+// El orden define el orden en el desplegable de sectores.
+export const SECTORES = {
+  'Dirección y Gerencia': {
+    kw: ['director', 'directora', 'direccion', 'gerente', 'gerencia', 'ceo', 'cfo', 'coo', 'chief '],
+    sub: [
+      'Dirección general',
+      'Dirección financiera',
+      'Dirección comercial y de ventas',
+      'Dirección de operaciones',
+      'Dirección de logística y distribución',
+      'Dirección de recursos humanos',
+      'Dirección de marketing',
+      'Dirección de sistemas / TIC',
+      'Dirección de producción',
+      'Administración y Dirección de Empresas (ADE)',
+      'Máster en Dirección de Empresas (MBA)',
+    ],
+  },
+  'Tecnología e IT': {
+    kw: [
+      'informat', 'software', 'developer', 'desarrollad', 'desarrollo de',
+      'programad', 'program', 'full stack', 'fullstack', 'backend', 'back-end',
+      'frontend', 'front-end', 'devops', 'cloud', 'ciberseg', 'cybersec',
+      'base de datos', 'bases de datos', 'big data', 'machine learning',
+      'inteligencia artificial', 'python', 'java', 'javascript', 'react',
+      'angular', 'node', 'sql', 'sistemas', 'redes', 'help desk', 'helpdesk',
+      'soporte tecnico', 'videojuego', 'aplicaciones web', 'desarrollo web', 'tic',
+    ],
+    sub: [
+      // Profesiones
+      'Programador/a',
+      'Desarrollador/a backend',
+      'Desarrollador/a frontend',
+      'Desarrollador/a full stack',
+      'Desarrollador/a móvil',
+      'Desarrollador/a de videojuegos',
+      'Analista de sistemas',
+      'Administrador/a de sistemas y redes',
+      'Administrador/a de bases de datos',
+      'Ingeniero/a DevOps',
+      'Arquitecto/a de software',
+      'Científico/a de datos (Data Scientist)',
+      'Ingeniero/a de datos',
+      'Analista de datos / BI',
+      'Especialista en ciberseguridad',
+      'Técnico/a de soporte / Help Desk',
+      'Técnico/a de redes',
+      'QA / Tester',
+      'Diseñador/a UX/UI',
+      // Grados universitarios
+      'Ingeniería Informática',
+      'Ingeniería del Software',
+      'Ingeniería de Computadores',
+      'Ingeniería de Datos / Ciencia de Datos',
+      'Inteligencia Artificial',
+      'Ingeniería Multimedia',
+      'Diseño y Desarrollo de Videojuegos',
+      // FP (Informática y Comunicaciones)
+      'Sistemas Microinformáticos y Redes (SMR)',
+      'Desarrollo de Aplicaciones Web (DAW)',
+      'Desarrollo de Aplicaciones Multiplataforma (DAM)',
+      'Administración de Sistemas Informáticos en Red (ASIR)',
+    ],
+  },
+  'Ingeniería y Técnica': {
+    kw: ['ingenier', 'telecomunicacion', 'electronic', 'mecanic', 'aeronautic', 'naval', 'topograf', 'delineante', 'automatizacion', 'robotic'],
+    sub: [
+      // Profesiones
+      'Ingeniero/a industrial',
+      'Ingeniero/a mecánico/a',
+      'Ingeniero/a electrónico/a',
+      'Ingeniero/a eléctrico/a',
+      'Ingeniero/a de telecomunicaciones',
+      'Ingeniero/a aeronáutico/a',
+      'Ingeniero/a de materiales',
+      'Ingeniero/a químico/a',
+      'Ingeniero/a de organización industrial',
+      'Técnico/a en topografía',
+      'Delineante / Dibujante técnico',
+      'Técnico/a en automatización y robótica',
+      // Grados universitarios
+      'Ingeniería Mecánica',
+      'Ingeniería Eléctrica',
+      'Ingeniería Electrónica Industrial y Automática',
+      'Ingeniería en Tecnologías Industriales',
+      'Ingeniería de Telecomunicación',
+      'Ingeniería Aeroespacial',
+      'Ingeniería Química',
+      'Ingeniería de Materiales',
+      'Ingeniería Biomédica',
+      'Ingeniería en Diseño Industrial y Desarrollo de Productos',
+      // FP (Electricidad y Electrónica / Fabricación Mecánica)
+      'Sistemas Electrotécnicos y Automatizados',
+      'Automatización y Robótica Industrial',
+      'Mantenimiento Electrónico',
+      'Sistemas de Telecomunicaciones e Informáticos',
+      'Diseño en Fabricación Mecánica',
+    ],
+  },
+  'Ciencias': {
+    kw: ['biolog', 'botanic', 'zoolog', 'quimic', 'matematic', 'actuari', 'laboratorio', 'fisico', 'geolog', 'biotecnolog', 'bioquimic'],
+    sub: [
+      // Profesiones
+      'Biólogo/a',
+      'Químico/a',
+      'Físico/a',
+      'Matemático/a',
+      'Actuario/a',
+      'Geólogo/a',
+      'Biotecnólogo/a',
+      'Técnico/a de laboratorio',
+      // Grados universitarios
+      'Biología',
+      'Bioquímica',
+      'Biotecnología',
+      'Química',
+      'Física',
+      'Matemáticas',
+      'Estadística',
+      'Geología',
+      'Ciencias del Mar',
+      'Ciencias Ambientales',
+      'Ciencia y Tecnología de los Alimentos',
+      // FP (Química)
+      'Laboratorio de Análisis y Control de Calidad',
+      'Química Industrial',
+    ],
+  },
+  'Sanidad': {
+    kw: [
+      'enfermer', 'medic', 'farmac', 'fisioterap', 'odontolog', 'dentist',
+      'estomatolog', 'optic', 'optometr', 'logopeda', 'terapeuta', 'veterinar',
+      'psicolog', 'sanitari', 'salud', 'dietista', 'nutricion', 'celador',
+      'protesis dental', 'bucodental', 'emergencias sanitarias',
+      'auxiliar de enfermeria', 'imagen y diagnostico', 'podolog', 'matron',
+    ],
+    sub: [
+      // Profesiones
+      'Médico/a',
+      'Médico/a de familia',
+      'Enfermero/a',
+      'Auxiliar de enfermería (TCAE)',
+      'Matrón/a',
+      'Farmacéutico/a',
+      'Fisioterapeuta',
+      'Terapeuta ocupacional',
+      'Logopeda',
+      'Dietista-nutricionista',
+      'Psicólogo/a sanitario/a',
+      'Odontólogo/a',
+      'Higienista dental',
+      'Protésico/a dental',
+      'Óptico-optometrista',
+      'Podólogo/a',
+      'Veterinario/a',
+      'Técnico/a en imagen para el diagnóstico',
+      'Técnico/a de laboratorio clínico',
+      'Técnico/a en emergencias sanitarias',
+      'Técnico/a en farmacia',
+      'Celador/a sanitario/a',
+      // Grados universitarios
+      'Medicina',
+      'Enfermería',
+      'Farmacia',
+      'Fisioterapia',
+      'Odontología',
+      'Veterinaria',
+      'Psicología',
+      'Nutrición Humana y Dietética',
+      'Terapia Ocupacional',
+      'Logopedia',
+      'Óptica y Optometría',
+      'Podología',
+      'Medicina (especialidades / MIR)',
+      // FP (Sanidad)
+      'Cuidados Auxiliares de Enfermería',
+      'Emergencias Sanitarias',
+      'Farmacia y Parafarmacia',
+      'Laboratorio Clínico y Biomédico',
+      'Imagen para el Diagnóstico y Medicina Nuclear',
+      'Anatomía Patológica y Citodiagnóstico',
+      'Higiene Bucodental',
+      'Prótesis Dentales',
+      'Dietética',
+      'Documentación y Administración Sanitarias',
+      'Audiología Protésica',
+      'Radioterapia y Dosimetría',
+    ],
+  },
+  'Finanzas, Banca y Seguros': {
+    kw: ['financ', 'contab', 'inversion', 'banca', 'bancari', 'seguro', 'fiscal', 'auditor', 'tesorer', 'economist'],
+    sub: [
+      // Profesiones
+      'Contable',
+      'Analista financiero/a',
+      'Asesor/a financiero/a y de inversiones',
+      'Auditor/a',
+      'Asesor/a fiscal',
+      'Empleado/a de banca',
+      'Agente / Mediador de seguros',
+      'Economista',
+      'Controller financiero',
+      // Grados universitarios
+      'Economía',
+      'Administración y Dirección de Empresas (ADE)',
+      'Finanzas y Contabilidad',
+      'Finanzas, Banca y Seguros',
+      'Ciencias Actuariales y Financieras',
+      'Doble Grado en Derecho y ADE',
+      // FP (Administración y Gestión)
+      'Administración y Finanzas',
+    ],
+  },
+  'Legal y Jurídico': {
+    kw: ['abogad', 'juridic', 'legal', 'notari', 'procurad', 'compliance', 'criminolog'],
+    sub: [
+      // Profesiones
+      'Abogado/a',
+      'Procurador/a',
+      'Asesor/a jurídico/a',
+      'Compliance officer',
+      'Graduado/a social',
+      'Criminólogo/a',
+      'Notario/a',
+      // Grados universitarios
+      'Derecho',
+      'Criminología',
+      'Relaciones Laborales y Recursos Humanos',
+      'Ciencias Políticas y de la Administración',
+      'Gestión y Administración Pública',
+      // FP (Administración y Gestión)
+      'Administración y Gestión (apoyo jurídico)',
+    ],
+  },
+  'Comercio, Ventas y Marketing': {
+    kw: [
+      'comercial', 'ventas', 'vendedor', 'publicidad', 'marketing',
+      'relaciones publicas', 'inmobiliaria', 'retail', 'tienda', 'cajero',
+      'taquiller', 'reponedor', 'telemarketing', 'teleoperador', 'promotor',
+      'estacion de servicio', 'key account', 'ecommerce', 'e-commerce',
+    ],
+    sub: [
+      // Profesiones
+      'Comercial / Ventas',
+      'Key Account Manager',
+      'Representante comercial',
+      'Agente inmobiliario/a',
+      'Responsable de marketing',
+      'Especialista en marketing digital',
+      'Community manager',
+      'Especialista SEO/SEM',
+      'Técnico/a de publicidad y RRPP',
+      'Dependiente/a de comercio',
+      'Cajero/a',
+      'Reponedor/a',
+      'Jefe/a de tienda',
+      'Teleoperador/a',
+      'Promotor/a de ventas',
+      // Grados universitarios
+      'Marketing e Investigación de Mercados',
+      'Publicidad y Relaciones Públicas',
+      'Comercio',
+      'Comercio Internacional',
+      // FP (Comercio y Marketing)
+      'Actividades Comerciales',
+      'Gestión de Ventas y Espacios Comerciales',
+      'Marketing y Publicidad',
+      'Comercio Internacional',
+    ],
+  },
+  'Administración y Gestión': {
+    kw: [
+      'administrativ', 'administracion', 'recursos humanos', 'rrhh', 'nominas',
+      'secretari', 'recepcionista', 'back office', 'gestion administrativa',
+      'grabador de datos', 'archivo', 'biblioteca', 'encuesta',
+      'servicios de personal',
+    ],
+    sub: [
+      // Profesiones
+      'Administrativo/a',
+      'Auxiliar administrativo/a',
+      'Asistente/a de dirección',
+      'Técnico/a de recursos humanos',
+      'Técnico/a de nóminas',
+      'Recepcionista',
+      'Secretario/a',
+      'Grabador/a de datos',
+      'Documentalista / Bibliotecario/a',
+      // Grados universitarios
+      'Relaciones Laborales y Recursos Humanos',
+      'Gestión y Administración Pública',
+      'Información y Documentación',
+      // FP (Administración y Gestión)
+      'Gestión Administrativa',
+      'Administración y Finanzas',
+      'Asistencia a la Dirección',
+    ],
+  },
+  'Hostelería y Turismo': {
+    kw: ['hosteler', 'turismo', 'turistic', 'hotel', 'cocin', 'chef', 'camarer', 'restaurac', 'agencia de viajes', 'guia turistic', 'azafat', 'barista', 'sumiller'],
+    sub: [
+      // Profesiones
+      'Cocinero/a',
+      'Chef / Jefe de cocina',
+      'Ayudante de cocina',
+      'Camarero/a',
+      'Barista',
+      'Sumiller',
+      'Recepcionista de hotel',
+      'Gobernanta / Personal de pisos',
+      'Agente de viajes',
+      'Guía turístico/a',
+      'Azafato/a de tierra',
+      // Grados universitarios
+      'Turismo',
+      'Gastronomía y Artes Culinarias',
+      'Dirección Hotelera / Gestión Hotelera',
+      // FP (Hostelería y Turismo)
+      'Cocina y Gastronomía',
+      'Servicios en Restauración',
+      'Dirección de Cocina',
+      'Dirección de Servicios de Restauración',
+      'Gestión de Alojamientos Turísticos',
+      'Guía, Información y Asistencias Turísticas',
+      'Agencias de Viajes y Gestión de Eventos',
+    ],
+  },
+  'Educación y Formación': {
+    kw: ['profesor', 'maestr', 'docent', 'educacion infantil', 'formacion', 'ensenanza', 'educador', 'pedagog', 'autoescuela'],
+    sub: [
+      // Profesiones
+      'Maestro/a de educación infantil',
+      'Maestro/a de educación primaria',
+      'Profesor/a de educación secundaria',
+      'Profesor/a de formación profesional',
+      'Profesor/a universitario/a',
+      'Profesor/a de idiomas',
+      'Pedagogo/a',
+      'Psicopedagogo/a',
+      'Educador/a especial',
+      'Profesor/a de autoescuela',
+      // Grados universitarios
+      'Magisterio / Educación Infantil',
+      'Magisterio / Educación Primaria',
+      'Pedagogía',
+      'Educación Social',
+      'Máster en Formación del Profesorado',
+      // FP (Servicios Socioculturales)
+      'Educación Infantil',
+    ],
+  },
+  'Servicios Sociales y a la Comunidad': {
+    kw: ['trabajo social', 'trabajador social', 'trabajadora social', 'educacion social', 'educador social', 'integracion social', 'cuidados', 'dependencia', 'animacion', 'tiempo libre', 'mediacion'],
+    sub: [
+      // Profesiones (reales)
+      'Trabajo social',
+      'Educación social',
+      'Integración social',
+      'Mediación comunicativa',
+      'Animación sociocultural',
+      'Monitor/a de tiempo libre',
+      'Atención a personas dependientes',
+      'Cuidador/a a domicilio',
+      'Auxiliar de ayuda a domicilio',
+      'Técnico/a de igualdad',
+      // Grados universitarios
+      'Trabajo Social',
+      'Educación Social',
+      'Sociología',
+      'Antropología Social y Cultural',
+      // FP (Servicios Socioculturales y a la Comunidad)
+      'Atención a Personas en Situación de Dependencia',
+      'Integración Social',
+      'Animación Sociocultural y Turística',
+      'Mediación Comunicativa',
+      'Promoción de Igualdad de Género',
+    ],
+  },
+  'Cultura, Arte, Diseño y Comunicación': {
+    kw: ['periodist', 'comunicacion', 'traductor', 'interprete', 'filolog', 'disenador', 'diseno grafico', 'decorador', 'audiovisual', 'artes escenicas', 'multimedia', 'grafic', 'fotograf', 'bellas artes'],
+    sub: [
+      // Profesiones
+      'Periodista',
+      'Comunicador/a audiovisual',
+      'Diseñador/a gráfico/a',
+      'Diseñador/a de interiores',
+      'Diseñador/a de moda',
+      'Fotógrafo/a',
+      'Técnico/a de sonido / grabación',
+      'Traductor/a e intérprete',
+      'Filólogo/a',
+      'Técnico/a de artes escénicas',
+      'Ilustrador/a',
+      // Grados universitarios
+      'Periodismo',
+      'Comunicación Audiovisual',
+      'Publicidad y Relaciones Públicas',
+      'Bellas Artes',
+      'Diseño',
+      'Diseño Gráfico',
+      'Diseño de Interiores',
+      'Diseño de Moda',
+      'Traducción e Interpretación',
+      'Estudios de la lengua (Filología)',
+      'Historia del Arte',
+      'Humanidades',
+      // FP (Imagen y Sonido / Artes Gráficas / Artes y Artesanías)
+      'Realización de Proyectos Audiovisuales y Espectáculos',
+      'Producción de Audiovisuales y Espectáculos',
+      'Sonido para Audiovisuales y Espectáculos',
+      'Iluminación, Captación y Tratamiento de Imagen',
+      'Animaciones 3D, Juegos y Entornos Interactivos',
+      'Diseño y Edición de Publicaciones Impresas y Multimedia',
+    ],
+  },
+  'Edificación y Obra Civil': {
+    kw: [
+      'construccion', 'obra civil', 'a pie de obra', 'albanil', 'arquitect',
+      'aparejador', 'urbanist', 'fontaner', 'encofrad', 'escayol', 'carpinter',
+      'cristaler', 'cubiertas', 'estructuras metalicas', 'placas de energia solar',
+      'parquet', 'solador', 'pintor y', 'empapelador', 'conserje',
+      'mantenedor de edificio', 'cerramientos', 'aislante', 'electricista',
+    ],
+    sub: [
+      // Profesiones
+      'Arquitecto/a',
+      'Arquitecto/a técnico/a (aparejador)',
+      'Ingeniero/a de caminos / obra civil',
+      'Jefe/a de obra',
+      'Encargado/a de obra',
+      'Albañil',
+      'Fontanero/a',
+      'Electricista',
+      'Carpintero/a',
+      'Cristalero/a',
+      'Encofrador/a',
+      'Escayolista',
+      'Pintor/a',
+      'Solador/a - alicatador/a',
+      'Instalador/a de placas solares',
+      'Instalador/a de climatización',
+      'Conserje / Mantenedor de edificios',
+      // Grados universitarios
+      'Arquitectura',
+      'Fundamentos de la Arquitectura',
+      'Arquitectura Técnica / Edificación',
+      'Ingeniería Civil',
+      'Ingeniería de la Construcción',
+      // FP (Edificación y Obra Civil / Instalación y Mantenimiento / Electricidad)
+      'Proyectos de Edificación',
+      'Proyectos de Obra Civil',
+      'Construcción',
+      'Obras de Interior, Decoración y Rehabilitación',
+      'Instalaciones Eléctricas y Automáticas',
+      'Instalaciones de Producción de Calor (climatización/fontanería)',
+      'Instalaciones Frigoríficas y de Climatización',
+    ],
+  },
+  'Industria y Producción': {
+    kw: [
+      'produccion', 'fabricacion', 'operario', 'operador de maquina', 'operadores de maquina',
+      'maquina-herramienta', 'maquinas-herramienta', 'soldador', 'oxicort',
+      'mecanizado', 'cnc', 'industria alimentaria', 'chapist', 'calderer',
+      'ebanista', 'panader', 'pasteler', 'carnica', 'matarife', 'pescado',
+      'conservero', 'ensamblador', 'matricero', 'zapatero', 'tapicer',
+      'refrigeracion', 'climatizacion', 'control de calidad', 'planta de produccion',
+      'planta industrial', 'embalaje', 'lavanderia', 'plastico', 'obtencion y transformacion de metales',
+      'plantas industriales', 'bicicleta', 'textil', 'confeccion', 'carrocer', 'automocion',
+    ],
+    sub: [
+      // Profesiones industriales
+      'Operario/a de producción',
+      'Operador/a de máquinas',
+      'Soldador/a',
+      'Calderero/a - Chapista',
+      'Mecánico/a industrial',
+      'Mecánico/a de vehículos',
+      'Chapista - pintor/a de automoción',
+      'Ajustador/a - matricero/a',
+      'Técnico/a de mantenimiento industrial',
+      'Técnico/a de control de calidad',
+      'Ebanista / Carpintero/a de mueble',
+      'Panadero/a - pastelero/a',
+      'Carnicero/a - charcutero/a',
+      'Operario/a de industria alimentaria',
+      'Tapicero/a',
+      'Zapatero/a',
+      'Operario/a textil / confección',
+      'Ensamblador/a electrónico/a',
+      // Grados universitarios
+      'Ingeniería en Tecnologías Industriales',
+      'Ingeniería de Organización Industrial',
+      'Enología',
+      // FP (Fabricación Mecánica / Transporte y Mantenimiento Vehículos / Industrias Alimentarias / Textil / Madera)
+      'Mecanizado',
+      'Soldadura y Calderería',
+      'Programación de la Producción en Fabricación Mecánica',
+      'Construcciones Metálicas',
+      'Electromecánica de Vehículos Automóviles',
+      'Carrocería',
+      'Automoción',
+      'Elaboración de Productos Alimenticios',
+      'Panadería, Repostería y Confitería',
+      'Carnicería y Elaboración de Productos Cárnicos',
+      'Vitivinicultura',
+      'Instalación y Amueblamiento (madera y mueble)',
+      'Confección y Moda',
+      'Fabricación y Ennoblecimiento de Productos Textiles',
+    ],
+  },
+  'Logística, Transporte y Almacén': {
+    kw: ['logistic', 'transporte', 'almacen', 'conductor', 'camion', 'autobus', 'tranvia', 'taxi', 'furgoneta', 'carretiller', 'grua', 'montacargas', 'reparto', 'mensajer', 'marinero', 'movimiento de tierras'],
+    sub: [
+      // Profesiones
+      'Mozo/a de almacén',
+      'Carretillero/a',
+      'Preparador/a de pedidos',
+      'Conductor/a de camión',
+      'Conductor/a de autobús',
+      'Conductor/a de furgoneta / repartidor/a',
+      'Taxista / VTC',
+      'Operador/a de grúa y montacargas',
+      'Operador/a de maquinaria de movimiento de tierras',
+      'Responsable de logística',
+      'Marinero/a',
+      // Grados universitarios
+      'Gestión del Transporte y la Logística',
+      'Náutica y Transporte Marítimo',
+      // FP (Comercio y Marketing / Marítimo-Pesquera)
+      'Transporte y Logística',
+      'Conducción de Vehículos de Transporte por Carretera',
+      'Navegación y Pesca de Litoral',
+    ],
+  },
+  'Agricultura, Ganadería y Medio Ambiente': {
+    kw: ['agricol', 'agronom', 'ganader', 'jardin', 'invernadero', 'vivero', 'huerta', 'adiestrad', 'cuidador de animales', 'ambiental', 'medio ambiente', 'residuos', 'aguas', 'plagas', 'fumigador', 'forestal', 'riesgos laborales', 'prevencion'],
+    sub: [
+      // Profesiones
+      'Ingeniero/a agrónomo/a',
+      'Ingeniero/a de montes / forestal',
+      'Trabajador/a agrícola',
+      'Jardinero/a - paisajista',
+      'Ganadero/a',
+      'Cuidador/a - adiestrador/a de animales',
+      'Técnico/a de medio ambiente',
+      'Técnico/a de tratamiento de aguas y residuos',
+      'Técnico/a de prevención de riesgos laborales (PRL)',
+      'Controlador/a de plagas',
+      // Grados universitarios
+      'Ingeniería Agrícola / Agroalimentaria',
+      'Ingeniería Forestal y del Medio Natural',
+      'Ciencias Ambientales',
+      'Enología',
+      'Ciencias del Mar',
+      // FP (Agraria / Seguridad y Medio Ambiente)
+      'Producción Agropecuaria',
+      'Jardinería y Floristería',
+      'Gestión Forestal y del Medio Natural',
+      'Paisajismo y Medio Rural',
+      'Ganadería y Asistencia en Sanidad Animal',
+      'Aprovechamiento y Conservación del Medio Natural',
+      'Gestión del Agua',
+      'Química y Salud Ambiental',
+    ],
+  },
+  'Servicios Personales y Estética': {
+    kw: ['peluquer', 'estetic', 'bienestar', 'manicura', 'maquillaj', 'spa '],
+    sub: [
+      // Profesiones
+      'Peluquero/a',
+      'Esteticista',
+      'Maquillador/a profesional',
+      'Manicurista',
+      'Técnico/a de spa y bienestar',
+      'Asesor/a de imagen',
+      // FP (Imagen Personal)
+      'Peluquería y Cosmética Capilar',
+      'Estética y Belleza',
+      'Estética Integral y Bienestar',
+      'Caracterización y Maquillaje Profesional',
+      'Asesoría de Imagen Personal y Corporativa',
+    ],
+  },
+  'Seguridad, Deporte y Emergencias': {
+    kw: ['seguridad privada', 'vigilante', 'escolta', 'socorrista', 'entrenador', 'arbitro', 'deportiv', 'monitor deportiv', 'bombero', 'policia', 'proteccion civil'],
+    sub: [
+      // Profesiones
+      'Vigilante de seguridad',
+      'Escolta',
+      'Socorrista',
+      'Entrenador/a deportivo/a',
+      'Monitor/a deportivo/a',
+      'Árbitro/a',
+      'Bombero/a',
+      'Técnico/a de emergencias y protección civil',
+      // Grados universitarios
+      'Ciencias de la Actividad Física y del Deporte (CAFYD)',
+      'Seguridad',
+      // FP (Actividades Físicas y Deportivas / Seguridad y Medio Ambiente)
+      'Enseñanza y Animación Sociodeportiva',
+      'Acondicionamiento Físico',
+      'Guía en el Medio Natural y de Tiempo Libre',
+      'Coordinación de Emergencias y Protección Civil',
+    ],
+  },
+  'Limpieza y Servicios Generales': {
+    kw: ['limpieza', 'limpiador', 'mantenimiento y limpieza'],
+    sub: [
+      'Personal de limpieza',
+      'Supervisor/a de limpieza',
+      'Limpiador/a de cristales',
+      'Personal de mantenimiento general',
+    ],
+  },
+};
+
+export const OTROS = 'Otros / Sin clasificar';
+
+// Lista de sectores para los desplegables (incluye "Otros" al final).
+export const LISTA_SECTORES = [...Object.keys(SECTORES), OTROS];
+
+// Devuelve todos los sectores que coinciden con el texto dado
+export const clasificarSectores = (...textos) => {
+  const texto = normalizar(textos.filter(Boolean).join(' '));
+  if (!texto) return [OTROS];
+
+  const encontradas = [];
+  for (const [familia, datos] of Object.entries(SECTORES)) {
+    if (datos.kw.some((kw) => texto.includes(kw))) encontradas.push(familia);
+  }
+  return encontradas.length > 0 ? encontradas : [OTROS];
+};
+
+// Devuelve las profesiones/estudios (subcategorías) de un sector, para el desplegable
+export const subcategoriasDe = (familia) =>
+  (SECTORES[familia] && SECTORES[familia].sub) || [];

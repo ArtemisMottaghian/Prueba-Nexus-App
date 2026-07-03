@@ -182,7 +182,7 @@
     padding 0.2s ease;
   white-space: nowrap;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 15px;
 }
 .sidebar-item:hover,
 .sidebar-item.active {

@@ -52,6 +52,13 @@
   box-sizing: border-box;
 }
 
+/* Texto base un poco más grande para mejorar la legibilidad en jornadas largas.
+   Como la mayoría de tamaños están en rem, subir la base (16px -> 17px) escala
+   el texto de toda la app de forma uniforme. */
+html {
+  font-size: 106.25%;
+}
+
 body {
   font-family:
     'Inter',

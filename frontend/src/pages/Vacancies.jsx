@@ -1,5 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import FilterBar from '../components/recruitment/shared/FilterBar';
+import {
+  LISTA_SECTORES,
+  clasificarSectores,
+  subcategoriasDe,
+} from '../utils/sectores';
 import BulkActions from '../components/recruitment/shared/BulkActions';
 import VacancyGrid from '../components/recruitment/vacancies/VacancyGrid';
 import initialJobsData from '../data/dummyData.json';
@@ -9,7 +14,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CreateVacancy from '../components/recruitment/vacancies/CreateVacancies';
 
-const ITEMS_POR_PAGINA = 20;
+const OPCIONES_POR_PAGINA = [10, 20, 50];
 
 // Constantes para LocalStorage (persistencia de datos)
 const LS_FAV_KEY = 'nexus_vacantes_favorites';
@@ -52,6 +57,7 @@ export default function Vacancies() {
     search: queryURL,
     status: 'All',
     industry: 'All',
+    subcategoria: 'All',
     location: 'All',
     source: 'All',
     modalidad: 'All',
@@ -68,28 +74,27 @@ export default function Vacancies() {
   const [showMyVacanciesOnly, setShowMyVacanciesOnly] = useState(false);
 
   const [paginaActual, setPaginaActual] = useState(1);
+  const [itemsPorPagina, setItemsPorPagina] = useState(20);
+  const [ordenarPor, setOrdenarPor] = useState('recientes');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // --- 2. OPCIONES DINÁMICAS (Para el FilterBar) ---
-  const mergedIndustryOptions = useMemo(() => {
-    const fromJobs = jobs
-      .map((j) => (j.industry || j.sector || '').trim())
-      .filter(Boolean);
-    const defaultSectors = [
-      'Tecnología / IT',
-      'Recursos Humanos',
-      'Ventas',
-      'Marketing',
-      'Finanzas',
-      'Salud',
-      'Ingeniería',
-      'Legal',
-      'Retail',
-      'Logística',
-      'Construcción',
-      'Educación',
-    ];
-    return [...new Set([...defaultSectors, ...fromJobs])].sort();
+  // El filtro "Sector" ofrece nuestras familias profesionales (sectores).
+  const mergedIndustryOptions = LISTA_SECTORES;
+
+  // Subcategorías (profesiones) del sector elegido, para el desplegable en cascada.
+  const subcatOptions =
+    filters.industry && filters.industry !== 'All'
+      ? subcategoriasDe(filters.industry)
+      : [];
+
+  // Clasificamos cada vacante en uno o varios sectores.
+  const sectoresByJob = useMemo(() => {
+    const mapa = {};
+    for (const j of jobs) {
+      mapa[j.id] = clasificarSectores(j.title, j.industry, j.description);
+    }
+    return mapa;
   }, [jobs]);
 
   const mergedLocationOptions = useMemo(() => {
@@ -139,6 +144,7 @@ export default function Vacancies() {
       search: '',
       status: 'All',
       industry: 'All',
+      subcategoria: 'All',
       location: 'All',
       source: 'All',
       modalidad: 'All',
@@ -149,6 +155,12 @@ export default function Vacancies() {
       searchParams.delete('q');
       setSearchParams(searchParams);
     }
+  };
+
+  const handleDeleteVacancy = async (jobId) => {
+    await vacanciesService.deleteVacancy(jobId);
+    setJobs((prev) => prev.filter((j) => j.id !== jobId));
+    setSelectedVacancies((prev) => prev.filter((id) => id !== jobId));
   };
 
   const handleUpdateJobStatus = (jobId, newStatus) => {
@@ -202,8 +214,7 @@ export default function Vacancies() {
 
     const matchIndustry =
       filters.industry === 'All' ||
-      job.industry === filters.industry ||
-      job.sector === filters.industry;
+      (sectoresByJob[job.id] || []).includes(filters.industry);
     const matchLocation =
       filters.location === 'All' ||
       normalizeLocation(job.location).includes(filters.location);
@@ -254,20 +265,49 @@ export default function Vacancies() {
     );
   });
 
+  // --- 5b. ORDENACIÓN ---
+  if (ordenarPor === 'empresa') {
+    filteredJobs.sort((a, b) =>
+      (a.companyName || '').localeCompare(b.companyName || '')
+    );
+  } else if (ordenarPor === 'estado') {
+    filteredJobs.sort((a, b) => (a.status || '').localeCompare(b.status || ''));
+  } else if (ordenarPor === 'antiguos') {
+    filteredJobs.sort(
+      (a, b) => new Date(a.rawDate || 0) - new Date(b.rawDate || 0)
+    );
+  } else {
+    filteredJobs.sort(
+      (a, b) => new Date(b.rawDate || 0) - new Date(a.rawDate || 0)
+    );
+  }
+
   // --- 6. PAGINACIÓN ---
   const totalPaginas = Math.max(
     1,
-    Math.ceil(filteredJobs.length / ITEMS_POR_PAGINA)
+    Math.ceil(filteredJobs.length / itemsPorPagina)
   );
   const paginaSafe = Math.min(paginaActual, totalPaginas);
+
+  const irAPagina = (p) =>
+    setPaginaActual(Math.max(1, Math.min(p, totalPaginas)));
+
+  const paginasVisibles = useMemo(() => {
+    const inicio = Math.max(1, paginaSafe - 1);
+    const fin = Math.min(totalPaginas, inicio + 2);
+    const pages = [];
+    for (let i = inicio; i <= fin; i++) pages.push(i);
+    return pages;
+  }, [paginaSafe, totalPaginas]);
+
   const jobsPaginados = useMemo(() => {
-    const inicio = (paginaSafe - 1) * ITEMS_POR_PAGINA;
-    return filteredJobs.slice(inicio, inicio + ITEMS_POR_PAGINA);
-  }, [filteredJobs, paginaSafe]);
+    const inicio = (paginaSafe - 1) * itemsPorPagina;
+    return filteredJobs.slice(inicio, inicio + itemsPorPagina);
+  }, [filteredJobs, paginaSafe, itemsPorPagina]);
 
   const desde =
-    filteredJobs.length === 0 ? 0 : (paginaSafe - 1) * ITEMS_POR_PAGINA + 1;
-  const hasta = Math.min(paginaSafe * ITEMS_POR_PAGINA, filteredJobs.length);
+    filteredJobs.length === 0 ? 0 : (paginaSafe - 1) * itemsPorPagina + 1;
+  const hasta = Math.min(paginaSafe * itemsPorPagina, filteredJobs.length);
 
   // --- 7. RENDER ---
   return (
@@ -277,10 +317,16 @@ export default function Vacancies() {
         <FilterBar
           filters={filters}
           onFilterChange={(name, val) =>
-            setFilters((prev) => ({ ...prev, [name]: val }))
+            setFilters((prev) => ({
+              ...prev,
+              [name]: val,
+              // al cambiar de sector, reseteamos la subcategoría
+              ...(name === 'industry' ? { subcategoria: 'All' } : {}),
+            }))
           }
           onClearFilters={handleClearFilters}
           industryOptions={mergedIndustryOptions}
+          subcategoriaOptions={subcatOptions}
           locationOptions={mergedLocationOptions}
           showMyVacanciesToggle={isNegocio}
           myVacanciesActive={showMyVacanciesOnly}
@@ -343,8 +389,24 @@ export default function Vacancies() {
 
       {/* Cabecera de contadores y botones visuales */}
       <div className="d-flex justify-content-between align-items-center mb-3 mt-3">
-        <div className="text-muted small">
-          Mostrando {filteredJobs.length} vacantes
+        <div className="d-flex align-items-center gap-3">
+          <div className="text-muted small">
+            Mostrando {jobsPaginados.length} de {filteredJobs.length} vacantes
+          </div>
+          <label className="d-flex align-items-center gap-2 text-muted small mb-0">
+            Ordenar por
+            <select
+              className="form-select form-select-sm"
+              style={{ width: 'auto' }}
+              value={ordenarPor}
+              onChange={(e) => setOrdenarPor(e.target.value)}
+            >
+              <option value="recientes">Más recientes</option>
+              <option value="antiguos">Más antiguos</option>
+              <option value="empresa">Empresa (A–Z)</option>
+              <option value="estado">Estado</option>
+            </select>
+          </label>
         </div>
 
         <div className="d-flex gap-2">
@@ -407,30 +469,97 @@ export default function Vacancies() {
           onUpdateJobStatus={handleUpdateJobStatus}
           onToggleFavorite={handleToggleFavorite}
           onAsignarVacante={handleAsignarVacante}
+          onDeleteVacancy={handleDeleteVacancy}
         />
       )}
 
       {/* Paginación */}
-      {!loading && totalPaginas > 1 && (
+      {!loading && filteredJobs.length > 0 && (
         <div className="clientes-pagination mt-3">
           <span className="clientes-pagination__info">
-            {desde}–{hasta} de {filteredJobs.length}
+            {desde}–{hasta} de {filteredJobs.length} · Página {paginaSafe} de{' '}
+            {totalPaginas}
           </span>
           <div className="clientes-pagination__controls">
+            <label
+              className="clientes-pagination__pagesize"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                marginRight: '12px',
+                fontSize: '0.875rem',
+              }}
+            >
+              Ver
+              <select
+                value={itemsPorPagina}
+                onChange={(e) => {
+                  setItemsPorPagina(Number(e.target.value));
+                  setPaginaActual(1);
+                }}
+              >
+                {OPCIONES_POR_PAGINA.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+              por página
+            </label>
             <button
               className="clientes-pagination__btn"
-              onClick={() => setPaginaActual(paginaSafe - 1)}
+              onClick={() => irAPagina(paginaSafe - 1)}
               disabled={paginaSafe === 1}
+              aria-label="Página anterior"
             >
               <i className="bi bi-chevron-left"></i>
             </button>
-            <button className="clientes-pagination__btn active">
-              {paginaSafe}
-            </button>
+
+            {paginasVisibles[0] > 1 && (
+              <>
+                <button
+                  className="clientes-pagination__btn"
+                  onClick={() => irAPagina(1)}
+                >
+                  1
+                </button>
+                {paginasVisibles[0] > 2 && (
+                  <span className="clientes-pagination__dots">…</span>
+                )}
+              </>
+            )}
+
+            {paginasVisibles.map((p) => (
+              <button
+                key={p}
+                className={`clientes-pagination__btn ${p === paginaSafe ? 'active' : ''}`}
+                onClick={() => irAPagina(p)}
+              >
+                {p}
+              </button>
+            ))}
+
+            {paginasVisibles[paginasVisibles.length - 1] < totalPaginas && (
+              <>
+                {paginasVisibles[paginasVisibles.length - 1] <
+                  totalPaginas - 1 && (
+                  <span className="clientes-pagination__dots">…</span>
+                )}
+                <button
+                  className="clientes-pagination__btn"
+                  onClick={() => irAPagina(totalPaginas)}
+                >
+                  {totalPaginas}
+                </button>
+              </>
+            )}
+
             <button
               className="clientes-pagination__btn"
-              onClick={() => setPaginaActual(paginaSafe + 1)}
+              onClick={() => irAPagina(paginaSafe + 1)}
               disabled={paginaSafe === totalPaginas}
+              aria-label="Página siguiente"
             >
               <i className="bi bi-chevron-right"></i>
             </button>
@@ -442,12 +571,14 @@ export default function Vacancies() {
       {isCreateModalOpen && (
         <CreateVacancy
           onClose={() => setIsCreateModalOpen(false)}
-          onSave={(data) => {
-            setJobs((prev) => [
-              { ...data, id: Date.now().toString() },
-              ...prev,
-            ]);
-            setIsCreateModalOpen(false);
+          onSave={async (payload) => {
+            try {
+              const nueva = await vacanciesService.createVacancy(payload);
+              setJobs((prev) => [nueva, ...prev]);
+              setIsCreateModalOpen(false);
+            } catch (e) {
+              alert('No se pudo guardar la vacante: ' + e.message);
+            }
           }}
         />
       )}

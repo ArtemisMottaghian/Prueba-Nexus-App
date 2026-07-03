@@ -72,9 +72,22 @@ export default function VacancyModal({
   onToggleFavorite,
   onAsignarVacante,
   isNegocio,
+  onDelete,
 }) {
   const { hasRole } = useAuth();
   const isReclutador = hasRole('hr_manager') || hasRole('reclutador');
+
+  const handleDeleteVacancy = async () => {
+    const ok = window.confirm(
+      '¿Seguro que quieres eliminar esta vacante? Esta acción no se puede deshacer.'
+    );
+    if (!ok) return;
+    try {
+      if (onDelete) await onDelete(job.id);
+    } catch (e) {
+      alert('No se pudo eliminar la vacante: ' + (e?.message || e));
+    }
+  };
 
   const [activeTab, setActiveTab] = useState('detalles');
   const [localStatus, setLocalStatus] = useState(job?.status || '');
@@ -222,7 +235,7 @@ export default function VacancyModal({
       outreachEmailMode === 'manual' ? outreachEmailManual : outreachEmail;
 
     try {
-      const res = await authFetch('/api/emails/send-prospect', {
+      const res = await authFetch(ENDPOINTS.emails.sendProspect, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -728,6 +741,15 @@ export default function VacancyModal({
                 >
                   <i className="bi bi-box-arrow-up-right"></i>
                 </button>
+                {onDelete && (
+                  <button
+                    className="btn-icon text-danger ms-auto"
+                    title="Eliminar vacante"
+                    onClick={handleDeleteVacancy}
+                  >
+                    <i className="bi bi-trash"></i>
+                  </button>
+                )}
               </div>
 
               {/* Tabs */}

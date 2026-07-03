@@ -24,24 +24,28 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
     setIsSubmitting(true);
 
     // Formateamos los datos tal y como los espera el backend
-    const expNumber = formData.experience
-      ? parseInt(formData.experience, 10)
-      : 0;
-    const skillsArray = formData.specialty
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const nameParts = formData.name.trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ');
 
-    const updatedData = {
-      name: formData.name.trim(),
+    // El backend espera first_name/last_name y experience/skills como TEXTO,
+    // y rechaza cadenas vacías en campos con formato. Enviamos solo lo que
+    // tenga valor.
+    const rawData = {
+      first_name: firstName,
+      last_name: lastName,
       email: formData.email.trim(),
       phone: formData.phone.trim(),
       education: formData.education,
       location: formData.location.trim(),
-      experience: expNumber,
-      specialty: formData.specialty.trim(),
-      skills: skillsArray,
+      experience: String(formData.experience || '').trim(),
+      skills: formData.specialty.trim(),
     };
+    const updatedData = Object.fromEntries(
+      Object.entries(rawData).filter(
+        ([, v]) => v !== '' && v !== null && v !== undefined
+      )
+    );
 
     try {
       await onSave(candidate.id, updatedData);

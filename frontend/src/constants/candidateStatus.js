@@ -1,9 +1,9 @@
 /** Valores de `CandidateStatus` en el API (GET/PATCH). */
 export const CANDIDATE_STATUS_OPTIONS = [
-  { value: 'active', label: 'Activo' },
-  { value: 'passive', label: 'Pasivo' },
-  { value: 'hired_elsewhere', label: 'Contratado fuera' },
-  { value: 'blacklisted', label: 'Lista negra' },
+  { value: 'active', label: 'En búsqueda activa' },
+  { value: 'passive', label: 'Abierto a ofertas' },
+  { value: 'hired_elsewhere', label: 'Contratado (otra empresa)' },
+  { value: 'blacklisted', label: 'No contactar' },
 ];
 
 /** Incluye etiquetas antiguas (mock / candidatesData.json) para que el select muestre valor. */

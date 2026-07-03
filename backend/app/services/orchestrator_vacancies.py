@@ -16,6 +16,7 @@ from app.models.user_model import User
 from app.models.job_model import JobOffer
 from app.models.contacts_model import Contact
 from app.models.companies_model import Company
+from app.core.reclutadoras import oferta_es_reclutadora, es_empresa_oculta
 
 from app.schemas.job_offer import ScrapedJobOffer
 from app.services.scrapers.scraper_vacancies_linkedin.runner import extract_linked
@@ -48,29 +49,6 @@ async def gather_raw_offers() -> list[dict]:
 def validate_and_filter_offers(raw_offers: list[dict]) -> list[ScrapedJobOffer]:
     valid_offers = []
     today = datetime.now(timezone.utc)
-    
-    # 🔥 LISTA NEGRA DE CONSULTORAS DE RRHH, HEADHUNTING Y ETTS
-    BLACKLISTED_COMPANIES = [
-        # Empresas originales y firmas clave
-        "aratalent", "adecco", "randstad", "manpower", "hays", 
-        "page personnel", "michael page", "robert walters", 
-        "spring professional", "talent search people", 
-        "grupo crit", "grupo nortempo", "nortempo", "synergie", 
-        "eurofirms", "sibils consulting",
-        
-        # Agencias de Headhunting y Selección Especializada
-        "walters people", "robert half", "experis", "antal international", 
-        "catenon", "bros group", "claire joster", "badenoch + clark", 
-        "hudson", "oliver james", "frank recruitment group", "nigel frank", 
-        "jefferson frank", "wyser",
-        
-        # ETTs y Plataformas de Contratación masiva
-        "jobandtalent", "kelly services", "gi group", "iman temporing", 
-        "grupo ctc", "selectiva", "isgf", "ananda",
-        
-        # Consultoras Organizativas de RRHH y Talento
-        "lhh", "korn ferry", "mercer", "cegos", "aon"
-    ]
 
     for offer in raw_offers:
         try:
@@ -78,11 +56,18 @@ def validate_and_filter_offers(raw_offers: list[dict]) -> list[ScrapedJobOffer]:
             if not validated_offer.company_name:
                 continue
                 
-            # 🔥 NUEVO FILTRO: Comprobamos si la empresa está en la lista negra
-            company_name_lower = validated_offer.company_name.lower()
-            es_consultora = any(blacklisted in company_name_lower for blacklisted in BLACKLISTED_COMPANIES)
-            
-            if es_consultora:
+            # Descartar ofertas sin empresa identificable ("empresa oculta")
+            if es_empresa_oculta(validated_offer.company_name):
+                print(f"      [FILTRO OCULTA] Descartando oferta sin empresa identificable: {validated_offer.title}")
+                continue
+
+            # Descartar reclutadoras / competencia
+            if oferta_es_reclutadora(
+                company_name=validated_offer.company_name,
+                titulo=validated_offer.title,
+                descripcion=validated_offer.job_description,
+                offer_url=str(validated_offer.offer_url or ""),
+            ):
                 print(f"      [FILTRO ETT] Descartando oferta de competidor/consultora: {validated_offer.company_name}")
                 continue
 
@@ -316,6 +301,7 @@ async def process_and_save_offers(valid_offers: list[ScrapedJobOffer]):
 
                     # Guardar Oferta
                     offer_dict["company_id"] = company_id
+
                     for key in [
                         "company_name",
                         "recruiter_name",

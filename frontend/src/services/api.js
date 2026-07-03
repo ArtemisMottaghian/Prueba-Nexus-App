@@ -36,6 +36,7 @@ export const ENDPOINTS = {
   },
   companies: {
     list: `${BASE_URL}/api/companies/clientes`,
+    all: `${BASE_URL}/api/companies`,
     detail: (id) => `${BASE_URL}/api/companies/${id}`,
     create: `${BASE_URL}/api/companies`,
     update: (id) => `${BASE_URL}/api/companies/${id}`,
@@ -66,9 +67,15 @@ export const ENDPOINTS = {
       search: (name) =>
         `${BASE_URL}/api/candidates/search?name=${encodeURIComponent(name)}`,
       locations: `${BASE_URL}/api/candidates/locations`,
+      extractCV: `${BASE_URL}/api/candidates/extract_cv`,
+      public: `${BASE_URL}/api/candidates/public`,
+      downloadCV: (filename) =>
+        `${BASE_URL}/api/candidates/download-cv/${filename}`,
     },
     vacantes: {
       list: `${BASE_URL}/api/vacancies`,
+      create: `${BASE_URL}/api/vacancies`,
+      taxonomy: `${BASE_URL}/api/vacancies/taxonomy`,
       assignedTo: (hrId) => `${BASE_URL}/api/vacancies/assigned/${hrId}`,
       locations: `${BASE_URL}/api/vacancies/locations`,
       filter: (params) => {
@@ -97,6 +104,10 @@ export const ENDPOINTS = {
   ai: {
     matchVacancy: (vacancyId) =>
       `${BASE_URL}/api/ai/match-vacancy/${vacancyId}`,
+  },
+
+  emails: {
+    sendProspect: `${BASE_URL}/api/emails/send-prospect`,
   },
 
   metrics: {
