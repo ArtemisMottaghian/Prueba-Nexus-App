@@ -102,7 +102,11 @@ export default function Sidebar({ isOpen, onClose }) {
                       <span className="sidebar-text">Clientes</span>
                     </NavLink>
                   )}
-                  <NavLink to="/inbox" className="sidebar-item" onClick={onClose}>
+                  <NavLink
+                    to="/inbox"
+                    className="sidebar-item"
+                    onClick={onClose}
+                  >
                     <i className="bi bi-envelope"></i>
                     <span className="sidebar-text">Inbox</span>
                     {unreadCount > 0 && (

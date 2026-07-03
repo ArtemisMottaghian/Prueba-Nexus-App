@@ -403,9 +403,7 @@ export default function Candidates() {
   }, [paginaSafe, totalPaginas]);
 
   const desde =
-    filteredCandidates.length === 0
-      ? 0
-      : (paginaSafe - 1) * itemsPorPagina + 1;
+    filteredCandidates.length === 0 ? 0 : (paginaSafe - 1) * itemsPorPagina + 1;
   const hasta = Math.min(
     paginaSafe * itemsPorPagina,
     filteredCandidates.length

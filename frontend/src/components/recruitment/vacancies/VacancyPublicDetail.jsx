@@ -586,22 +586,23 @@ export default function VacancyPublicDetail() {
                           const res = await fetch(
                             ENDPOINTS.recruitment.candidatos.public,
                             {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              first_name: nameParts[0] || '',
-                              last_name: nameParts.slice(1).join(' ') || '',
-                              email: formData.email || '',
-                              phone: formData.phone || '',
-                              location: formData.location || '',
-                              education: formData.education || '',
-                              experience: String(
-                                parseInt(formData.experience) || 0
-                              ),
-                              specialty: formData.specialty || '',
-                              source: `Vacante pública #${id}`,
-                            }),
-                          });
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                first_name: nameParts[0] || '',
+                                last_name: nameParts.slice(1).join(' ') || '',
+                                email: formData.email || '',
+                                phone: formData.phone || '',
+                                location: formData.location || '',
+                                education: formData.education || '',
+                                experience: String(
+                                  parseInt(formData.experience) || 0
+                                ),
+                                specialty: formData.specialty || '',
+                                source: `Vacante pública #${id}`,
+                              }),
+                            }
+                          );
                           if (res.ok) setFormStatus('ok');
                           else {
                             const err = await res.json();

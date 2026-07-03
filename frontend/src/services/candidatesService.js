@@ -292,12 +292,13 @@ export const candidatesService = {
       const response = await authFetch(
         ENDPOINTS.recruitment.candidatos.detail(id),
         {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(candidateData),
-      });
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(candidateData),
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Error al actualizar el candidato en el servidor');

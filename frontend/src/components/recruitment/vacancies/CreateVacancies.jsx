@@ -214,7 +214,8 @@ export default function CreateVacancy({ onClose, onSave }) {
                                   'rgba(124,58,237,0.10)')
                               }
                               onMouseLeave={(e) =>
-                                (e.currentTarget.style.background = 'transparent')
+                                (e.currentTarget.style.background =
+                                  'transparent')
                               }
                             >
                               {c}
@@ -224,7 +225,8 @@ export default function CreateVacancy({ onClose, onSave }) {
                       )}
                     </div>
                     <small className="text-muted">
-                      Elige una de la lista o escribe una nueva (no se duplican).
+                      Elige una de la lista o escribe una nueva (no se
+                      duplican).
                     </small>
                   </div>
 

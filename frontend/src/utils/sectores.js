@@ -3,16 +3,23 @@
 // minúsculas y sin acentos, para comparar sin problemas.
 const normalizar = (texto) => {
   if (!texto) return '';
-  return String(texto)
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '');
+  return String(texto).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 };
 
 // El orden define el orden en el desplegable de sectores.
 export const SECTORES = {
   'Dirección y Gerencia': {
-    kw: ['director', 'directora', 'direccion', 'gerente', 'gerencia', 'ceo', 'cfo', 'coo', 'chief '],
+    kw: [
+      'director',
+      'directora',
+      'direccion',
+      'gerente',
+      'gerencia',
+      'ceo',
+      'cfo',
+      'coo',
+      'chief ',
+    ],
     sub: [
       'Dirección general',
       'Dirección financiera',
@@ -29,13 +36,44 @@ export const SECTORES = {
   },
   'Tecnología e IT': {
     kw: [
-      'informat', 'software', 'developer', 'desarrollad', 'desarrollo de',
-      'programad', 'program', 'full stack', 'fullstack', 'backend', 'back-end',
-      'frontend', 'front-end', 'devops', 'cloud', 'ciberseg', 'cybersec',
-      'base de datos', 'bases de datos', 'big data', 'machine learning',
-      'inteligencia artificial', 'python', 'java', 'javascript', 'react',
-      'angular', 'node', 'sql', 'sistemas', 'redes', 'help desk', 'helpdesk',
-      'soporte tecnico', 'videojuego', 'aplicaciones web', 'desarrollo web', 'tic',
+      'informat',
+      'software',
+      'developer',
+      'desarrollad',
+      'desarrollo de',
+      'programad',
+      'program',
+      'full stack',
+      'fullstack',
+      'backend',
+      'back-end',
+      'frontend',
+      'front-end',
+      'devops',
+      'cloud',
+      'ciberseg',
+      'cybersec',
+      'base de datos',
+      'bases de datos',
+      'big data',
+      'machine learning',
+      'inteligencia artificial',
+      'python',
+      'java',
+      'javascript',
+      'react',
+      'angular',
+      'node',
+      'sql',
+      'sistemas',
+      'redes',
+      'help desk',
+      'helpdesk',
+      'soporte tecnico',
+      'videojuego',
+      'aplicaciones web',
+      'desarrollo web',
+      'tic',
     ],
     sub: [
       // Profesiones
@@ -74,7 +112,18 @@ export const SECTORES = {
     ],
   },
   'Ingeniería y Técnica': {
-    kw: ['ingenier', 'telecomunicacion', 'electronic', 'mecanic', 'aeronautic', 'naval', 'topograf', 'delineante', 'automatizacion', 'robotic'],
+    kw: [
+      'ingenier',
+      'telecomunicacion',
+      'electronic',
+      'mecanic',
+      'aeronautic',
+      'naval',
+      'topograf',
+      'delineante',
+      'automatizacion',
+      'robotic',
+    ],
     sub: [
       // Profesiones
       'Ingeniero/a industrial',
@@ -108,8 +157,20 @@ export const SECTORES = {
       'Diseño en Fabricación Mecánica',
     ],
   },
-  'Ciencias': {
-    kw: ['biolog', 'botanic', 'zoolog', 'quimic', 'matematic', 'actuari', 'laboratorio', 'fisico', 'geolog', 'biotecnolog', 'bioquimic'],
+  Ciencias: {
+    kw: [
+      'biolog',
+      'botanic',
+      'zoolog',
+      'quimic',
+      'matematic',
+      'actuari',
+      'laboratorio',
+      'fisico',
+      'geolog',
+      'biotecnolog',
+      'bioquimic',
+    ],
     sub: [
       // Profesiones
       'Biólogo/a',
@@ -137,13 +198,33 @@ export const SECTORES = {
       'Química Industrial',
     ],
   },
-  'Sanidad': {
+  Sanidad: {
     kw: [
-      'enfermer', 'medic', 'farmac', 'fisioterap', 'odontolog', 'dentist',
-      'estomatolog', 'optic', 'optometr', 'logopeda', 'terapeuta', 'veterinar',
-      'psicolog', 'sanitari', 'salud', 'dietista', 'nutricion', 'celador',
-      'protesis dental', 'bucodental', 'emergencias sanitarias',
-      'auxiliar de enfermeria', 'imagen y diagnostico', 'podolog', 'matron',
+      'enfermer',
+      'medic',
+      'farmac',
+      'fisioterap',
+      'odontolog',
+      'dentist',
+      'estomatolog',
+      'optic',
+      'optometr',
+      'logopeda',
+      'terapeuta',
+      'veterinar',
+      'psicolog',
+      'sanitari',
+      'salud',
+      'dietista',
+      'nutricion',
+      'celador',
+      'protesis dental',
+      'bucodental',
+      'emergencias sanitarias',
+      'auxiliar de enfermeria',
+      'imagen y diagnostico',
+      'podolog',
+      'matron',
     ],
     sub: [
       // Profesiones
@@ -199,7 +280,18 @@ export const SECTORES = {
     ],
   },
   'Finanzas, Banca y Seguros': {
-    kw: ['financ', 'contab', 'inversion', 'banca', 'bancari', 'seguro', 'fiscal', 'auditor', 'tesorer', 'economist'],
+    kw: [
+      'financ',
+      'contab',
+      'inversion',
+      'banca',
+      'bancari',
+      'seguro',
+      'fiscal',
+      'auditor',
+      'tesorer',
+      'economist',
+    ],
     sub: [
       // Profesiones
       'Contable',
@@ -223,7 +315,15 @@ export const SECTORES = {
     ],
   },
   'Legal y Jurídico': {
-    kw: ['abogad', 'juridic', 'legal', 'notari', 'procurad', 'compliance', 'criminolog'],
+    kw: [
+      'abogad',
+      'juridic',
+      'legal',
+      'notari',
+      'procurad',
+      'compliance',
+      'criminolog',
+    ],
     sub: [
       // Profesiones
       'Abogado/a',
@@ -245,10 +345,25 @@ export const SECTORES = {
   },
   'Comercio, Ventas y Marketing': {
     kw: [
-      'comercial', 'ventas', 'vendedor', 'publicidad', 'marketing',
-      'relaciones publicas', 'inmobiliaria', 'retail', 'tienda', 'cajero',
-      'taquiller', 'reponedor', 'telemarketing', 'teleoperador', 'promotor',
-      'estacion de servicio', 'key account', 'ecommerce', 'e-commerce',
+      'comercial',
+      'ventas',
+      'vendedor',
+      'publicidad',
+      'marketing',
+      'relaciones publicas',
+      'inmobiliaria',
+      'retail',
+      'tienda',
+      'cajero',
+      'taquiller',
+      'reponedor',
+      'telemarketing',
+      'teleoperador',
+      'promotor',
+      'estacion de servicio',
+      'key account',
+      'ecommerce',
+      'e-commerce',
     ],
     sub: [
       // Profesiones
@@ -281,9 +396,19 @@ export const SECTORES = {
   },
   'Administración y Gestión': {
     kw: [
-      'administrativ', 'administracion', 'recursos humanos', 'rrhh', 'nominas',
-      'secretari', 'recepcionista', 'back office', 'gestion administrativa',
-      'grabador de datos', 'archivo', 'biblioteca', 'encuesta',
+      'administrativ',
+      'administracion',
+      'recursos humanos',
+      'rrhh',
+      'nominas',
+      'secretari',
+      'recepcionista',
+      'back office',
+      'gestion administrativa',
+      'grabador de datos',
+      'archivo',
+      'biblioteca',
+      'encuesta',
       'servicios de personal',
     ],
     sub: [
@@ -308,7 +433,21 @@ export const SECTORES = {
     ],
   },
   'Hostelería y Turismo': {
-    kw: ['hosteler', 'turismo', 'turistic', 'hotel', 'cocin', 'chef', 'camarer', 'restaurac', 'agencia de viajes', 'guia turistic', 'azafat', 'barista', 'sumiller'],
+    kw: [
+      'hosteler',
+      'turismo',
+      'turistic',
+      'hotel',
+      'cocin',
+      'chef',
+      'camarer',
+      'restaurac',
+      'agencia de viajes',
+      'guia turistic',
+      'azafat',
+      'barista',
+      'sumiller',
+    ],
     sub: [
       // Profesiones
       'Cocinero/a',
@@ -337,7 +476,17 @@ export const SECTORES = {
     ],
   },
   'Educación y Formación': {
-    kw: ['profesor', 'maestr', 'docent', 'educacion infantil', 'formacion', 'ensenanza', 'educador', 'pedagog', 'autoescuela'],
+    kw: [
+      'profesor',
+      'maestr',
+      'docent',
+      'educacion infantil',
+      'formacion',
+      'ensenanza',
+      'educador',
+      'pedagog',
+      'autoescuela',
+    ],
     sub: [
       // Profesiones
       'Maestro/a de educación infantil',
@@ -361,7 +510,19 @@ export const SECTORES = {
     ],
   },
   'Servicios Sociales y a la Comunidad': {
-    kw: ['trabajo social', 'trabajador social', 'trabajadora social', 'educacion social', 'educador social', 'integracion social', 'cuidados', 'dependencia', 'animacion', 'tiempo libre', 'mediacion'],
+    kw: [
+      'trabajo social',
+      'trabajador social',
+      'trabajadora social',
+      'educacion social',
+      'educador social',
+      'integracion social',
+      'cuidados',
+      'dependencia',
+      'animacion',
+      'tiempo libre',
+      'mediacion',
+    ],
     sub: [
       // Profesiones (reales)
       'Trabajo social',
@@ -388,7 +549,22 @@ export const SECTORES = {
     ],
   },
   'Cultura, Arte, Diseño y Comunicación': {
-    kw: ['periodist', 'comunicacion', 'traductor', 'interprete', 'filolog', 'disenador', 'diseno grafico', 'decorador', 'audiovisual', 'artes escenicas', 'multimedia', 'grafic', 'fotograf', 'bellas artes'],
+    kw: [
+      'periodist',
+      'comunicacion',
+      'traductor',
+      'interprete',
+      'filolog',
+      'disenador',
+      'diseno grafico',
+      'decorador',
+      'audiovisual',
+      'artes escenicas',
+      'multimedia',
+      'grafic',
+      'fotograf',
+      'bellas artes',
+    ],
     sub: [
       // Profesiones
       'Periodista',
@@ -426,11 +602,30 @@ export const SECTORES = {
   },
   'Edificación y Obra Civil': {
     kw: [
-      'construccion', 'obra civil', 'a pie de obra', 'albanil', 'arquitect',
-      'aparejador', 'urbanist', 'fontaner', 'encofrad', 'escayol', 'carpinter',
-      'cristaler', 'cubiertas', 'estructuras metalicas', 'placas de energia solar',
-      'parquet', 'solador', 'pintor y', 'empapelador', 'conserje',
-      'mantenedor de edificio', 'cerramientos', 'aislante', 'electricista',
+      'construccion',
+      'obra civil',
+      'a pie de obra',
+      'albanil',
+      'arquitect',
+      'aparejador',
+      'urbanist',
+      'fontaner',
+      'encofrad',
+      'escayol',
+      'carpinter',
+      'cristaler',
+      'cubiertas',
+      'estructuras metalicas',
+      'placas de energia solar',
+      'parquet',
+      'solador',
+      'pintor y',
+      'empapelador',
+      'conserje',
+      'mantenedor de edificio',
+      'cerramientos',
+      'aislante',
+      'electricista',
     ],
     sub: [
       // Profesiones
@@ -469,14 +664,46 @@ export const SECTORES = {
   },
   'Industria y Producción': {
     kw: [
-      'produccion', 'fabricacion', 'operario', 'operador de maquina', 'operadores de maquina',
-      'maquina-herramienta', 'maquinas-herramienta', 'soldador', 'oxicort',
-      'mecanizado', 'cnc', 'industria alimentaria', 'chapist', 'calderer',
-      'ebanista', 'panader', 'pasteler', 'carnica', 'matarife', 'pescado',
-      'conservero', 'ensamblador', 'matricero', 'zapatero', 'tapicer',
-      'refrigeracion', 'climatizacion', 'control de calidad', 'planta de produccion',
-      'planta industrial', 'embalaje', 'lavanderia', 'plastico', 'obtencion y transformacion de metales',
-      'plantas industriales', 'bicicleta', 'textil', 'confeccion', 'carrocer', 'automocion',
+      'produccion',
+      'fabricacion',
+      'operario',
+      'operador de maquina',
+      'operadores de maquina',
+      'maquina-herramienta',
+      'maquinas-herramienta',
+      'soldador',
+      'oxicort',
+      'mecanizado',
+      'cnc',
+      'industria alimentaria',
+      'chapist',
+      'calderer',
+      'ebanista',
+      'panader',
+      'pasteler',
+      'carnica',
+      'matarife',
+      'pescado',
+      'conservero',
+      'ensamblador',
+      'matricero',
+      'zapatero',
+      'tapicer',
+      'refrigeracion',
+      'climatizacion',
+      'control de calidad',
+      'planta de produccion',
+      'planta industrial',
+      'embalaje',
+      'lavanderia',
+      'plastico',
+      'obtencion y transformacion de metales',
+      'plantas industriales',
+      'bicicleta',
+      'textil',
+      'confeccion',
+      'carrocer',
+      'automocion',
     ],
     sub: [
       // Profesiones industriales
@@ -520,7 +747,24 @@ export const SECTORES = {
     ],
   },
   'Logística, Transporte y Almacén': {
-    kw: ['logistic', 'transporte', 'almacen', 'conductor', 'camion', 'autobus', 'tranvia', 'taxi', 'furgoneta', 'carretiller', 'grua', 'montacargas', 'reparto', 'mensajer', 'marinero', 'movimiento de tierras'],
+    kw: [
+      'logistic',
+      'transporte',
+      'almacen',
+      'conductor',
+      'camion',
+      'autobus',
+      'tranvia',
+      'taxi',
+      'furgoneta',
+      'carretiller',
+      'grua',
+      'montacargas',
+      'reparto',
+      'mensajer',
+      'marinero',
+      'movimiento de tierras',
+    ],
     sub: [
       // Profesiones
       'Mozo/a de almacén',
@@ -544,7 +788,26 @@ export const SECTORES = {
     ],
   },
   'Agricultura, Ganadería y Medio Ambiente': {
-    kw: ['agricol', 'agronom', 'ganader', 'jardin', 'invernadero', 'vivero', 'huerta', 'adiestrad', 'cuidador de animales', 'ambiental', 'medio ambiente', 'residuos', 'aguas', 'plagas', 'fumigador', 'forestal', 'riesgos laborales', 'prevencion'],
+    kw: [
+      'agricol',
+      'agronom',
+      'ganader',
+      'jardin',
+      'invernadero',
+      'vivero',
+      'huerta',
+      'adiestrad',
+      'cuidador de animales',
+      'ambiental',
+      'medio ambiente',
+      'residuos',
+      'aguas',
+      'plagas',
+      'fumigador',
+      'forestal',
+      'riesgos laborales',
+      'prevencion',
+    ],
     sub: [
       // Profesiones
       'Ingeniero/a agrónomo/a',
@@ -593,7 +856,19 @@ export const SECTORES = {
     ],
   },
   'Seguridad, Deporte y Emergencias': {
-    kw: ['seguridad privada', 'vigilante', 'escolta', 'socorrista', 'entrenador', 'arbitro', 'deportiv', 'monitor deportiv', 'bombero', 'policia', 'proteccion civil'],
+    kw: [
+      'seguridad privada',
+      'vigilante',
+      'escolta',
+      'socorrista',
+      'entrenador',
+      'arbitro',
+      'deportiv',
+      'monitor deportiv',
+      'bombero',
+      'policia',
+      'proteccion civil',
+    ],
     sub: [
       // Profesiones
       'Vigilante de seguridad',

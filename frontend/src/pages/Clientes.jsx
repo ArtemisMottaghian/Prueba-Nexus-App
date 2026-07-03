@@ -155,7 +155,7 @@ export default function Clientes() {
   const clientesPaginados = useMemo(() => {
     const inicio = (paginaSafe - 1) * itemsPorPagina;
     return clientesFiltrados.slice(inicio, inicio + itemsPorPagina);
-  }, [clientesFiltrados, paginaSafe]);
+  }, [clientesFiltrados, paginaSafe, itemsPorPagina]);
 
   const irAPagina = (p) =>
     setPaginaActual(Math.max(1, Math.min(p, totalPaginas)));
@@ -171,13 +171,8 @@ export default function Clientes() {
   }, [paginaSafe, totalPaginas]);
 
   const desde =
-    clientesFiltrados.length === 0
-      ? 0
-      : (paginaSafe - 1) * itemsPorPagina + 1;
-  const hasta = Math.min(
-    paginaSafe * itemsPorPagina,
-    clientesFiltrados.length
-  );
+    clientesFiltrados.length === 0 ? 0 : (paginaSafe - 1) * itemsPorPagina + 1;
+  const hasta = Math.min(paginaSafe * itemsPorPagina, clientesFiltrados.length);
 
   const abrirModalNuevo = () => {
     setForm(formVacio);
@@ -306,7 +301,10 @@ export default function Clientes() {
   };
 
   return (
-    <div className="clientes-page" style={{ height: 'auto', overflow: 'visible' }}>
+    <div
+      className="clientes-page"
+      style={{ height: 'auto', overflow: 'visible' }}
+    >
       {/* Cabecera */}
       <div className="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-2">
         <div>
@@ -349,9 +347,7 @@ export default function Clientes() {
             <div className="d-flex gap-2 mb-3">
               <button
                 className={`btn btn-sm ${
-                  vista === 'clientes'
-                    ? 'btn-primary'
-                    : 'btn-outline-secondary'
+                  vista === 'clientes' ? 'btn-primary' : 'btn-outline-secondary'
                 }`}
                 onClick={() => setVista('clientes')}
               >
@@ -558,7 +554,6 @@ export default function Clientes() {
             </div>
           )}
         </div>
-
       </div>
 
       {/* Detalle de la empresa en modal (como en Vacantes) */}

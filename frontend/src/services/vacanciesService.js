@@ -223,17 +223,21 @@ export const vacanciesService = {
 
   // Eliminar una vacante (borrado real en la BD)
   deleteVacancy: async (id) => {
-    const response = await authFetch(ENDPOINTS.recruitment.vacantes.bulkActions, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ vacancy_ids: [id], action: 'delete' }),
-    });
+    const response = await authFetch(
+      ENDPOINTS.recruitment.vacantes.bulkActions,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vacancy_ids: [id], action: 'delete' }),
+      }
+    );
     if (!response.ok) {
       let msg = `Error HTTP: ${response.status}`;
       try {
         const e = await response.json();
         if (e?.detail) {
-          msg = typeof e.detail === 'string' ? e.detail : JSON.stringify(e.detail);
+          msg =
+            typeof e.detail === 'string' ? e.detail : JSON.stringify(e.detail);
         }
       } catch {
         /* sin cuerpo */

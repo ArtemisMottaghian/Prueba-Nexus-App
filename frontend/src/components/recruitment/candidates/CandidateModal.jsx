@@ -501,7 +501,9 @@ export default function CandidateModal({
                             <i className="bi bi-file-earmark-pdf text-danger"></i>
                           </div>
                           <div className="flex-grow-1">
-                            <div className="doc-name">CV del candidato (PDF)</div>
+                            <div className="doc-name">
+                              CV del candidato (PDF)
+                            </div>
                             <div className="doc-meta">
                               <span className="doc-tipo-badge">CV</span>
                             </div>

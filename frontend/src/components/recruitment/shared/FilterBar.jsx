@@ -175,7 +175,8 @@ export default function FilterBar({
                   </select>
                 </div>
 
-                {(subcategoriaPlaceholder || subcategoriaOptions.length > 0) && (
+                {(subcategoriaPlaceholder ||
+                  subcategoriaOptions.length > 0) && (
                   <div className="filter-group">
                     <label>Subcategoría</label>
                     <select

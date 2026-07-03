@@ -168,9 +168,7 @@ export default function CandidateCard({
           }}
         >
           <i
-            className={
-              candidate.isFavorite ? 'bi bi-star-fill' : 'bi bi-star'
-            }
+            className={candidate.isFavorite ? 'bi bi-star-fill' : 'bi bi-star'}
           ></i>
         </button>
       </div>
