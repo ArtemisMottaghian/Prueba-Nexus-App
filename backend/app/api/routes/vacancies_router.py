@@ -15,6 +15,7 @@ from app.schemas.vacancies_schemas import (
     VacancySummary,
     VacancyDetail,
     VacancyFiltered,
+    VacancyCreate,
     FavouriteRequest,
     BulkActionRequest,
     MessageResponse,
@@ -26,8 +27,15 @@ from app.models.user_model import User, UserRole
 from app.models.job_model import JobApplication
 from app.models.aplication_model import ApplicationStatus
 from sqlalchemy.exc import IntegrityError
+from app.core.taxonomia import listar_taxonomia
 
 router = APIRouter()
+
+
+@router.get("/taxonomy")
+async def get_taxonomy():
+    """Devuelve la taxonomía (familia -> subcategorías) para los filtros del frontend."""
+    return listar_taxonomia()
 
 
 @router.get("", response_model=List[VacancySummary])
@@ -37,6 +45,29 @@ async def read_vacancies(
     current_user: dict = Depends(get_current_user),
 ):
     return await vacancies_service.get_vacancies_list(db, status)
+
+
+@router.post("", response_model=VacancySummary, status_code=201)
+async def create_vacancy(
+    payload: VacancyCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    offer = await vacancies_service.crear_vacante(db, payload)
+    # Construimos la respuesta explícitamente para no tocar relaciones no cargadas
+    return VacancySummary(
+        id=offer.id,
+        title=offer.title,
+        company_name=offer.company_name,
+        location=offer.location,
+        salary_min=offer.salary_min,
+        salary_max=offer.salary_max,
+        published_at=offer.published_at,
+        portal_id=offer.portal_id,
+        status=offer.status,
+        is_favourite=offer.is_favourite or False,
+        sector=offer.sector,
+    )
 
 
 @router.get("/filter/list", response_model=List[VacancyFiltered])

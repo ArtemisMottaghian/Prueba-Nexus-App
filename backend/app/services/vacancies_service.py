@@ -1,7 +1,7 @@
 import re
 from fastapi import HTTPException
 from typing import List, Optional
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 import json
 
@@ -21,9 +21,64 @@ from sqlalchemy.orm import joinedload, selectinload
 from datetime import datetime, timezone
 from app.db.session import AsyncSessionLocal
 from app.models.trakingHistory_model import TrackingHistory
-from app.schemas.vacancies_schemas import CandidateTrackingCreate
+from app.schemas.vacancies_schemas import CandidateTrackingCreate, VacancyCreate
+from app.schemas.job_offer import OfferStatus
+from app.core.normalizar import normalizar_empresa
 
 
+async def buscar_o_crear_empresa(db: AsyncSession, nombre: str):
+    """Busca (por nombre normalizado) o crea la empresa. Devuelve su id o None."""
+    nombre = (nombre or "").strip()
+    if not nombre:
+        return None
+
+    objetivo = normalizar_empresa(nombre)
+    if not objetivo:
+        return None
+
+    existentes = (await db.execute(select(Company.id, Company.name))).all()
+    for cid, cname in existentes:
+        if normalizar_empresa(cname) == objetivo:
+            return cid
+
+    result = await db.execute(
+        pg_insert(Company).values(name=nombre).returning(Company.id)
+    )
+    return result.scalar_one()
+
+
+async def crear_vacante(db: AsyncSession, data: VacancyCreate) -> JobOffer:
+    """Crea una vacante manual, enlazando (o creando) la empresa sin duplicarla."""
+    company_id = await buscar_o_crear_empresa(db, data.company_name)
+
+    # Coherencia del salario (evita romper el CHECK salary_min <= salary_max)
+    salary_min, salary_max = data.salary_min, data.salary_max
+    if salary_min is not None and salary_max is not None and salary_min > salary_max:
+        salary_min, salary_max = salary_max, salary_min
+
+    portales = {"linkedin": 3, "infojobs": 2, "adzuna": 1}
+    portal_id = portales.get((data.source or "").strip().lower())
+
+    values = {
+        "title": data.title.strip(),
+        "company_id": company_id,
+        "company_name": (data.company_name or "").strip() or None,
+        "location": (data.location or "").strip() or None,
+        "sector": (data.sector or "").strip() or None,
+        "salary_min": salary_min,
+        "salary_max": salary_max,
+        "published_at": data.published_at or datetime.now(timezone.utc),
+        "portal_id": portal_id,
+        "status": OfferStatus.detected,
+    }
+
+    result = await db.execute(
+        pg_insert(JobOffer).values(**values).returning(JobOffer.id)
+    )
+    new_id = result.scalar_one()
+    await db.commit()
+
+    return (await db.execute(select(JobOffer).where(JobOffer.id == new_id))).scalar_one()
 
 
 # Funcion para obtener el listado (Dashboard y Pantalla de Vacantes)
@@ -111,15 +166,24 @@ async def set_favourite(db: AsyncSession, vacancy_id: int, favourite: bool) -> N
 async def apply_bulk_action(db: AsyncSession, vacancy_ids: List[int], action: str) -> None:
     """Aplica una acción masiva sobre un conjunto de vacantes."""
     try:
-        query = select(JobOffer).where(JobOffer.id.in_(vacancy_ids))
-        result = await db.execute(query)
-        vacancies = result.scalars().all()
-
-        for vacancy in vacancies:
-            if action == "discard":
-                vacancy.status = "discarded"
-            elif action == "delete":
-                await db.delete(vacancy)
+        if action == "discard":
+            await db.execute(
+                update(JobOffer)
+                .where(JobOffer.id.in_(vacancy_ids))
+                .values(status="discarded")
+            )
+        elif action == "delete":
+            # Limpiamos primero las dependencias SIN borrado en cascada
+            await db.execute(
+                delete(TrackingHistory).where(TrackingHistory.offer_id.in_(vacancy_ids))
+            )
+            await db.execute(
+                update(Company)
+                .where(Company.original_offer_id.in_(vacancy_ids))
+                .values(original_offer_id=None)
+            )
+            # Las candidaturas, asignaciones y resultados de búsqueda caen en cascada (BD)
+            await db.execute(delete(JobOffer).where(JobOffer.id.in_(vacancy_ids)))
 
         await db.commit()
     except Exception as e:

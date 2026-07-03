@@ -33,31 +33,28 @@ export default function CreateCandidate({ onClose, onSave }) {
     setIsSubmitting(true);
     setErrorStatus(null);
 
-    const expNumber = formData.experience
-      ? parseInt(formData.experience, 10)
-      : 0;
-    const skillsArray = formData.specialty
-      ? formData.specialty
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean)
-      : [];
-
     const nameParts = formData.name.trim().split(' ');
     const fName = nameParts[0] || '';
     const lName = nameParts.slice(1).join(' ') || '';
 
-    const finalData = {
+    // El backend espera experience/skills como TEXTO y rechaza cadenas
+    // vacías en campos con formato (p. ej. phone). Enviamos solo lo que
+    // tenga valor.
+    const rawData = {
       first_name: fName,
       last_name: lName,
       email: formData.email.trim(),
       phone: formData.phone.trim(),
       education: formData.education,
       location: formData.location.trim(),
-      experience: expNumber,
-      specialty: formData.specialty.trim(),
-      skills: skillsArray,
+      experience: String(formData.experience || '').trim(),
+      skills: formData.specialty.trim(),
     };
+    const finalData = Object.fromEntries(
+      Object.entries(rawData).filter(
+        ([, v]) => v !== '' && v !== null && v !== undefined
+      )
+    );
 
     try {
       let finalCandidate;
@@ -73,8 +70,8 @@ export default function CreateCandidate({ onClose, onSave }) {
       onSave({
         ...finalCandidate,
         name: formData.name.trim(),
-        specialty: finalData.specialty,
-        experience: expNumber,
+        specialty: formData.specialty.trim(),
+        experience: formData.experience,
       });
     } catch (error) {
       console.error('Error al guardar el candidato:', error);

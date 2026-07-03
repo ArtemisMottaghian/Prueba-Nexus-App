@@ -117,64 +117,60 @@ export default function CandidateCard({
       onClick={onClick}
       style={{ cursor: 'pointer' }}
     >
-      <div className="card-header-row d-flex justify-content-between align-items-center mb-2">
-        <div className="d-flex align-items-center gap-2">
-          <input
-            className="form-check-input mt-0 checkbox-lg"
-            type="checkbox"
-            checked={isSelected || false}
-            onChange={handleCheckboxClick}
-            onClick={handleChildClick}
-          />
-          <select
-            className={`form-select form-select-sm select-status-inline ${badgeClass}`}
-            value={candidate.status}
-            onChange={handleStatusChange}
-            onClick={handleChildClick}
-            style={{ minWidth: '120px' }}
-          >
-            {CANDIDATE_STATUS_SELECT_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Lado derecho: Botón Verificar y Estrella */}
-        <div className="d-flex align-items-center gap-2">
-          {onVerify && (
-            <button
-              type="button"
-              className={`btn btn-sm ${
-                candidate.verified ? 'btn-outline-danger' : 'btn-primary'
-              }`}
-              onClick={handleVerify}
-              style={{
-                padding: '0.25rem 0.6rem',
-                fontSize: '0.8rem',
-                borderRadius: '6px',
-              }}
-            >
-              {candidate.verified ? 'Quitar' : 'Verificar'}
-            </button>
-          )}
+      <div
+        className="card-header-row d-flex align-items-center mb-2"
+        style={{ justifyContent: 'space-evenly', gap: '8px' }}
+      >
+        <input
+          className="form-check-input mt-0 checkbox-lg"
+          type="checkbox"
+          checked={isSelected || false}
+          onChange={handleCheckboxClick}
+          onClick={handleChildClick}
+          style={{ flexShrink: 0, width: '18px', height: '18px' }}
+        />
+        <select
+          className={`form-select form-select-sm select-status-inline ${badgeClass}`}
+          value={candidate.status}
+          onChange={handleStatusChange}
+          onClick={handleChildClick}
+          style={{ minWidth: '90px', textAlignLast: 'center' }}
+        >
+          {CANDIDATE_STATUS_SELECT_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        {onVerify && (
           <button
-            className={`btn-icon btn-icon-sm ${
-              candidate.isFavorite ? 'text-warning' : ''
+            type="button"
+            className={`btn btn-sm ${
+              candidate.verified ? 'btn-outline-danger' : 'btn-primary'
             }`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleFavorite(candidate.id, candidate.isFavorite);
+            onClick={handleVerify}
+            style={{
+              padding: '0.25rem 0.6rem',
+              fontSize: '0.8rem',
+              borderRadius: '6px',
             }}
           >
-            <i
-              className={
-                candidate.isFavorite ? 'bi bi-star-fill' : 'bi bi-star'
-              }
-            ></i>
+            {candidate.verified ? 'Quitar' : 'Verificar'}
           </button>
-        </div>
+        )}
+        <button
+          className={`btn-icon btn-icon-sm ${
+            candidate.isFavorite ? 'text-warning' : ''
+          }`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFavorite(candidate.id, candidate.isFavorite);
+          }}
+        >
+          <i
+            className={candidate.isFavorite ? 'bi bi-star-fill' : 'bi bi-star'}
+          ></i>
+        </button>
       </div>
 
       <h3 className="vacante-title">{candidate.name}</h3>

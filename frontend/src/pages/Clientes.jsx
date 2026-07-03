@@ -5,13 +5,14 @@ import BulkActions from '../components/recruitment/shared/BulkActions';
 import {
   getClientes,
   getClienteById,
+  getVacantesByCliente,
   createCliente,
   updateCliente,
   deleteCliente,
   assignUserToCompanies,
 } from '../services/clientesService';
 
-const ITEMS_POR_PAGINA = 10;
+const OPCIONES_POR_PAGINA = [10, 20, 50];
 
 const formVacio = {
   nombre: '',
@@ -51,7 +52,7 @@ export default function Clientes() {
   const cargarClientes = async () => {
     try {
       setIsLoading(true);
-      const data = await getClientes('confirmed_client');
+      const data = await getClientes('all');
       setClientes(data);
     } catch (error) {
       console.error('Error al cargar clientes:', error);
@@ -63,7 +64,12 @@ export default function Clientes() {
   const seleccionarCliente = async (cliente) => {
     try {
       const detalle = await getClienteById(cliente.id);
-      setClienteSeleccionado(detalle);
+      const vacantes = await getVacantesByCliente(cliente.id);
+      setClienteSeleccionado({
+        ...detalle,
+        vacantes,
+        vacantesAbiertas: vacantes.length,
+      });
     } catch (error) {
       console.error('Error al cargar detalle del cliente:', error);
       setClienteSeleccionado(cliente);
@@ -73,6 +79,9 @@ export default function Clientes() {
   const [busqueda, setBusqueda] = useState('');
   const [filtroSector, setFiltroSector] = useState('Todos');
   const [filtroPrioritario, setFiltroPrioritario] = useState(false);
+  const [vista, setVista] = useState('clientes'); // 'clientes' | 'pendientes'
+  const [itemsPorPagina, setItemsPorPagina] = useState(10);
+  const [ordenarPor, setOrdenarPor] = useState('recientes');
 
   const [modalAbierto, setModalAbierto] = useState(false);
   const [modalEliminar, setModalEliminar] = useState(false);
@@ -86,8 +95,20 @@ export default function Clientes() {
     ...new Set(clientes.map((c) => c.sector).filter(Boolean)),
   ];
 
+  // Separamos por estado: clientes confirmados vs pendientes (leads)
+  const numClientes = clientes.filter(
+    (c) => c.estadoCuenta === 'cliente'
+  ).length;
+  const numPendientes = clientes.length - numClientes;
+
+  const clientesDeVista = clientes.filter((c) =>
+    vista === 'clientes'
+      ? c.estadoCuenta === 'cliente'
+      : c.estadoCuenta !== 'cliente'
+  );
+
   // FILTRO CORREGIDO CON PROTECCIÓN DE UNDEFINED Y COMPANY_NAME
-  const clientesFiltrados = clientes.filter((c) => {
+  const clientesFiltrados = clientesDeVista.filter((c) => {
     const searchLower = (busqueda || '').toLowerCase();
 
     const coincideNombre =
@@ -100,22 +121,41 @@ export default function Clientes() {
     return coincideNombre && coincideSector && coincidePrioritario;
   });
 
+  // Ordenación
+  if (ordenarPor === 'nombre') {
+    clientesFiltrados.sort((a, b) =>
+      (a.nombre || '').localeCompare(b.nombre || '')
+    );
+  } else if (ordenarPor === 'vacantes') {
+    clientesFiltrados.sort(
+      (a, b) => (b.vacantesAbiertas || 0) - (a.vacantesAbiertas || 0)
+    );
+  } else if (ordenarPor === 'antiguos') {
+    clientesFiltrados.sort(
+      (a, b) => new Date(a.rawDate || 0) - new Date(b.rawDate || 0)
+    );
+  } else {
+    clientesFiltrados.sort(
+      (a, b) => new Date(b.rawDate || 0) - new Date(a.rawDate || 0)
+    );
+  }
+
   // Reset página al cambiar filtros
   useEffect(() => {
     setPaginaActual(1);
-  }, [busqueda, filtroSector, filtroPrioritario]);
+  }, [busqueda, filtroSector, filtroPrioritario, vista, ordenarPor]);
 
   // Cálculo de paginación
   const totalPaginas = Math.max(
     1,
-    Math.ceil(clientesFiltrados.length / ITEMS_POR_PAGINA)
+    Math.ceil(clientesFiltrados.length / itemsPorPagina)
   );
   const paginaSafe = Math.min(paginaActual, totalPaginas);
 
   const clientesPaginados = useMemo(() => {
-    const inicio = (paginaSafe - 1) * ITEMS_POR_PAGINA;
-    return clientesFiltrados.slice(inicio, inicio + ITEMS_POR_PAGINA);
-  }, [clientesFiltrados, paginaSafe]);
+    const inicio = (paginaSafe - 1) * itemsPorPagina;
+    return clientesFiltrados.slice(inicio, inicio + itemsPorPagina);
+  }, [clientesFiltrados, paginaSafe, itemsPorPagina]);
 
   const irAPagina = (p) =>
     setPaginaActual(Math.max(1, Math.min(p, totalPaginas)));
@@ -131,13 +171,8 @@ export default function Clientes() {
   }, [paginaSafe, totalPaginas]);
 
   const desde =
-    clientesFiltrados.length === 0
-      ? 0
-      : (paginaSafe - 1) * ITEMS_POR_PAGINA + 1;
-  const hasta = Math.min(
-    paginaSafe * ITEMS_POR_PAGINA,
-    clientesFiltrados.length
-  );
+    clientesFiltrados.length === 0 ? 0 : (paginaSafe - 1) * itemsPorPagina + 1;
+  const hasta = Math.min(paginaSafe * itemsPorPagina, clientesFiltrados.length);
 
   const abrirModalNuevo = () => {
     setForm(formVacio);
@@ -266,7 +301,10 @@ export default function Clientes() {
   };
 
   return (
-    <div className="clientes-page">
+    <div
+      className="clientes-page"
+      style={{ height: 'auto', overflow: 'visible' }}
+    >
       {/* Cabecera */}
       <div className="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-2">
         <div>
@@ -301,13 +339,48 @@ export default function Clientes() {
         </div>
       )}
 
-      <div
-        className={`clientes-split${clienteSeleccionado ? ' has-selected' : ''}`}
-      >
-        {/* Panel izquierdo */}
-        <div className="clientes-list-panel">
+      <div>
+        {/* Contenido a ancho completo (rejilla) */}
+        <div>
           {/* Cabecera fija: buscador + filtros */}
           <div className="clientes-list-header">
+            <div className="d-flex gap-2 mb-3">
+              <button
+                className={`btn btn-sm ${
+                  vista === 'clientes' ? 'btn-primary' : 'btn-outline-secondary'
+                }`}
+                onClick={() => setVista('clientes')}
+              >
+                Clientes ({numClientes})
+              </button>
+              <button
+                className={`btn btn-sm ${
+                  vista === 'pendientes'
+                    ? 'btn-primary'
+                    : 'btn-outline-secondary'
+                }`}
+                onClick={() => setVista('pendientes')}
+              >
+                Pendientes ({numPendientes})
+              </button>
+            </div>
+            <label
+              className="d-flex align-items-center gap-2 mb-2"
+              style={{ fontSize: '0.875rem', color: '#6b7787' }}
+            >
+              Ordenar por
+              <select
+                className="form-select form-select-sm"
+                style={{ width: 'auto' }}
+                value={ordenarPor}
+                onChange={(e) => setOrdenarPor(e.target.value)}
+              >
+                <option value="recientes">Más recientes</option>
+                <option value="antiguos">Más antiguos</option>
+                <option value="nombre">Alfabético (A–Z)</option>
+                <option value="vacantes">Más vacantes</option>
+              </select>
+            </label>
             <div className="clientes-search-bar mb-2">
               <i className="bi bi-search"></i>
               <input
@@ -348,8 +421,17 @@ export default function Clientes() {
             </div>
           </div>
 
-          {/* Zona scrolleable de tarjetas */}
-          <div className="clientes-list-scroll">
+          {/* Rejilla de tarjetas */}
+          <div
+            className="clientes-list-scroll"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
+              gap: '20px',
+              maxHeight: 'none',
+              overflow: 'visible',
+            }}
+          >
             {isLoading ? (
               <div className="text-center text-muted py-4">
                 <div className="spinner-border text-primary" role="status">
@@ -380,12 +462,38 @@ export default function Clientes() {
           </div>
 
           {/* Paginación */}
-          {!isLoading && totalPaginas > 1 && (
+          {!isLoading && clientesFiltrados.length > 0 && (
             <div className="clientes-pagination">
               <span className="clientes-pagination__info">
-                {desde}–{hasta} de {clientesFiltrados.length}
+                {desde}–{hasta} de {clientesFiltrados.length} · Página{' '}
+                {paginaSafe} de {totalPaginas}
               </span>
               <div className="clientes-pagination__controls">
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    marginRight: '12px',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  Ver
+                  <select
+                    value={itemsPorPagina}
+                    onChange={(e) => {
+                      setItemsPorPagina(Number(e.target.value));
+                      setPaginaActual(1);
+                    }}
+                  >
+                    {OPCIONES_POR_PAGINA.map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                  por página
+                </label>
                 <button
                   className="clientes-pagination__btn"
                   onClick={() => irAPagina(paginaSafe - 1)}
@@ -446,25 +554,38 @@ export default function Clientes() {
             </div>
           )}
         </div>
-
-        {/* Panel derecho */}
-        <div className="clientes-detail-panel">
-          {clienteSeleccionado && (
-            <button
-              className="btn-volver-mobile"
-              onClick={() => setClienteSeleccionado(null)}
-            >
-              <i className="bi bi-arrow-left"></i>
-              Volver a clientes
-            </button>
-          )}
-          <ClienteDetail
-            cliente={clienteSeleccionado}
-            onEdit={abrirModalEditar}
-            onDelete={abrirModalEliminar}
-          />
-        </div>
       </div>
+
+      {/* Detalle de la empresa en modal (como en Vacantes) */}
+      {clienteSeleccionado && (
+        <>
+          <div
+            className="modal-backdrop fade show"
+            onClick={() => setClienteSeleccionado(null)}
+          ></div>
+          <div className="modal fade show d-block" role="dialog">
+            <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Ficha de empresa</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setClienteSeleccionado(null)}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <ClienteDetail
+                    cliente={clienteSeleccionado}
+                    onEdit={abrirModalEditar}
+                    onDelete={abrirModalEliminar}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* MODAL NUEVO / EDITAR */}
       {modalAbierto && (

@@ -26,6 +26,10 @@ export default function FilterBar({
   // Opciones de selects
   locationOptions = [],
   industryOptions = [],
+  familiaOptions = [],
+  subcategoriaOptions = [],
+  // Subcategoría visible pero deshabilitada (se activará más adelante)
+  subcategoriaPlaceholder = false,
   statusOptions = ['Nueva', 'Contactada', 'En proceso', 'Descartada'],
   sourceOptions = ['LinkedIn', 'InfoJobs', 'Adzuna', 'Carga Manual', 'Otro'],
   modalidadOptions = [
@@ -48,6 +52,8 @@ export default function FilterBar({
     filters.status !== 'All' ||
     filters.location !== 'All' ||
     filters.industry !== 'All' ||
+    (filters.familia && filters.familia !== 'All') ||
+    (filters.subcategoria && filters.subcategoria !== 'All') ||
     filters.source !== 'All' ||
     (filters.modalidad && filters.modalidad !== 'All') ||
     myVacanciesActive; // Sumamos el estado de "Mis Vacantes" al detector de filtros activos
@@ -124,18 +130,71 @@ export default function FilterBar({
       {showAdvanced && (
         <div className="filter-advanced-row animate__animated animate__fadeIn">
           <div className="advanced-grid">
-            <div className="filter-group">
-              <label>Sector</label>
-              <select
-                value={filters.industry || 'All'}
-                onChange={(e) => onFilterChange('industry', e.target.value)}
-              >
-                <option value="All">Todos los sectores</option>
-                {industryOptions.map((opt, i) =>
-                  renderSafeOption(opt, i, 'ind')
+            {familiaOptions.length > 0 ? (
+              <>
+                <div className="filter-group">
+                  <label>Familia</label>
+                  <select
+                    value={filters.familia || 'All'}
+                    onChange={(e) => onFilterChange('familia', e.target.value)}
+                  >
+                    <option value="All">Todas las familias</option>
+                    {familiaOptions.map((opt, i) =>
+                      renderSafeOption(opt, i, 'fam')
+                    )}
+                  </select>
+                </div>
+                <div className="filter-group">
+                  <label>Subcategoría</label>
+                  <select
+                    value={filters.subcategoria || 'All'}
+                    onChange={(e) =>
+                      onFilterChange('subcategoria', e.target.value)
+                    }
+                    disabled={!filters.familia || filters.familia === 'All'}
+                  >
+                    <option value="All">Todas</option>
+                    {subcategoriaOptions.map((opt, i) =>
+                      renderSafeOption(opt, i, 'sub')
+                    )}
+                  </select>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="filter-group">
+                  <label>Sector</label>
+                  <select
+                    value={filters.industry || 'All'}
+                    onChange={(e) => onFilterChange('industry', e.target.value)}
+                  >
+                    <option value="All">Todos los sectores</option>
+                    {industryOptions.map((opt, i) =>
+                      renderSafeOption(opt, i, 'ind')
+                    )}
+                  </select>
+                </div>
+
+                {(subcategoriaPlaceholder ||
+                  subcategoriaOptions.length > 0) && (
+                  <div className="filter-group">
+                    <label>Subcategoría</label>
+                    <select
+                      value={filters.subcategoria || 'All'}
+                      onChange={(e) =>
+                        onFilterChange('subcategoria', e.target.value)
+                      }
+                      disabled={subcategoriaOptions.length === 0}
+                    >
+                      <option value="All">Todas</option>
+                      {subcategoriaOptions.map((opt, i) =>
+                        renderSafeOption(opt, i, 'sub')
+                      )}
+                    </select>
+                  </div>
                 )}
-              </select>
-            </div>
+              </>
+            )}
 
             <div className="filter-group">
               <label>Origen</label>

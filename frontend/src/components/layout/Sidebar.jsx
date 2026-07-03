@@ -73,55 +73,59 @@ export default function Sidebar({ isOpen, onClose }) {
                 <i className="bi bi-house"></i>
                 <span className="sidebar-text">Inicio</span>
               </NavLink>
-            </div>
 
-            {hasAnyRole(['admin', 'hr_manager', 'company']) && (
-              <div className="sidebar-nav-section">
-                <NavLink
-                  to="/vacantes"
-                  className="sidebar-item"
-                  onClick={onClose}
-                >
-                  <i className="bi bi-briefcase"></i>
-                  <span className="sidebar-text">Vacantes</span>
-                </NavLink>
-                <NavLink
-                  to="/candidatos"
-                  className="sidebar-item"
-                  onClick={onClose}
-                >
-                  <i className="bi bi-people"></i>
-                  <span className="sidebar-text">Candidatos</span>
-                </NavLink>
-                {hasAnyRole(['admin', 'negocio', 'company']) && (
+              {hasAnyRole(['admin', 'hr_manager', 'company']) && (
+                <>
                   <NavLink
-                    to="/clientes"
+                    to="/vacantes"
                     className="sidebar-item"
                     onClick={onClose}
                   >
-                    <i className="bi bi-building"></i>
-                    <span className="sidebar-text">Clientes</span>
+                    <i className="bi bi-briefcase"></i>
+                    <span className="sidebar-text">Vacantes</span>
                   </NavLink>
-                )}
-                <NavLink to="/inbox" className="sidebar-item" onClick={onClose}>
-                  <i className="bi bi-envelope"></i>
-                  <span className="sidebar-text">Inbox</span>
-                  {unreadCount > 0 && (
-                    <span className="sidebar-unread-badge">
-                      {unreadCount > 99 ? '99+' : unreadCount}
-                    </span>
+                  <NavLink
+                    to="/candidatos"
+                    className="sidebar-item"
+                    onClick={onClose}
+                  >
+                    <i className="bi bi-people"></i>
+                    <span className="sidebar-text">Candidatos</span>
+                  </NavLink>
+                  {hasAnyRole(['admin', 'negocio', 'company']) && (
+                    <NavLink
+                      to="/clientes"
+                      className="sidebar-item"
+                      onClick={onClose}
+                    >
+                      <i className="bi bi-building"></i>
+                      <span className="sidebar-text">Clientes</span>
+                    </NavLink>
                   )}
-                </NavLink>
-                <NavLink
-                  to="/calendar"
-                  className="sidebar-item"
-                  onClick={onClose}
-                >
-                  <i className="bi bi-calendar-check"></i>
-                  <span className="sidebar-text">Calendario</span>
-                </NavLink>
-              </div>
-            )}
+                  <NavLink
+                    to="/inbox"
+                    className="sidebar-item"
+                    onClick={onClose}
+                  >
+                    <i className="bi bi-envelope"></i>
+                    <span className="sidebar-text">Inbox</span>
+                    {unreadCount > 0 && (
+                      <span className="sidebar-unread-badge">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
+                  </NavLink>
+                  <NavLink
+                    to="/calendar"
+                    className="sidebar-item"
+                    onClick={onClose}
+                  >
+                    <i className="bi bi-calendar-check"></i>
+                    <span className="sidebar-text">Calendario</span>
+                  </NavLink>
+                </>
+              )}
+            </div>
           </nav>
 
           <div className="sidebar-footer pb-3">

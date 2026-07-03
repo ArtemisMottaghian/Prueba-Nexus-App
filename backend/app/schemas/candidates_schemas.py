@@ -94,6 +94,7 @@ class CandidateFrontendOut(BaseModel):
     is_favorite: bool = False
     verified: bool = False
     email: Optional[str] = None
+    cv_url: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -119,6 +120,7 @@ class CandidateFrontendOut(BaseModel):
                 "experience": getattr(data, "experience") or "Consultar CV",
                 "education": getattr(data, "education"),
                 "email": getattr(data, "email", None),
+                "cv_url": getattr(data, "cv_url", None),
                 # Extraemos el valor del Enum (ej: "active")
                 "status": (
                     data.status.value

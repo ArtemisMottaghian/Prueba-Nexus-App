@@ -2,31 +2,13 @@
 .candidates-grid {
   display: grid;
   gap: 20px;
-  /* Móvil: 1 columna */
-  grid-template-columns: 1fr;
+  /* Tarjetas de ancho medio que se auto-ajustan (varias por fila) */
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 }
 
-@media (min-width: 576px) {
+@media (max-width: 480px) {
   .candidates-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 992px) {
-  .candidates-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (min-width: 1400px) {
-  .candidates-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-@media (min-width: 1700px) {
-  .candidates-grid {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: 1fr;
   }
 }
 

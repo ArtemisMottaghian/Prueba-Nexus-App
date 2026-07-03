@@ -2,6 +2,7 @@ import { useState } from 'react';
 import VacancyCard from './VacancyCard';
 import VacancyModal from './VacancyModal';
 import SmartMatchResults from './SmartMatchResults';
+import ErrorBoundary from '../../common/ErrorBoundary';
 import './VacancyGrid.css';
 import { vacanciesService } from '../../../services/vacanciesService';
 
@@ -14,6 +15,7 @@ export default function VacancyGrid({
   onAsignarVacante,
   currentUser,
   isNegocio,
+  onDeleteVacancy,
 }) {
   const [viewMode, setViewMode] = useState('grid');
   const [selectedJob, setSelectedJob] = useState(null);
@@ -117,17 +119,27 @@ export default function VacancyGrid({
       </div>
 
       {selectedJob && (
-        <VacancyModal
-          job={selectedJob}
-          onClose={() => setSelectedJob(null)}
-          onUpdateStatus={onUpdateJobStatus}
-          onToggleFavorite={onToggleFavorite}
-          onAsignarVacante={onAsignarVacante}
-          currentUser={currentUser}
-          isNegocio={isNegocio}
-          onSmartMatch={(ev) => handleSmartMatch(ev, selectedJob)}
-          isMatching={isMatching && activeMatchingId === selectedJob.id}
-        />
+        <ErrorBoundary onReset={() => setSelectedJob(null)}>
+          <VacancyModal
+            job={selectedJob}
+            onClose={() => setSelectedJob(null)}
+            onUpdateStatus={onUpdateJobStatus}
+            onToggleFavorite={onToggleFavorite}
+            onAsignarVacante={onAsignarVacante}
+            currentUser={currentUser}
+            isNegocio={isNegocio}
+            onSmartMatch={(ev) => handleSmartMatch(ev, selectedJob)}
+            isMatching={isMatching && activeMatchingId === selectedJob.id}
+            onDelete={
+              onDeleteVacancy
+                ? async (id) => {
+                    await onDeleteVacancy(id);
+                    setSelectedJob(null);
+                  }
+                : undefined
+            }
+          />
+        </ErrorBoundary>
       )}
 
       {matchingJob && (

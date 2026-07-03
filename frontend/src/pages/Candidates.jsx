@@ -1,5 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import FilterBar from '../components/recruitment/shared/FilterBar';
+import {
+  LISTA_SECTORES,
+  clasificarSectores,
+  subcategoriasDe,
+} from '../utils/sectores';
 import CandidateGrid from '../components/recruitment/candidates/CandidateGrid';
 import BulkActions from '../components/recruitment/shared/BulkActions';
 import initialCandidatesData from '../data/candidatesData.json';
@@ -11,7 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import CreateCandidate from '../components/recruitment/candidates/CreateCandidate';
 import EditCandidate from '../components/recruitment/candidates/EditCandidate';
 
-const ITEMS_POR_PAGINA = 10;
+const OPCIONES_POR_PAGINA = [10, 20, 50];
 
 function filtersToApiQuery(f) {
   const q = {};
@@ -32,6 +37,7 @@ export default function Candidates() {
     search: '',
     status: 'All',
     industry: 'All',
+    subcategoria: 'All',
     location: 'All',
     source: 'All',
     habilidades: 'All',
@@ -47,6 +53,8 @@ export default function Candidates() {
   const [hrUsers, setHrUsers] = useState([]);
 
   const [paginaActual, setPaginaActual] = useState(1);
+  const [itemsPorPagina, setItemsPorPagina] = useState(10);
+  const [ordenarPor, setOrdenarPor] = useState('recientes');
 
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showDescartadas, setShowDescartadas] = useState(false);
@@ -147,24 +155,15 @@ export default function Candidates() {
 
   const handleSaveEditCandidate = async (candidateId, updatedData) => {
     try {
-      await candidatesService.updateCandidate(candidateId, updatedData);
+      const actualizado = await candidatesService.updateCandidate(
+        candidateId,
+        updatedData
+      );
 
       setCandidates((prev) =>
-        prev.map((c) => {
-          if (c.id === candidateId) {
-            return {
-              ...c,
-              ...updatedData,
-              name: updatedData.name || c.name,
-              specialty: updatedData.specialty || c.specialty,
-              experience:
-                updatedData.experience !== undefined
-                  ? updatedData.experience
-                  : c.experience,
-            };
-          }
-          return c;
-        })
+        prev.map((c) =>
+          c.id === candidateId ? { ...c, ...(actualizado || {}) } : c
+        )
       );
 
       setEditingCandidate(null);
@@ -217,7 +216,12 @@ export default function Candidates() {
   };
 
   const handleFilterChange = (filterName, value) => {
-    setFilters((prevFilters) => ({ ...prevFilters, [filterName]: value }));
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      [filterName]: value,
+      // al cambiar de sector, reseteamos la subcategoría
+      ...(filterName === 'industry' ? { subcategoria: 'All' } : {}),
+    }));
   };
 
   const handleClearFilters = () => {
@@ -270,12 +274,23 @@ export default function Candidates() {
     );
   };
 
-  // --- SOLUCIÓN: EXTRAEMOS LOS SECTORES/INDUSTRIAS ÚNICOS DEL BACKEND ---
-  const industryOptions = [
-    ...new Set(
-      candidates.map((c) => c.specialty || c.industry).filter(Boolean)
-    ),
-  ].sort();
+  // El filtro "Sector" usa las familias profesionales (sectores), igual que Vacantes.
+  const industryOptions = LISTA_SECTORES;
+
+  // Subcategorías (profesiones) del sector elegido, para el desplegable en cascada.
+  const subcatOptions =
+    filters.industry && filters.industry !== 'All'
+      ? subcategoriasDe(filters.industry)
+      : [];
+
+  // Clasificamos cada candidato en todos sus sectores (skills + experiencia + formación).
+  const sectoresByCandidate = useMemo(() => {
+    const mapa = {};
+    for (const c of candidates) {
+      mapa[c.id] = clasificarSectores(c.specialty, c.experience, c.education);
+    }
+    return mapa;
+  }, [candidates]);
 
   const skillsOptions = [
     ...new Set(candidates.map((c) => c.specialty).filter(Boolean)),
@@ -317,10 +332,10 @@ export default function Candidates() {
         .toLowerCase()
         .includes(term);
 
-    // FILTRADO DE SECTOR CORREGIDO
-    const candidateIndustry = candidate.specialty || candidate.industry;
+    // FILTRADO DE SECTOR/FAMILIA (multi-etiqueta)
     const matchEspecialidad =
-      filters.industry === 'All' || candidateIndustry === filters.industry;
+      filters.industry === 'All' ||
+      (sectoresByCandidate[candidate.id] || []).includes(filters.industry);
 
     const matchDisponibilidad = (() => {
       if (filters.disponibilidad === 'All') return true;
@@ -345,20 +360,35 @@ export default function Candidates() {
     );
   });
 
+  // --- Ordenación ---
+  if (ordenarPor === 'estado') {
+    filteredCandidates.sort((a, b) =>
+      (a.status || '').localeCompare(b.status || '')
+    );
+  } else if (ordenarPor === 'antiguos') {
+    filteredCandidates.sort(
+      (a, b) => new Date(a.rawDate || 0) - new Date(b.rawDate || 0)
+    );
+  } else {
+    filteredCandidates.sort(
+      (a, b) => new Date(b.rawDate || 0) - new Date(a.rawDate || 0)
+    );
+  }
+
   useEffect(() => {
     setPaginaActual(1);
   }, [filters, showFavoritesOnly, showDescartadas]);
 
   const totalPaginas = Math.max(
     1,
-    Math.ceil(filteredCandidates.length / ITEMS_POR_PAGINA)
+    Math.ceil(filteredCandidates.length / itemsPorPagina)
   );
   const paginaSafe = Math.min(paginaActual, totalPaginas);
 
   const candidatesPaginados = useMemo(() => {
-    const inicio = (paginaSafe - 1) * ITEMS_POR_PAGINA;
-    return filteredCandidates.slice(inicio, inicio + ITEMS_POR_PAGINA);
-  }, [filteredCandidates, paginaSafe]);
+    const inicio = (paginaSafe - 1) * itemsPorPagina;
+    return filteredCandidates.slice(inicio, inicio + itemsPorPagina);
+  }, [filteredCandidates, paginaSafe, itemsPorPagina]);
 
   const irAPagina = (p) =>
     setPaginaActual(Math.max(1, Math.min(p, totalPaginas)));
@@ -373,11 +403,9 @@ export default function Candidates() {
   }, [paginaSafe, totalPaginas]);
 
   const desde =
-    filteredCandidates.length === 0
-      ? 0
-      : (paginaSafe - 1) * ITEMS_POR_PAGINA + 1;
+    filteredCandidates.length === 0 ? 0 : (paginaSafe - 1) * itemsPorPagina + 1;
   const hasta = Math.min(
-    paginaSafe * ITEMS_POR_PAGINA,
+    paginaSafe * itemsPorPagina,
     filteredCandidates.length
   );
 
@@ -397,6 +425,7 @@ export default function Candidates() {
           ]}
           locationOptions={locationOptions}
           industryOptions={industryOptions}
+          subcategoriaOptions={subcatOptions}
           skillsOptions={skillsOptions}
           disponibilidadOptions={DISPONIBILIDAD_OPTIONS}
           experienciaOptions={EXPERIENCIA_OPTIONS}
@@ -440,9 +469,24 @@ export default function Candidates() {
 
       {!loading && (
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <div className="text-muted small">
-            Mostrando {filteredCandidates.length} candidatos de{' '}
-            {candidates.length}
+          <div className="d-flex align-items-center gap-3">
+            <div className="text-muted small">
+              Mostrando {candidatesPaginados.length} de{' '}
+              {filteredCandidates.length} candidatos
+            </div>
+            <label className="d-flex align-items-center gap-2 text-muted small mb-0">
+              Ordenar por
+              <select
+                className="form-select form-select-sm"
+                style={{ width: 'auto' }}
+                value={ordenarPor}
+                onChange={(e) => setOrdenarPor(e.target.value)}
+              >
+                <option value="recientes">Más recientes</option>
+                <option value="antiguos">Más antiguos</option>
+                <option value="estado">Por estado</option>
+              </select>
+            </label>
           </div>
 
           <div className="d-flex gap-2">
@@ -499,12 +543,39 @@ export default function Candidates() {
         />
       )}
 
-      {!loading && totalPaginas > 1 && (
+      {!loading && filteredCandidates.length > 0 && (
         <div className="clientes-pagination" style={{ marginTop: '1rem' }}>
           <span className="clientes-pagination__info">
-            {desde}–{hasta} de {filteredCandidates.length}
+            {desde}–{hasta} de {filteredCandidates.length} · Página {paginaSafe}{' '}
+            de {totalPaginas}
           </span>
           <div className="clientes-pagination__controls">
+            <label
+              className="clientes-pagination__pagesize"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                marginRight: '12px',
+                fontSize: '0.875rem',
+              }}
+            >
+              Ver
+              <select
+                value={itemsPorPagina}
+                onChange={(e) => {
+                  setItemsPorPagina(Number(e.target.value));
+                  setPaginaActual(1);
+                }}
+              >
+                {OPCIONES_POR_PAGINA.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+              por página
+            </label>
             <button
               className="clientes-pagination__btn"
               onClick={() => irAPagina(paginaSafe - 1)}

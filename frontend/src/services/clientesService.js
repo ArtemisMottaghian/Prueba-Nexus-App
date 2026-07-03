@@ -29,6 +29,7 @@ const mapToFrontend = (client) => ({
   email: client.email,
   telefono: client.phone || client.telefono,
   vacantesAbiertas: client.open_positions ?? client.vacantesAbiertas ?? 0,
+  rawDate: client.created_at || null,
   cif: client.cif || '',
   direccion: client.address || client.direccion || '',
   prioritario: client.prioritario || client.priority || false,
@@ -119,6 +120,38 @@ export const getClienteById = async (id) => {
   }
 };
 
+// Traduce el estado de la oferta (backend) al texto que usa la ficha
+const traducirEstadoOferta = (s) => {
+  const map = {
+    detected: 'Nueva',
+    contacted: 'Contactada',
+    negotiating: 'En proceso',
+    won: 'Ganada',
+    discarded: 'Descartada',
+  };
+  return map[(s || '').toLowerCase()] || 'Nueva';
+};
+
+// Obtiene las ofertas vinculadas a una empresa/cliente
+export const getVacantesByCliente = async (companyId) => {
+  try {
+    const res = await authFetch(ENDPOINTS.companies.vacancies(companyId));
+    if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+    const data = await res.json();
+    return data.map((o) => ({
+      id: o.id,
+      titulo: o.title,
+      estado: traducirEstadoOferta(o.status),
+      fecha: o.published_at
+        ? new Date(o.published_at).toLocaleDateString('es-ES')
+        : '',
+    }));
+  } catch (err) {
+    console.error('Error al obtener las vacantes del cliente:', err);
+    return [];
+  }
+};
+
 export const getClienteByNombre = async (nombre) => {
   if (!nombre) return null;
   const target = String(nombre).toLowerCase().trim();
@@ -159,13 +192,13 @@ export const updateCliente = async (id, cliente) => {
 export const updateEstadoCuenta = async (id, nuevoEstado) => {
   const estado = normalizarEstadoCuenta(nuevoEstado);
 
+  // Mantenemos entity_type coherente con el estado (Fase 4): solo es
+  // 'confirmed_client' cuando es cliente; en cualquier otro estado se limpia
+  // para que los dos campos (lead_status y entity_type) nunca se contradigan.
   const payload = {
     lead_status: statusMap[estado] || 'new',
+    entity_type: estado === 'cliente' ? 'confirmed_client' : null,
   };
-
-  if (estado === 'cliente') {
-    payload.entity_type = 'confirmed_client';
-  }
 
   try {
     const response = await authFetch(ENDPOINTS.companies.update(id), {

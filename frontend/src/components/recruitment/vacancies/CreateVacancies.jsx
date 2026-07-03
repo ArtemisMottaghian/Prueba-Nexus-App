@@ -1,54 +1,119 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import './CreateVacancies.css';
+import { LISTA_SECTORES } from '../../../utils/sectores';
+import { EMPRESAS_DESTACADAS } from '../../../utils/empresasDestacadas';
+import { vacanciesService } from '../../../services/vacanciesService';
+
+// clave normalizada para comparar/deduplicar nombres de empresa
+const normalizarEmp = (s) =>
+  (s || '')
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]/g, '');
+
+// "Publicada hace..." -> nº de días hacia atrás
+const DIAS_PUBLICACION = {
+  Hoy: 0,
+  Ayer: 1,
+  'Esta semana': 3,
+  'Hace 1-2 semanas': 10,
+  'Hace +1 mes': 35,
+};
+
+// "35.000€ - 45.000€" -> { salary_min: 35000, salary_max: 45000 }
+function parseSalario(rango) {
+  const nums = (String(rango).match(/\d[\d.]*/g) || [])
+    .map((s) => parseInt(s.replace(/\./g, ''), 10))
+    .filter((n) => !isNaN(n));
+  return { salary_min: nums[0] ?? null, salary_max: nums[1] ?? null };
+}
+
+function publicadaHaceAFecha(etiqueta) {
+  if (!etiqueta) return null;
+  const dias = DIAS_PUBLICACION[etiqueta] ?? 0;
+  const d = new Date();
+  d.setDate(d.getDate() - dias);
+  return d.toISOString();
+}
 
 export default function CreateVacancy({ onClose, onSave }) {
-  // 1. Estado inicial del formulario con todos los campos solicitados
   const [formData, setFormData] = useState({
-    title: '', // Nombre de la vacante
-    location: '', // Ubicación
-    sector: '', // Sector / Industria
-    source: '', // Fuente de origen
-    salaryRange: '', // Rango salarial
-    activeVacancies: 1, // Vacantes activas con esta empresa (por defecto 1)
-    publishedAgo: '', // Hace cuánto ha sido publicada
+    title: '',
+    location: '',
+    sector: '',
+    source: '',
+    salaryRange: '',
+    companyName: '',
+    publishedAgo: '',
   });
+  const [companies, setCompanies] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [showEmpresas, setShowEmpresas] = useState(false);
 
-  // 2. Manejador genérico para todos los inputs y selects
+  // Cargar los nombres de empresas ya registradas (para el selector con dedup)
+  useEffect(() => {
+    vacanciesService
+      .getCompanies()
+      .then(setCompanies)
+      .catch(() => {});
+  }, []);
+
+  // Empresas de la BD + grandes empleadoras precargadas, sin duplicados y ordenadas.
+  const empresasTodas = useMemo(() => {
+    const vistas = new Set();
+    const out = [];
+    for (const c of [...companies, ...EMPRESAS_DESTACADAS]) {
+      const k = normalizarEmp(c);
+      if (!k || vistas.has(k)) continue;
+      vistas.add(k);
+      out.push(c);
+    }
+    return out.sort((a, b) => a.localeCompare(b, 'es'));
+  }, [companies]);
+
+  // Filtro del buscador (muestra hasta 50 coincidencias).
+  const empresasFiltradas = useMemo(() => {
+    const q = normalizarEmp(formData.companyName);
+    const base = q
+      ? empresasTodas.filter((c) => normalizarEmp(c).includes(q))
+      : empresasTodas;
+    return base.slice(0, 50);
+  }, [empresasTodas, formData.companyName]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 3. Procesar el envío
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    const { salary_min, salary_max } = parseSalario(formData.salaryRange);
 
-    // Estructuramos el objeto que enviaremos a Page/vacancies.jsx
-    const newVacancyData = {
+    const payload = {
       title: formData.title.trim(),
-      location: formData.location.trim(),
-      industry: formData.sector.trim(), // Lo mapeamos a 'industry' como usa tu sistema
+      company_name: formData.companyName.trim() || null,
+      location: formData.location.trim() || null,
+      sector: formData.sector || null,
       source: formData.source || 'Carga Manual',
-      salaryRange: formData.salaryRange.trim(),
-      companyActiveJobs: parseInt(formData.activeVacancies, 10) || 1,
-      publishedAgo: formData.publishedAgo,
-      // Campos automáticos por defecto para una nueva vacante
-      status: 'Nueva',
-      isFavorite: false,
-      createdAt: new Date().toISOString(),
+      salary_min,
+      salary_max,
+      published_at: publicadaHaceAFecha(formData.publishedAgo),
     };
 
-    onSave(newVacancyData);
+    try {
+      setSaving(true);
+      await onSave(payload); // el padre persiste y cierra el modal si va bien
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <>
       <div className="modal-backdrop fade show"></div>
 
-      {/* Aplicamos la clase custom-create-modal para el efecto Glassmorphism */}
       <div
         className="modal fade show d-block custom-create-modal"
         tabIndex="-1"
@@ -68,7 +133,7 @@ export default function CreateVacancy({ onClose, onSave }) {
 
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
-                {/* 1. Nombre de la Vacante (Title) */}
+                {/* 1. Nombre de la Vacante */}
                 <div className="mb-4">
                   <label htmlFor="title" className="form-label fw-semibold">
                     Nombre de la vacante <span className="text-danger">*</span>
@@ -86,7 +151,86 @@ export default function CreateVacancy({ onClose, onSave }) {
                 </div>
 
                 <div className="row">
-                  {/* 2. Ubicación */}
+                  {/* 2. Empresa (elegir existente o escribir nueva) */}
+                  <div className="col-md-6 mb-3">
+                    <label
+                      htmlFor="companyName"
+                      className="form-label fw-semibold"
+                    >
+                      Empresa <span className="text-danger">*</span>
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="companyName"
+                        name="companyName"
+                        value={formData.companyName}
+                        onChange={handleChange}
+                        onFocus={() => setShowEmpresas(true)}
+                        onBlur={() =>
+                          setTimeout(() => setShowEmpresas(false), 150)
+                        }
+                        placeholder="Escribe o elige una empresa..."
+                        autoComplete="off"
+                        required
+                      />
+                      {showEmpresas && empresasFiltradas.length > 0 && (
+                        <ul
+                          style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            right: 0,
+                            zIndex: 30,
+                            margin: '2px 0 0',
+                            padding: '4px 0',
+                            listStyle: 'none',
+                            maxHeight: '220px',
+                            overflowY: 'auto',
+                            background: 'var(--bg-secondary, #ffffff)',
+                            border: '1px solid var(--border-color, #d1d5db)',
+                            borderRadius: '8px',
+                            boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                          }}
+                        >
+                          {empresasFiltradas.map((c) => (
+                            <li
+                              key={c}
+                              onMouseDown={() => {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  companyName: c,
+                                }));
+                                setShowEmpresas(false);
+                              }}
+                              style={{
+                                padding: '6px 12px',
+                                cursor: 'pointer',
+                                color: 'var(--text-primary, #111827)',
+                              }}
+                              onMouseEnter={(e) =>
+                                (e.currentTarget.style.background =
+                                  'rgba(124,58,237,0.10)')
+                              }
+                              onMouseLeave={(e) =>
+                                (e.currentTarget.style.background =
+                                  'transparent')
+                              }
+                            >
+                              {c}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                    <small className="text-muted">
+                      Elige una de la lista o escribe una nueva (no se
+                      duplican).
+                    </small>
+                  </div>
+
+                  {/* 3. Ubicación */}
                   <div className="col-md-6 mb-3">
                     <label
                       htmlFor="location"
@@ -104,26 +248,31 @@ export default function CreateVacancy({ onClose, onSave }) {
                       placeholder="Ej. Madrid, España (o Remoto)"
                     />
                   </div>
+                </div>
 
-                  {/* 3. Sector / Industria */}
+                <div className="row">
+                  {/* 4. Sector (desplegable de familias) */}
                   <div className="col-md-6 mb-3">
                     <label htmlFor="sector" className="form-label fw-semibold">
                       Sector
                     </label>
-                    <input
-                      type="text"
-                      className="form-control"
+                    <select
+                      className="form-select"
                       id="sector"
                       name="sector"
                       value={formData.sector}
                       onChange={handleChange}
-                      placeholder="Ej. Tecnología, Finanzas, Salud..."
-                    />
+                    >
+                      <option value="">Selecciona un sector...</option>
+                      {LISTA_SECTORES.map((f) => (
+                        <option key={f} value={f}>
+                          {f}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                </div>
 
-                <div className="row">
-                  {/* 4. Fuente de origen */}
+                  {/* 5. Fuente de origen */}
                   <div className="col-md-6 mb-3">
                     <label htmlFor="source" className="form-label fw-semibold">
                       Fuente de origen
@@ -144,8 +293,10 @@ export default function CreateVacancy({ onClose, onSave }) {
                       <option value="Otro">Otro</option>
                     </select>
                   </div>
+                </div>
 
-                  {/* 5. Rango Salarial */}
+                <div className="row">
+                  {/* 6. Rango Salarial */}
                   <div className="col-md-6 mb-3">
                     <label
                       htmlFor="salaryRange"
@@ -163,28 +314,6 @@ export default function CreateVacancy({ onClose, onSave }) {
                       placeholder="Ej. 35.000€ - 45.000€"
                     />
                   </div>
-                </div>
-
-                <div className="row">
-                  {/* 6. Vacantes activas con esta empresa */}
-                  <div className="col-md-6 mb-3">
-                    <label
-                      htmlFor="activeVacancies"
-                      className="form-label fw-semibold"
-                    >
-                      Vacantes activas con esta empresa
-                    </label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      id="activeVacancies"
-                      name="activeVacancies"
-                      value={formData.activeVacancies}
-                      onChange={handleChange}
-                      min="1"
-                      placeholder="Ej. 2"
-                    />
-                  </div>
 
                   {/* 7. Hace cuánto ha sido publicada */}
                   <div className="col-md-6 mb-3">
@@ -192,7 +321,7 @@ export default function CreateVacancy({ onClose, onSave }) {
                       htmlFor="publishedAgo"
                       className="form-label fw-semibold"
                     >
-                      Publicada hace...
+                      Publicada hace... <span className="text-danger">*</span>
                     </label>
                     <select
                       className="form-select"
@@ -200,6 +329,7 @@ export default function CreateVacancy({ onClose, onSave }) {
                       name="publishedAgo"
                       value={formData.publishedAgo}
                       onChange={handleChange}
+                      required
                     >
                       <option value="">Selecciona un tiempo...</option>
                       <option value="Hoy">Hoy</option>
@@ -217,15 +347,21 @@ export default function CreateVacancy({ onClose, onSave }) {
                   type="button"
                   className="btn btn-outline-secondary"
                   onClick={onClose}
+                  disabled={saving}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  disabled={!formData.title.trim()}
+                  disabled={
+                    saving ||
+                    !formData.title.trim() ||
+                    !formData.companyName.trim() ||
+                    !formData.publishedAgo
+                  }
                 >
-                  Guardar Vacante
+                  {saving ? 'Guardando...' : 'Guardar Vacante'}
                 </button>
               </div>
             </form>
