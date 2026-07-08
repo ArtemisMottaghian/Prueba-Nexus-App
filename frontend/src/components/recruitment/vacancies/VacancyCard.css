@@ -83,16 +83,16 @@
 /* Botón IA ✨ */
 .btn-smart-match-mini,
 .btn-smart-match-icon {
-  color: var(--color-cyan, #00d4ff);
-  background: rgba(0, 212, 255, 0.05);
-  border: 1px solid rgba(0, 212, 255, 0.2);
+  color: var(--color-cyan-primary);
+  background: rgba(var(--cyan-rgb), 0.05);
+  border: 1px solid rgba(var(--cyan-rgb), 0.2);
 }
 
 .btn-smart-match-mini:hover,
 .btn-smart-match-icon:hover {
-  background: rgba(0, 212, 255, 0.15);
-  border-color: var(--color-cyan, #00d4ff);
-  box-shadow: 0 0 12px rgba(0, 212, 255, 0.3);
+  background: rgba(var(--cyan-rgb), 0.15);
+  border-color: var(--color-cyan-primary);
+  box-shadow: 0 0 12px rgba(var(--cyan-rgb), 0.3);
 }
 
 /* Estrella Favoritos ⭐ */
@@ -280,13 +280,13 @@ select.select-status-inline:focus {
 /* 1. NUEVA ->  */
 select.badge-nueva,
 .badge-nueva {
-  background-color: rgba(0, 212, 255, 0.15) !important;
+  background-color: rgba(var(--cyan-rgb), 0.15) !important;
   color: #0096b3 !important;
-  border: 1px solid rgba(0, 212, 255, 0.3) !important;
+  border: 1px solid rgba(var(--cyan-rgb), 0.3) !important;
 }
 [data-bs-theme='dark'] select.badge-nueva,
 [data-bs-theme='dark'] .badge-nueva {
-  color: #00d4ff !important;
+  color: var(--color-cyan-primary) !important;
 }
 
 /* 2. EN PROCESO -> */
@@ -347,14 +347,14 @@ select.badge-contactada,
   border-radius: 20px;
   font-size: 13px;
   font-weight: 500;
-  background: rgba(0, 212, 255, 0.1);
-  color: var(--color-cyan-primary, #00d4ff);
-  border: 1px solid rgba(0, 212, 255, 0.25);
+  background: rgba(var(--cyan-rgb), 0.1);
+  color: var(--color-cyan-primary);
+  border: 1px solid rgba(var(--cyan-rgb), 0.25);
   white-space: nowrap;
 }
 
 [data-bs-theme='dark'] .vacante-assignee {
-  background: rgba(0, 212, 255, 0.08);
+  background: rgba(var(--cyan-rgb), 0.08);
   color: #67e8f9;
-  border-color: rgba(0, 212, 255, 0.2);
+  border-color: rgba(var(--cyan-rgb), 0.2);
 }

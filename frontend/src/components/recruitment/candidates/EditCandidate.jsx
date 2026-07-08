@@ -10,6 +10,7 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
     location: candidate?.location || '',
     experience: candidate?.experience || '',
     specialty: candidate?.specialty || candidate?.skills || '',
+    languages: candidate?.languages || '',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,6 +41,7 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
       location: formData.location.trim(),
       experience: String(formData.experience || '').trim(),
       skills: formData.specialty.trim(),
+      languages: formData.languages.trim(),
     };
     const updatedData = Object.fromEntries(
       Object.entries(rawData).filter(
@@ -208,6 +210,20 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
                   <div className="form-text">
                     Escribe las tecnologías o habilidades separadas por comas.
                   </div>
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="languages" className="form-label fw-semibold">
+                    Idiomas
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="languages"
+                    name="languages"
+                    value={formData.languages}
+                    onChange={handleChange}
+                    placeholder="Ej: Español (nativo), Inglés (C1)..."
+                  />
                 </div>
               </div>
 

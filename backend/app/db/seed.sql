@@ -15,7 +15,7 @@ CREATE TYPE lead_status AS ENUM ('new', 'qualifying', 'negotiating', 'converted'
 CREATE TYPE entity_type AS ENUM ('scraping_prospect', 'confirmed_client');
 
 -- Estado global del candidato
-CREATE TYPE candidate_status AS ENUM ('active', 'passive', 'hired_elsewhere', 'blacklisted');
+CREATE TYPE candidate_status AS ENUM ('active', 'passive', 'hired_elsewhere', 'hired', 'blacklisted');
 
 -- Estado del proceso de seleccion especifico para una oferta
 CREATE TYPE application_status AS ENUM (
@@ -176,6 +176,7 @@ CREATE TABLE candidates (
     source       VARCHAR(100),
     experience   VARCHAR(100),
     education    TEXT,
+    languages    TEXT,
     candidate_url TEXT,
     cv_url       TEXT,   -- Link al archivo (S3, Cloudinary...)
     skills       TEXT,

@@ -5,6 +5,7 @@ import {
   clasificarSectores,
   subcategoriasDe,
 } from '../utils/sectores';
+import { UBICACIONES_POR_PROVINCIA } from '../utils/ubicacionesEspana';
 import BulkActions from '../components/recruitment/shared/BulkActions';
 import VacancyGrid from '../components/recruitment/vacancies/VacancyGrid';
 import initialJobsData from '../data/dummyData.json';
@@ -103,6 +104,31 @@ export default function Vacancies() {
       .filter(Boolean);
     return [...new Set([...locationOptions, ...fromJobs])].sort();
   }, [jobs, locationOptions]);
+
+  const locationCounts = useMemo(() => {
+    const normLocs = jobs
+      .map((j) => normalizeLocation(j.location || ''))
+      .filter(Boolean);
+    const ciudades = {};
+    const addCity = (name) => {
+      if (name in ciudades) return;
+      let n = 0;
+      for (const nl of normLocs) if (nl.includes(name)) n++;
+      if (n) ciudades[name] = n;
+    };
+    const provincias = {};
+    UBICACIONES_POR_PROVINCIA.forEach((p) => {
+      p.ciudades.forEach(addCity);
+      let n = 0;
+      for (const nl of normLocs) {
+        if (p.ciudades.some((c) => nl.includes(c))) n++;
+      }
+      if (n) provincias[p.provincia] = n;
+    });
+    // valores exactos presentes en los datos (p. ej. "Remoto")
+    [...new Set(normLocs)].forEach(addCity);
+    return { ciudades, provincias };
+  }, [jobs]);
 
   // --- 3. CARGA DE DATOS ---
   useEffect(() => {
@@ -328,6 +354,7 @@ export default function Vacancies() {
           industryOptions={mergedIndustryOptions}
           subcategoriaOptions={subcatOptions}
           locationOptions={mergedLocationOptions}
+          locationCounts={locationCounts}
           showMyVacanciesToggle={isNegocio}
           myVacanciesActive={showMyVacanciesOnly}
           onToggleMyVacancies={() =>

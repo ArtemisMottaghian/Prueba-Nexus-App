@@ -11,6 +11,7 @@ export default function CreateCandidate({ onClose, onSave }) {
     location: '',
     experience: '',
     specialty: '',
+    languages: '',
   });
 
   const [isParsing, setIsParsing] = useState(false);
@@ -49,6 +50,7 @@ export default function CreateCandidate({ onClose, onSave }) {
       location: formData.location.trim(),
       experience: String(formData.experience || '').trim(),
       skills: formData.specialty.trim(),
+      languages: formData.languages.trim(),
     };
     const finalData = Object.fromEntries(
       Object.entries(rawData).filter(
@@ -136,6 +138,7 @@ export default function CreateCandidate({ onClose, onSave }) {
         location: createdCandidate.location || '',
         experience: createdCandidate.experience || '',
         specialty: createdCandidate.specialty || createdCandidate.skills || '',
+        languages: createdCandidate.languages || '',
       });
 
       setParsedCandidateId(createdCandidate.id);
@@ -188,6 +191,7 @@ export default function CreateCandidate({ onClose, onSave }) {
       location: '',
       experience: '',
       specialty: '',
+      languages: '',
     });
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -417,6 +421,24 @@ export default function CreateCandidate({ onClose, onSave }) {
                       value={formData.specialty}
                       onChange={handleChange}
                       placeholder="Ej: React, Node, SQL..."
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label
+                      htmlFor="languages"
+                      className="form-label fw-semibold"
+                    >
+                      Idiomas
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="languages"
+                      name="languages"
+                      value={formData.languages}
+                      onChange={handleChange}
+                      placeholder="Ej: Español (nativo), Inglés (C1)..."
                     />
                   </div>
                 </div>

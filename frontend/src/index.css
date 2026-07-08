@@ -1,13 +1,12 @@
-/* ==========================================
-    1. VARIABLES GLOBALES (MODO CLARO)
-    ========================================== */
+/* 1. VARIABLES GLOBALES (MODO CLARO) */
 :root {
   /* Colores de Marca */
   --color-purple-primary: #4425a7;
   --color-purple-secondary: #7c3fff;
   --color-purple-dark: #4a2fee;
-  --color-cyan-primary: #00d4ff;
-  --color-cyan-secondary: #00b8e6;
+  --color-cyan-primary: #3b82f6;
+  --color-cyan-secondary: #2563eb;
+  --cyan-rgb: 59, 130, 246;
   --color-violet: #a855f7;
 
   /* Fondos */
@@ -28,9 +27,7 @@
   --scrollbar-thumb: rgba(0, 0, 0, 0.1);
 }
 
-/* ==========================================
-    2. EL OVERRIDE (MODO OSCURO)
-    ========================================== */
+/* 2. EL OVERRIDE (MODO OSCURO) */
 [data-bs-theme='dark'] {
   --bg-primary: #0a0a1a;
   --bg-secondary: #12121f;
@@ -43,6 +40,9 @@
 
   --border-color: #374151;
   --scrollbar-thumb: rgba(255, 255, 255, 0.15);
+  --color-cyan-primary: #00d4ff;
+  --color-cyan-secondary: #00b8e6;
+  --cyan-rgb: 0, 212, 255;
 }
 
 /* ── Reset & Body ── */
@@ -169,7 +169,7 @@ body {
   color: #fff;
 }
 .badge-contactada {
-  background: var(--color-cyan-primary);
+  background: #14b8a6;
   color: #fff;
 }
 .badge-en-proceso {
@@ -178,6 +178,10 @@ body {
 }
 .badge-descartada {
   background: #6b7280;
+  color: #fff;
+}
+.badge-contratada {
+  background: #16a34a;
   color: #fff;
 }
 

@@ -181,7 +181,9 @@ export default function CandidateCard({
             <i className="bi bi-person-badge"></i>
           </div>
           <div className="d-flex flex-column gap-1">
-            <span className="detail-text">{candidate.specialty}</span>
+            <span className="detail-text">
+              {candidate.specialty || 'No indicada'}
+            </span>
             <div className="d-flex flex-wrap gap-1 mt-1">
               {candidate.isAvailable && (
                 <span
@@ -208,7 +210,9 @@ export default function CandidateCard({
           <div className="detail-icon icon-cyan">
             <i className="bi bi-geo-alt"></i>
           </div>
-          <span className="detail-text">{candidate.location}</span>
+          <span className="detail-text">
+            {candidate.location || 'No indicada'}
+          </span>
         </div>
 
         <div className="detail-item">
@@ -216,7 +220,25 @@ export default function CandidateCard({
             <i className="bi bi-briefcase"></i>
           </div>
           <span className="detail-text text-break">
-            {candidate.experience || 'Experiencia no indicada'}
+            {candidate.experience || 'No indicada'}
+          </span>
+        </div>
+
+        <div className="detail-item">
+          <div className="detail-icon icon-green mt-1 align-self-start">
+            <i className="bi bi-mortarboard"></i>
+          </div>
+          <span className="detail-text text-break">
+            {candidate.education || 'No indicada'}
+          </span>
+        </div>
+
+        <div className="detail-item">
+          <div className="detail-icon icon-teal mt-1 align-self-start">
+            <i className="bi bi-translate"></i>
+          </div>
+          <span className="detail-text text-break">
+            {candidate.languages || 'No indicados'}
           </span>
         </div>
 

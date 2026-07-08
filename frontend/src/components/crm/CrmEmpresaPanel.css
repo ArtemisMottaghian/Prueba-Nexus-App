@@ -91,9 +91,9 @@
   border-color: rgba(148, 163, 184, 0.3);
 }
 .estado-contactada {
-  background: rgba(0, 212, 255, 0.15);
+  background: rgba(var(--cyan-rgb), 0.15);
   color: var(--color-cyan-primary);
-  border-color: rgba(0, 212, 255, 0.3);
+  border-color: rgba(var(--cyan-rgb), 0.3);
 }
 .estado-negociacion {
   background: rgba(245, 158, 11, 0.15);
@@ -152,7 +152,7 @@
   border-color: #94a3b8;
 }
 .crm-estado-pill.active.estado-contactada {
-  background: rgba(0, 212, 255, 0.2);
+  background: rgba(var(--cyan-rgb), 0.2);
   color: var(--color-cyan-primary);
   border-color: var(--color-cyan-primary);
 }

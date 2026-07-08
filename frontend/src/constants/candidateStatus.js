@@ -3,6 +3,7 @@ export const CANDIDATE_STATUS_OPTIONS = [
   { value: 'active', label: 'En búsqueda activa' },
   { value: 'passive', label: 'Abierto a ofertas' },
   { value: 'hired_elsewhere', label: 'Contratado (otra empresa)' },
+  { value: 'hired', label: 'Contratado (por nosotros)' },
   { value: 'blacklisted', label: 'No contactar' },
 ];
 
@@ -32,6 +33,8 @@ export function candidateStatusBadgeClass(status) {
     case 'passive':
     case 'Contactado':
       return 'badge-contactada';
+    case 'hired':
+      return 'badge-contratada';
     case 'hired_elsewhere':
     case 'En proceso':
       return 'badge-en-proceso';

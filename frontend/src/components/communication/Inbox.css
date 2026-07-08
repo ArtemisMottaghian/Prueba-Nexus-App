@@ -368,7 +368,7 @@
   margin: 0;
   font-size: 1.1rem;
   color: var(--clr-cyan);
-  text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+  text-shadow: 0 0 10px rgba(var(--cyan-rgb), 0.3);
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -425,7 +425,7 @@
 
 .chat-input input:focus {
   border-color: var(--clr-cyan);
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.15);
+  box-shadow: 0 0 15px rgba(var(--cyan-rgb), 0.15);
 }
 
 .send-btn {

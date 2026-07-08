@@ -140,7 +140,7 @@
 }
 .stat-cyan {
   color: var(--color-cyan-primary);
-  text-shadow: 0 0 12px rgba(0, 212, 255, 0.4);
+  text-shadow: 0 0 12px rgba(var(--cyan-rgb), 0.4);
 }
 .stat-amber {
   color: #f59e0b;

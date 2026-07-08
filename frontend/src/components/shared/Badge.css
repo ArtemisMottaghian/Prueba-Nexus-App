@@ -17,7 +17,7 @@
 }
 
 .badge-contactada {
-  background-color: var(--color-cyan-primary);
+  background-color: #14b8a6;
   color: #ffffff !important;
 }
 
@@ -28,6 +28,11 @@
 
 .badge-descartada {
   background-color: var(--text-muted);
+  color: #ffffff !important;
+}
+
+.badge-contratada {
+  background-color: #16a34a;
   color: #ffffff !important;
 }
 

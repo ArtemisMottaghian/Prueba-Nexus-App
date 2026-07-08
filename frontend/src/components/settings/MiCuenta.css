@@ -206,7 +206,7 @@
   color: var(--color-purple-secondary);
 }
 .icon-cyan {
-  background: rgba(0, 212, 255, 0.12);
+  background: rgba(var(--cyan-rgb), 0.12);
   color: var(--color-cyan-primary);
 }
 .icon-orange {
