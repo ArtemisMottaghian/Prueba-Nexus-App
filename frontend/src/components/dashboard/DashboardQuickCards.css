@@ -50,6 +50,11 @@
   color: #8b5cf6;
 }
 .quick-card-icon-wrapper.cyan {
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+[data-bs-theme='dark'] .quick-card-icon-wrapper.cyan {
   background: #ecfeff;
   color: #06b6d4;
 }
@@ -107,10 +112,16 @@
   align-items: center;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #0891b2;
+  color: #3b82f6;
   transition: color 0.2s;
 }
+[data-bs-theme='dark'] .quick-card-link-text {
+  color: #0891b2;
+}
 .quick-card-modern:hover .quick-card-link-text {
+  color: #2563eb;
+}
+[data-bs-theme='dark'] .quick-card-modern:hover .quick-card-link-text {
   color: #0e7490;
 }
 .quick-card-link-text i {

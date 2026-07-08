@@ -27,15 +27,8 @@ from app.models.user_model import User, UserRole
 from app.models.job_model import JobApplication
 from app.models.aplication_model import ApplicationStatus
 from sqlalchemy.exc import IntegrityError
-from app.core.taxonomia import listar_taxonomia
 
 router = APIRouter()
-
-
-@router.get("/taxonomy")
-async def get_taxonomy():
-    """Devuelve la taxonomía (familia -> subcategorías) para los filtros del frontend."""
-    return listar_taxonomia()
 
 
 @router.get("", response_model=List[VacancySummary])

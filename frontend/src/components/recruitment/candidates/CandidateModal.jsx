@@ -20,7 +20,6 @@ export default function CandidateModal({
     candidate?.candidatos || []
   );
   const [candForm, setCandForm] = useState({
-    nombre: '',
     fase: 'Enviado CV',
     resultado: 'Pendiente',
     notas: '',
@@ -43,15 +42,12 @@ export default function CandidateModal({
   };
 
   const handleAddCandidato = () => {
-    if (!candForm.nombre.trim()) return;
     const nuevo = {
       ...candForm,
-      nombre: candForm.nombre.trim(),
       fecha: new Date().toLocaleDateString('es-ES'),
     };
     setCandidatosList((prev) => [nuevo, ...prev]);
     setCandForm({
-      nombre: '',
       fase: 'Enviado CV',
       resultado: 'Pendiente',
       notas: '',
@@ -274,32 +270,10 @@ export default function CandidateModal({
                 {activeTab === 'candidatos' && (
                   <div className="tab-pane fade show active">
                     <div className="detail-section">
-                      <h4 className="section-title">
-                        Seguimiento de candidatos
-                      </h4>
+                      <h4 className="section-title">Seguimiento del proceso</h4>
 
                       <div className="cand-tracking-form mb-4">
                         <div className="cand-form-row">
-                          <div className="cand-form-field cand-form-field--wide">
-                            <label className="field-label">
-                              NOMBRE DEL CANDIDATO
-                            </label>
-                            <input
-                              type="text"
-                              className="form-control input-field"
-                              placeholder="Ej: Ana García"
-                              value={candForm.nombre}
-                              onChange={(e) =>
-                                setCandForm((f) => ({
-                                  ...f,
-                                  nombre: e.target.value,
-                                }))
-                              }
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleAddCandidato();
-                              }}
-                            />
-                          </div>
                           <div className="cand-form-field">
                             <label className="field-label">
                               TIPO DE ENTREVISTA / FASE
@@ -359,9 +333,8 @@ export default function CandidateModal({
                           <button
                             className="btn btn-primary-custom cand-add-btn"
                             onClick={handleAddCandidato}
-                            disabled={!candForm.nombre.trim()}
                           >
-                            <i className="bi bi-person-plus-fill"></i>
+                            <i className="bi bi-plus-lg"></i>
                             <span>Añadir</span>
                           </button>
                         </div>
@@ -372,13 +345,11 @@ export default function CandidateModal({
                           {candidatosList.map((c, i) => (
                             <div key={i} className="cand-tracking-item">
                               <div className="cand-avatar">
-                                {c.nombre.charAt(0).toUpperCase()}
+                                <i className="bi bi-diagram-3"></i>
                               </div>
                               <div className="cand-body">
                                 <div className="cand-body-top">
-                                  <span className="cand-nombre">
-                                    {c.nombre}
-                                  </span>
+                                  <span className="cand-nombre">{c.fase}</span>
                                   <span
                                     className={`cand-resultado-badge cand-resultado-${c.resultado.toLowerCase().replace(/\s+/g, '-')}`}
                                   >
@@ -398,10 +369,6 @@ export default function CandidateModal({
                                   </span>
                                 </div>
                                 <div className="cand-body-mid">
-                                  <span className="cand-fase-badge">
-                                    <i className="bi bi-diagram-3 me-1"></i>
-                                    {c.fase}
-                                  </span>
                                   <span className="cand-fecha">
                                     <i className="bi bi-calendar3 me-1"></i>
                                     {c.fecha}
@@ -419,13 +386,11 @@ export default function CandidateModal({
                         </div>
                       ) : (
                         <div className="tab-empty">
-                          <i className="bi bi-people"></i>
-                          <p>
-                            No hay candidatos registrados para esta vacante.
-                          </p>
+                          <i className="bi bi-diagram-3"></i>
+                          <p>Aún no hay fases registradas en el proceso.</p>
                           <small className="text-muted">
-                            Usa el formulario de arriba para añadir el primer
-                            candidato.
+                            Usa el formulario de arriba para registrar la
+                            primera fase.
                           </small>
                         </div>
                       )}

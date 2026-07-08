@@ -10,7 +10,7 @@
   --clr-border: rgba(124, 58, 237, 0.18);
   --clr-purple: #7c3aed;
   --clr-purple-light: #9b5de5;
-  --clr-cyan: #00d4ff;
+  --clr-cyan: var(--color-cyan-primary);
   --clr-text: #111827;
   --clr-text-muted: #6b7280;
   --clr-error: #dc2626;

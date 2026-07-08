@@ -125,7 +125,7 @@
   background: linear-gradient(
     135deg,
     rgba(124, 63, 255, 0.25),
-    rgba(0, 212, 255, 0.15)
+    rgba(var(--cyan-rgb), 0.15)
   );
   border: 2px solid rgba(124, 63, 255, 0.3);
   color: var(--color-purple-secondary);

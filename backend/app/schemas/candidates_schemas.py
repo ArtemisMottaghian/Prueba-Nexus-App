@@ -9,6 +9,7 @@ class CandidateStatus(str, Enum):
     active = "active"
     passive = "passive"
     hired_elsewhere = "hired_elsewhere"
+    hired = "hired"
     blacklisted = "blacklisted"
 
 
@@ -30,6 +31,7 @@ class CandidateBase(BaseModel):
     source: Optional[str] = Field(None, max_length=100)
     experience: Optional[str] = None
     education: Optional[str] = None
+    languages: Optional[str] = None
     verified: Optional[bool] = False
 
 
@@ -57,6 +59,7 @@ class CandidateUpdate(BaseModel):
     source: Optional[str] = Field(None, max_length=100)
     experience: Optional[str] = None
     education: Optional[str] = None
+    languages: Optional[str] = None
 
 
 # Salida (CandidateOut / CandidateResponse)
@@ -89,6 +92,7 @@ class CandidateFrontendOut(BaseModel):
     source: str
     experience: Optional[str] = "Consultar CV"
     education: Optional[str] = None
+    languages: Optional[str] = None
     isAvailable: bool
     time: str
     is_favorite: bool = False
@@ -119,6 +123,7 @@ class CandidateFrontendOut(BaseModel):
                 "source": getattr(data, "source", None) or "Carga Manual",
                 "experience": getattr(data, "experience") or "Consultar CV",
                 "education": getattr(data, "education"),
+                "languages": getattr(data, "languages", None),
                 "email": getattr(data, "email", None),
                 "cv_url": getattr(data, "cv_url", None),
                 # Extraemos el valor del Enum (ej: "active")
@@ -180,6 +185,7 @@ class CandidatePublicCreate(BaseModel):
     source: Optional[str] = None
     experience: Optional[str] = None
     education: Optional[str] = None
+    languages: Optional[str] = None
     specialty: Optional[str] = None
     skills: Optional[list] = None
     status: Optional[CandidateStatus] = CandidateStatus.active

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './FilterBar.css';
+import LocationSelect from './LocationSelect';
 
 /**
  * Función auxiliar para renderizar opciones de forma segura y
@@ -22,9 +23,11 @@ export default function FilterBar({
   filters,
   onFilterChange,
   onClearFilters,
+  searchPlaceholder = 'Buscar por título, empresa o cliente...',
 
   // Opciones de selects
   locationOptions = [],
+  locationCounts,
   industryOptions = [],
   familiaOptions = [],
   subcategoriaOptions = [],
@@ -67,7 +70,7 @@ export default function FilterBar({
           <input
             type="text"
             className="search-control"
-            placeholder="Buscar por título, empresa o cliente..."
+            placeholder={searchPlaceholder}
             value={filters.search || ''}
             onChange={(e) => onFilterChange('search', e.target.value)}
           />
@@ -86,14 +89,12 @@ export default function FilterBar({
           </div>
 
           <div className="pill-item">
-            <select
-              className={`pill-select ${filters.location !== 'All' ? 'active' : ''}`}
-              value={filters.location || 'All'}
-              onChange={(e) => onFilterChange('location', e.target.value)}
-            >
-              <option value="All">Ubicación: Todas</option>
-              {locationOptions.map((loc, i) => renderSafeOption(loc, i, 'loc'))}
-            </select>
+            <LocationSelect
+              value={filters.location}
+              onChange={(v) => onFilterChange('location', v)}
+              locationOptions={locationOptions}
+              counts={locationCounts}
+            />
           </div>
 
           {/* NUEVO: Botón "Mis Vacantes" integrado en la barra de filtros */}

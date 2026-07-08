@@ -191,8 +191,8 @@
   justify-content: space-between;
   padding: 10px 14px;
   border-radius: 10px;
-  background: rgba(0, 212, 255, 0.08);
-  border: 1px solid rgba(0, 212, 255, 0.25);
+  background: rgba(var(--cyan-rgb), 0.08);
+  border: 1px solid rgba(var(--cyan-rgb), 0.25);
   font-size: 13px;
   color: var(--text-primary);
   margin-bottom: 4px;

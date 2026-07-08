@@ -54,8 +54,28 @@
   color: #bba6ff;
 }
 .icon-cyan {
-  background: rgba(0, 212, 255, 0.15);
+  background: rgba(var(--cyan-rgb), 0.15);
   color: var(--color-cyan-primary);
+}
+
+.vacante-card .icon-orange {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.vacante-card .icon-gray {
+  background: rgba(107, 114, 128, 0.15);
+  color: #6b7280;
+}
+
+.vacante-card .icon-green {
+  background: rgba(22, 163, 74, 0.15);
+  color: #16a34a;
+}
+
+.vacante-card .icon-teal {
+  background: rgba(20, 184, 166, 0.15);
+  color: #14b8a6;
 }
 
 .checkbox-lg {
@@ -71,6 +91,26 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+}
+
+.vacante-footer .origin-badge {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.vacante-footer .origin-badge span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vacante-date {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 @media (max-width: 480px) {
   .results-header {

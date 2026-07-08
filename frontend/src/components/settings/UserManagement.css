@@ -148,7 +148,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #7c3aed, #00d4ff);
+  background: linear-gradient(135deg, #7c3aed, var(--color-cyan-primary));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -181,9 +181,9 @@
 }
 
 .badge-hr {
-  background: rgba(0, 212, 255, 0.12);
-  color: #00d4ff;
-  border: 1px solid rgba(0, 212, 255, 0.3);
+  background: rgba(var(--cyan-rgb), 0.12);
+  color: var(--color-cyan-primary);
+  border: 1px solid rgba(var(--cyan-rgb), 0.3);
 }
 
 .badge-company {

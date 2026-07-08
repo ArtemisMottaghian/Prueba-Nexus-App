@@ -416,6 +416,7 @@ export default function Candidates() {
           filters={filters}
           onFilterChange={handleFilterChange}
           onClearFilters={handleClearFilters}
+          searchPlaceholder="Buscar por nombre, email o especialidad..."
           statusOptions={CANDIDATE_STATUS_OPTIONS}
           sourceOptions={[
             { value: 'LinkedIn', label: 'LinkedIn' },
@@ -468,7 +469,7 @@ export default function Candidates() {
       </div>
 
       {!loading && (
-        <div className="d-flex justify-content-between align-items-center mb-3">
+        <div className="d-flex justify-content-between align-items-center mb-3 mt-3">
           <div className="d-flex align-items-center gap-3">
             <div className="text-muted small">
               Mostrando {candidatesPaginados.length} de{' '}

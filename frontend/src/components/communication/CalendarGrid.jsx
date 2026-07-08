@@ -329,7 +329,7 @@ export default function Calendario() {
         {/* BANNER: Google no conectado */}
         {googleNotConnected && (
           <div
-            className="alert alert-warning d-flex align-items-center gap-2 mx-0 mb-0 rounded-0"
+            className="alert alert-warning calendar-alert d-flex align-items-center gap-2"
             role="alert"
           >
             <i className="bi bi-exclamation-triangle-fill"></i>

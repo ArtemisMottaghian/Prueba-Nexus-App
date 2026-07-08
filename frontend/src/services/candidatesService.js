@@ -38,6 +38,7 @@ const mapCandidateData = (c) => ({
   source: c.source || 'N/A',
   experience: c.experience || 'N/A',
   education: c.education || null,
+  languages: c.languages || null,
   email: c.email || null,
   isAvailable: c.is_available ?? c.isAvailable ?? false,
   isFavorite: c.is_favourite ?? c.isFavourite ?? false,
