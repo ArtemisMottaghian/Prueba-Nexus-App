@@ -54,16 +54,25 @@ export default function LocationSelect({
 
   const q = norm(query);
 
+  const enDatos = useMemo(() => {
+    const s = new Set();
+    (locationOptions || [])
+      .map((o) => (typeof o === 'object' ? o?.value : o))
+      .filter(Boolean)
+      .forEach((o) => s.add(norm(o)));
+    return s;
+  }, [locationOptions]);
+
   const grupos = useMemo(() => {
-    if (!q) return UBICACIONES_POR_PROVINCIA;
     return UBICACIONES_POR_PROVINCIA.map((p) => {
-      const provMatch = norm(p.provincia).includes(q);
-      const ciudades = provMatch
-        ? p.ciudades
-        : p.ciudades.filter((c) => norm(c).includes(q));
+      const provMatch = q && norm(p.provincia).includes(q);
+      let ciudades = p.ciudades.filter((c) => enDatos.has(norm(c)));
+      if (q && !provMatch) {
+        ciudades = ciudades.filter((c) => norm(c).includes(q));
+      }
       return ciudades.length ? { provincia: p.provincia, ciudades } : null;
     }).filter(Boolean);
-  }, [q]);
+  }, [q, enDatos]);
 
   const extrasFiltradas = useMemo(
     () => (q ? extras.filter((o) => norm(o).includes(q)) : extras),
@@ -116,7 +125,7 @@ export default function LocationSelect({
 
             {extrasFiltradas.length > 0 && (
               <div className="loc-select__group">
-                <div className="loc-select__prov">En tus datos</div>
+                <div className="loc-select__prov">Otras ubicaciones</div>
                 {extrasFiltradas.map((o) => (
                   <button
                     key={o}
