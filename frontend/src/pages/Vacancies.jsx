@@ -5,7 +5,6 @@ import {
   clasificarSectores,
   subcategoriasDe,
 } from '../utils/sectores';
-import { UBICACIONES_POR_PROVINCIA } from '../utils/ubicacionesEspana';
 import BulkActions from '../components/recruitment/shared/BulkActions';
 import VacancyGrid from '../components/recruitment/vacancies/VacancyGrid';
 import initialJobsData from '../data/dummyData.json';
@@ -106,28 +105,12 @@ export default function Vacancies() {
   }, [jobs, locationOptions]);
 
   const locationCounts = useMemo(() => {
-    const normLocs = jobs
-      .map((j) => normalizeLocation(j.location || ''))
-      .filter(Boolean);
     const ciudades = {};
-    const addCity = (name) => {
-      if (name in ciudades) return;
-      let n = 0;
-      for (const nl of normLocs) if (nl.includes(name)) n++;
-      if (n) ciudades[name] = n;
-    };
-    const provincias = {};
-    UBICACIONES_POR_PROVINCIA.forEach((p) => {
-      p.ciudades.forEach(addCity);
-      let n = 0;
-      for (const nl of normLocs) {
-        if (p.ciudades.some((c) => nl.includes(c))) n++;
-      }
-      if (n) provincias[p.provincia] = n;
-    });
-    // valores exactos presentes en los datos (p. ej. "Remoto")
-    [...new Set(normLocs)].forEach(addCity);
-    return { ciudades, provincias };
+    for (const job of jobs) {
+      const loc = normalizeLocation(job.location || '');
+      if (loc) ciudades[loc] = (ciudades[loc] || 0) + 1;
+    }
+    return { ciudades };
   }, [jobs]);
 
   // --- 3. CARGA DE DATOS ---
