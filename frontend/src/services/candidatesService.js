@@ -44,6 +44,12 @@ const mapCandidateData = (c) => ({
   isFavorite: c.is_favourite ?? c.isFavourite ?? false,
   verified: c.verified ?? false,
   cvUrl: c.cv_url || null,
+  managed_by_id: c.managed_by_id ?? null,
+  phone: c.phone || null,
+  candidateUrl: c.candidate_url || null,
+  linkedinUrl: c.linkedin_url || null,
+  githubUrl: c.github_url || null,
+  portfolioUrl: c.portfolio_url || null,
   rawDate: c.created_at || c.time || null,
   time: formatFecha(c.created_at || c.time),
 });
@@ -91,7 +97,7 @@ export const candidatesService = {
     }
 
     const data = await response.json();
-    return mapCandidateData(data);
+    return data;
   },
 
   getAllCandidates: async (query) => {

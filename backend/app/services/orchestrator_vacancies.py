@@ -194,7 +194,7 @@ async def process_and_save_offers(valid_offers: list[ScrapedJobOffer]):
                     recruiter_name = offer_dict.get("recruiter_name")
                     recruiter_email = offer_dict.get("recruiter_email")
                     recruiter_phone = offer_dict.get("recruiter_phone")
-                    recruiter_linkedin = None
+                    recruiter_linkedin = offer_dict.get("recruiter_url")
                     recruiter_job_title = None
 
                     apollo_id = None
@@ -229,6 +229,20 @@ async def process_and_save_offers(valid_offers: list[ScrapedJobOffer]):
                                 apollo_id = apollo_data.get("apollo_contact_id")
                             elif apollo_data.get("id"):
                                 apollo_id = apollo_data.get("id")
+
+                    if not recruiter_name and not recruiter_email:
+                        from app.services.ai_service import parse_contact_from_text
+
+                        c_txt = await parse_contact_from_text(
+                            offer_dict.get("job_description") or ""
+                        )
+                        recruiter_name = recruiter_name or c_txt.get("nombre") or None
+                        recruiter_email = (
+                            recruiter_email or c_txt.get("email") or None
+                        )
+                        recruiter_job_title = (
+                            recruiter_job_title or c_txt.get("cargo") or None
+                        )
 
                     # ==========================================
                     # PASO 3: GUARDADO FINAL EN BD

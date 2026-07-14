@@ -11,6 +11,9 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
     experience: candidate?.experience || '',
     specialty: candidate?.specialty || candidate?.skills || '',
     languages: candidate?.languages || '',
+    linkedin: candidate?.linkedinUrl || '',
+    github: candidate?.githubUrl || '',
+    portfolio: candidate?.portfolioUrl || '',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,6 +45,9 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
       experience: String(formData.experience || '').trim(),
       skills: formData.specialty.trim(),
       languages: formData.languages.trim(),
+      linkedin_url: formData.linkedin.trim(),
+      github_url: formData.github.trim(),
+      portfolio_url: formData.portfolio.trim(),
     };
     const updatedData = Object.fromEntries(
       Object.entries(rawData).filter(
@@ -223,6 +229,54 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
                     value={formData.languages}
                     onChange={handleChange}
                     placeholder="Ej: Español (nativo), Inglés (C1)..."
+                  />
+                </div>
+
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label
+                      htmlFor="linkedin"
+                      className="form-label fw-semibold"
+                    >
+                      LinkedIn
+                    </label>
+                    <input
+                      type="url"
+                      className="form-control"
+                      id="linkedin"
+                      name="linkedin"
+                      value={formData.linkedin}
+                      onChange={handleChange}
+                      placeholder="https://linkedin.com/in/..."
+                    />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label htmlFor="github" className="form-label fw-semibold">
+                      GitHub
+                    </label>
+                    <input
+                      type="url"
+                      className="form-control"
+                      id="github"
+                      name="github"
+                      value={formData.github}
+                      onChange={handleChange}
+                      placeholder="https://github.com/..."
+                    />
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="portfolio" className="form-label fw-semibold">
+                    Portfolio / Web
+                  </label>
+                  <input
+                    type="url"
+                    className="form-control"
+                    id="portfolio"
+                    name="portfolio"
+                    value={formData.portfolio}
+                    onChange={handleChange}
+                    placeholder="https://..."
                   />
                 </div>
               </div>

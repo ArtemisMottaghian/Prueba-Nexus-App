@@ -199,7 +199,7 @@ def extract_company_data(raw_text: str, basic_company_name: str) -> dict:
     if not GEMINI_API_KEY:
          return {"name": nombre_limpio, "cif": cif_encontrado, "sector": None, "website": website_clearbit, "linkedin_url": None, "address": "Provincia/Pais no especificado", "contact_email": None, "contact_phone": None}
 
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    model = genai.GenerativeModel(os.getenv("GEMINI_MODEL", "gemini-flash-latest"))
     
     prompt = f"""
     Actúa como investigador B2B. Oferta de la empresa "{nombre_limpio}".

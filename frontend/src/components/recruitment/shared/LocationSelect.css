@@ -71,6 +71,19 @@
   padding: 8px 8px 4px;
 }
 
+.loc-select__prov--btn {
+  width: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.12s ease;
+}
+
+.loc-select__prov--btn:hover {
+  background: rgba(124, 58, 237, 0.1);
+}
+
 .loc-select__item {
   display: flex;
   justify-content: space-between;

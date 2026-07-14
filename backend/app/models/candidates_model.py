@@ -20,8 +20,13 @@ class Candidate(Base):
     languages = Column(Text, nullable=True)
     phone = Column(String(50), nullable=True)
     candidate_url = Column(Text, nullable=True)
+    linkedin_url = Column(Text, nullable=True)
+    github_url = Column(Text, nullable=True)
+    portfolio_url = Column(Text, nullable=True)
     cv_url = Column(Text, nullable=True)
-    skills = Column(Text, nullable=True, index=True) 
+    skills = Column(Text, nullable=True, index=True)
+
+    managed_by_id = Column(BigInteger, ForeignKey("users.id"), nullable=True, index=True)
 
     status = Column(
         ENUM(CandidateStatus, name="candidate_status", create_type=True),

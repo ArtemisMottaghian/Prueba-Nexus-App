@@ -9,6 +9,7 @@ import CandidateGrid from '../components/recruitment/candidates/CandidateGrid';
 import BulkActions from '../components/recruitment/shared/BulkActions';
 import initialCandidatesData from '../data/candidatesData.json';
 import { candidatesService } from '../services/candidatesService';
+import { provinciaDe } from '../utils/provincias';
 import { usersService } from '../services/userManagementService';
 import { CANDIDATE_STATUS_OPTIONS } from '../constants/candidateStatus';
 import { useAuth } from '../context/AuthContext';
@@ -22,7 +23,8 @@ function filtersToApiQuery(f) {
   const q = {};
   if (f.verified === 'yes') q.verified = true;
   if (f.verified === 'no') q.verified = false;
-  if (f.location && f.location !== 'All') q.location = f.location;
+  if (f.location && f.location !== 'All' && !f.location.startsWith('prov:'))
+    q.location = f.location;
   if (f.habilidades && f.habilidades !== 'All') q.skills = f.habilidades;
   if (f.status && f.status !== 'All') q.status = f.status;
   if (f.source && f.source !== 'All') q.source = f.source;
@@ -61,6 +63,8 @@ export default function Candidates() {
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingCandidate, setEditingCandidate] = useState(null);
+  const [assignmentView, setAssignmentView] = useState('pendientes');
+  const [recruiterFilter, setRecruiterFilter] = useState('All');
 
   const apiListQuery = useMemo(
     () =>
@@ -186,10 +190,31 @@ export default function Candidates() {
         'assign',
         targetUserId
       );
+      const idSet = new Set(selectedCandidates);
+      setCandidates((prev) =>
+        prev.map((c) =>
+          idSet.has(c.id) ? { ...c, managed_by_id: Number(targetUserId) } : c
+        )
+      );
       setSelectedCandidates([]);
     } catch (err) {
       console.error(err);
       alert('Error al asignar candidatos');
+    }
+  };
+
+  const handleBulkUnassign = async () => {
+    if (selectedCandidates.length === 0) return;
+    try {
+      await candidatesService.applyBulkActions(selectedCandidates, 'unassign');
+      const idSet = new Set(selectedCandidates);
+      setCandidates((prev) =>
+        prev.map((c) => (idSet.has(c.id) ? { ...c, managed_by_id: null } : c))
+      );
+      setSelectedCandidates([]);
+    } catch (err) {
+      console.error(err);
+      alert('Error al quitar la asignación');
     }
   };
 
@@ -313,6 +338,19 @@ export default function Candidates() {
     return match ? parseInt(match[0], 10) : 0;
   };
 
+  const recruiterNameById = useMemo(() => {
+    const map = {};
+    for (const u of hrUsers) map[u.id] = u.name;
+    return map;
+  }, [hrUsers]);
+
+  const countPendientes = candidates.filter(
+    (c) => c.managed_by_id == null
+  ).length;
+  const countAsignados = candidates.filter(
+    (c) => c.managed_by_id != null
+  ).length;
+
   const filteredCandidates = candidates.filter((candidate) => {
     const safeStatus = (candidate.status || '').toLowerCase().trim();
     const arrDiscard = ['descartada', 'discarded', 'rejected', 'descartado'];
@@ -322,6 +360,24 @@ export default function Candidates() {
     }
 
     if (showFavoritesOnly && !candidate.isFavorite) return false;
+
+    if (isNegocio) {
+      const sinAsignar = candidate.managed_by_id == null;
+      if (assignmentView === 'pendientes' && !sinAsignar) return false;
+      if (assignmentView === 'asignados' && sinAsignar) return false;
+      if (
+        recruiterFilter !== 'All' &&
+        String(candidate.managed_by_id) !== String(recruiterFilter)
+      )
+        return false;
+    }
+
+    if (
+      filters.location &&
+      filters.location.startsWith('prov:') &&
+      provinciaDe(candidate.location) !== filters.location.slice(5)
+    )
+      return false;
 
     const term = (filters.search || '').trim().toLowerCase();
     const matchSearch =
@@ -377,7 +433,13 @@ export default function Candidates() {
 
   useEffect(() => {
     setPaginaActual(1);
-  }, [filters, showFavoritesOnly, showDescartadas]);
+  }, [
+    filters,
+    showFavoritesOnly,
+    showDescartadas,
+    assignmentView,
+    recruiterFilter,
+  ]);
 
   const totalPaginas = Math.max(
     1,
@@ -387,8 +449,15 @@ export default function Candidates() {
 
   const candidatesPaginados = useMemo(() => {
     const inicio = (paginaSafe - 1) * itemsPorPagina;
-    return filteredCandidates.slice(inicio, inicio + itemsPorPagina);
-  }, [filteredCandidates, paginaSafe, itemsPorPagina]);
+    return filteredCandidates
+      .slice(inicio, inicio + itemsPorPagina)
+      .map((c) => ({
+        ...c,
+        managedByName: c.managed_by_id
+          ? recruiterNameById[c.managed_by_id]
+          : null,
+      }));
+  }, [filteredCandidates, paginaSafe, itemsPorPagina, recruiterNameById]);
 
   const irAPagina = (p) =>
     setPaginaActual(Math.max(1, Math.min(p, totalPaginas)));
@@ -460,6 +529,7 @@ export default function Candidates() {
               }}
               onClear={() => setSelectedCandidates([])}
               onAssign={handleBulkAssign}
+              onUnassign={handleBulkUnassign}
               hrUsers={hrUsers}
               showAssign={isNegocio}
               label="candidato"
@@ -525,6 +595,49 @@ export default function Candidates() {
               Solo Favoritos
             </button>
           </div>
+        </div>
+      )}
+
+      {!loading && isNegocio && (
+        <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
+          <div className="btn-group btn-group-sm" role="group">
+            <button
+              type="button"
+              className={`btn ${assignmentView === 'pendientes' ? 'btn-primary' : 'btn-outline-secondary'}`}
+              onClick={() => setAssignmentView('pendientes')}
+            >
+              Pendientes ({countPendientes})
+            </button>
+            <button
+              type="button"
+              className={`btn ${assignmentView === 'asignados' ? 'btn-primary' : 'btn-outline-secondary'}`}
+              onClick={() => setAssignmentView('asignados')}
+            >
+              Asignados ({countAsignados})
+            </button>
+            <button
+              type="button"
+              className={`btn ${assignmentView === 'todos' ? 'btn-primary' : 'btn-outline-secondary'}`}
+              onClick={() => setAssignmentView('todos')}
+            >
+              Todos ({candidates.length})
+            </button>
+          </div>
+          {assignmentView !== 'pendientes' && (
+            <select
+              className="form-select form-select-sm"
+              style={{ width: 'auto' }}
+              value={recruiterFilter}
+              onChange={(e) => setRecruiterFilter(e.target.value)}
+            >
+              <option value="All">Todos los reclutadores</option>
+              {hrUsers.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       )}
 

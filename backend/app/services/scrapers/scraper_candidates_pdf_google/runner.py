@@ -101,7 +101,7 @@ async def extract_pdf_data(pdf_bytes: bytes, keyword: str) -> dict | None:
         
         for intento_gemini in range(4):
             try:
-                response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
+                response = client.models.generate_content(model=os.getenv("GEMINI_MODEL", "gemini-flash-latest"), contents=prompt)
                 clean_json = response.text.replace('```json', '').replace('```', '').strip()
                 parsed_data = json.loads(clean_json)
                 

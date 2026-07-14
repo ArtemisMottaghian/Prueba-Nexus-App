@@ -33,6 +33,9 @@ class CandidateBase(BaseModel):
     education: Optional[str] = None
     languages: Optional[str] = None
     verified: Optional[bool] = False
+    linkedin_url: Optional[str] = None
+    github_url: Optional[str] = None
+    portfolio_url: Optional[str] = None
 
 
 class CandidateCreate(CandidateBase):
@@ -60,6 +63,9 @@ class CandidateUpdate(BaseModel):
     experience: Optional[str] = None
     education: Optional[str] = None
     languages: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    github_url: Optional[str] = None
+    portfolio_url: Optional[str] = None
 
 
 # Salida (CandidateOut / CandidateResponse)
@@ -99,6 +105,12 @@ class CandidateFrontendOut(BaseModel):
     verified: bool = False
     email: Optional[str] = None
     cv_url: Optional[str] = None
+    managed_by_id: Optional[int] = None
+    phone: Optional[str] = None
+    candidate_url: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    github_url: Optional[str] = None
+    portfolio_url: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -126,6 +138,12 @@ class CandidateFrontendOut(BaseModel):
                 "languages": getattr(data, "languages", None),
                 "email": getattr(data, "email", None),
                 "cv_url": getattr(data, "cv_url", None),
+                "managed_by_id": getattr(data, "managed_by_id", None),
+                "phone": getattr(data, "phone", None),
+                "candidate_url": getattr(data, "candidate_url", None),
+                "linkedin_url": getattr(data, "linkedin_url", None),
+                "github_url": getattr(data, "github_url", None),
+                "portfolio_url": getattr(data, "portfolio_url", None),
                 # Extraemos el valor del Enum (ej: "active")
                 "status": (
                     data.status.value
@@ -155,6 +173,12 @@ class CandidateStatusUpdate(BaseModel):
 
 class MessageResponse(BaseModel):
     message: str
+
+
+class CandidateBulkActionRequest(BaseModel):
+    candidate_ids: list[int]
+    action: str
+    target_user: Optional[int] = None
 
 
 # Schema para el status de los scrapers de candidatos

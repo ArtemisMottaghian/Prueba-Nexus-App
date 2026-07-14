@@ -178,12 +178,16 @@ CREATE TABLE candidates (
     education    TEXT,
     languages    TEXT,
     candidate_url TEXT,
+    linkedin_url TEXT,
+    github_url TEXT,
+    portfolio_url TEXT,
     cv_url       TEXT,   -- Link al archivo (S3, Cloudinary...)
     skills       TEXT,
     is_favorite BOOLEAN DEFAULT FALSE,
     verified BOOLEAN DEFAULT FALSE NOT NULL,
     status       candidate_status DEFAULT 'active',
     notes        TEXT,
+    managed_by_id BIGINT REFERENCES users(id),
     created_at   TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at   TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 
@@ -375,6 +379,7 @@ CREATE INDEX idx_users_email               ON users(email);
 CREATE INDEX idx_job_offers_status         ON job_offers(status);
 CREATE INDEX idx_searches_status           ON searches(status);
 CREATE INDEX idx_candidates_status         ON candidates(status);
+CREATE INDEX idx_candidates_managed_by     ON candidates(managed_by_id);
 CREATE INDEX idx_job_applications_status   ON job_applications(status);
 CREATE INDEX idx_companies_lead_status     ON companies(lead_status);
 CREATE INDEX idx_companies_source_id       ON companies(source_id);

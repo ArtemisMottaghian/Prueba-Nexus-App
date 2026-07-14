@@ -106,6 +106,14 @@
   border-color: rgba(16, 185, 129, 0.3);
 }
 
+.estado-cuenta-chip.estado-lead {
+  color: #475569;
+}
+
+[data-bs-theme='dark'] .estado-cuenta-chip.estado-lead {
+  color: #94a3b8;
+}
+
 /* ── SELECTOR ESTADO (PILLS) ────────────────────── */
 .crm-head-actions {
   display: flex;
@@ -133,9 +141,9 @@
   border: 1px solid var(--border-color);
   color: var(--text-muted);
   border-radius: 9999px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
-  padding: 5px 12px;
+  padding: 7px 16px;
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
@@ -148,8 +156,12 @@
 
 .crm-estado-pill.active.estado-lead {
   background: rgba(148, 163, 184, 0.2);
-  color: #e2e8f0;
+  color: #475569;
   border-color: #94a3b8;
+}
+
+[data-bs-theme='dark'] .crm-estado-pill.active.estado-lead {
+  color: #e2e8f0;
 }
 .crm-estado-pill.active.estado-contactada {
   background: rgba(var(--cyan-rgb), 0.2);

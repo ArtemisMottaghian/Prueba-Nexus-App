@@ -5,6 +5,7 @@ export default function BulkActions({
   selectedCount = 0,
   onDiscard,
   onAssign,
+  onUnassign,
   onClear,
   label = 'candidato',
   hrUsers = [],
@@ -50,6 +51,15 @@ export default function BulkActions({
               >
                 <i className="bi bi-person-check"></i>
                 <span className="d-none d-sm-inline ms-1">Asignar</span>
+              </button>
+
+              <button
+                className="btn btn-sm btn-bulk-discard"
+                onClick={onUnassign}
+                title="Quitar reclutador"
+              >
+                <i className="bi bi-person-dash"></i>
+                <span className="d-none d-sm-inline ms-1">Quitar</span>
               </button>
             </>
           )}

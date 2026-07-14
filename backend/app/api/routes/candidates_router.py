@@ -19,6 +19,7 @@ from app.schemas.candidates_schemas import (
     CandidatePublicCreate,
     CandidateScraperStatusOut,
     VerifyRequest,
+    CandidateBulkActionRequest,
 )
 from app.schemas.comments_schemas import CommentCreate, CommentUpdate, CommentResponse
 from app.services import comments_service
@@ -54,7 +55,42 @@ async def read_candidates(
     Permite filtrar los resultados por ubicación, habilidades, estado, fuente de origen y si han sido verificados.
     Se utiliza principalmente para renderizar la tabla principal de candidatos en el Frontend.
     """
-    return await candidates_service.get_all_candidates(db, location, skills, status, source, verified)
+    return await candidates_service.get_all_candidates(
+        db,
+        location,
+        skills,
+        status,
+        source,
+        verified,
+        user_id=current_user.get("id"),
+        user_role=current_user.get("role"),
+    )
+
+
+@router.post("/bulk-actions", response_model=MessageResponse)
+async def bulk_actions(
+    body: CandidateBulkActionRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    if current_user.get("role") not in ("admin", "company"):
+        raise HTTPException(
+            status_code=403, detail="No tienes permisos para asignar candidatos."
+        )
+
+    if body.action == "assign":
+        if not body.target_user:
+            raise HTTPException(status_code=400, detail="Falta el usuario de destino.")
+        n = await candidates_service.assign_candidates(
+            db, body.candidate_ids, body.target_user
+        )
+        return {"message": f"Se han asignado {n} candidatos correctamente"}
+
+    if body.action == "unassign":
+        n = await candidates_service.assign_candidates(db, body.candidate_ids, None)
+        return {"message": f"Se ha quitado la asignación de {n} candidatos"}
+
+    raise HTTPException(status_code=400, detail=f"Acción no soportada: {body.action}")
 
 
 @router.get("/search", response_model=List[CandidateFrontendOut])
@@ -218,7 +254,7 @@ async def verify_candidate(
     }
 
 
-@router.post("/process_cv", response_model=CandidateOut, status_code=201)
+@router.post("/process_cv", status_code=202)
 async def process_cv(
     pdf_file: Optional[UploadFile] = File(None),
     db: AsyncSession = Depends(get_db),
@@ -248,7 +284,13 @@ async def process_cv(
         if not raw_text or not raw_text.strip():
             raise HTTPException(status_code=400, detail="No se pudo extraer el texto del documento PDF.")
 
-        candidate_json = await parse_with_code(raw_text)
+        try:
+            from app.services.ai_service import parse_cv_with_ai
+
+            candidate_json = await parse_cv_with_ai(raw_text)
+        except Exception as e:
+            print(f"[WARN] IA de CV no disponible, uso parser de codigo: {e}")
+            candidate_json = await parse_with_code(raw_text)
 
         email_extraido = candidate_json.get("email", "")
         if not email_extraido or "@" not in email_extraido:
@@ -296,23 +338,20 @@ async def process_cv(
             print(f"⚠️ Error al guardar el PDF físico: {e}")
             cv_url_bd = None
 
-        candidate_payload = CandidateCreate(
-            first_name=fn_final,
-            last_name=ln_final,
-            email=email_extraido,
-            phone=phone_extraido,
-            location=candidate_json.get("location", "España"),
-            source="Inbound (PDF)",
-            experience=candidate_json.get("experience", ""),
-            education=candidate_json.get("education", ""),
-            skills=candidate_json.get("skills", ""),
-            candidate_url=None,
-            cv_url=cv_url_bd, 
-            status="active",
-        )
+        candidate_json["first_name"] = fn_final
+        candidate_json["last_name"] = ln_final
+        candidate_json["email"] = email_extraido
+        candidate_json["phone"] = phone_extraido
+        if cv_url_bd:
+            candidate_json["cv_url"] = cv_url_bd
 
-        new_candidate = await candidates_service.create_candidate(db, candidate_payload)
-        return new_candidate
+        nuevo = await candidates_service.create_candidate_from_cv(db, candidate_json)
+
+        return {
+            "status": "ok",
+            "id": nuevo.id,
+            "mensaje": "Candidato anadido correctamente.",
+        }
 
     except HTTPException:
         raise
@@ -359,7 +398,13 @@ async def extract_cv(
         if not raw_text or not raw_text.strip():
             raise HTTPException(status_code=400, detail="No se pudo extraer el texto del PDF.")
 
-        candidate_json = await parse_with_code(raw_text)
+        try:
+            from app.services.ai_service import parse_cv_with_ai
+
+            candidate_json = await parse_cv_with_ai(raw_text)
+        except Exception as e:
+            print(f"[WARN] IA de CV no disponible, uso parser de codigo: {e}")
+            candidate_json = await parse_with_code(raw_text)
         return candidate_json
 
     except HTTPException:

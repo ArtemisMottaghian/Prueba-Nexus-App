@@ -175,6 +175,13 @@ export default function CandidateCard({
 
       <h3 className="vacante-title">{candidate.name}</h3>
 
+      {candidate.managedByName && (
+        <div className="candidate-recruiter">
+          <i className="bi bi-person-check"></i>
+          Reclutador/a: {candidate.managedByName}
+        </div>
+      )}
+
       <div className="vacante-details">
         <div className="detail-item">
           <div className="detail-icon icon-purple mt-1 align-self-start">
@@ -185,14 +192,6 @@ export default function CandidateCard({
               {candidate.specialty || 'No indicada'}
             </span>
             <div className="d-flex flex-wrap gap-1 mt-1">
-              {candidate.isAvailable && (
-                <span
-                  className="badge badge-disponible d-inline-flex align-items-center"
-                  style={{ width: 'fit-content' }}
-                >
-                  DISPONIBLE
-                </span>
-              )}
               {candidate.verified && (
                 <span
                   className="badge bg-success-subtle text-success d-inline-flex align-items-center"

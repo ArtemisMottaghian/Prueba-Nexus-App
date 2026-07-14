@@ -76,10 +76,23 @@ export default function Clientes() {
     }
   };
 
+  const handleEstadoChange = (clienteId, nuevoEstado) => {
+    setClientes((prev) =>
+      prev.map((c) =>
+        c.id === clienteId ? { ...c, estadoCuenta: nuevoEstado } : c
+      )
+    );
+    setClienteSeleccionado((prev) =>
+      prev && prev.id === clienteId
+        ? { ...prev, estadoCuenta: nuevoEstado }
+        : prev
+    );
+  };
+
   const [busqueda, setBusqueda] = useState('');
   const [filtroSector, setFiltroSector] = useState('Todos');
   const [filtroPrioritario, setFiltroPrioritario] = useState(false);
-  const [vista, setVista] = useState('clientes'); // 'clientes' | 'pendientes'
+  const [vista, setVista] = useState('todas');
   const [itemsPorPagina, setItemsPorPagina] = useState(10);
   const [ordenarPor, setOrdenarPor] = useState('recientes');
 
@@ -95,17 +108,24 @@ export default function Clientes() {
     ...new Set(clientes.map((c) => c.sector).filter(Boolean)),
   ];
 
-  // Separamos por estado: clientes confirmados vs pendientes (leads)
-  const numClientes = clientes.filter(
-    (c) => c.estadoCuenta === 'cliente'
-  ).length;
-  const numPendientes = clientes.length - numClientes;
+  const ESTADOS_CUENTA = [
+    { value: 'todas', label: 'Todas' },
+    { value: 'lead', label: 'Lead' },
+    { value: 'contactada', label: 'Contactada' },
+    { value: 'en_negociacion', label: 'En negociación' },
+    { value: 'cliente', label: 'Cliente' },
+  ];
 
-  const clientesDeVista = clientes.filter((c) =>
-    vista === 'clientes'
-      ? c.estadoCuenta === 'cliente'
-      : c.estadoCuenta !== 'cliente'
-  );
+  const estadoDe = (c) => c.estadoCuenta || 'lead';
+  const contarEstado = (estado) =>
+    estado === 'todas'
+      ? clientes.length
+      : clientes.filter((c) => estadoDe(c) === estado).length;
+
+  const clientesDeVista =
+    vista === 'todas'
+      ? clientes
+      : clientes.filter((c) => estadoDe(c) === vista);
 
   // FILTRO CORREGIDO CON PROTECCIÓN DE UNDEFINED Y COMPANY_NAME
   const clientesFiltrados = clientesDeVista.filter((c) => {
@@ -344,25 +364,18 @@ export default function Clientes() {
         <div>
           {/* Cabecera fija: buscador + filtros */}
           <div className="clientes-list-header">
-            <div className="d-flex gap-2 mb-3">
-              <button
-                className={`btn btn-sm ${
-                  vista === 'clientes' ? 'btn-primary' : 'btn-outline-secondary'
-                }`}
-                onClick={() => setVista('clientes')}
-              >
-                Clientes ({numClientes})
-              </button>
-              <button
-                className={`btn btn-sm ${
-                  vista === 'pendientes'
-                    ? 'btn-primary'
-                    : 'btn-outline-secondary'
-                }`}
-                onClick={() => setVista('pendientes')}
-              >
-                Pendientes ({numPendientes})
-              </button>
+            <div className="d-flex flex-wrap gap-2 mb-3">
+              {ESTADOS_CUENTA.map((e) => (
+                <button
+                  key={e.value}
+                  className={`btn btn-sm ${
+                    vista === e.value ? 'btn-primary' : 'btn-outline-secondary'
+                  }`}
+                  onClick={() => setVista(e.value)}
+                >
+                  {e.label} ({contarEstado(e.value)})
+                </button>
+              ))}
             </div>
             <label
               className="d-flex align-items-center gap-2 mb-2"
@@ -579,6 +592,7 @@ export default function Clientes() {
                     cliente={clienteSeleccionado}
                     onEdit={abrirModalEditar}
                     onDelete={abrirModalEliminar}
+                    onEstadoChange={handleEstadoChange}
                   />
                 </div>
               </div>

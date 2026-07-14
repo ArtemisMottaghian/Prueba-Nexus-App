@@ -17,7 +17,7 @@ cffi==2.0.0
 charset-normalizer==3.4.6
 click==8.3.1
 cloudpathlib==0.23.0
-cmdop==2026.4.7.2
+cmdop==1.1.0
 colorama==0.4.6
 confection==1.3.3
 cryptography==46.0.7
