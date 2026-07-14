@@ -379,3 +379,28 @@
   color: #ff4d4f !important;
   background-color: rgba(255, 77, 79, 0.1) !important;
 }
+
+/* Apartados del CV como lista (experiencia, formacion, idiomas) */
+.cv-list {
+  margin: 0;
+  padding-left: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  list-style: none;
+}
+.cv-list li {
+  position: relative;
+  padding-left: 1rem;
+}
+.cv-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-secondary, #6c757d);
+  opacity: 0.55;
+}

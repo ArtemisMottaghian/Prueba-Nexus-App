@@ -3,6 +3,32 @@ import { CANDIDATE_STATUS_SELECT_OPTIONS } from '../../../constants/candidateSta
 import { ENDPOINTS } from '../../../services/api';
 import './CandidateModal.css';
 
+// Parte el texto de un apartado del CV en entradas: una por salto de linea
+// (o por comas fuera de parentesis, p. ej. idiomas: "Espaniol (nativo), Ingles (C1)")
+const cvItems = (text, { commas = false } = {}) => {
+  if (!text) return [];
+  const sep = commas ? /\n+|,(?![^(]*\))/ : /\n+/;
+  return text
+    .split(sep)
+    .map((s) => s.replace(/^[-–—•·▪]\s*/, '').trim())
+    .filter(Boolean);
+};
+
+// Pinta un apartado del CV: lista con puntos si hay varias entradas,
+// texto normal si solo hay una (o el texto antiguo sin saltos de linea)
+function CvList({ text, empty, commas = false }) {
+  const items = cvItems(text, { commas });
+  if (items.length === 0) return empty;
+  if (items.length === 1) return items[0];
+  return (
+    <ul className="cv-list">
+      {items.map((item, i) => (
+        <li key={i}>{item}</li>
+      ))}
+    </ul>
+  );
+}
+
 export default function CandidateModal({
   candidate,
   onClose,
@@ -346,7 +372,10 @@ export default function CandidateModal({
                           className="field-value text-break flex-grow-1"
                           style={{ whiteSpace: 'pre-line', minWidth: 0 }}
                         >
-                          {candidate.experience || 'No especificada'}
+                          <CvList
+                            text={candidate.experience}
+                            empty="No especificada"
+                          />
                         </div>
                       </div>
                     </div>
@@ -361,7 +390,10 @@ export default function CandidateModal({
                           className="field-value text-break flex-grow-1"
                           style={{ whiteSpace: 'pre-line', minWidth: 0 }}
                         >
-                          {candidate.education || 'No especificada'}
+                          <CvList
+                            text={candidate.education}
+                            empty="No especificada"
+                          />
                         </div>
                       </div>
                     </div>
@@ -376,7 +408,11 @@ export default function CandidateModal({
                           className="field-value text-break flex-grow-1"
                           style={{ whiteSpace: 'pre-line', minWidth: 0 }}
                         >
-                          {candidate.languages || 'No especificados'}
+                          <CvList
+                            text={candidate.languages}
+                            empty="No especificados"
+                            commas
+                          />
                         </div>
                       </div>
                     </div>
