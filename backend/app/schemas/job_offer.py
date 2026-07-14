@@ -99,3 +99,7 @@ class ScrapedJobOffer(JobOfferRequest):
     recruiter_email: Optional[str] = Field(
         default=None, description="Email extraído."
     )
+
+    recruiter_url: Optional[str] = Field(
+        default=None, description="URL del perfil de LinkedIn del reclutador (scraper)."
+    )

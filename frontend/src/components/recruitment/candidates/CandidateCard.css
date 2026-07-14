@@ -112,6 +112,22 @@
   flex-shrink: 0;
   margin-left: auto;
 }
+
+.candidate-recruiter {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  margin-bottom: 14px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--color-purple-primary);
+  background: rgba(91, 63, 255, 0.12);
+  border: 1px solid rgba(91, 63, 255, 0.22);
+}
+
 @media (max-width: 480px) {
   .results-header {
     flex-direction: column;

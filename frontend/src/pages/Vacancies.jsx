@@ -13,6 +13,7 @@ import { usersService } from '../services/userManagementService';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CreateVacancy from '../components/recruitment/vacancies/CreateVacancies';
+import { provinciaDe } from '../utils/provincias';
 
 const OPCIONES_POR_PAGINA = [10, 20, 50];
 
@@ -226,7 +227,9 @@ export default function Vacancies() {
       (sectoresByJob[job.id] || []).includes(filters.industry);
     const matchLocation =
       filters.location === 'All' ||
-      normalizeLocation(job.location).includes(filters.location);
+      (filters.location.startsWith('prov:')
+        ? provinciaDe(job.location) === filters.location.slice(5)
+        : normalizeLocation(job.location).includes(filters.location));
     const matchSource =
       filters.source === 'All' || job.source === filters.source;
 

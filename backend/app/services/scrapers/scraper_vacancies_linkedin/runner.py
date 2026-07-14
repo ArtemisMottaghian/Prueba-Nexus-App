@@ -135,6 +135,7 @@ async def process_job_card(
         "contract_time": details.get("contract_time"),
         "work_modality": modality,
         "recruiter_name": details.get("recruiter_name"),
+        "recruiter_url": details.get("recruiter_url"),
         "recruiter_email": None,
     }
 

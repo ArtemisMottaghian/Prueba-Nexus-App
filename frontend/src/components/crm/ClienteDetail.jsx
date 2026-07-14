@@ -31,7 +31,12 @@ const adaptarVacante = (vacante, cliente) => ({
   salary: null,
 });
 
-export default function ClienteDetail({ cliente, onEdit, onDelete }) {
+export default function ClienteDetail({
+  cliente,
+  onEdit,
+  onDelete,
+  onEstadoChange,
+}) {
   const [vacanteSeleccionada, setVacanteSeleccionada] = useState(null);
   const [notaTexto, setNotaTexto] = useState('');
   const [notas, setNotas] = useState([]);
@@ -63,6 +68,7 @@ export default function ClienteDetail({ cliente, onEdit, onDelete }) {
     }));
     try {
       await updateEstadoCuenta(cliente.id, nuevoEstado);
+      onEstadoChange?.(cliente.id, nuevoEstado);
     } catch (err) {
       console.error('Error actualizando estado de cuenta:', err);
     }

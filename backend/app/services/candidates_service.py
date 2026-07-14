@@ -1,8 +1,10 @@
-from sqlalchemy import select,func,case,distinct
+from sqlalchemy import select,func,case,distinct,update
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from app.models.candidates_model import Candidate 
 from app.schemas.candidates_schemas import CandidateStatus, CandidateCreate,CandidateUpdate,ScraperStatusItem, CandidateScraperStatusOut
+from app.models.user_model import User
+from fastapi import HTTPException
 from datetime import datetime, timezone, timedelta
 import re
 
@@ -13,8 +15,13 @@ async def get_all_candidates(
     status: Optional[CandidateStatus] = None,
     source: Optional[str] = None,
     verified: Optional[bool] = None,
+    user_id: Optional[int] = None,
+    user_role: Optional[str] = None,
 ) -> List[Candidate]:
     query = select(Candidate)
+
+    if user_role == "hr_manager":
+        query = query.where(Candidate.managed_by_id == user_id)
 
     if location:
         query = query.where(Candidate.location.ilike(f"%{location}%"))
@@ -30,6 +37,30 @@ async def get_all_candidates(
     query = query.order_by(Candidate.created_at.desc())
     result = await db.execute(query)
     return result.scalars().all()
+
+async def assign_candidates(
+    db: AsyncSession, candidate_ids: List[int], target_user: Optional[int]
+) -> int:
+    if not candidate_ids:
+        return 0
+
+    if target_user is not None:
+        user = (
+            await db.execute(select(User).where(User.id == target_user))
+        ).scalar_one_or_none()
+        if not user:
+            raise HTTPException(
+                status_code=404, detail="El usuario de destino no existe."
+            )
+
+    result = await db.execute(
+        update(Candidate)
+        .where(Candidate.id.in_(candidate_ids))
+        .values(managed_by_id=target_user)
+    )
+    await db.commit()
+    return result.rowcount
+
 
 async def get_candidate_by_id(db: AsyncSession, candidate_id: int) -> Optional[Candidate]:
     query = select(Candidate).where(Candidate.id == candidate_id)
@@ -47,6 +78,32 @@ async def search_candidates_by_name(db: AsyncSession, name: str) -> List[Candida
     ).order_by(Candidate.created_at.desc())
     result = await db.execute(query)
     return result.scalars().all()
+
+async def create_candidate_from_cv(db: AsyncSession, data: dict) -> Candidate:
+    campos = {
+        "first_name",
+        "last_name",
+        "email",
+        "phone",
+        "location",
+        "source",
+        "experience",
+        "education",
+        "languages",
+        "skills",
+        "cv_url",
+        "candidate_url",
+        "linkedin_url",
+        "github_url",
+        "portfolio_url",
+    }
+    limpio = {k: v for k, v in data.items() if k in campos and v not in (None, "")}
+    nuevo = Candidate(**limpio)
+    db.add(nuevo)
+    await db.commit()
+    await db.refresh(nuevo)
+    return nuevo
+
 
 async def create_candidate(db: AsyncSession, datos: CandidateCreate) -> Candidate:
     nuevo = Candidate(**datos.model_dump())

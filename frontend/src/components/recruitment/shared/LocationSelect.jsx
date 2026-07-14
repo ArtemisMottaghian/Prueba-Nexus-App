@@ -1,11 +1,9 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { MUNI_PROV, PROV_NOMBRE } from '../../../utils/municipioProvincia';
+import { provinciaDe } from '../../../utils/provincias';
 import './LocationSelect.css';
 
 const norm = (s) =>
   (s || '').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-
-const provinciaDe = (loc) => PROV_NOMBRE[MUNI_PROV[norm(loc)]] || null;
 
 export default function LocationSelect({
   value,
@@ -18,6 +16,9 @@ export default function LocationSelect({
   const boxRef = useRef(null);
 
   const selected = value && value !== 'All' ? value : '';
+  const selectedLabel = selected.startsWith('prov:')
+    ? `${selected.slice(5)} (provincia)`
+    : selected;
 
   useEffect(() => {
     if (!open) return;
@@ -99,10 +100,10 @@ export default function LocationSelect({
         type="button"
         className={`pill-select loc-select__trigger ${selected ? 'active' : ''}`}
         onClick={() => setOpen((o) => !o)}
-        title={selected || 'Ubicación: todas'}
+        title={selectedLabel || 'Ubicación: todas'}
       >
         <span className="loc-select__value">
-          {selected || 'Ubicación: todas'}
+          {selectedLabel || 'Ubicación: todas'}
         </span>
         <i className="bi bi-chevron-down loc-select__caret"></i>
       </button>
@@ -128,14 +129,19 @@ export default function LocationSelect({
 
             {gruposFiltrados.map((p) => (
               <div key={p.provincia} className="loc-select__group">
-                <div className="loc-select__prov">
+                <button
+                  type="button"
+                  className="loc-select__prov loc-select__prov--btn"
+                  onClick={() => pick(`prov:${p.provincia}`)}
+                  title={`Toda la provincia de ${p.provincia}`}
+                >
                   <span>{p.provincia}</span>
                   {provTotal(p.ciudades) > 0 && (
                     <span className="loc-select__count loc-select__count--prov">
                       {provTotal(p.ciudades)}
                     </span>
                   )}
-                </div>
+                </button>
                 {p.ciudades.map((c) => (
                   <button
                     key={c}

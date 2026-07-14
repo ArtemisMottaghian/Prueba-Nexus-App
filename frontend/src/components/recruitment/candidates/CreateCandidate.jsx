@@ -21,6 +21,7 @@ export default function CreateCandidate({ onClose, onSave }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [parsedCandidateId, setParsedCandidateId] = useState(null);
   const [errorStatus, setErrorStatus] = useState(null);
+  const [consentMensaje, setConsentMensaje] = useState('');
 
   const fileInputRef = useRef(null);
 
@@ -128,20 +129,8 @@ export default function CreateCandidate({ onClose, onSave }) {
     setCvExtracted(false);
 
     try {
-      const createdCandidate = await candidatesService.processCV(file);
-
-      setFormData({
-        name: createdCandidate.name || '',
-        email: createdCandidate.email || '',
-        phone: createdCandidate.phone || '',
-        education: createdCandidate.education || '',
-        location: createdCandidate.location || '',
-        experience: createdCandidate.experience || '',
-        specialty: createdCandidate.specialty || createdCandidate.skills || '',
-        languages: createdCandidate.languages || '',
-      });
-
-      setParsedCandidateId(createdCandidate.id);
+      const res = await candidatesService.processCV(file);
+      setConsentMensaje(res?.mensaje || 'CV procesado correctamente.');
       setCvExtracted(true);
     } catch (err) {
       console.error('Error al procesar el CV:', err);
@@ -182,6 +171,7 @@ export default function CreateCandidate({ onClose, onSave }) {
     setCvFileName('');
     setCvExtracted(false);
     setErrorStatus(null);
+    setConsentMensaje('');
     setParsedCandidateId(null);
     setFormData({
       name: '',
@@ -275,10 +265,7 @@ export default function CreateCandidate({ onClose, onSave }) {
                   <div className="cv-success-banner d-flex justify-content-between align-items-center p-3 mb-4 bg-success-subtle text-success rounded border border-success">
                     <div className="cv-success-left">
                       <i className="bi bi-check-circle-fill me-2"></i>
-                      <span>
-                        Datos extraídos con éxito — Revisa los campos antes de
-                        guardar.
-                      </span>
+                      <span>{consentMensaje}</span>
                     </div>
                     <button
                       type="button"

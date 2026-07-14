@@ -11,6 +11,8 @@ from sqlalchemy.orm import selectinload
 from app.models.job_model import JobOffer
 from app.models.candidates_model import Candidate
 from app.schemas.ai_schemas import MatchResult
+from app.services.llm_parser import parse_with_code
+from pydantic import BaseModel
 
 load_dotenv()
 
@@ -22,6 +24,8 @@ if not api_key:
     )
 
 client = genai.Client(api_key=api_key)
+
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
 
 
 async def fetch_pre_filtered_candidates(
@@ -196,7 +200,7 @@ def get_match_from_gemini(prompt: str) -> dict:
         dict: Diccionario que representa la respuesta del modelo procesada según el esquema `MatchResult`.
     """
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model=GEMINI_MODEL,
         contents=prompt,
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
@@ -205,6 +209,105 @@ def get_match_from_gemini(prompt: str) -> dict:
         ),
     )
     return json.loads(response.text)
+
+
+class CVData(BaseModel):
+    first_name: str = ""
+    last_name: str = ""
+    email: str = ""
+    phone: str = ""
+    location: str = ""
+    experience: str = ""
+    education: str = ""
+    languages: str = ""
+    skills: str = ""
+
+
+_CV_PROMPT = (
+    "Eres un asistente de RRHH. Extrae los datos del siguiente CV y devuelvelos en JSON.\n"
+    "Reglas:\n"
+    "- first_name / last_name: nombre y apellidos de la persona.\n"
+    "- location: SOLO la ciudad o municipio de residencia, sin pais ni provincia. Si no aparece, cadena vacia.\n"
+    "- experience: resumen breve de la experiencia (puestos y anios aprox.). Si no hay, cadena vacia.\n"
+    "- education: la titulacion o formacion academica principal. Si no hay, cadena vacia.\n"
+    "- languages: idiomas con su nivel, ej. 'Espaniol (nativo), Ingles (C1)'. Si no hay, cadena vacia.\n"
+    "- skills: tecnologias y habilidades separadas por comas. Si no hay, cadena vacia.\n"
+    "- No inventes datos: si algo no aparece en el CV, deja la cadena vacia.\n\n"
+    "CV:\n---\n"
+)
+
+
+async def parse_cv_with_ai(raw_text: str) -> dict:
+    """Extrae los datos de un CV con Gemini; si falla, usa el parser de codigo."""
+    try:
+        prompt = _CV_PROMPT + (raw_text or "")[:15000] + "\n---"
+        response = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=CVData,
+                temperature=0.1,
+            ),
+        )
+        data = json.loads(response.text)
+        return {
+            "first_name": (data.get("first_name") or "").strip(),
+            "last_name": (data.get("last_name") or "").strip(),
+            "email": (data.get("email") or "").strip(),
+            "phone": (data.get("phone") or "").strip(),
+            "location": (data.get("location") or "").strip(),
+            "experience": (data.get("experience") or "").strip(),
+            "education": (data.get("education") or "").strip(),
+            "languages": (data.get("languages") or "").strip(),
+            "skills": (data.get("skills") or "").strip(),
+        }
+    except Exception as e:
+        print(f"[WARN] Gemini no pudo procesar el CV, uso el parser de codigo: {e}")
+        return await parse_with_code(raw_text)
+
+
+class ContactoTexto(BaseModel):
+    nombre: str = ""
+    email: str = ""
+    cargo: str = ""
+
+
+_EMAIL_RE = re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
+
+_CONTACT_PROMPT = (
+    "Del siguiente texto de una oferta de empleo, extrae la persona de contacto "
+    "(reclutador o RRHH) si se menciona. Devuelve JSON con nombre, email y cargo. "
+    "Si algo no aparece, deja cadena vacia. No inventes datos.\n\nTexto:\n---\n"
+)
+
+
+async def parse_contact_from_text(text: str) -> dict:
+    """Extrae un contacto del texto de una oferta: email por regex (fiable) y
+    nombre/cargo con Gemini (best-effort). Nunca lanza; devuelve dict."""
+    text = (text or "")[:8000]
+    m = _EMAIL_RE.search(text)
+    email_regex = m.group(0).lower() if m else ""
+
+    nombre, cargo, email_ai = "", "", ""
+    try:
+        response = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=_CONTACT_PROMPT + text + "\n---",
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=ContactoTexto,
+                temperature=0.1,
+            ),
+        )
+        data = json.loads(response.text)
+        nombre = (data.get("nombre") or "").strip()
+        cargo = (data.get("cargo") or "").strip()
+        email_ai = (data.get("email") or "").strip()
+    except Exception as e:
+        print(f"[WARN] IA de contacto no disponible: {e}")
+
+    return {"nombre": nombre, "email": email_ai or email_regex, "cargo": cargo}
 
 
 async def calculate_vacancy_match(db: AsyncSession, vacancy_id: int) -> dict:
