@@ -25,6 +25,7 @@ class Candidate(Base):
     portfolio_url = Column(Text, nullable=True)
     cv_url = Column(Text, nullable=True)
     skills = Column(Text, nullable=True, index=True)
+    profile = Column(Text, nullable=True)
 
     managed_by_id = Column(BigInteger, ForeignKey("users.id"), nullable=True, index=True)
 

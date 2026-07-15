@@ -380,6 +380,22 @@
   background-color: rgba(255, 77, 79, 0.1) !important;
 }
 
+/* Habilidades como etiquetas */
+.skill-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.skill-chip {
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(91, 63, 255, 0.08);
+  color: var(--color-purple-primary, #5b3fff);
+  border: 1px solid rgba(91, 63, 255, 0.15);
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
 /* Apartados del CV como lista (experiencia, formacion, idiomas) */
 .cv-list {
   margin: 0;

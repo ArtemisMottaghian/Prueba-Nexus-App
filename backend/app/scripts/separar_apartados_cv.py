@@ -42,16 +42,23 @@ async def separar(todos: bool = False):
         for c in candidatos:
             exp = (c.experience or "").strip()
             edu = (c.education or "").strip()
+            skl = (c.skills or "").strip()
+            prf = (c.profile or "").strip()
 
+            hay_datos = exp or edu or skl
             if todos:
-                if not exp and not edu:
+                if not hay_datos:
                     continue
-            elif not _necesita_separar(exp) and not _educacion_sin_limpiar(edu):
+            elif not (
+                _necesita_separar(exp)
+                or _educacion_sin_limpiar(edu)
+                or (not prf and hay_datos)
+            ):
                 continue
 
             revisados += 1
             try:
-                data = await separar_apartados_cv(exp, edu)
+                data = await separar_apartados_cv(exp, edu, skl)
             except Exception as e:
                 print(f"  - Error con candidato {c.id}: {e}")
                 continue
@@ -59,11 +66,21 @@ async def separar(todos: bool = False):
             # Se acepta tambien vacio: significa que no habia nada valido
             nuevo_exp = (data.get("experience") or "").strip()
             nuevo_edu = (data.get("education") or "").strip()
+            nuevo_prf = (data.get("profile") or "").strip()
+
+            cambiado = False
             if nuevo_exp != exp or nuevo_edu != edu:
                 c.experience = nuevo_exp
                 c.education = nuevo_edu
+                cambiado = True
+            # El perfil solo se pisa si no habia uno (o con --todos)
+            if nuevo_prf and (todos or not prf):
+                c.profile = nuevo_prf
+                cambiado = True
+
+            if cambiado:
                 actualizados += 1
-                print(f"  * Candidato {c.id} separado")
+                print(f"  * Candidato {c.id} actualizado")
 
         await db.commit()
         print(f"Candidatos revisados: {revisados}")

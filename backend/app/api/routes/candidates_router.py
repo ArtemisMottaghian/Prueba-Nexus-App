@@ -361,6 +361,7 @@ async def process_cv(
                 "education": candidate_json.get("education") or "",
                 "languages": candidate_json.get("languages") or "",
                 "skills": candidate_json.get("skills") or "",
+                "profile": candidate_json.get("profile") or "",
             },
         }
 

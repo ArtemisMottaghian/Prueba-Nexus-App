@@ -33,6 +33,7 @@ const mapCandidateData = (c) => ({
   id: c.id,
   name: buildFullName(c),
   specialty: c.specialty || 'N/A',
+  profile: c.profile || null,
   location: c.location || 'Remoto',
   status: c.status,
   source: c.source || 'N/A',

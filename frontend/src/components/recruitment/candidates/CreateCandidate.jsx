@@ -12,6 +12,7 @@ export default function CreateCandidate({ onClose, onSave }) {
     experience: '',
     specialty: '',
     languages: '',
+    profile: '',
   });
 
   const [isParsing, setIsParsing] = useState(false);
@@ -52,6 +53,7 @@ export default function CreateCandidate({ onClose, onSave }) {
       experience: String(formData.experience || '').trim(),
       skills: formData.specialty.trim(),
       languages: formData.languages.trim(),
+      profile: formData.profile.trim(),
     };
     const finalData = Object.fromEntries(
       Object.entries(rawData).filter(
@@ -145,6 +147,7 @@ export default function CreateCandidate({ onClose, onSave }) {
           experience: c.experience || '',
           specialty: c.skills || '',
           languages: c.languages || '',
+          profile: c.profile || '',
         });
       }
       if (res?.id) setParsedCandidateId(res.id);
@@ -199,6 +202,7 @@ export default function CreateCandidate({ onClose, onSave }) {
       experience: '',
       specialty: '',
       languages: '',
+      profile: '',
     });
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -341,6 +345,21 @@ export default function CreateCandidate({ onClose, onSave }) {
                         onChange={handleChange}
                       />
                     </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label htmlFor="profile" className="form-label fw-semibold">
+                      Perfil (resumen)
+                    </label>
+                    <textarea
+                      className="form-control"
+                      id="profile"
+                      name="profile"
+                      rows="2"
+                      value={formData.profile}
+                      onChange={handleChange}
+                      placeholder="Resumen profesional de 1-2 frases"
+                    />
                   </div>
 
                   <div className="mb-3">

@@ -72,6 +72,11 @@ export default function CandidateModal({
     candidate.candidateUrl,
   ].filter(Boolean);
 
+  const habilidades = (candidate.specialty || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s && s !== 'N/A' && s !== 'Sin especificar');
+
   const handleSave = () => {
     onUpdateStatus(candidate.id, localStatus);
     onClose();
@@ -134,15 +139,9 @@ export default function CandidateModal({
               <div className="flex-grow-1">
                 <h2 className="modal-title">{candidate.name}</h2>
                 <div className="d-flex align-items-center gap-2 mt-1 flex-wrap">
-                  <span className="modal-subtitle">{candidate.specialty}</span>
-                  {candidate.isAvailable && (
-                    <span
-                      className="badge badge-client-sm d-inline-flex align-items-center"
-                      style={{ width: 'fit-content', whiteSpace: 'nowrap' }}
-                    >
-                      Disponible
-                    </span>
-                  )}
+                  <span className="modal-subtitle">
+                    {candidate.profile || candidate.specialty}
+                  </span>
                   {candidate.verified && (
                     <span className="badge bg-success-subtle text-success d-inline-flex align-items-center">
                       <i className="bi bi-patch-check-fill me-1" />
@@ -413,6 +412,31 @@ export default function CandidateModal({
                             empty="No especificados"
                             commas
                           />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="detail-section">
+                      <h4 className="section-title">Habilidades</h4>
+                      <div className="detail-field d-flex align-items-start gap-3">
+                        <div className="detail-icon icon-purple flex-shrink-0 mt-1">
+                          <i className="bi bi-tools"></i>
+                        </div>
+                        <div
+                          className="field-value flex-grow-1"
+                          style={{ minWidth: 0 }}
+                        >
+                          {habilidades.length > 0 ? (
+                            <div className="skill-chips">
+                              {habilidades.map((h, i) => (
+                                <span key={i} className="skill-chip">
+                                  {h}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            'No especificadas'
+                          )}
                         </div>
                       </div>
                     </div>

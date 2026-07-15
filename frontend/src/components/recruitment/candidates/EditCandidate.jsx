@@ -11,6 +11,7 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
     experience: candidate?.experience || '',
     specialty: candidate?.specialty || candidate?.skills || '',
     languages: candidate?.languages || '',
+    profile: candidate?.profile || '',
     linkedin: candidate?.linkedinUrl || '',
     github: candidate?.githubUrl || '',
     portfolio: candidate?.portfolioUrl || '',
@@ -45,6 +46,7 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
       experience: String(formData.experience || '').trim(),
       skills: formData.specialty.trim(),
       languages: formData.languages.trim(),
+      profile: formData.profile.trim(),
       linkedin_url: formData.linkedin.trim(),
       github_url: formData.github.trim(),
       portfolio_url: formData.portfolio.trim(),
@@ -137,6 +139,20 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
                 </div>
 
                 {/* Perfil */}
+                <div className="mb-3">
+                  <label htmlFor="profile" className="form-label fw-semibold">
+                    Perfil (resumen)
+                  </label>
+                  <textarea
+                    className="form-control"
+                    id="profile"
+                    name="profile"
+                    rows="2"
+                    value={formData.profile}
+                    onChange={handleChange}
+                    placeholder="Resumen profesional de 1-2 frases"
+                  />
+                </div>
                 <div className="mb-3">
                   <label htmlFor="education" className="form-label fw-semibold">
                     Formación académica
