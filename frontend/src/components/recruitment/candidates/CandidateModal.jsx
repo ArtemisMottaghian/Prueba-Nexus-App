@@ -53,7 +53,7 @@ export default function CandidateModal({
 
   // Documentos locales
   const [localDocs, setLocalDocs] = useState(candidate?.documentos || []);
-  const [docTipo, setDocTipo] = useState('CV');
+  const [docTipo, setDocTipo] = useState('');
   const [draggingOver, setDraggingOver] = useState(false);
 
   if (!candidate) return null;
@@ -101,6 +101,10 @@ export default function CandidateModal({
 
   const handleAdjuntarArchivos = (files) => {
     if (!files?.length) return;
+    if (!docTipo) {
+      alert('Selecciona primero el tipo de documento.');
+      return;
+    }
     const nuevos = Array.from(files).map((f) => ({
       nombre: f.name,
       tipo: docTipo,
@@ -584,18 +588,27 @@ export default function CandidateModal({
                       <h4 className="section-title">ADJUNTAR DOCUMENTOS</h4>
 
                       <div className="doc-upload-row mb-3">
-                        <select
-                          className="form-select input-field doc-tipo-select"
-                          value={docTipo}
-                          onChange={(e) => setDocTipo(e.target.value)}
-                        >
-                          <option>CV</option>
-                          <option>Oferta económica</option>
-                          <option>Contrato</option>
-                          <option>Prueba técnica</option>
-                          <option>Informe</option>
-                          <option>Otro</option>
-                        </select>
+                        <div>
+                          <label className="field-label" htmlFor="doc-tipo">
+                            TIPO DE DOCUMENTO
+                          </label>
+                          <select
+                            id="doc-tipo"
+                            className="form-select input-field doc-tipo-select"
+                            value={docTipo}
+                            onChange={(e) => setDocTipo(e.target.value)}
+                          >
+                            <option value="" disabled>
+                              Selecciona tipo de documento…
+                            </option>
+                            <option>CV</option>
+                            <option>Oferta económica</option>
+                            <option>Contrato</option>
+                            <option>Prueba técnica</option>
+                            <option>Informe</option>
+                            <option>Otro</option>
+                          </select>
+                        </div>
                         <label
                           className={`doc-dropzone ${draggingOver ? 'doc-dropzone--active' : ''}`}
                           onDragOver={(e) => {
