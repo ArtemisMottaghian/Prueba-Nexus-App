@@ -162,7 +162,11 @@ export default function CandidateModal({
                 <select
                   className="form-select select-status-inline"
                   value={localStatus}
-                  onChange={(e) => setLocalStatus(e.target.value)}
+                  onChange={(e) => {
+                    // Se guarda al momento, sin esperar a "Guardar cambios"
+                    setLocalStatus(e.target.value);
+                    onUpdateStatus(candidate.id, e.target.value);
+                  }}
                 >
                   {CANDIDATE_STATUS_SELECT_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>
