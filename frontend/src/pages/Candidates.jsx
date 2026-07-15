@@ -289,7 +289,10 @@ export default function Candidates() {
     });
   };
 
-  const handleUpdateCandidateStatus = (candidateId, newStatus) => {
+  const handleUpdateCandidateStatus = async (candidateId, newStatus) => {
+    const estadoAnterior = candidates.find((c) => c.id === candidateId)?.status;
+
+    // Optimista: se refleja al momento en la pantalla
     setCandidates((prevCandidates) =>
       prevCandidates.map((candidate) =>
         candidate.id === candidateId
@@ -297,6 +300,21 @@ export default function Candidates() {
           : candidate
       )
     );
+
+    // Y se guarda de verdad en el servidor
+    try {
+      await candidatesService.updateCandidateStatus(candidateId, newStatus);
+    } catch (err) {
+      console.error('No se pudo guardar el estado del candidato:', err);
+      // Si el servidor lo rechaza, volvemos al estado anterior
+      setCandidates((prevCandidates) =>
+        prevCandidates.map((candidate) =>
+          candidate.id === candidateId
+            ? { ...candidate, status: estadoAnterior }
+            : candidate
+        )
+      );
+    }
   };
 
   // El filtro "Sector" usa las familias profesionales (sectores), igual que Vacantes.

@@ -63,7 +63,9 @@ export default function CandidateCard({
             <span className="detail-text">{candidate.specialty}</span>
             <span className="text-muted small d-none d-lg-block">|</span>
             <span className="detail-text text-muted small">
-              {candidate.experience || 'Experiencia no indicada'}
+              {/* Solo la primera linea (puesto mas reciente); el detalle va en la ficha */}
+              {(candidate.experience || '').split('\n')[0] ||
+                'Experiencia no indicada'}
             </span>
           </div>
 

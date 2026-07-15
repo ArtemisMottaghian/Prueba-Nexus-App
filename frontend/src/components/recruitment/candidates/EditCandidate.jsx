@@ -11,6 +11,7 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
     experience: candidate?.experience || '',
     specialty: candidate?.specialty || candidate?.skills || '',
     languages: candidate?.languages || '',
+    profile: candidate?.profile || '',
     linkedin: candidate?.linkedinUrl || '',
     github: candidate?.githubUrl || '',
     portfolio: candidate?.portfolioUrl || '',
@@ -45,6 +46,7 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
       experience: String(formData.experience || '').trim(),
       skills: formData.specialty.trim(),
       languages: formData.languages.trim(),
+      profile: formData.profile.trim(),
       linkedin_url: formData.linkedin.trim(),
       github_url: formData.github.trim(),
       portfolio_url: formData.portfolio.trim(),
@@ -137,54 +139,50 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
                 </div>
 
                 {/* Perfil */}
-                <div className="row">
-                  <div className="col-md-6 mb-3">
-                    <label
-                      htmlFor="education"
-                      className="form-label fw-semibold"
-                    >
-                      Formación / Titulación
-                    </label>
-                    <select
-                      className="form-select"
-                      id="education"
-                      name="education"
-                      value={formData.education}
-                      onChange={handleChange}
-                    >
-                      <option value="">Selecciona una opción...</option>
-                      <option value="Bootcamp">Bootcamp</option>
-                      <option value="FP Grado Medio">FP Grado Medio</option>
-                      <option value="FP Grado Superior">
-                        FP Grado Superior
-                      </option>
-                      <option value="Grado Universitario">
-                        Grado Universitario
-                      </option>
-                      <option value="Máster">Máster</option>
-                      <option value="Autodidacta">Autodidacta</option>
-                    </select>
-                  </div>
-                  <div className="col-md-6 mb-3">
-                    <label
-                      htmlFor="experience"
-                      className="form-label fw-semibold"
-                    >
-                      Años de experiencia
-                    </label>
-                    <div className="input-group">
-                      <input
-                        type="number"
-                        className="form-control"
-                        id="experience"
-                        name="experience"
-                        value={formData.experience}
-                        onChange={handleChange}
-                        min="0"
-                      />
-                      <span className="input-group-text">años</span>
-                    </div>
-                  </div>
+                <div className="mb-3">
+                  <label htmlFor="profile" className="form-label fw-semibold">
+                    Perfil (resumen)
+                  </label>
+                  <textarea
+                    className="form-control"
+                    id="profile"
+                    name="profile"
+                    rows="2"
+                    value={formData.profile}
+                    onChange={handleChange}
+                    placeholder="Resumen profesional de 1-2 frases"
+                  />
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="education" className="form-label fw-semibold">
+                    Formación académica
+                  </label>
+                  <textarea
+                    className="form-control"
+                    id="education"
+                    name="education"
+                    rows="3"
+                    value={formData.education}
+                    onChange={handleChange}
+                    placeholder="Una titulación por línea"
+                  />
+                </div>
+                <div className="mb-3">
+                  <label
+                    htmlFor="experience"
+                    className="form-label fw-semibold"
+                  >
+                    Experiencia profesional
+                  </label>
+                  <textarea
+                    className="form-control"
+                    id="experience"
+                    name="experience"
+                    rows="4"
+                    value={formData.experience}
+                    onChange={handleChange}
+                    placeholder="Un puesto por línea"
+                  />
                 </div>
 
                 {/* Localización y Habilidades */}

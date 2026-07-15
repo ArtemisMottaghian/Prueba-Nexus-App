@@ -12,6 +12,7 @@ export default function CreateCandidate({ onClose, onSave }) {
     experience: '',
     specialty: '',
     languages: '',
+    profile: '',
   });
 
   const [isParsing, setIsParsing] = useState(false);
@@ -52,6 +53,7 @@ export default function CreateCandidate({ onClose, onSave }) {
       experience: String(formData.experience || '').trim(),
       skills: formData.specialty.trim(),
       languages: formData.languages.trim(),
+      profile: formData.profile.trim(),
     };
     const finalData = Object.fromEntries(
       Object.entries(rawData).filter(
@@ -131,6 +133,24 @@ export default function CreateCandidate({ onClose, onSave }) {
     try {
       const res = await candidatesService.processCV(file);
       setConsentMensaje(res?.mensaje || 'CV procesado correctamente.');
+
+      // Rellenar el formulario con lo extraido del CV para poder revisarlo.
+      // Al guardar, como ya existe el candidato (parsedCandidateId), se actualiza.
+      const c = res?.candidato;
+      if (c) {
+        setFormData({
+          name: [c.first_name, c.last_name].filter(Boolean).join(' '),
+          email: c.email || '',
+          phone: c.phone || '',
+          education: c.education || '',
+          location: c.location || '',
+          experience: c.experience || '',
+          specialty: c.skills || '',
+          languages: c.languages || '',
+          profile: c.profile || '',
+        });
+      }
+      if (res?.id) setParsedCandidateId(res.id);
       setCvExtracted(true);
     } catch (err) {
       console.error('Error al procesar el CV:', err);
@@ -182,6 +202,7 @@ export default function CreateCandidate({ onClose, onSave }) {
       experience: '',
       specialty: '',
       languages: '',
+      profile: '',
     });
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -326,54 +347,59 @@ export default function CreateCandidate({ onClose, onSave }) {
                     </div>
                   </div>
 
-                  <div className="row">
-                    <div className="col-md-6 mb-3">
-                      <label
-                        htmlFor="education"
-                        className="form-label fw-semibold"
-                      >
-                        Formación / Titulación
-                      </label>
-                      <select
-                        className="form-select"
-                        id="education"
-                        name="education"
-                        value={formData.education}
-                        onChange={handleChange}
-                      >
-                        <option value="">Selecciona una opción...</option>
-                        <option value="Bootcamp">Bootcamp</option>
-                        <option value="FP Grado Medio">FP Grado Medio</option>
-                        <option value="FP Grado Superior">
-                          FP Grado Superior
-                        </option>
-                        <option value="Grado Universitario">
-                          Grado Universitario
-                        </option>
-                        <option value="Máster">Máster</option>
-                        <option value="Autodidacta">Autodidacta</option>
-                      </select>
-                    </div>
-                    <div className="col-md-6 mb-3">
-                      <label
-                        htmlFor="experience"
-                        className="form-label fw-semibold"
-                      >
-                        Años de experiencia
-                      </label>
-                      <div className="input-group">
-                        <input
-                          type="number"
-                          className="form-control"
-                          id="experience"
-                          name="experience"
-                          value={formData.experience}
-                          onChange={handleChange}
-                          min="0"
-                        />
-                        <span className="input-group-text">años</span>
-                      </div>
-                    </div>
+                  <div className="mb-3">
+                    <label htmlFor="profile" className="form-label fw-semibold">
+                      Perfil (resumen)
+                    </label>
+                    <textarea
+                      className="form-control"
+                      id="profile"
+                      name="profile"
+                      rows="2"
+                      value={formData.profile}
+                      onChange={handleChange}
+                      placeholder="Resumen profesional de 1-2 frases"
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label
+                      htmlFor="education"
+                      className="form-label fw-semibold"
+                    >
+                      Formación académica
+                    </label>
+                    <textarea
+                      className="form-control"
+                      id="education"
+                      name="education"
+                      rows="3"
+                      value={formData.education}
+                      onChange={handleChange}
+                      placeholder={
+                        'Una titulación por línea. Ej:\nGrado en Trabajo Social\nMáster Full Stack Developer'
+                      }
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label
+                      htmlFor="experience"
+                      className="form-label fw-semibold"
+                    >
+                      Experiencia profesional
+                    </label>
+                    <textarea
+                      className="form-control"
+                      id="experience"
+                      name="experience"
+                      rows="4"
+                      value={formData.experience}
+                      onChange={handleChange}
+                      placeholder={
+                        'Un puesto por línea. Ej:\nMediadora Social - Cruz Roja Española (2023-2024)'
+                      }
+                    />
                   </div>
 
                   <div className="mb-3">

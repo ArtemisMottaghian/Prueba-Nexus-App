@@ -221,6 +221,7 @@ class CVData(BaseModel):
     education: str = ""
     languages: str = ""
     skills: str = ""
+    profile: str = ""
 
 
 _CV_PROMPT = (
@@ -228,10 +229,17 @@ _CV_PROMPT = (
     "Reglas:\n"
     "- first_name / last_name: nombre y apellidos de la persona.\n"
     "- location: SOLO la ciudad o municipio de residencia, sin pais ni provincia. Si no aparece, cadena vacia.\n"
-    "- experience: resumen breve de la experiencia (puestos y anios aprox.). Si no hay, cadena vacia.\n"
-    "- education: la titulacion o formacion academica principal. Si no hay, cadena vacia.\n"
+    "- experience: los puestos de trabajo de la persona, CADA PUESTO EN UNA LINEA NUEVA "
+    "(separados por salto de linea), formato 'Puesto - Empresa/Organismo (anios aprox.)'. "
+    "No incluyas proyectos personales, tecnologias ni habilidades sueltas. Si no hay, cadena vacia.\n"
+    "- education: SOLO el nombre de cada titulacion (ej. 'Grado en Trabajo Social'), "
+    "sin universidad, centro ni fechas, CADA UNA EN UNA LINEA NUEVA, la principal primero. "
+    "Si no hay, cadena vacia.\n"
     "- languages: idiomas con su nivel, ej. 'Espaniol (nativo), Ingles (C1)'. Si no hay, cadena vacia.\n"
     "- skills: tecnologias y habilidades separadas por comas. Si no hay, cadena vacia.\n"
+    "- profile: resumen profesional del candidato en 1 o 2 frases, combinando lo mas "
+    "relevante de su experiencia, formacion y habilidades. Si el CV trae una seccion de "
+    "perfil, apoyate en ella.\n"
     "- No inventes datos: si algo no aparece en el CV, deja la cadena vacia.\n\n"
     "CV:\n---\n"
 )
@@ -261,10 +269,72 @@ async def parse_cv_with_ai(raw_text: str) -> dict:
             "education": (data.get("education") or "").strip(),
             "languages": (data.get("languages") or "").strip(),
             "skills": (data.get("skills") or "").strip(),
+            "profile": (data.get("profile") or "").strip(),
         }
     except Exception as e:
         print(f"[WARN] Gemini no pudo procesar el CV, uso el parser de codigo: {e}")
         return await parse_with_code(raw_text)
+
+
+class ApartadosCV(BaseModel):
+    experience: str = ""
+    education: str = ""
+    profile: str = ""
+
+
+_SEPARAR_CV_PROMPT = (
+    "Eres un asistente de RRHH. Te paso la experiencia, la formacion y las habilidades "
+    "de un candidato tal y como estan guardadas (todo seguido, separado por comas). "
+    "Reconoce cada puesto y cada titulacion y devuelvelos separados, UNO POR LINEA "
+    "(salto de linea entre entradas).\n"
+    "Reglas:\n"
+    "- experience: SOLO puestos de trabajo reales (rol y/o empresa u organismo, con fechas "
+    "si las hay), cada puesto en una linea. Manten junta en la misma linea la informacion "
+    "del mismo puesto (departamento, facultad, organismo, fechas...).\n"
+    "- education: SOLO el nombre de cada titulacion (ej. 'Grado en Trabajo Social'), "
+    "sin universidad, centro ni fechas, una por linea.\n"
+    "- DESCARTA lo que no sea un puesto o una titulacion: titulos de seccion (PROYECTOS, "
+    "HERRAMIENTAS...), listas de tecnologias o habilidades, enlaces, y frases cortadas o "
+    "sin sentido.\n"
+    "- Si el texto llega troceado, une los trozos que claramente pertenecen a la misma entrada.\n"
+    "- profile: ademas, redacta un resumen profesional del candidato en 1 o 2 frases, "
+    "combinando lo mas relevante de su experiencia, formacion y habilidades. "
+    "Si no hay informacion suficiente, cadena vacia.\n"
+    "- No inventes informacion que no este en el texto.\n"
+    "- Si un campo llega vacio o no queda nada valido, devuelvelo vacio.\n\n"
+)
+
+
+async def separar_apartados_cv(
+    experience: str, education: str, skills: str = ""
+) -> dict:
+    """Re-separa en lineas (una entrada por linea) la experiencia y formacion
+    de candidatos antiguos que se guardaron todo seguido, y genera su perfil."""
+    prompt = (
+        _SEPARAR_CV_PROMPT
+        + "EXPERIENCIA:\n---\n"
+        + (experience or "")[:4000]
+        + "\n---\n\nFORMACION:\n---\n"
+        + (education or "")[:4000]
+        + "\n---\n\nHABILIDADES:\n---\n"
+        + (skills or "")[:1000]
+        + "\n---"
+    )
+    response = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=ApartadosCV,
+            temperature=0.1,
+        ),
+    )
+    data = json.loads(response.text)
+    return {
+        "experience": (data.get("experience") or "").strip(),
+        "education": (data.get("education") or "").strip(),
+        "profile": (data.get("profile") or "").strip(),
+    }
 
 
 class ContactoTexto(BaseModel):

@@ -25,6 +25,7 @@ class CandidateBase(BaseModel):
     cv_url: Optional[str] = None 
     
     skills: Optional[str] = Field(None)
+    profile: Optional[str] = None
     notes: Optional[str] = Field(None, max_length=1000)
     status: Optional[CandidateStatus] = CandidateStatus.active
     location: Optional[str] = Field(None, max_length=255)
@@ -56,6 +57,7 @@ class CandidateUpdate(BaseModel):
     cv_url: Optional[str] = None 
     
     skills: Optional[str] = Field(None)
+    profile: Optional[str] = None
     notes: Optional[str] = Field(None, max_length=1000)
     status: Optional[CandidateStatus] = None
     location: Optional[str] = Field(None, max_length=255)
@@ -93,6 +95,7 @@ class CandidateFrontendOut(BaseModel):
     id: int
     name: str
     specialty: str
+    profile: Optional[str] = None
     location: str
     status: str
     source: str
@@ -129,6 +132,7 @@ class CandidateFrontendOut(BaseModel):
                 "name": f"{data.first_name} {data.last_name}".strip(),
                 # Si skills es None, devolvemos un texto amigable
                 "specialty": getattr(data, "skills", None) or "Sin especificar",
+                "profile": getattr(data, "profile", None),
                 # Usamos location según lo tengamos en la base de datos
                 "location": getattr(data, "location", None) or "No indicada",
                 # Lógica de origen: Si viene del scraper tendrá un ID de origen

@@ -3,6 +3,32 @@ import { CANDIDATE_STATUS_SELECT_OPTIONS } from '../../../constants/candidateSta
 import { ENDPOINTS } from '../../../services/api';
 import './CandidateModal.css';
 
+// Parte el texto de un apartado del CV en entradas: una por salto de linea
+// (o por comas fuera de parentesis, p. ej. idiomas: "Espaniol (nativo), Ingles (C1)")
+const cvItems = (text, { commas = false } = {}) => {
+  if (!text) return [];
+  const sep = commas ? /\n+|,(?![^(]*\))/ : /\n+/;
+  return text
+    .split(sep)
+    .map((s) => s.replace(/^[-–—•·▪]\s*/, '').trim())
+    .filter(Boolean);
+};
+
+// Pinta un apartado del CV: lista con puntos si hay varias entradas,
+// texto normal si solo hay una (o el texto antiguo sin saltos de linea)
+function CvList({ text, empty, commas = false }) {
+  const items = cvItems(text, { commas });
+  if (items.length === 0) return empty;
+  if (items.length === 1) return items[0];
+  return (
+    <ul className="cv-list">
+      {items.map((item, i) => (
+        <li key={i}>{item}</li>
+      ))}
+    </ul>
+  );
+}
+
 export default function CandidateModal({
   candidate,
   onClose,
@@ -27,7 +53,7 @@ export default function CandidateModal({
 
   // Documentos locales
   const [localDocs, setLocalDocs] = useState(candidate?.documentos || []);
-  const [docTipo, setDocTipo] = useState('CV');
+  const [docTipo, setDocTipo] = useState('');
   const [draggingOver, setDraggingOver] = useState(false);
 
   if (!candidate) return null;
@@ -45,6 +71,11 @@ export default function CandidateModal({
     candidate.portfolioUrl,
     candidate.candidateUrl,
   ].filter(Boolean);
+
+  const habilidades = (candidate.specialty || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s && s !== 'N/A' && s !== 'Sin especificar');
 
   const handleSave = () => {
     onUpdateStatus(candidate.id, localStatus);
@@ -70,6 +101,10 @@ export default function CandidateModal({
 
   const handleAdjuntarArchivos = (files) => {
     if (!files?.length) return;
+    if (!docTipo) {
+      alert('Selecciona primero el tipo de documento.');
+      return;
+    }
     const nuevos = Array.from(files).map((f) => ({
       nombre: f.name,
       tipo: docTipo,
@@ -108,15 +143,9 @@ export default function CandidateModal({
               <div className="flex-grow-1">
                 <h2 className="modal-title">{candidate.name}</h2>
                 <div className="d-flex align-items-center gap-2 mt-1 flex-wrap">
-                  <span className="modal-subtitle">{candidate.specialty}</span>
-                  {candidate.isAvailable && (
-                    <span
-                      className="badge badge-client-sm d-inline-flex align-items-center"
-                      style={{ width: 'fit-content', whiteSpace: 'nowrap' }}
-                    >
-                      Disponible
-                    </span>
-                  )}
+                  <span className="modal-subtitle">
+                    {candidate.profile || candidate.specialty}
+                  </span>
                   {candidate.verified && (
                     <span className="badge bg-success-subtle text-success d-inline-flex align-items-center">
                       <i className="bi bi-patch-check-fill me-1" />
@@ -137,7 +166,11 @@ export default function CandidateModal({
                 <select
                   className="form-select select-status-inline"
                   value={localStatus}
-                  onChange={(e) => setLocalStatus(e.target.value)}
+                  onChange={(e) => {
+                    // Se guarda al momento, sin esperar a "Guardar cambios"
+                    setLocalStatus(e.target.value);
+                    onUpdateStatus(candidate.id, e.target.value);
+                  }}
                 >
                   {CANDIDATE_STATUS_SELECT_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>
@@ -346,7 +379,10 @@ export default function CandidateModal({
                           className="field-value text-break flex-grow-1"
                           style={{ whiteSpace: 'pre-line', minWidth: 0 }}
                         >
-                          {candidate.experience || 'No especificada'}
+                          <CvList
+                            text={candidate.experience}
+                            empty="No especificada"
+                          />
                         </div>
                       </div>
                     </div>
@@ -361,7 +397,10 @@ export default function CandidateModal({
                           className="field-value text-break flex-grow-1"
                           style={{ whiteSpace: 'pre-line', minWidth: 0 }}
                         >
-                          {candidate.education || 'No especificada'}
+                          <CvList
+                            text={candidate.education}
+                            empty="No especificada"
+                          />
                         </div>
                       </div>
                     </div>
@@ -376,7 +415,36 @@ export default function CandidateModal({
                           className="field-value text-break flex-grow-1"
                           style={{ whiteSpace: 'pre-line', minWidth: 0 }}
                         >
-                          {candidate.languages || 'No especificados'}
+                          <CvList
+                            text={candidate.languages}
+                            empty="No especificados"
+                            commas
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="detail-section">
+                      <h4 className="section-title">Habilidades</h4>
+                      <div className="detail-field d-flex align-items-start gap-3">
+                        <div className="detail-icon icon-purple flex-shrink-0 mt-1">
+                          <i className="bi bi-tools"></i>
+                        </div>
+                        <div
+                          className="field-value flex-grow-1"
+                          style={{ minWidth: 0 }}
+                        >
+                          {habilidades.length > 0 ? (
+                            <div className="skill-chips">
+                              {habilidades.map((h, i) => (
+                                <span key={i} className="skill-chip">
+                                  {h}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            'No especificadas'
+                          )}
                         </div>
                       </div>
                     </div>
@@ -520,18 +588,27 @@ export default function CandidateModal({
                       <h4 className="section-title">ADJUNTAR DOCUMENTOS</h4>
 
                       <div className="doc-upload-row mb-3">
-                        <select
-                          className="form-select input-field doc-tipo-select"
-                          value={docTipo}
-                          onChange={(e) => setDocTipo(e.target.value)}
-                        >
-                          <option>CV</option>
-                          <option>Oferta económica</option>
-                          <option>Contrato</option>
-                          <option>Prueba técnica</option>
-                          <option>Informe</option>
-                          <option>Otro</option>
-                        </select>
+                        <div>
+                          <label className="field-label" htmlFor="doc-tipo">
+                            TIPO DE DOCUMENTO
+                          </label>
+                          <select
+                            id="doc-tipo"
+                            className="form-select input-field doc-tipo-select"
+                            value={docTipo}
+                            onChange={(e) => setDocTipo(e.target.value)}
+                          >
+                            <option value="" disabled>
+                              Selecciona tipo de documento…
+                            </option>
+                            <option>CV</option>
+                            <option>Oferta económica</option>
+                            <option>Contrato</option>
+                            <option>Prueba técnica</option>
+                            <option>Informe</option>
+                            <option>Otro</option>
+                          </select>
+                        </div>
                         <label
                           className={`doc-dropzone ${draggingOver ? 'doc-dropzone--active' : ''}`}
                           onDragOver={(e) => {

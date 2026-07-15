@@ -351,6 +351,18 @@ async def process_cv(
             "status": "ok",
             "id": nuevo.id,
             "mensaje": "Candidato anadido correctamente.",
+            "candidato": {
+                "first_name": fn_final,
+                "last_name": ln_final,
+                "email": email_extraido,
+                "phone": phone_extraido,
+                "location": candidate_json.get("location") or "",
+                "experience": candidate_json.get("experience") or "",
+                "education": candidate_json.get("education") or "",
+                "languages": candidate_json.get("languages") or "",
+                "skills": candidate_json.get("skills") or "",
+                "profile": candidate_json.get("profile") or "",
+            },
         }
 
     except HTTPException:

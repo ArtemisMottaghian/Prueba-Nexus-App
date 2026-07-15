@@ -91,6 +91,7 @@ async def create_candidate_from_cv(db: AsyncSession, data: dict) -> Candidate:
         "education",
         "languages",
         "skills",
+        "profile",
         "cv_url",
         "candidate_url",
         "linkedin_url",
