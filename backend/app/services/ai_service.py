@@ -23,7 +23,11 @@ if not api_key:
         "ERROR: No se ha encontrado GEMINI_API_KEY en las variables de entorno."
     )
 
-client = genai.Client(api_key=api_key)
+# Timeout global: ninguna llamada a Gemini puede quedarse colgada para siempre
+client = genai.Client(
+    api_key=api_key,
+    http_options=types.HttpOptions(timeout=60_000),  # 60s por llamada
+)
 
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
 
