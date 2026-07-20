@@ -35,6 +35,7 @@ def _educacion_sin_limpiar(texto: str) -> bool:
 async def separar(todos: bool = False):
     async with AsyncSessionLocal() as db:
         candidatos = (await db.execute(select(Candidate))).scalars().all()
+        print(f"Candidatos en total: {len(candidatos)}", flush=True)
 
         revisados = 0
         actualizados = 0
@@ -60,7 +61,7 @@ async def separar(todos: bool = False):
             try:
                 data = await separar_apartados_cv(exp, edu, skl)
             except Exception as e:
-                print(f"  - Error con candidato {c.id}: {e}")
+                print(f"  - Error con candidato {c.id}: {e}", flush=True)
                 continue
 
             # Se acepta tambien vacio: significa que no habia nada valido
@@ -80,11 +81,20 @@ async def separar(todos: bool = False):
 
             if cambiado:
                 actualizados += 1
-                print(f"  * Candidato {c.id} actualizado")
+                print(f"  * Candidato {c.id} actualizado", flush=True)
+
+            # Guardado por tandas: si algo se corta, lo hecho no se pierde
+            if revisados % 25 == 0:
+                await db.commit()
+                print(
+                    f"--- progreso: {revisados} revisados, "
+                    f"{actualizados} actualizados (guardado) ---",
+                    flush=True,
+                )
 
         await db.commit()
-        print(f"Candidatos revisados: {revisados}")
-        print(f"Candidatos actualizados: {actualizados}")
+        print(f"Candidatos revisados: {revisados}", flush=True)
+        print(f"Candidatos actualizados: {actualizados}", flush=True)
 
 
 if __name__ == "__main__":
