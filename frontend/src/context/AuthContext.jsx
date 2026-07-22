@@ -1,8 +1,18 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+} from 'react';
 import * as authService from '../services/authService';
 import { authFetch, ENDPOINTS } from '../services/api';
 
 const AuthContext = createContext(null);
+
+// Cierre de sesión automático tras este tiempo sin actividad del usuario
+const LIMITE_INACTIVIDAD_MS = 40 * 60 * 1000; // 40 minutos
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
@@ -71,10 +81,48 @@ export const AuthProvider = ({ children }) => {
     authService.loginWithGoogle();
   };
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await authService.logout();
     setUser(null);
-  };
+  }, []);
+
+  // --- Cierre de sesión por inactividad (40 min sin ratón/teclado/scroll) ---
+  const ultimaActividadRef = useRef(Date.now());
+
+  useEffect(() => {
+    if (!user) return undefined;
+
+    const marcarActividad = () => {
+      ultimaActividadRef.current = Date.now();
+    };
+
+    const eventos = [
+      'mousemove',
+      'mousedown',
+      'keydown',
+      'scroll',
+      'touchstart',
+      'click',
+    ];
+    eventos.forEach((ev) =>
+      window.addEventListener(ev, marcarActividad, { passive: true })
+    );
+    ultimaActividadRef.current = Date.now();
+
+    // Cada minuto comprobamos si se superó el límite
+    const vigilante = setInterval(() => {
+      if (Date.now() - ultimaActividadRef.current >= LIMITE_INACTIVIDAD_MS) {
+        // Marca para que el login muestre el aviso de por qué se cerró
+        sessionStorage.setItem('cierreSesionInactividad', '1');
+        logout();
+      }
+    }, 60 * 1000);
+
+    return () => {
+      eventos.forEach((ev) => window.removeEventListener(ev, marcarActividad));
+      clearInterval(vigilante);
+    };
+  }, [user, logout]);
 
   const hasRole = (role) => user?.role === role;
 
