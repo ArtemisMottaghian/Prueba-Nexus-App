@@ -73,6 +73,7 @@ export default function VacancyModal({
   onAsignarVacante,
   isNegocio,
   onDelete,
+  onEditVacancy,
 }) {
   const { hasRole } = useAuth();
   const isReclutador = hasRole('hr_manager') || hasRole('reclutador');
@@ -113,6 +114,7 @@ export default function VacancyModal({
   });
   const [candForm, setCandForm] = useState({
     nombre: '',
+    candidatoId: null,
     fase: 'Enviado CV',
     resultado: 'Pendiente',
     notas: '',
@@ -596,7 +598,7 @@ export default function VacancyModal({
     setCandidatoSearch(query);
 
     if (!query.trim()) {
-      setCandForm((f) => ({ ...f, nombre: '' }));
+      setCandForm((f) => ({ ...f, nombre: '', candidatoId: null }));
       setCandidatosSugeridos([]);
       return;
     }
@@ -626,26 +628,41 @@ export default function VacancyModal({
   const handleSeleccionarCandidato = (c) => {
     const nombre = c.name || c.nombre || '';
     setCandidatoSearch(nombre);
-    setCandForm((f) => ({ ...f, nombre }));
+    // Guardamos también el id: el vínculo con la vacante deja de depender
+    // de que el nombre coincida letra a letra
+    setCandForm((f) => ({ ...f, nombre, candidatoId: c.id ?? null }));
     setCandidatosSugeridos([]);
   };
 
   const handleAddCandidato = async () => {
     if (!candForm.nombre.trim()) return;
     try {
-      await authFetch(
+      const res = await authFetch(
         ENDPOINTS.recruitment.vacantes.candidateTracking(job.id),
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: candForm.nombre.trim(),
+            candidate_id: candForm.candidatoId,
             phase: candForm.fase,
             result: candForm.resultado,
             notes: candForm.notas ? [candForm.notas] : [],
           }),
         }
       );
+
+      // Antes se pintaba como guardado aunque el servidor fallara,
+      // y al recargar desaparecía. Ahora se comprueba de verdad.
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(
+          err.detail ||
+            'No se pudo guardar el candidato en la oferta. Elige el candidato en el desplegable del buscador.'
+        );
+        return;
+      }
+
       const nuevo = {
         ...candForm,
         nombre: candForm.nombre.trim(),
@@ -654,6 +671,7 @@ export default function VacancyModal({
       setCandidatosList((prev) => [nuevo, ...prev]);
       setCandForm({
         nombre: '',
+        candidatoId: null,
         fase: 'Enviado CV',
         resultado: 'Pendiente',
         notas: '',
@@ -662,6 +680,7 @@ export default function VacancyModal({
       setCandidatosSugeridos([]);
     } catch (err) {
       console.error('Error guardando seguimiento:', err);
+      alert('No se pudo guardar el candidato en la oferta.');
     }
   };
 
@@ -741,6 +760,18 @@ export default function VacancyModal({
                 >
                   <i className="bi bi-box-arrow-up-right"></i>
                 </button>
+                {onEditVacancy && (
+                  <button
+                    className="btn-icon"
+                    title="Editar vacante"
+                    onClick={() => {
+                      onClose();
+                      onEditVacancy(job);
+                    }}
+                  >
+                    <i className="bi bi-pencil"></i>
+                  </button>
+                )}
                 {onDelete && (
                   <button
                     className="btn-icon text-danger ms-auto"

@@ -6,8 +6,24 @@ import {
   getClienteComments,
   addClienteComment,
   deleteClienteComment,
+  getClienteDocumentos,
+  subirClienteDocumento,
+  eliminarClienteDocumento,
+  getClienteInteracciones,
+  addClienteInteraccion,
+  eliminarClienteInteraccion,
 } from '../../services/clientesService';
+import { ENDPOINTS } from '../../services/api';
 import './ClienteDetail.css';
+
+const TIPOS_DOCUMENTO = ['Contrato', 'Propuesta', 'Factura', 'Otro'];
+
+const formatearTamano = (bytes) => {
+  if (!bytes && bytes !== 0) return '';
+  return bytes > 1024 * 1024
+    ? `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+    : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+};
 
 const getBadgeEstado = (estado) => {
   const map = {
@@ -42,6 +58,10 @@ export default function ClienteDetail({
   const [notas, setNotas] = useState([]);
   const [activeTab, setActiveTab] = useState('info');
   const [empresaCrm, setEmpresaCrm] = useState(cliente);
+  const [documentos, setDocumentos] = useState([]);
+  const [docTipo, setDocTipo] = useState('Contrato');
+  const [subiendoDoc, setSubiendoDoc] = useState(false);
+  const [interacciones, setInteracciones] = useState([]);
 
   useEffect(() => {
     setEmpresaCrm(cliente);
@@ -58,6 +78,16 @@ export default function ClienteDetail({
       }
     };
     cargarNotas();
+  }, [cliente?.id]);
+
+  useEffect(() => {
+    setDocumentos([]);
+    setInteracciones([]);
+    if (cliente?.id) {
+      cargarDocumentos();
+      cargarInteracciones();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cliente?.id]);
 
   const handleUpdateEstadoCuenta = async (nuevoEstado) => {
@@ -93,6 +123,77 @@ export default function ClienteDetail({
       setNotas((prev) => prev.filter((n) => n.id !== id));
     } catch (err) {
       console.error('Error eliminando nota:', err);
+    }
+  };
+
+  const cargarDocumentos = async () => {
+    if (!cliente?.id) return;
+    try {
+      const data = await getClienteDocumentos(cliente.id);
+      setDocumentos(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Error cargando documentos:', err);
+    }
+  };
+
+  const cargarInteracciones = async () => {
+    if (!cliente?.id) return;
+    try {
+      const data = await getClienteInteracciones(cliente.id);
+      setInteracciones(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Error cargando interacciones:', err);
+    }
+  };
+
+  const handleAgregarInteraccion = async (tipo, texto) => {
+    if (!texto?.trim() || !cliente?.id) return;
+    try {
+      const nueva = await addClienteInteraccion(cliente.id, {
+        tipo,
+        texto: texto.trim(),
+      });
+      setInteracciones((prev) => [nueva, ...prev]);
+    } catch (err) {
+      console.error('Error registrando interacción:', err);
+      alert('No se pudo registrar la interacción.');
+    }
+  };
+
+  const handleEliminarInteraccion = async (interactionId) => {
+    if (!window.confirm('¿Eliminar esta interacción?')) return;
+    try {
+      await eliminarClienteInteraccion(interactionId);
+      setInteracciones((prev) => prev.filter((i) => i.id !== interactionId));
+    } catch (err) {
+      console.error('Error eliminando interacción:', err);
+      alert('No se pudo eliminar la interacción.');
+    }
+  };
+
+  const handleSubirDocumento = async (files) => {
+    const file = files?.[0];
+    if (!file || !cliente?.id) return;
+    try {
+      setSubiendoDoc(true);
+      const nuevo = await subirClienteDocumento(cliente.id, file, docTipo);
+      setDocumentos((prev) => [nuevo, ...prev]);
+    } catch (err) {
+      console.error('Error subiendo documento:', err);
+      alert('No se pudo subir el documento. Inténtalo de nuevo.');
+    } finally {
+      setSubiendoDoc(false);
+    }
+  };
+
+  const handleEliminarDocumento = async (docId) => {
+    if (!window.confirm('¿Eliminar este documento definitivamente?')) return;
+    try {
+      await eliminarClienteDocumento(docId);
+      setDocumentos((prev) => prev.filter((d) => d.id !== docId));
+    } catch (err) {
+      console.error('Error eliminando documento:', err);
+      alert('No se pudo eliminar el documento.');
     }
   };
 
@@ -256,13 +357,43 @@ export default function ClienteDetail({
             <span className="tab-badge">{notas.length}</span>
           )}
         </button>
+        <button
+          className={`cliente-tab ${activeTab === 'documentos' ? 'active' : ''}`}
+          onClick={() => setActiveTab('documentos')}
+        >
+          <i className="bi bi-folder2-open me-2"></i>
+          Documentos
+          {documentos.length > 0 && (
+            <span className="tab-badge">{documentos.length}</span>
+          )}
+        </button>
       </div>
 
       {/* TAB: Seguimiento comercial (Issue #329) */}
       {activeTab === 'crm' && (
         <CrmEmpresaPanel
-          empresa={empresaCrm}
+          empresa={{
+            ...empresaCrm,
+            // Los documentos e interacciones reales alimentan el panel CRM
+            documentosComerciales: documentos.map((d) => ({
+              id: d.id,
+              nombre: d.original_name,
+              tipo: d.tipo,
+              fecha: d.uploaded_at
+                ? new Date(d.uploaded_at).toLocaleDateString('es-ES')
+                : '',
+            })),
+            historialComercial: interacciones.map((i) => ({
+              id: i.id,
+              tipo: i.tipo,
+              texto: i.texto,
+              autor: i.autor,
+              fecha: i.fecha ? new Date(i.fecha).toLocaleString('es-ES') : '',
+            })),
+          }}
           onUpdateEstadoCuenta={handleUpdateEstadoCuenta}
+          onAddInteraccion={handleAgregarInteraccion}
+          onDeleteInteraccion={handleEliminarInteraccion}
         />
       )}
 
@@ -456,6 +587,106 @@ export default function ClienteDetail({
               <p className="mb-0">No hay notas para este cliente</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* TAB: Documentos */}
+      {activeTab === 'documentos' && (
+        <div>
+          <div className="cliente-info-card mb-3">
+            <h6 className="info-card-title mb-3">
+              <i className="bi bi-file-earmark-arrow-up me-2"></i>
+              Subir documento
+            </h6>
+            <div className="d-flex align-items-center gap-2 flex-wrap">
+              <select
+                className="form-select"
+                style={{ maxWidth: '190px' }}
+                value={docTipo}
+                onChange={(e) => setDocTipo(e.target.value)}
+              >
+                {TIPOS_DOCUMENTO.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+              <label className="btn btn-sm btn-primary mb-0">
+                <i className="bi bi-upload me-1"></i>
+                {subiendoDoc ? 'Subiendo...' : 'Elegir archivo'}
+                <input
+                  type="file"
+                  style={{ display: 'none' }}
+                  disabled={subiendoDoc}
+                  onChange={(e) => {
+                    handleSubirDocumento(e.target.files);
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+              <span className="text-muted" style={{ fontSize: '11px' }}>
+                PDF, Word, imágenes… se guarda en el servidor
+              </span>
+            </div>
+          </div>
+
+          <div className="cliente-info-card">
+            <h6 className="info-card-title mb-3">
+              <i className="bi bi-folder2-open me-2"></i>
+              Documentos guardados ({documentos.length})
+            </h6>
+            {documentos.length > 0 ? (
+              documentos.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="d-flex align-items-center justify-content-between mb-2 p-2 rounded border"
+                >
+                  <div
+                    className="d-flex align-items-center gap-2"
+                    style={{ minWidth: 0 }}
+                  >
+                    <i className="bi bi-file-earmark-text text-muted"></i>
+                    <div style={{ minWidth: 0 }}>
+                      <a
+                        href={ENDPOINTS.companies.documentDownload(doc.id)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="d-block text-truncate"
+                        style={{ maxWidth: '280px' }}
+                        title={doc.original_name}
+                      >
+                        {doc.original_name}
+                      </a>
+                      <span className="activity-time">
+                        {doc.tipo}
+                        {doc.size_bytes
+                          ? ` · ${formatearTamano(doc.size_bytes)}`
+                          : ''}
+                        {doc.uploaded_at
+                          ? ` · ${new Date(doc.uploaded_at).toLocaleDateString('es-ES')}`
+                          : ''}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    className="btn-icon btn-icon-sm ms-2 flex-shrink-0"
+                    onClick={() => handleEliminarDocumento(doc.id)}
+                    title="Eliminar documento"
+                  >
+                    <i
+                      className="bi bi-trash text-danger"
+                      style={{ fontSize: '12px' }}
+                    ></i>
+                  </button>
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-muted py-4">
+                <i className="bi bi-folder2-open fs-3 d-block mb-2"></i>
+                <p className="mb-0">Aún no hay documentos para este cliente</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

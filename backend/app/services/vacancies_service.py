@@ -190,6 +190,17 @@ async def apply_bulk_action(db: AsyncSession, vacancy_ids: List[int], action: st
         await db.rollback()
         raise e
 
+# actualizar campos editables de una vacante (solo los recibidos)
+async def update_vacancy_fields(db: AsyncSession, vacancy_id: int, campos: dict) -> bool:
+    vacancy = await get_vacancy_by_id(db, vacancy_id)
+    if vacancy is None:
+        return False
+    for campo, valor in campos.items():
+        setattr(vacancy, campo, valor)
+    await db.commit()
+    return True
+
+
 # actualizar estado de vacante
 async def update_vacancy_status(db: AsyncSession, vacancy_id: int, new_status: str):
     clean_status = new_status.strip().lower()
@@ -583,23 +594,48 @@ async def update_candidate_tracking(
     from app.services.candidates_service import search_candidates_by_name
     from app.models.aplication_model import ApplicationStatus
 
-    # 1. Buscar aplicación existente por nombre
-    apps_result = await db.execute(
-        select(JobApplication).where(JobApplication.offer_id == vacancy_id)
-    )
-    applications = apps_result.scalars().all()
-
     app_to_update = None
-    for app in applications:
-        cand_result = await db.execute(
-            select(Candidate).where(Candidate.id == app.candidate_id)
+
+    # 0. Si llega el id del candidato, vincular directo (sin depender del nombre)
+    if data.candidate_id:
+        app_result = await db.execute(
+            select(JobApplication).where(
+                JobApplication.offer_id == vacancy_id,
+                JobApplication.candidate_id == data.candidate_id,
+            )
         )
-        candidate = cand_result.scalar_one_or_none()
-        if candidate:
-            full_name = f"{candidate.first_name} {candidate.last_name}".strip()
-            if full_name.lower() == data.name.lower():
-                app_to_update = app
-                break
+        app_to_update = app_result.scalar_one_or_none()
+        if app_to_update is None:
+            cand_result = await db.execute(
+                select(Candidate).where(Candidate.id == data.candidate_id)
+            )
+            if cand_result.scalar_one_or_none() is None:
+                return False
+            app_to_update = JobApplication(
+                candidate_id=data.candidate_id,
+                offer_id=vacancy_id,
+                status=ApplicationStatus.proposed,
+            )
+            db.add(app_to_update)
+            await db.flush()
+
+    # 1. Buscar aplicación existente por nombre
+    if not app_to_update:
+        apps_result = await db.execute(
+            select(JobApplication).where(JobApplication.offer_id == vacancy_id)
+        )
+        applications = apps_result.scalars().all()
+
+        for app in applications:
+            cand_result = await db.execute(
+                select(Candidate).where(Candidate.id == app.candidate_id)
+            )
+            candidate = cand_result.scalar_one_or_none()
+            if candidate:
+                full_name = f"{candidate.first_name} {candidate.last_name}".strip()
+                if full_name.lower() == data.name.lower():
+                    app_to_update = app
+                    break
 
     # 2. Si no existe, buscar candidato por nombre y crear JobApplication
     if not app_to_update:

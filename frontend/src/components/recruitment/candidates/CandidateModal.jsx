@@ -137,7 +137,7 @@ export default function CandidateModal({
     <>
       <div className="modal-backdrop fade show"></div>
       <div className="modal fade show d-block" tabIndex="-1" role="dialog">
-        <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div className="modal-dialog modal-xl modal-candidate modal-dialog-centered modal-dialog-scrollable">
           <div className="modal-content">
             <div className="modal-header">
               <div className="flex-grow-1">

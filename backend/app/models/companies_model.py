@@ -76,3 +76,20 @@ class CompanyComment(Base):
     )
 
     company = relationship("Company", back_populates="comments")
+
+
+class CompanyDocument(Base):
+    __tablename__ = "company_documents"
+
+    id = Column(BigInteger, primary_key=True, index=True)
+    company_id = Column(
+        BigInteger,
+        ForeignKey("companies.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    tipo = Column(String(50), nullable=False, default="Otro")
+    original_name = Column(String(255), nullable=False)
+    stored_name = Column(String(255), nullable=False, unique=True)
+    size_bytes = Column(BigInteger, nullable=True)
+    uploaded_at = Column(DateTime(timezone=True), server_default=func.now())

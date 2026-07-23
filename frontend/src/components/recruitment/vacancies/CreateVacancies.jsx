@@ -38,14 +38,23 @@ function publicadaHaceAFecha(etiqueta) {
   return d.toISOString();
 }
 
-export default function CreateVacancy({ onClose, onSave }) {
+export default function CreateVacancy({ onClose, onSave, vacancy = null }) {
+  // Con `vacancy` el mismo modal funciona en modo edición
+  const esEdicion = !!vacancy;
+
   const [formData, setFormData] = useState({
-    title: '',
-    location: '',
-    sector: '',
+    title: vacancy?.title || '',
+    location:
+      vacancy?.location && vacancy.location !== 'No especificada'
+        ? vacancy.location
+        : '',
+    sector:
+      vacancy?.industry && vacancy.industry !== 'N/A' ? vacancy.industry : '',
     source: '',
-    salaryRange: '',
-    companyName: '',
+    salaryRange: vacancy?.salaryMin
+      ? `${vacancy.salaryMin}${vacancy.salaryMax ? ` - ${vacancy.salaryMax}` : ''}`
+      : '',
+    companyName: vacancy?.companyName || '',
     publishedAgo: '',
   });
   const [companies, setCompanies] = useState([]);
@@ -96,11 +105,15 @@ export default function CreateVacancy({ onClose, onSave }) {
       company_name: formData.companyName.trim() || null,
       location: formData.location.trim() || null,
       sector: formData.sector || null,
-      source: formData.source || 'Carga Manual',
       salary_min,
       salary_max,
-      published_at: publicadaHaceAFecha(formData.publishedAgo),
     };
+
+    // La fuente y la fecha de publicación solo se fijan al crear
+    if (!esEdicion) {
+      payload.source = formData.source || 'Carga Manual';
+      payload.published_at = publicadaHaceAFecha(formData.publishedAgo);
+    }
 
     try {
       setSaving(true);
@@ -122,7 +135,9 @@ export default function CreateVacancy({ onClose, onSave }) {
         <div className="modal-dialog modal-dialog-centered modal-lg">
           <div className="modal-content">
             <div className="modal-header">
-              <h4 className="modal-title fw-bold">Añadir Nueva Vacante</h4>
+              <h4 className="modal-title fw-bold">
+                {esEdicion ? 'Editar Vacante' : 'Añadir Nueva Vacante'}
+              </h4>
               <button
                 type="button"
                 className="btn-close"
@@ -272,27 +287,36 @@ export default function CreateVacancy({ onClose, onSave }) {
                     </select>
                   </div>
 
-                  {/* 5. Fuente de origen */}
-                  <div className="col-md-6 mb-3">
-                    <label htmlFor="source" className="form-label fw-semibold">
-                      Fuente de origen
-                    </label>
-                    <select
-                      className="form-select"
-                      id="source"
-                      name="source"
-                      value={formData.source}
-                      onChange={handleChange}
-                    >
-                      <option value="">Selecciona el origen...</option>
-                      <option value="LinkedIn">LinkedIn</option>
-                      <option value="InfoJobs">InfoJobs</option>
-                      <option value="Adzuna">Adzuna</option>
-                      <option value="Búsqueda Directa">Búsqueda Directa</option>
-                      <option value="Carga Manual">Carga Manual Interna</option>
-                      <option value="Otro">Otro</option>
-                    </select>
-                  </div>
+                  {/* 5. Fuente de origen (solo al crear) */}
+                  {!esEdicion && (
+                    <div className="col-md-6 mb-3">
+                      <label
+                        htmlFor="source"
+                        className="form-label fw-semibold"
+                      >
+                        Fuente de origen
+                      </label>
+                      <select
+                        className="form-select"
+                        id="source"
+                        name="source"
+                        value={formData.source}
+                        onChange={handleChange}
+                      >
+                        <option value="">Selecciona el origen...</option>
+                        <option value="LinkedIn">LinkedIn</option>
+                        <option value="InfoJobs">InfoJobs</option>
+                        <option value="Adzuna">Adzuna</option>
+                        <option value="Búsqueda Directa">
+                          Búsqueda Directa
+                        </option>
+                        <option value="Carga Manual">
+                          Carga Manual Interna
+                        </option>
+                        <option value="Otro">Otro</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
 
                 <div className="row">
@@ -315,30 +339,34 @@ export default function CreateVacancy({ onClose, onSave }) {
                     />
                   </div>
 
-                  {/* 7. Hace cuánto ha sido publicada */}
-                  <div className="col-md-6 mb-3">
-                    <label
-                      htmlFor="publishedAgo"
-                      className="form-label fw-semibold"
-                    >
-                      Publicada hace... <span className="text-danger">*</span>
-                    </label>
-                    <select
-                      className="form-select"
-                      id="publishedAgo"
-                      name="publishedAgo"
-                      value={formData.publishedAgo}
-                      onChange={handleChange}
-                      required
-                    >
-                      <option value="">Selecciona un tiempo...</option>
-                      <option value="Hoy">Hoy</option>
-                      <option value="Ayer">Ayer</option>
-                      <option value="Esta semana">Esta semana</option>
-                      <option value="Hace 1-2 semanas">Hace 1-2 semanas</option>
-                      <option value="Hace +1 mes">Hace más de un mes</option>
-                    </select>
-                  </div>
+                  {/* 7. Hace cuánto ha sido publicada (solo al crear) */}
+                  {!esEdicion && (
+                    <div className="col-md-6 mb-3">
+                      <label
+                        htmlFor="publishedAgo"
+                        className="form-label fw-semibold"
+                      >
+                        Publicada hace... <span className="text-danger">*</span>
+                      </label>
+                      <select
+                        className="form-select"
+                        id="publishedAgo"
+                        name="publishedAgo"
+                        value={formData.publishedAgo}
+                        onChange={handleChange}
+                        required
+                      >
+                        <option value="">Selecciona un tiempo...</option>
+                        <option value="Hoy">Hoy</option>
+                        <option value="Ayer">Ayer</option>
+                        <option value="Esta semana">Esta semana</option>
+                        <option value="Hace 1-2 semanas">
+                          Hace 1-2 semanas
+                        </option>
+                        <option value="Hace +1 mes">Hace más de un mes</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -358,10 +386,14 @@ export default function CreateVacancy({ onClose, onSave }) {
                     saving ||
                     !formData.title.trim() ||
                     !formData.companyName.trim() ||
-                    !formData.publishedAgo
+                    (!esEdicion && !formData.publishedAgo)
                   }
                 >
-                  {saving ? 'Guardando...' : 'Guardar Vacante'}
+                  {saving
+                    ? 'Guardando...'
+                    : esEdicion
+                      ? 'Guardar cambios'
+                      : 'Guardar Vacante'}
                 </button>
               </div>
             </form>

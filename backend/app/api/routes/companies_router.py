@@ -1,6 +1,10 @@
+import os
+import uuid
+
 from sqlalchemy import select, func
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
@@ -12,15 +16,24 @@ from app.schemas.companies_schemas import (
     CompanyCreate,
     CompanyUpdate,
     CompanyWithManagerResponse,
+    CompanyDocumentOut,
+    CompanyInteractionCreate,
+    CompanyInteractionOut,
 )
 from app.schemas.comments_schemas import CommentCreate, CommentUpdate, CommentResponse
 from app.services import comments_service
 from app.schemas.users_schemas import MessageResponse
-from app.models.companies_model import Company
+from app.models.companies_model import Company, CompanyDocument
 from app.models.job_model import JobOffer
+from app.models.trakingHistory_model import TrackingHistory
+from app.models.user_model import User
 from app.core.jwt import get_current_user
 
 router = APIRouter()
+
+# Carpeta donde se guardan los documentos de empresas (contratos, etc.)
+COMPANY_DOCS_DIR = os.path.join(os.getcwd(), "stored_company_docs")
+os.makedirs(COMPANY_DOCS_DIR, exist_ok=True)
 
 
 # -----------------
@@ -269,3 +282,170 @@ async def delete_company_comment(
     if not deleted:
         raise HTTPException(status_code=404, detail="Comentario no encontrado")
     return {"message": "Comentario eliminado correctamente"}
+
+
+# -----------------
+# Interacciones comerciales de empresa (llamadas, reuniones, emails...)
+# -----------------
+@router.get(
+    "/{company_id}/interactions", response_model=List[CompanyInteractionOut]
+)
+async def list_company_interactions(
+    company_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(TrackingHistory, User.name, User.email)
+        .outerjoin(User, User.id == TrackingHistory.user_id)
+        .where(TrackingHistory.company_id == company_id)
+        .order_by(TrackingHistory.recorded_at.desc())
+    )
+    return [
+        CompanyInteractionOut(
+            id=t.id,
+            tipo=t.action_type,
+            texto=t.comments,
+            fecha=t.recorded_at,
+            autor=nombre or email,
+        )
+        for t, nombre, email in result.all()
+    ]
+
+
+@router.post(
+    "/{company_id}/interactions",
+    response_model=CompanyInteractionOut,
+    status_code=201,
+)
+async def create_company_interaction(
+    company_id: int,
+    body: CompanyInteractionCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    company = await db.get(Company, company_id)
+    if company is None:
+        raise HTTPException(status_code=404, detail="La empresa no existe")
+
+    nueva = TrackingHistory(
+        company_id=company_id,
+        action_type=(body.tipo or "nota")[:255],
+        comments=body.texto,
+        user_id=current_user.get("id"),
+    )
+    db.add(nueva)
+    await db.commit()
+    await db.refresh(nueva)
+
+    return CompanyInteractionOut(
+        id=nueva.id,
+        tipo=nueva.action_type,
+        texto=nueva.comments,
+        fecha=nueva.recorded_at,
+        autor=current_user.get("name") or current_user.get("email"),
+    )
+
+
+@router.delete("/interactions/{interaction_id}", response_model=MessageResponse)
+async def delete_company_interaction(
+    interaction_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    interaccion = await db.get(TrackingHistory, interaction_id)
+    # Solo se borran interacciones de empresa (no notas de vacantes)
+    if interaccion is None or interaccion.company_id is None:
+        raise HTTPException(status_code=404, detail="Interacción no encontrada")
+    await db.delete(interaccion)
+    await db.commit()
+    return {"message": "Interacción eliminada correctamente"}
+
+
+# -----------------
+# Documentos de empresa (contratos, propuestas, facturas...)
+# -----------------
+@router.get("/{company_id}/documents", response_model=List[CompanyDocumentOut])
+async def list_company_documents(
+    company_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(CompanyDocument)
+        .where(CompanyDocument.company_id == company_id)
+        .order_by(CompanyDocument.uploaded_at.desc())
+    )
+    return result.scalars().all()
+
+
+@router.post(
+    "/{company_id}/documents", response_model=CompanyDocumentOut, status_code=201
+)
+async def upload_company_document(
+    company_id: int,
+    file: UploadFile = File(...),
+    tipo: str = Form("Otro"),
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    company = await db.get(Company, company_id)
+    if company is None:
+        raise HTTPException(status_code=404, detail="La empresa no existe")
+
+    contenido = await file.read()
+    if not contenido:
+        raise HTTPException(status_code=400, detail="El archivo está vacío")
+
+    extension = os.path.splitext(file.filename or "")[1].lower()[:10]
+    stored_name = f"empresa{company_id}_{uuid.uuid4().hex[:10]}{extension}"
+    with open(os.path.join(COMPANY_DOCS_DIR, stored_name), "wb") as f:
+        f.write(contenido)
+
+    doc = CompanyDocument(
+        company_id=company_id,
+        tipo=(tipo or "Otro")[:50],
+        original_name=(file.filename or stored_name)[:255],
+        stored_name=stored_name,
+        size_bytes=len(contenido),
+    )
+    db.add(doc)
+    await db.commit()
+    await db.refresh(doc)
+    return doc
+
+
+@router.get("/documents/{doc_id}/download")
+async def download_company_document(
+    doc_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    doc = await db.get(CompanyDocument, doc_id)
+    if doc is None:
+        raise HTTPException(status_code=404, detail="Documento no encontrado")
+    file_path = os.path.join(COMPANY_DOCS_DIR, doc.stored_name)
+    if not os.path.exists(file_path):
+        raise HTTPException(
+            status_code=404, detail="El archivo no existe en el servidor"
+        )
+    return FileResponse(file_path, filename=doc.original_name)
+
+
+@router.delete("/documents/{doc_id}", response_model=MessageResponse)
+async def delete_company_document(
+    doc_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    doc = await db.get(CompanyDocument, doc_id)
+    if doc is None:
+        raise HTTPException(status_code=404, detail="Documento no encontrado")
+    file_path = os.path.join(COMPANY_DOCS_DIR, doc.stored_name)
+    await db.delete(doc)
+    await db.commit()
+    try:
+        os.remove(file_path)
+    except OSError:
+        pass
+    return {"message": "Documento eliminado correctamente"}

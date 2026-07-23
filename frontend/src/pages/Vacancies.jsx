@@ -78,6 +78,7 @@ export default function Vacancies() {
   const [itemsPorPagina, setItemsPorPagina] = useState(20);
   const [ordenarPor, setOrdenarPor] = useState('recientes');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingVacancy, setEditingVacancy] = useState(null);
 
   // --- 2. OPCIONES DINÁMICAS (Para el FilterBar) ---
   // El filtro "Sector" ofrece nuestras familias profesionales (sectores).
@@ -483,6 +484,7 @@ export default function Vacancies() {
           onToggleFavorite={handleToggleFavorite}
           onAsignarVacante={handleAsignarVacante}
           onDeleteVacancy={handleDeleteVacancy}
+          onEditVacancy={setEditingVacancy}
         />
       )}
 
@@ -591,6 +593,36 @@ export default function Vacancies() {
               setIsCreateModalOpen(false);
             } catch (e) {
               alert('No se pudo guardar la vacante: ' + e.message);
+            }
+          }}
+        />
+      )}
+
+      {/* Modal de Edición (mismo formulario, con la vacante precargada) */}
+      {editingVacancy && (
+        <CreateVacancy
+          vacancy={editingVacancy}
+          onClose={() => setEditingVacancy(null)}
+          onSave={async (payload) => {
+            try {
+              await vacanciesService.updateVacancy(editingVacancy.id, payload);
+              // Reflejar el cambio en el listado sin recargar
+              const vista = {
+                title: payload.title,
+                companyName: payload.company_name,
+                location: payload.location || 'No especificada',
+                industry: payload.sector || 'N/A',
+                salaryMin: payload.salary_min,
+                salaryMax: payload.salary_max,
+              };
+              setJobs((prev) =>
+                prev.map((j) =>
+                  j.id === editingVacancy.id ? { ...j, ...vista } : j
+                )
+              );
+              setEditingVacancy(null);
+            } catch (e) {
+              alert('No se pudo actualizar la vacante: ' + e.message);
             }
           }}
         />

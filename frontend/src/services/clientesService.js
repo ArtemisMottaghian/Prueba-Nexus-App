@@ -75,18 +75,27 @@ const statusMap = {
   cliente: 'converted',
 };
 
-const mapToBackend = (client) => ({
-  name: client.nombre,
-  sector: client.sector,
-  cif: client.cif,
-  address: client.direccion,
-  email: client.email,
-  phone: client.telefono,
-  primary_contact: client.contactoPrincipal,
-  lead_status: statusMap[client.estadoCuenta] || 'new',
-  entity_type:
-    client.estadoCuenta === 'cliente' ? 'confirmed_client' : undefined,
-});
+const mapToBackend = (client) => {
+  const out = {
+    name: client.nombre,
+    sector: client.sector,
+    cif: client.cif,
+    address: client.direccion,
+    email: client.email,
+    phone: client.telefono,
+    primary_contact: client.contactoPrincipal,
+  };
+
+  // El estado de cuenta solo viaja si viene informado; si no, el backend
+  // conserva el actual (antes se mandaba siempre y una edición cualquiera
+  // convertía al cliente en lead).
+  if (client.estadoCuenta) {
+    out.lead_status = statusMap[client.estadoCuenta] || 'new';
+    if (client.estadoCuenta === 'cliente') out.entity_type = 'confirmed_client';
+  }
+
+  return out;
+};
 
 export const getClientes = async (entityType = 'confirmed_client') => {
   try {
@@ -266,5 +275,67 @@ export const deleteClienteComment = async (commentId) => {
     }
   );
   if (!response.ok) throw new Error('Error al eliminar nota');
+  return await response.json();
+};
+
+// ── Interacciones comerciales (llamadas, reuniones, emails...) ──────────────
+
+export const getClienteInteracciones = async (companyId) => {
+  const response = await authFetch(ENDPOINTS.companies.interactions(companyId));
+  if (!response.ok) throw new Error('Error al obtener las interacciones');
+  return await response.json();
+};
+
+export const addClienteInteraccion = async (companyId, body) => {
+  const response = await authFetch(
+    ENDPOINTS.companies.interactions(companyId),
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }
+  );
+  if (!response.ok) throw new Error('Error al registrar la interacción');
+  return await response.json();
+};
+
+export const eliminarClienteInteraccion = async (interactionId) => {
+  const response = await authFetch(
+    ENDPOINTS.companies.interactionDelete(interactionId),
+    { method: 'DELETE' }
+  );
+  if (!response.ok) throw new Error('Error al eliminar la interacción');
+  return await response.json();
+};
+
+// ── Documentos de empresa (contratos, propuestas, facturas...) ──────────────
+
+export const getClienteDocumentos = async (companyId) => {
+  const response = await authFetch(ENDPOINTS.companies.documents(companyId));
+  if (!response.ok) throw new Error('Error al obtener los documentos');
+  return await response.json();
+};
+
+export const subirClienteDocumento = async (companyId, file, tipo) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('tipo', tipo || 'Otro');
+
+  // fetch directo (sin authFetch): con FormData el navegador debe poner
+  // solo el Content-Type multipart con su boundary
+  const response = await fetch(ENDPOINTS.companies.documents(companyId), {
+    method: 'POST',
+    credentials: 'include',
+    body: formData,
+  });
+  if (!response.ok) throw new Error('Error al subir el documento');
+  return await response.json();
+};
+
+export const eliminarClienteDocumento = async (docId) => {
+  const response = await authFetch(ENDPOINTS.companies.documentDelete(docId), {
+    method: 'DELETE',
+  });
+  if (!response.ok) throw new Error('Error al eliminar el documento');
   return await response.json();
 };
