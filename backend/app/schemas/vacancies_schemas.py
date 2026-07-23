@@ -191,6 +191,7 @@ class VacancyNoteCreate(BaseModel):
 
 class CandidateTrackingCreate(BaseModel):
     name: str
+    candidate_id: Optional[int] = None  # si llega, se vincula por id (no por nombre)
     phase: str
     result: Optional[str] = None
     notes: Optional[List[str]] = []
