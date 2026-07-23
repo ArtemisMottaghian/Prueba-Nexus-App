@@ -12,6 +12,7 @@ export default function LoginForm() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [generalError, setGeneralError] = useState('');
+  const [avisoInactividad, setAvisoInactividad] = useState(false);
 
   const navigate = useNavigate();
   const { login, user } = useAuth();
@@ -20,6 +21,14 @@ export default function LoginForm() {
       navigate(getDefaultRouteForRole(user.role));
     }
   }, [user, navigate]);
+
+  // Aviso de sesión cerrada por inactividad (marca puesta por AuthContext)
+  useEffect(() => {
+    if (sessionStorage.getItem('cierreSesionInactividad')) {
+      sessionStorage.removeItem('cierreSesionInactividad');
+      setAvisoInactividad(true);
+    }
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
@@ -43,6 +52,7 @@ export default function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setGeneralError('');
+    setAvisoInactividad(false);
     if (!validateForm()) return;
     setLoading(true);
 
@@ -114,6 +124,11 @@ export default function LoginForm() {
             <p>Ingresa tus credenciales para continuar</p>
           </div>
 
+          {avisoInactividad && (
+            <div className="form-inactivity-notice">
+              Tu sesión se cerró por inactividad. Vuelve a iniciar sesión.
+            </div>
+          )}
           {generalError && (
             <div className="form-general-error">{generalError}</div>
           )}
