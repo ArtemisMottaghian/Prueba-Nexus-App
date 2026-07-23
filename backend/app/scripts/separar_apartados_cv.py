@@ -32,6 +32,15 @@ def _educacion_sin_limpiar(texto: str) -> bool:
     return bool(t) and ("," in t or "(" in t)
 
 
+_MARCAS_SUCIAS = ("NUEVA EXPERIENCIA", "{'COMPANY'", '{"COMPANY"')
+
+
+def _texto_sucio(texto: str) -> bool:
+    """Entradas con separadores/duplicados o formato tecnico del scraper."""
+    t = (texto or "").upper()
+    return any(marca in t for marca in _MARCAS_SUCIAS)
+
+
 async def separar(todos: bool = False):
     async with AsyncSessionLocal() as db:
         candidatos = (await db.execute(select(Candidate))).scalars().all()
@@ -53,6 +62,8 @@ async def separar(todos: bool = False):
             elif not (
                 _necesita_separar(exp)
                 or _educacion_sin_limpiar(edu)
+                or _texto_sucio(exp)
+                or _texto_sucio(edu)
                 or (not prf and hay_datos)
             ):
                 continue
