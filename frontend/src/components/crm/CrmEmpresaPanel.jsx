@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ENDPOINTS } from '../../services/api';
 import './CrmEmpresaPanel.css';
 
 /**
@@ -250,9 +251,21 @@ export default function CrmEmpresaPanel({
                   {d.tipo} · {d.fecha}
                 </div>
               </div>
-              <button className="btn-icon btn-icon-sm" title="Descargar">
-                <i className="bi bi-download"></i>
-              </button>
+              {d.id ? (
+                <a
+                  className="btn-icon btn-icon-sm"
+                  title="Descargar"
+                  href={ENDPOINTS.companies.documentDownload(d.id)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <i className="bi bi-download"></i>
+                </a>
+              ) : (
+                <button className="btn-icon btn-icon-sm" title="Descargar">
+                  <i className="bi bi-download"></i>
+                </button>
+              )}
             </div>
           ))
         ) : (

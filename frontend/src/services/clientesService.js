@@ -277,3 +277,35 @@ export const deleteClienteComment = async (commentId) => {
   if (!response.ok) throw new Error('Error al eliminar nota');
   return await response.json();
 };
+
+// ── Documentos de empresa (contratos, propuestas, facturas...) ──────────────
+
+export const getClienteDocumentos = async (companyId) => {
+  const response = await authFetch(ENDPOINTS.companies.documents(companyId));
+  if (!response.ok) throw new Error('Error al obtener los documentos');
+  return await response.json();
+};
+
+export const subirClienteDocumento = async (companyId, file, tipo) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('tipo', tipo || 'Otro');
+
+  // fetch directo (sin authFetch): con FormData el navegador debe poner
+  // solo el Content-Type multipart con su boundary
+  const response = await fetch(ENDPOINTS.companies.documents(companyId), {
+    method: 'POST',
+    credentials: 'include',
+    body: formData,
+  });
+  if (!response.ok) throw new Error('Error al subir el documento');
+  return await response.json();
+};
+
+export const eliminarClienteDocumento = async (docId) => {
+  const response = await authFetch(ENDPOINTS.companies.documentDelete(docId), {
+    method: 'DELETE',
+  });
+  if (!response.ok) throw new Error('Error al eliminar el documento');
+  return await response.json();
+};

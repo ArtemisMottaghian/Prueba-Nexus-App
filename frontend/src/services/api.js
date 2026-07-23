@@ -47,6 +47,10 @@ export const ENDPOINTS = {
     updateComment: (commentId) =>
       `${BASE_URL}/api/companies/comments/${commentId}`,
     vacancies: (id) => `${BASE_URL}/api/companies/${id}/vacants`,
+    documents: (id) => `${BASE_URL}/api/companies/${id}/documents`,
+    documentDownload: (docId) =>
+      `${BASE_URL}/api/companies/documents/${docId}/download`,
+    documentDelete: (docId) => `${BASE_URL}/api/companies/documents/${docId}`,
   },
 
   recruitment: {

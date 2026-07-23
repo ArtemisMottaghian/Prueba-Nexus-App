@@ -83,3 +83,14 @@ class CompanyWithManagerResponse(CompanyResponse):
     managed_by_id: Optional[int] = None
     manager_name: Optional[str] = None
     manager_email: Optional[str] = None
+
+
+# Documento adjunto de una empresa (contrato, propuesta, factura...)
+class CompanyDocumentOut(BaseModel):
+    id: int
+    tipo: str
+    original_name: str
+    size_bytes: Optional[int] = None
+    uploaded_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
