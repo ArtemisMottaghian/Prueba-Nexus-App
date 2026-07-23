@@ -73,6 +73,7 @@ export default function VacancyModal({
   onAsignarVacante,
   isNegocio,
   onDelete,
+  onEditVacancy,
 }) {
   const { hasRole } = useAuth();
   const isReclutador = hasRole('hr_manager') || hasRole('reclutador');
@@ -741,6 +742,18 @@ export default function VacancyModal({
                 >
                   <i className="bi bi-box-arrow-up-right"></i>
                 </button>
+                {onEditVacancy && (
+                  <button
+                    className="btn-icon"
+                    title="Editar vacante"
+                    onClick={() => {
+                      onClose();
+                      onEditVacancy(job);
+                    }}
+                  >
+                    <i className="bi bi-pencil"></i>
+                  </button>
+                )}
                 {onDelete && (
                   <button
                     className="btn-icon text-danger ms-auto"

@@ -16,6 +16,7 @@ export default function VacancyGrid({
   currentUser,
   isNegocio,
   onDeleteVacancy,
+  onEditVacancy,
 }) {
   const [viewMode, setViewMode] = useState('grid');
   const [selectedJob, setSelectedJob] = useState(null);
@@ -128,6 +129,7 @@ export default function VacancyGrid({
             onAsignarVacante={onAsignarVacante}
             currentUser={currentUser}
             isNegocio={isNegocio}
+            onEditVacancy={onEditVacancy}
             onSmartMatch={(ev) => handleSmartMatch(ev, selectedJob)}
             isMatching={isMatching && activeMatchingId === selectedJob.id}
             onDelete={

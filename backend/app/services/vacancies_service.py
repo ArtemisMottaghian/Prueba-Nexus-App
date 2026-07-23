@@ -190,6 +190,17 @@ async def apply_bulk_action(db: AsyncSession, vacancy_ids: List[int], action: st
         await db.rollback()
         raise e
 
+# actualizar campos editables de una vacante (solo los recibidos)
+async def update_vacancy_fields(db: AsyncSession, vacancy_id: int, campos: dict) -> bool:
+    vacancy = await get_vacancy_by_id(db, vacancy_id)
+    if vacancy is None:
+        return False
+    for campo, valor in campos.items():
+        setattr(vacancy, campo, valor)
+    await db.commit()
+    return True
+
+
 # actualizar estado de vacante
 async def update_vacancy_status(db: AsyncSession, vacancy_id: int, new_status: str):
     clean_status = new_status.strip().lower()

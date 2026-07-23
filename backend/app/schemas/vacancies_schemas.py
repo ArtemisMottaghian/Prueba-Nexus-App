@@ -111,6 +111,18 @@ class VacancyCreate(BaseModel):
     salary_min: Optional[int] = Field(None, ge=0)
     salary_max: Optional[int] = Field(None, ge=0)
 
+# Schema para editar una vacante ya creada (solo se actualiza lo que llega)
+class VacancyUpdate(BaseModel):
+    title: Optional[str] = Field(None, min_length=2, max_length=255)
+    company_name: Optional[str] = Field(None, max_length=255)
+    location: Optional[str] = Field(None, max_length=255)
+    sector: Optional[str] = Field(None, max_length=255)
+    salary_min: Optional[int] = Field(None, ge=0)
+    salary_max: Optional[int] = Field(None, ge=0)
+    job_description: Optional[str] = None
+    status: Optional[str] = None
+
+
 # Schema para marcar como favorita
 class FavouriteRequest(BaseModel):
     favourite: bool
