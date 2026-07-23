@@ -278,6 +278,36 @@ export const deleteClienteComment = async (commentId) => {
   return await response.json();
 };
 
+// ── Interacciones comerciales (llamadas, reuniones, emails...) ──────────────
+
+export const getClienteInteracciones = async (companyId) => {
+  const response = await authFetch(ENDPOINTS.companies.interactions(companyId));
+  if (!response.ok) throw new Error('Error al obtener las interacciones');
+  return await response.json();
+};
+
+export const addClienteInteraccion = async (companyId, body) => {
+  const response = await authFetch(
+    ENDPOINTS.companies.interactions(companyId),
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }
+  );
+  if (!response.ok) throw new Error('Error al registrar la interacción');
+  return await response.json();
+};
+
+export const eliminarClienteInteraccion = async (interactionId) => {
+  const response = await authFetch(
+    ENDPOINTS.companies.interactionDelete(interactionId),
+    { method: 'DELETE' }
+  );
+  if (!response.ok) throw new Error('Error al eliminar la interacción');
+  return await response.json();
+};
+
 // ── Documentos de empresa (contratos, propuestas, facturas...) ──────────────
 
 export const getClienteDocumentos = async (companyId) => {

@@ -48,6 +48,9 @@ export const ENDPOINTS = {
       `${BASE_URL}/api/companies/comments/${commentId}`,
     vacancies: (id) => `${BASE_URL}/api/companies/${id}/vacants`,
     documents: (id) => `${BASE_URL}/api/companies/${id}/documents`,
+    interactions: (id) => `${BASE_URL}/api/companies/${id}/interactions`,
+    interactionDelete: (interactionId) =>
+      `${BASE_URL}/api/companies/interactions/${interactionId}`,
     documentDownload: (docId) =>
       `${BASE_URL}/api/companies/documents/${docId}/download`,
     documentDelete: (docId) => `${BASE_URL}/api/companies/documents/${docId}`,

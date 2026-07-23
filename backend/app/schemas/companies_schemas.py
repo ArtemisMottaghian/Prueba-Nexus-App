@@ -85,6 +85,20 @@ class CompanyWithManagerResponse(CompanyResponse):
     manager_email: Optional[str] = None
 
 
+# Interacciones comerciales de una empresa (llamadas, reuniones, emails...)
+class CompanyInteractionCreate(BaseModel):
+    tipo: str = Field(..., max_length=50)
+    texto: str = Field(..., min_length=1)
+
+
+class CompanyInteractionOut(BaseModel):
+    id: int
+    tipo: Optional[str] = None
+    texto: Optional[str] = None
+    fecha: Optional[datetime] = None
+    autor: Optional[str] = None
+
+
 # Documento adjunto de una empresa (contrato, propuesta, factura...)
 class CompanyDocumentOut(BaseModel):
     id: int

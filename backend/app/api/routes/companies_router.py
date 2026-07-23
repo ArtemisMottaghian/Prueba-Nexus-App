@@ -17,12 +17,16 @@ from app.schemas.companies_schemas import (
     CompanyUpdate,
     CompanyWithManagerResponse,
     CompanyDocumentOut,
+    CompanyInteractionCreate,
+    CompanyInteractionOut,
 )
 from app.schemas.comments_schemas import CommentCreate, CommentUpdate, CommentResponse
 from app.services import comments_service
 from app.schemas.users_schemas import MessageResponse
 from app.models.companies_model import Company, CompanyDocument
 from app.models.job_model import JobOffer
+from app.models.trakingHistory_model import TrackingHistory
+from app.models.user_model import User
 from app.core.jwt import get_current_user
 
 router = APIRouter()
@@ -278,6 +282,84 @@ async def delete_company_comment(
     if not deleted:
         raise HTTPException(status_code=404, detail="Comentario no encontrado")
     return {"message": "Comentario eliminado correctamente"}
+
+
+# -----------------
+# Interacciones comerciales de empresa (llamadas, reuniones, emails...)
+# -----------------
+@router.get(
+    "/{company_id}/interactions", response_model=List[CompanyInteractionOut]
+)
+async def list_company_interactions(
+    company_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(TrackingHistory, User.name, User.email)
+        .outerjoin(User, User.id == TrackingHistory.user_id)
+        .where(TrackingHistory.company_id == company_id)
+        .order_by(TrackingHistory.recorded_at.desc())
+    )
+    return [
+        CompanyInteractionOut(
+            id=t.id,
+            tipo=t.action_type,
+            texto=t.comments,
+            fecha=t.recorded_at,
+            autor=nombre or email,
+        )
+        for t, nombre, email in result.all()
+    ]
+
+
+@router.post(
+    "/{company_id}/interactions",
+    response_model=CompanyInteractionOut,
+    status_code=201,
+)
+async def create_company_interaction(
+    company_id: int,
+    body: CompanyInteractionCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    company = await db.get(Company, company_id)
+    if company is None:
+        raise HTTPException(status_code=404, detail="La empresa no existe")
+
+    nueva = TrackingHistory(
+        company_id=company_id,
+        action_type=(body.tipo or "nota")[:255],
+        comments=body.texto,
+        user_id=current_user.get("id"),
+    )
+    db.add(nueva)
+    await db.commit()
+    await db.refresh(nueva)
+
+    return CompanyInteractionOut(
+        id=nueva.id,
+        tipo=nueva.action_type,
+        texto=nueva.comments,
+        fecha=nueva.recorded_at,
+        autor=current_user.get("name") or current_user.get("email"),
+    )
+
+
+@router.delete("/interactions/{interaction_id}", response_model=MessageResponse)
+async def delete_company_interaction(
+    interaction_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    interaccion = await db.get(TrackingHistory, interaction_id)
+    # Solo se borran interacciones de empresa (no notas de vacantes)
+    if interaccion is None or interaccion.company_id is None:
+        raise HTTPException(status_code=404, detail="Interacción no encontrada")
+    await db.delete(interaccion)
+    await db.commit()
+    return {"message": "Interacción eliminada correctamente"}
 
 
 # -----------------

@@ -9,6 +9,9 @@ import {
   getClienteDocumentos,
   subirClienteDocumento,
   eliminarClienteDocumento,
+  getClienteInteracciones,
+  addClienteInteraccion,
+  eliminarClienteInteraccion,
 } from '../../services/clientesService';
 import { ENDPOINTS } from '../../services/api';
 import './ClienteDetail.css';
@@ -58,6 +61,7 @@ export default function ClienteDetail({
   const [documentos, setDocumentos] = useState([]);
   const [docTipo, setDocTipo] = useState('Contrato');
   const [subiendoDoc, setSubiendoDoc] = useState(false);
+  const [interacciones, setInteracciones] = useState([]);
 
   useEffect(() => {
     setEmpresaCrm(cliente);
@@ -78,7 +82,11 @@ export default function ClienteDetail({
 
   useEffect(() => {
     setDocumentos([]);
-    if (cliente?.id) cargarDocumentos();
+    setInteracciones([]);
+    if (cliente?.id) {
+      cargarDocumentos();
+      cargarInteracciones();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cliente?.id]);
 
@@ -125,6 +133,41 @@ export default function ClienteDetail({
       setDocumentos(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error cargando documentos:', err);
+    }
+  };
+
+  const cargarInteracciones = async () => {
+    if (!cliente?.id) return;
+    try {
+      const data = await getClienteInteracciones(cliente.id);
+      setInteracciones(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Error cargando interacciones:', err);
+    }
+  };
+
+  const handleAgregarInteraccion = async (tipo, texto) => {
+    if (!texto?.trim() || !cliente?.id) return;
+    try {
+      const nueva = await addClienteInteraccion(cliente.id, {
+        tipo,
+        texto: texto.trim(),
+      });
+      setInteracciones((prev) => [nueva, ...prev]);
+    } catch (err) {
+      console.error('Error registrando interacción:', err);
+      alert('No se pudo registrar la interacción.');
+    }
+  };
+
+  const handleEliminarInteraccion = async (interactionId) => {
+    if (!window.confirm('¿Eliminar esta interacción?')) return;
+    try {
+      await eliminarClienteInteraccion(interactionId);
+      setInteracciones((prev) => prev.filter((i) => i.id !== interactionId));
+    } catch (err) {
+      console.error('Error eliminando interacción:', err);
+      alert('No se pudo eliminar la interacción.');
     }
   };
 
@@ -331,7 +374,7 @@ export default function ClienteDetail({
         <CrmEmpresaPanel
           empresa={{
             ...empresaCrm,
-            // Los documentos reales de la empresa alimentan también el panel CRM
+            // Los documentos e interacciones reales alimentan el panel CRM
             documentosComerciales: documentos.map((d) => ({
               id: d.id,
               nombre: d.original_name,
@@ -340,8 +383,17 @@ export default function ClienteDetail({
                 ? new Date(d.uploaded_at).toLocaleDateString('es-ES')
                 : '',
             })),
+            historialComercial: interacciones.map((i) => ({
+              id: i.id,
+              tipo: i.tipo,
+              texto: i.texto,
+              autor: i.autor,
+              fecha: i.fecha ? new Date(i.fecha).toLocaleString('es-ES') : '',
+            })),
           }}
           onUpdateEstadoCuenta={handleUpdateEstadoCuenta}
+          onAddInteraccion={handleAgregarInteraccion}
+          onDeleteInteraccion={handleEliminarInteraccion}
         />
       )}
 

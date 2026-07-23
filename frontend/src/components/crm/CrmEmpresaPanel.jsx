@@ -20,8 +20,12 @@ export default function CrmEmpresaPanel({
   empresa,
   compact = false,
   onUpdateEstadoCuenta,
+  onAddInteraccion,
+  onDeleteInteraccion,
 }) {
   const [confirmFirma, setConfirmFirma] = useState(false);
+  const [tipoInteraccion, setTipoInteraccion] = useState('contacto');
+  const [textoInteraccion, setTextoInteraccion] = useState('');
 
   if (!empresa) {
     return (
@@ -182,6 +186,48 @@ export default function CrmEmpresaPanel({
           <i className="bi bi-list-check me-2"></i>
           Historial de interacciones
         </h6>
+
+        {onAddInteraccion && (
+          <div className="d-flex gap-2 mb-3 flex-wrap">
+            <select
+              className="form-select"
+              style={{ maxWidth: '150px' }}
+              value={tipoInteraccion}
+              onChange={(e) => setTipoInteraccion(e.target.value)}
+            >
+              <option value="contacto">Llamada</option>
+              <option value="email">Email</option>
+              <option value="reunion">Reunión</option>
+              <option value="firma">Firma</option>
+              <option value="nota">Nota</option>
+            </select>
+            <input
+              type="text"
+              className="form-control"
+              style={{ flex: 1, minWidth: '180px' }}
+              placeholder="Seguimiento"
+              value={textoInteraccion}
+              onChange={(e) => setTextoInteraccion(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && textoInteraccion.trim()) {
+                  onAddInteraccion(tipoInteraccion, textoInteraccion);
+                  setTextoInteraccion('');
+                }
+              }}
+            />
+            <button
+              className="btn btn-sm btn-primary"
+              disabled={!textoInteraccion.trim()}
+              onClick={() => {
+                onAddInteraccion(tipoInteraccion, textoInteraccion);
+                setTextoInteraccion('');
+              }}
+            >
+              <i className="bi bi-plus me-1"></i>Registrar
+            </button>
+          </div>
+        )}
+
         {empresa.historialComercial?.length > 0 ? (
           <ul className="crm-timeline">
             {empresa.historialComercial.map((h, i) => (
@@ -192,7 +238,21 @@ export default function CrmEmpresaPanel({
                   ></i>
                 </span>
                 <div className="crm-timeline-card">
-                  <p className="mb-1">{h.texto}</p>
+                  <div className="d-flex justify-content-between align-items-start">
+                    <p className="mb-1">{h.texto}</p>
+                    {h.id && onDeleteInteraccion && (
+                      <button
+                        className="btn-icon btn-icon-sm ms-2 flex-shrink-0"
+                        title="Eliminar interacción"
+                        onClick={() => onDeleteInteraccion(h.id)}
+                      >
+                        <i
+                          className="bi bi-trash text-danger"
+                          style={{ fontSize: '12px' }}
+                        ></i>
+                      </button>
+                    )}
+                  </div>
                   <div className="crm-timeline-meta">
                     <span>
                       <i className="bi bi-clock me-1"></i>
