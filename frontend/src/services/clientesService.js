@@ -75,18 +75,27 @@ const statusMap = {
   cliente: 'converted',
 };
 
-const mapToBackend = (client) => ({
-  name: client.nombre,
-  sector: client.sector,
-  cif: client.cif,
-  address: client.direccion,
-  email: client.email,
-  phone: client.telefono,
-  primary_contact: client.contactoPrincipal,
-  lead_status: statusMap[client.estadoCuenta] || 'new',
-  entity_type:
-    client.estadoCuenta === 'cliente' ? 'confirmed_client' : undefined,
-});
+const mapToBackend = (client) => {
+  const out = {
+    name: client.nombre,
+    sector: client.sector,
+    cif: client.cif,
+    address: client.direccion,
+    email: client.email,
+    phone: client.telefono,
+    primary_contact: client.contactoPrincipal,
+  };
+
+  // El estado de cuenta solo viaja si viene informado; si no, el backend
+  // conserva el actual (antes se mandaba siempre y una edición cualquiera
+  // convertía al cliente en lead).
+  if (client.estadoCuenta) {
+    out.lead_status = statusMap[client.estadoCuenta] || 'new';
+    if (client.estadoCuenta === 'cliente') out.entity_type = 'confirmed_client';
+  }
+
+  return out;
+};
 
 export const getClientes = async (entityType = 'confirmed_client') => {
   try {

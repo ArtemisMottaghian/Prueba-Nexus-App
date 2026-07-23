@@ -213,6 +213,9 @@ export default function Clientes() {
       cif: cliente.cif || '',
       direccion: cliente.direccion || '',
       prioritario: cliente.prioritario || false,
+      // Mantener el estado real de la cuenta al editar (si no viaja,
+      // el traductor lo dejaba en 'lead' y el cliente se iba a Todos)
+      estadoCuenta: cliente.estadoCuenta || '',
     });
     setErrores({});
     setClienteEditando(cliente);
