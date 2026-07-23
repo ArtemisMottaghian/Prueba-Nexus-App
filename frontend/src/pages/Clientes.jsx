@@ -580,7 +580,10 @@ export default function Clientes() {
             onClick={() => setClienteSeleccionado(null)}
           ></div>
           <div className="modal fade show d-block" role="dialog">
-            <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div
+              className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+              style={{ maxWidth: 'min(1300px, 94vw)' }}
+            >
               <div className="modal-content">
                 <div className="modal-header">
                   <h5 className="modal-title">Ficha de empresa</h5>
