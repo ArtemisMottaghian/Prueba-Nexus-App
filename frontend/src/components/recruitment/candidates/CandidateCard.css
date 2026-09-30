@@ -194,3 +194,11 @@
     width: auto !important;
   }
 }
+
+/* ── Estado de la tarjeta ─────────────────────────────
+   Fila propia con todo el ancho de la tarjeta. La regla global
+   .select-status-inline (VacancyModal.css) lo limitaba a 180 px y cortaba el texto. */
+.vacante-card .select-status-inline.card-status {
+  width: 100%;
+  max-width: none;
+}
