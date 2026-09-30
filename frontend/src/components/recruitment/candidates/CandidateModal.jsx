@@ -162,9 +162,9 @@ export default function CandidateModal({
             </div>
 
             <div className="modal-body">
-              <div className="d-flex align-items-center gap-3 mb-4 flex-wrap">
+              <div className="cm-acciones d-flex align-items-center gap-3 mb-4 flex-wrap">
                 <select
-                  className="form-select select-status-inline"
+                  className="cm-estado form-select select-status-inline"
                   value={localStatus}
                   onChange={(e) => {
                     // Se guarda al momento, sin esperar a "Guardar cambios"
@@ -194,7 +194,7 @@ export default function CandidateModal({
                 )}
 
                 {/* --- ZONA DE ICONOS (ESTRELLA, EDITAR, ELIMINAR) --- */}
-                <div className="d-flex align-items-center gap-1 border-start ps-3 ms-1">
+                <div className="cm-iconos d-flex align-items-center gap-1 border-start ps-3 ms-1">
                   {/* Favorito */}
                   <button
                     className={`btn-icon ${candidate.isFavorite ? 'text-warning' : ''}`}
@@ -249,7 +249,7 @@ export default function CandidateModal({
                 {/* -------------------------------------------------- */}
               </div>
 
-              <ul className="nav nav-tabs mb-4">
+              <ul className="cm-tabs nav nav-tabs mb-4">
                 <li className="nav-item">
                   <button
                     className={`nav-link ${activeTab === 'detalles' ? 'active' : ''}`}
