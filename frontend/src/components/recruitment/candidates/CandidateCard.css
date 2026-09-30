@@ -144,3 +144,53 @@
     align-self: flex-start;
   }
 }
+
+/* ── Vista de lista de candidatos ─────────────────────
+   Las columnas de la fila pueden encogerse (min-width: 0) para que un texto largo
+   se corte con "..." en vez de estirar la página. Van con clases propias (cl-*)
+   porque .vacante-card-list lo comparte Vacantes. */
+.candidates-list .cl-left,
+.candidates-list .cl-namebox,
+.candidates-list .cl-right {
+  min-width: 0;
+}
+
+.candidates-list .cl-namebox,
+.candidates-list .cl-left .detail-text {
+  max-width: 100%;
+}
+
+.candidates-list .cl-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+@media (max-width: 991.98px) {
+  /* Con la fila en columna, un texto largo (que no salta de línea) hacía crecer la
+     página hasta su largo completo. Así ocupa el ancho disponible sin aportar su
+     largo, y se corta con "...". */
+  .candidates-list .cl-left > .detail-text,
+  .candidates-list .cl-left > .cl-namebox {
+    width: 0;
+    min-width: 100%;
+  }
+}
+
+@media (min-width: 992px) {
+  /* En escritorio el texto ocupa lo que sobra y las acciones solo lo que necesitan */
+  .candidates-list .cl-left {
+    flex: 1 1 0;
+  }
+  /* El nombre tiene prioridad: no encoge (salvo que pase del 45 % de la fila) y
+     son los textos largos, como las habilidades, los que se cortan primero. */
+  .candidates-list .cl-left > .cl-namebox {
+    flex: 0 0 auto;
+    max-width: 45%;
+  }
+  .candidates-list .cl-right {
+    flex: 0 0 auto;
+    width: auto !important;
+  }
+}

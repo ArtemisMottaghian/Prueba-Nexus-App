@@ -46,8 +46,8 @@ export default function CandidateCard({
         style={{ cursor: 'pointer' }}
       >
         <div className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between w-100 p-3 gap-3">
-          <div className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-2 gap-lg-3 w-100">
-            <div className="d-flex align-items-center gap-2">
+          <div className="cl-left d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-2 gap-lg-3 w-100">
+            <div className="cl-namebox d-flex align-items-center gap-2">
               <input
                 className="form-check-input mt-0"
                 type="checkbox"
@@ -55,21 +55,29 @@ export default function CandidateCard({
                 onChange={handleCheckboxClick}
                 onClick={handleChildClick}
               />
-              <h5 className="mb-0 text-body vacante-title-list-sm">
+              <h5
+                className="cl-name mb-0 text-body vacante-title-list-sm"
+                title={candidate.name}
+              >
                 {candidate.name}
               </h5>
             </div>
             <span className="text-muted small d-none d-lg-block">|</span>
-            <span className="detail-text">{candidate.specialty}</span>
+            <span className="detail-text" title={candidate.specialty}>
+              {candidate.specialty}
+            </span>
             <span className="text-muted small d-none d-lg-block">|</span>
-            <span className="detail-text text-muted small">
+            <span
+              className="detail-text text-muted small"
+              title={candidate.experience || ''}
+            >
               {/* Solo la primera linea (puesto mas reciente); el detalle va en la ficha */}
               {(candidate.experience || '').split('\n')[0] ||
                 'Experiencia no indicada'}
             </span>
           </div>
 
-          <div className="d-flex align-items-center gap-2 flex-wrap justify-content-start justify-content-lg-end w-100">
+          <div className="cl-right d-flex align-items-center gap-2 flex-wrap justify-content-start justify-content-lg-end w-100">
             <span className="detail-text opacity-75">
               <i className="bi bi-geo-alt me-1"></i>
               {candidate.location}
