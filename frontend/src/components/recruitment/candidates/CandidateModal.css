@@ -401,6 +401,14 @@
   white-space: nowrap;
 }
 
+/* Modo oscuro: el morado de la marca (#4425a7) sobre fondo oscuro no se lee
+   (contraste 1,4 a 1). Se usa un lila claro, con el mismo estilo. */
+[data-bs-theme='dark'] .skill-chip {
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.18);
+  border-color: rgba(167, 139, 250, 0.35);
+}
+
 /* Apartados del CV como lista (experiencia, formacion, idiomas) */
 .cv-list {
   margin: 0;
