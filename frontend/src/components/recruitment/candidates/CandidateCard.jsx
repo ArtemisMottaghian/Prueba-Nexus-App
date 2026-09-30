@@ -201,7 +201,10 @@ export default function CandidateCard({
             <i className="bi bi-person-badge"></i>
           </div>
           <div className="d-flex flex-column gap-1">
-            <span className="detail-text" title={candidate.specialty || ''}>
+            <span
+              className="detail-text cc-2l"
+              title={candidate.specialty || ''}
+            >
               {candidate.specialty || 'No indicada'}
             </span>
             <div className="d-flex flex-wrap gap-1 mt-1">
@@ -233,7 +236,7 @@ export default function CandidateCard({
           </div>
           {/* Solo el puesto actual (primera línea); la trayectoria completa va en la ficha */}
           <span
-            className="detail-text text-break"
+            className="detail-text text-break cc-2l"
             title={candidate.experience || ''}
           >
             {(candidate.experience || '').split('\n')[0] || 'No indicada'}
