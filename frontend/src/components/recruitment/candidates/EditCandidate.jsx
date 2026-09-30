@@ -75,7 +75,7 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
         tabIndex="-1"
         role="dialog"
       >
-        <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable candidate-form-dialog">
           <div className="modal-content">
             <div className="modal-header">
               <h4 className="modal-title fw-bold">
@@ -178,7 +178,7 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
                     className="form-control"
                     id="experience"
                     name="experience"
-                    rows="4"
+                    rows="8"
                     value={formData.experience}
                     onChange={handleChange}
                     placeholder="Un puesto por línea"

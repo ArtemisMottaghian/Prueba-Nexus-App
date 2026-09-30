@@ -220,7 +220,7 @@ export default function CreateCandidate({ onClose, onSave }) {
           CAMBIO CLAVE: eliminado "modal-dialog-scrollable" — interfería con nuestro
           flex propio. El scroll lo gestiona ahora el CSS en .modal-body.
         */}
-        <div className="modal-dialog modal-dialog-centered modal-lg">
+        <div className="modal-dialog modal-dialog-centered modal-lg candidate-form-dialog">
           <div className="modal-content">
             <div className="modal-header">
               <h4 className="modal-title fw-bold">Añadir Nuevo Candidato</h4>

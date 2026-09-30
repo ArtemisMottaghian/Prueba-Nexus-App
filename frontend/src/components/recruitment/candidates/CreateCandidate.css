@@ -232,3 +232,20 @@
   padding-top: 16px;
   border-top: 1px solid var(--border-color);
 }
+
+/* ── Ventanas de crear y editar candidato ─────────────
+   .custom-create-modal.modal es display:flex (arriba) y hace que la ventana se encoja
+   al ancho de su contenido (517 px en vez de los 800 de modal-lg). Con width: 100%
+   usa su max-width de Bootstrap. Va con clase propia porque custom-create-modal
+   también lo usa Crear vacante. */
+.custom-create-modal .modal-dialog.candidate-form-dialog {
+  width: 100%;
+}
+
+/* Los cuadros de texto crecen con su contenido en vez de tener scroll propio
+   (Chrome y Edge; en el resto vale el número de filas). */
+.candidate-form-dialog textarea.form-control {
+  field-sizing: content;
+  min-height: 3lh;
+  max-height: 18lh;
+}
