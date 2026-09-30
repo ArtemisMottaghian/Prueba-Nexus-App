@@ -8,13 +8,16 @@
 
 @media (max-width: 480px) {
   .candidates-grid {
-    grid-template-columns: 1fr;
+    /* minmax(0, 1fr): la columna no crece por el texto de las tarjetas.
+       Con 1fr a secas, un texto largo estira la columna y la pantalla entera. */
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
 /* Cada celda del grid estira la tarjeta al alto completo */
 .candidates-grid > div {
   display: flex;
+  min-width: 0; /* permite que la tarjeta se encoja y el texto largo se corte con "..." */
 }
 
 /* Vista de lista */
@@ -22,6 +25,10 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.candidates-list > div {
+  min-width: 0;
 }
 
 /* --- Estilos para el selector de vista (Cuadrícula/Lista) --- */

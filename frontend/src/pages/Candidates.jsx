@@ -557,8 +557,8 @@ export default function Candidates() {
       </div>
 
       {!loading && (
-        <div className="d-flex justify-content-between align-items-center mb-3 mt-3">
-          <div className="d-flex align-items-center gap-3">
+        <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 mt-3">
+          <div className="d-flex flex-wrap align-items-center gap-3">
             <div className="text-muted small">
               Mostrando {candidatesPaginados.length} de{' '}
               {filteredCandidates.length} candidatos
@@ -578,7 +578,7 @@ export default function Candidates() {
             </label>
           </div>
 
-          <div className="d-flex gap-2">
+          <div className="d-flex flex-wrap gap-2">
             <button
               className="btn btn-sm btn-primary"
               onClick={() => setIsCreateModalOpen(true)}
