@@ -184,7 +184,7 @@ export default function CandidateModal({
                     className={`btn btn-sm ${
                       candidate.verified
                         ? 'btn-outline-danger'
-                        : 'btn-outline-primary'
+                        : 'btn-outline-nexus'
                     }`}
                     onClick={handleVerify}
                   >
@@ -730,7 +730,7 @@ export default function CandidateModal({
               </button>
               <button
                 type="button"
-                className="btn btn-primary"
+                className="btn btn-nexus"
                 onClick={handleSave}
               >
                 Guardar cambios

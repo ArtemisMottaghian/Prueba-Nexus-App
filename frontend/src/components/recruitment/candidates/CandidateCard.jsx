@@ -92,7 +92,7 @@ export default function CandidateCard({
               <button
                 type="button"
                 className={`btn btn-sm py-0 px-2 ${
-                  candidate.verified ? 'btn-outline-danger' : 'btn-primary'
+                  candidate.verified ? 'btn-outline-danger' : 'btn-nexus'
                 }`}
                 onClick={handleVerify}
               >
@@ -141,7 +141,7 @@ export default function CandidateCard({
             <button
               type="button"
               className={`btn btn-sm ${
-                candidate.verified ? 'btn-outline-danger' : 'btn-primary'
+                candidate.verified ? 'btn-outline-danger' : 'btn-nexus'
               }`}
               onClick={handleVerify}
               style={{

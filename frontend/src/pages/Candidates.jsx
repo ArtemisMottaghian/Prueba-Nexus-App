@@ -580,7 +580,7 @@ export default function Candidates() {
 
           <div className="d-flex flex-wrap gap-2">
             <button
-              className="btn btn-sm btn-primary"
+              className="btn btn-sm btn-nexus"
               onClick={() => setIsCreateModalOpen(true)}
             >
               <i className="bi bi-person-plus-fill me-2"></i>
@@ -621,21 +621,21 @@ export default function Candidates() {
           <div className="btn-group btn-group-sm" role="group">
             <button
               type="button"
-              className={`btn ${assignmentView === 'pendientes' ? 'btn-primary' : 'btn-outline-secondary'}`}
+              className={`btn ${assignmentView === 'pendientes' ? 'btn-nexus' : 'btn-outline-secondary'}`}
               onClick={() => setAssignmentView('pendientes')}
             >
               Pendientes ({countPendientes})
             </button>
             <button
               type="button"
-              className={`btn ${assignmentView === 'asignados' ? 'btn-primary' : 'btn-outline-secondary'}`}
+              className={`btn ${assignmentView === 'asignados' ? 'btn-nexus' : 'btn-outline-secondary'}`}
               onClick={() => setAssignmentView('asignados')}
             >
               Asignados ({countAsignados})
             </button>
             <button
               type="button"
-              className={`btn ${assignmentView === 'todos' ? 'btn-primary' : 'btn-outline-secondary'}`}
+              className={`btn ${assignmentView === 'todos' ? 'btn-nexus' : 'btn-outline-secondary'}`}
               onClick={() => setAssignmentView('todos')}
             >
               Todos ({candidates.length})
