@@ -2,6 +2,25 @@ import { useState, useRef, useEffect } from 'react';
 import { candidatesService } from '../../../services/candidatesService';
 import './CreateCandidate.css';
 
+// El CV leído puede traer listas u objetos en vez de texto: lo pasamos a texto
+const asText = (value, separator = '\n') => {
+  if (value == null) return '';
+  if (typeof value === 'string') return value.trim();
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => asText(item, ' - '))
+      .filter(Boolean)
+      .join(separator);
+  }
+  if (typeof value === 'object') {
+    return Object.values(value)
+      .map((item) => asText(item, ' - '))
+      .filter(Boolean)
+      .join(' - ');
+  }
+  return String(value);
+};
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Mismo formato que exige el backend para el teléfono
 const PHONE_RE = /^\+?[\d\s-]{7,20}$/;
@@ -52,9 +71,7 @@ export default function CreateCandidate({ onClose, onSave, existingEmails }) {
   const [cvExtracted, setCvExtracted] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [parsedCandidateId, setParsedCandidateId] = useState(null);
   const [errorStatus, setErrorStatus] = useState(null);
-  const [consentMensaje, setConsentMensaje] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
 
   const fileInputRef = useRef(null);
@@ -85,11 +102,7 @@ export default function CreateCandidate({ onClose, onSave, existingEmails }) {
     e.preventDefault();
     if (submittingRef.current || isParsing) return;
 
-    // Con un CV ya procesado el candidato existe (se actualiza), no se comprueba duplicado
-    const errors = validateForm(
-      formData,
-      parsedCandidateId ? null : existingEmails
-    );
+    const errors = validateForm(formData, existingEmails);
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) {
       setErrorStatus('Revisa los campos marcados en rojo antes de guardar.');
@@ -126,15 +139,7 @@ export default function CreateCandidate({ onClose, onSave, existingEmails }) {
     );
 
     try {
-      let finalCandidate;
-      if (parsedCandidateId) {
-        finalCandidate = await candidatesService.updateCandidate(
-          parsedCandidateId,
-          finalData
-        );
-      } else {
-        finalCandidate = await candidatesService.createCandidate(finalData);
-      }
+      const finalCandidate = await candidatesService.createCandidate(finalData);
 
       onSave({
         ...finalCandidate,
@@ -163,50 +168,51 @@ export default function CreateCandidate({ onClose, onSave, existingEmails }) {
     }
   };
 
+  // Lee el PDF solo para rellenar el formulario: el candidato NO se crea hasta
+  // pulsar Guardar, así que cancelar o cerrar no deja nada guardado.
   const processCVFile = async (file) => {
-    if (!file || file.type !== 'application/pdf') return;
+    if (!file || isParsing) return;
+
+    const isPdf =
+      file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '');
+    if (!isPdf) {
+      setErrorStatus('Solo se admiten archivos PDF.');
+      return;
+    }
 
     setIsParsing(true);
     setErrorStatus(null);
+    setFieldErrors({});
     setCvFileName(file.name);
     setCvExtracted(false);
 
     try {
-      const res = await candidatesService.processCV(file);
-      setConsentMensaje(res?.mensaje || 'CV procesado correctamente.');
+      const c = await candidatesService.extractCV(file);
 
-      // Rellenar el formulario con lo extraido del CV para poder revisarlo.
-      // Al guardar, como ya existe el candidato (parsedCandidateId), se actualiza.
-      const c = res?.candidato;
-      if (c) {
-        setFormData({
-          name: [c.first_name, c.last_name].filter(Boolean).join(' '),
-          email: c.email || '',
-          phone: c.phone || '',
-          education: c.education || '',
-          location: c.location || '',
-          experience: c.experience || '',
-          specialty: c.skills || '',
-          languages: c.languages || '',
-          profile: c.profile || '',
-        });
-      }
-      if (res?.id) setParsedCandidateId(res.id);
+      setFormData({
+        name: [asText(c?.first_name), asText(c?.last_name)]
+          .filter(Boolean)
+          .join(' '),
+        email: asText(c?.email),
+        phone: asText(c?.phone),
+        education: asText(c?.education),
+        location: asText(c?.location),
+        experience: asText(c?.experience),
+        specialty: asText(c?.skills, ', '),
+        languages: asText(c?.languages, ', '),
+        profile: asText(c?.profile),
+      });
       setCvExtracted(true);
     } catch (err) {
-      console.error('Error al procesar el CV:', err);
+      console.error('Error al leer el CV:', err);
 
-      let msg = 'No hemos podido leer este PDF correctamente.';
-      if (
-        err.message.includes('already exists') ||
-        err.message.includes('duplicate')
-      ) {
+      // 400: el servidor explica el problema en español (no es PDF, sin texto...)
+      let msg = err.message;
+      if (err.status === 413) {
+        msg = 'El archivo PDF es demasiado grande.';
+      } else if (err.status >= 500) {
         msg =
-          '¡Este candidato ya existe! El email de este PDF ya está en la base de datos.';
-      } else if (err.message.includes('413')) {
-        msg = 'El archivo PDF es demasiado grande para procesarlo.';
-      } else {
-        msg = `Error al procesar PDF: ${err.message}`;
+          'No hemos podido leer este PDF. Prueba con otro archivo o rellena los datos a mano.';
       }
 
       setErrorStatus(msg);
@@ -232,8 +238,6 @@ export default function CreateCandidate({ onClose, onSave, existingEmails }) {
     setCvFileName('');
     setCvExtracted(false);
     setErrorStatus(null);
-    setConsentMensaje('');
-    setParsedCandidateId(null);
     setFieldErrors({});
     setFormData({
       name: '',
@@ -333,7 +337,10 @@ export default function CreateCandidate({ onClose, onSave, existingEmails }) {
                   <div className="cv-success-banner d-flex justify-content-between align-items-center p-3 mb-4 bg-success-subtle text-success rounded border border-success">
                     <div className="cv-success-left">
                       <i className="bi bi-check-circle-fill me-2"></i>
-                      <span>{consentMensaje}</span>
+                      <span>
+                        Datos leídos de {cvFileName}. Revísalos y pulsa Guardar
+                        Candidato.
+                      </span>
                     </div>
                     <button
                       type="button"

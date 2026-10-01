@@ -163,6 +163,39 @@ export const candidatesService = {
     return data;
   },
 
+  // Leer un CV en PDF para rellenar el formulario de alta. No guarda nada en el
+  // servidor: el candidato se crea después, al pulsar Guardar.
+  extractCV: async (pdfFile) => {
+    const formData = new FormData();
+    formData.append('pdf_file', pdfFile);
+
+    try {
+      // fetch normal (no authFetch): este fuerza Content-Type JSON y rompería el archivo
+      const response = await fetch(ENDPOINTS.recruitment.candidatos.extractCV, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = new Error(
+          await readErrorMessage(
+            response,
+            `Error al leer el PDF (HTTP ${response.status})`
+          )
+        );
+        error.status = response.status;
+        throw error;
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error en extractCV:', error);
+      if (isNetworkError(error)) throw new Error(UPDATE_NETWORK_ERROR);
+      throw error;
+    }
+  },
+
   getAllCandidates: async (query) => {
     try {
       const response = await authFetch(buildListUrl(query || {}));
