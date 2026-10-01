@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import PhoneInput, { LONGITUDES_TELEFONO } from '../components/shared/PhoneInput';
 import ClienteCard from '../components/crm/ClienteCard';
 import ClienteDetail from '../components/crm/ClienteDetail';
 import BulkActions from '../components/recruitment/shared/BulkActions';
@@ -19,12 +20,12 @@ const formVacio = {
   sector: '',
   contactoPrincipal: '',
   email: '',
+  prefijo: '+34', //  Añadimos España por defecto o el que quieras
   telefono: '',
   cif: '',
   direccion: '',
   prioritario: false,
 };
-
 const validarForm = (datos) => {
   const err = {};
   if (!datos.nombre) err.nombre = 'El nombre es obligatorio';
@@ -32,7 +33,21 @@ const validarForm = (datos) => {
   if (!datos.contactoPrincipal)
     err.contactoPrincipal = 'El contacto es obligatorio';
   if (!datos.email) err.email = 'El email es obligatorio';
-  if (!datos.telefono) err.telefono = 'El telefono es obligatorio';
+
+  // --- VALIDACIÓN DINÁMICA DE TELÉFONO POR PAÍS ---
+  if (!datos.telefono) {
+    err.telefono = 'El teléfono es obligatorio';
+  } else {
+    const numerosSolo = datos.telefono.replace(/\s/g, ''); 
+    const prefijoActual = datos.prefijo || '+34';
+    const reglaPais = LONGITUDES_TELEFONO[prefijoActual] || { min: 9, max: 13 };
+
+    if (numerosSolo.length < reglaPais.min) {
+      err.telefono = `Número no válido. Para este país debe tener al menos ${reglaPais.min} dígitos (llevas ${numerosSolo.length}).`;
+    } else if (numerosSolo.length > reglaPais.max) {
+      err.telefono = `Número no válido. No debe superar los ${reglaPais.max} dígitos.`;
+    }
+  } 
   return err;
 };
 
@@ -209,6 +224,7 @@ export default function Clientes() {
       sector: cliente.sector || '',
       contactoPrincipal: cliente.contactoPrincipal || '',
       email: cliente.email || '',
+      prefijo: cliente.prefijo || '+34', // Nueva propiedad para la bandera
       telefono: cliente.telefono || '',
       cif: cliente.cif || '',
       direccion: cliente.direccion || '',
@@ -686,20 +702,12 @@ export default function Clientes() {
                       )}
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label">Telefono *</label>
-                      <input
-                        name="telefono"
-                        type="tel"
-                        value={form.telefono}
-                        onChange={handleFormChange}
-                        className={`form-control ${errores.telefono ? 'is-invalid' : ''}`}
-                        placeholder="+34 600 000 000"
+                      <label className="form-label">Teléfono *</label>
+                      <PhoneInput 
+                        form={form} 
+                        errores={errores} 
+                        handleFormChange={handleFormChange} 
                       />
-                      {errores.telefono && (
-                        <div className="invalid-feedback">
-                          {errores.telefono}
-                        </div>
-                      )}
                     </div>
                     <div className="col-md-6">
                       <label className="form-label">CIF</label>
