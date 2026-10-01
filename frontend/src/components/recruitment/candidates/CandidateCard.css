@@ -174,16 +174,16 @@
 
 /* ── Vista de lista de candidatos ─────────────────────
    Las columnas de la fila pueden encogerse (min-width: 0) para que un texto largo
-   se corte con "..." en vez de estirar la página. Van con clases propias (cl-*)
+   se corte con "..." en vez de estirar la página. Usa las clases candidate-list-*
    porque .vacante-card-list lo comparte Vacantes. */
-.candidates-list .cl-left,
-.candidates-list .cl-namebox,
-.candidates-list .cl-right {
+.candidates-list .candidate-list-main,
+.candidates-list .candidate-list-main > .d-flex:first-child,
+.candidates-list .candidate-list-actions {
   min-width: 0;
 }
 
-.candidates-list .cl-namebox,
-.candidates-list .cl-left .detail-text {
+.candidates-list .candidate-list-main > .d-flex:first-child,
+.candidates-list .candidate-list-main .detail-text {
   max-width: 100%;
 }
 
@@ -198,8 +198,8 @@
   /* Con la fila en columna, un texto largo (que no salta de línea) hacía crecer la
      página hasta su largo completo. Así ocupa el ancho disponible sin aportar su
      largo, y se corta con "...". */
-  .candidates-list .cl-left > .detail-text,
-  .candidates-list .cl-left > .cl-namebox {
+  .candidates-list .candidate-list-main > .detail-text,
+  .candidates-list .candidate-list-main > .d-flex:first-child {
     width: 0;
     min-width: 100%;
   }
@@ -207,16 +207,16 @@
 
 @media (min-width: 992px) {
   /* En escritorio el texto ocupa lo que sobra y las acciones solo lo que necesitan */
-  .candidates-list .cl-left {
+  .candidates-list .candidate-list-main {
     flex: 1 1 0;
   }
   /* El nombre tiene prioridad: no encoge (salvo que pase del 45 % de la fila) y
      son los textos largos, como las habilidades, los que se cortan primero. */
-  .candidates-list .cl-left > .cl-namebox {
+  .candidates-list .candidate-list-main > .d-flex:first-child {
     flex: 0 0 auto;
     max-width: 45%;
   }
-  .candidates-list .cl-right {
+  .candidates-list .candidate-list-actions {
     flex: 0 0 auto;
     width: auto !important;
   }
