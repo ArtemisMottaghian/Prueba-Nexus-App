@@ -4,9 +4,8 @@ import re
 from dotenv import load_dotenv
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from google import genai
-from google.genai import types
 from sqlalchemy.orm import selectinload
+from langchain_groq import ChatGroq
 
 from app.models.job_model import JobOffer
 from app.models.candidates_model import Candidate
@@ -16,20 +15,24 @@ from pydantic import BaseModel
 
 load_dotenv()
 
-api_key = os.getenv("GEMINI_API_KEY")
+groq_api_key = os.getenv("GROQ_API_KEY")
 
-if not api_key:
+if not groq_api_key:
     raise ValueError(
-        "ERROR: No se ha encontrado GEMINI_API_KEY en las variables de entorno."
+        "ERROR: No se ha encontrado GROQ_API_KEY en las variables de entorno."
     )
 
-# Timeout global: ninguna llamada a Gemini puede quedarse colgada para siempre
-client = genai.Client(
-    api_key=api_key,
-    http_options=types.HttpOptions(timeout=60_000),  # 60s por llamada
-)
+GROQ_MODEL = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
 
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
+def get_groq_llm(temperature=0.1):
+    # Inicializa el motor de Inteligencia Artificial usando la librería ChatGroq.
+    # Groq utiliza LPU (Unidades de Procesamiento de Lenguaje) para una inferencia casi instantánea.
+    return ChatGroq(
+        model=GROQ_MODEL,
+        api_key=groq_api_key,
+        temperature=temperature,
+        max_retries=2
+    )
 
 
 async def fetch_pre_filtered_candidates(
@@ -152,7 +155,7 @@ def score_candidates_by_skills(
     return scored_candidates[:limit]
 
 
-def build_gemini_prompt(vacancy: JobOffer, top_candidates: list[Candidate]) -> str:
+def build_ai_prompt(vacancy: JobOffer, top_candidates: list[Candidate]) -> str:
     """
     Construye el prompt estructurado para enviar a la IA generativa.
 
@@ -193,9 +196,9 @@ def build_gemini_prompt(vacancy: JobOffer, top_candidates: list[Candidate]) -> s
     """
 
 
-def get_match_from_gemini(prompt: str) -> dict:
+async def get_match_from_ai(prompt: str) -> dict:
     """
-    Ejecuta una solicitud al modelo generativo Gemini para procesar el prompt.
+    Ejecuta una solicitud al modelo generativo Groq para procesar el prompt.
 
     Args:
         prompt (str): Texto estructurado con la información y las instrucciones.
@@ -203,16 +206,15 @@ def get_match_from_gemini(prompt: str) -> dict:
     Returns:
         dict: Diccionario que representa la respuesta del modelo procesada según el esquema `MatchResult`.
     """
-    response = client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            response_schema=MatchResult,
-            temperature=0.1,
-        ),
-    )
-    return json.loads(response.text)
+    # Instanciamos el modelo con baja temperatura para que no sea muy imaginativo (respuestas predecibles)
+    llm = get_groq_llm(temperature=0.1)
+    
+    # Obligamos a Groq a devolver los datos en un formato JSON exacto usando nuestro esquema MatchResult
+    structured_llm = llm.with_structured_output(MatchResult)
+    
+    # Lanzamos la petición asíncrona a la IA
+    res = await structured_llm.ainvoke(prompt)
+    return res.model_dump() if hasattr(res, 'model_dump') else res.dict()
 
 
 class CVData(BaseModel):
@@ -250,19 +252,16 @@ _CV_PROMPT = (
 
 
 async def parse_cv_with_ai(raw_text: str) -> dict:
-    """Extrae los datos de un CV con Gemini; si falla, usa el parser de codigo."""
+    """Extrae los datos de un CV con IA; si falla, usa el parser de codigo."""
     try:
         prompt = _CV_PROMPT + (raw_text or "")[:15000] + "\n---"
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=CVData,
-                temperature=0.1,
-            ),
-        )
-        data = json.loads(response.text)
+        
+        # Usamos Groq para procesar el texto masivo del PDF y extraer variables como nombre, experiencia, etc.
+        llm = get_groq_llm(temperature=0.1)
+        structured_llm = llm.with_structured_output(CVData)
+        res = await structured_llm.ainvoke(prompt)
+        data = res.model_dump() if hasattr(res, 'model_dump') else res.dict()
+        
         return {
             "first_name": (data.get("first_name") or "").strip(),
             "last_name": (data.get("last_name") or "").strip(),
@@ -276,7 +275,7 @@ async def parse_cv_with_ai(raw_text: str) -> dict:
             "profile": (data.get("profile") or "").strip(),
         }
     except Exception as e:
-        print(f"[WARN] Gemini no pudo procesar el CV, uso el parser de codigo: {e}")
+        print(f"[WARN] Groq no pudo procesar el CV, uso el parser de codigo: {e}")
         return await parse_with_code(raw_text)
 
 
@@ -330,16 +329,13 @@ async def separar_apartados_cv(
         + (skills or "")[:1000]
         + "\n---"
     )
-    response = client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            response_schema=ApartadosCV,
-            temperature=0.1,
-        ),
-    )
-    data = json.loads(response.text)
+    
+    # Utilizamos Groq para limpiar textos basura y formatear correctamente la experiencia
+    llm = get_groq_llm(temperature=0.1)
+    structured_llm = llm.with_structured_output(ApartadosCV)
+    res = await structured_llm.ainvoke(prompt)
+    data = res.model_dump() if hasattr(res, 'model_dump') else res.dict()
+    
     return {
         "experience": (data.get("experience") or "").strip(),
         "education": (data.get("education") or "").strip(),
@@ -364,28 +360,24 @@ _CONTACT_PROMPT = (
 
 async def parse_contact_from_text(text: str) -> dict:
     """Extrae un contacto del texto de una oferta: email por regex (fiable) y
-    nombre/cargo con Gemini (best-effort). Nunca lanza; devuelve dict."""
+    nombre/cargo con Groq (best-effort). Nunca lanza; devuelve dict."""
     text = (text or "")[:8000]
     m = _EMAIL_RE.search(text)
     email_regex = m.group(0).lower() if m else ""
 
     nombre, cargo, email_ai = "", "", ""
     try:
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=_CONTACT_PROMPT + text + "\n---",
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=ContactoTexto,
-                temperature=0.1,
-            ),
-        )
-        data = json.loads(response.text)
+        # Le pedimos a Groq que busque nombres propios y cargos (como "Director de RRHH") dentro del texto
+        llm = get_groq_llm(temperature=0.1)
+        structured_llm = llm.with_structured_output(ContactoTexto)
+        res = await structured_llm.ainvoke(_CONTACT_PROMPT + text + "\n---")
+        data = res.model_dump() if hasattr(res, 'model_dump') else res.dict()
+        
         nombre = (data.get("nombre") or "").strip()
         cargo = (data.get("cargo") or "").strip()
         email_ai = (data.get("email") or "").strip()
     except Exception as e:
-        print(f"[WARN] IA de contacto no disponible: {e}")
+        print(f"[WARN] IA de contacto no disponible: {e} - fallback manual o ignorar")
 
     return {"nombre": nombre, "email": email_ai or email_regex, "cargo": cargo}
 
@@ -440,24 +432,25 @@ async def calculate_vacancy_match(db: AsyncSession, vacancy_id: int) -> dict:
         return {"top_candidates": []}
 
     # ---------------------------------------------------------
-    # ⚙️ INTERRUPTOR DE MODO: IA (GEMINI) vs MOCK (LOCAL)
+    # ⚙️ INTERRUPTOR DE MODO: IA (GROQ) vs MOCK (LOCAL)
     # ---------------------------------------------------------
 
-    # 🟢 OPCIÓN A: LLAMADA REAL A GEMINI (Producción)
+    # 🟢 OPCIÓN A: LLAMADA REAL A IA (Producción)
     # IMPORTANTE: Descomenta este bloque (borra las triple comillas) para usar la IA.
-    """
+    
     try:
-        print("[INFO] Enviando datos a Gemini para redacción de motivos...")
+        print("[INFO] Enviando datos a Groq para redacción de motivos...")
         top_candidates = [item[1] for item in top_candidates_with_scores]
-        prompt = build_gemini_prompt(vacancy, top_candidates)
-        return get_match_from_gemini(prompt)
+        prompt = build_ai_prompt(vacancy, top_candidates)
+        return await get_match_from_ai(prompt)
     except Exception as e:
-        print(f"[ERROR] Fallo al contactar con Gemini: {e}")
+        print(f"[ERROR] Fallo al contactar con Groq: {e}")
         return {"top_candidates": []}
-    """
+    
 
     # 🟡 OPCIÓN B: MOCK DE RESPUESTA (Desarrollo / Ahorro de Tokens)
     # IMPORTANTE: Comenta este bloque completo si has activado la OPCIÓN A.
+    """
     fake_results = []
     for score, candidate in top_candidates_with_scores[:8]:
         fake_results.append(
@@ -470,3 +463,4 @@ async def calculate_vacancy_match(db: AsyncSession, vacancy_id: int) -> dict:
         )
 
     return {"top_candidates": fake_results}
+    """

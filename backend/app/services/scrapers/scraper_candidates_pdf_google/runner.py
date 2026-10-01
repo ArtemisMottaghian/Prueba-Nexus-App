@@ -6,8 +6,8 @@ import aiohttp
 import fitz
 import uuid  # NUEVO: Para crear nombres de archivo únicos
 from datetime import datetime
-from google import genai  
 from dotenv import load_dotenv
+from langchain_groq import ChatGroq
 
 from sqlalchemy import select
 from app.models.scraper_keyword_model import ScraperKeyword
@@ -18,7 +18,9 @@ from .browser import search_brave_pdfs
 
 load_dotenv(override=True)
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    print("[ERROR CRÍTICO] No se ha encontrado GROQ_API_KEY en el .env.")
 
 LIMIT_FILE = "daily_limit.json"
 # 🛠️ NUEVO: Definimos la carpeta donde se guardarán los PDFs
@@ -101,15 +103,20 @@ async def extract_pdf_data(pdf_bytes: bytes, keyword: str) -> dict | None:
         
         for intento_gemini in range(4):
             try:
-                response = client.models.generate_content(model=os.getenv("GEMINI_MODEL", "gemini-flash-latest"), contents=prompt)
-                clean_json = response.text.replace('```json', '').replace('```', '').strip()
+                llm = ChatGroq(
+                    model=os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b"), 
+                    api_key=GROQ_API_KEY, 
+                    temperature=0.1
+                )
+                response = llm.invoke(prompt)
+                clean_json = response.content.replace('```json', '').replace('```', '').strip()
                 parsed_data = json.loads(clean_json)
                 
                 if not parsed_data:
                     print(f"CV descartado no cumple requisitos para: {keyword}")
                     return None
                 
-                print("Extraído con éxito usando Gemini (Plan Gratuito)")
+                print("Extraído con éxito usando Groq")
                 if isinstance(parsed_data, list) and len(parsed_data) > 0:
                     return parsed_data[0]
                 return parsed_data if parsed_data else None

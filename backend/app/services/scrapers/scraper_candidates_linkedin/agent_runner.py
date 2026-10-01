@@ -5,7 +5,7 @@ from typing import Optional
 from dotenv import load_dotenv
 from pypdf import PdfReader
 from playwright.async_api import async_playwright
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 # Si no usas la BD todavía, puedes comentar la siguiente línea
 # from app.schemas.candidates_schemas import CandidateCreate as CandidateSchema
 
@@ -16,16 +16,16 @@ load_dotenv()
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 COOKIES_PATH = os.path.join(CURRENT_DIR, "cookies.json")
 
-# Instancia de Gemini
-api_key = os.getenv("GEMINI_API_KEY")
+# Instancia de Groq
+api_key = os.getenv("GROQ_API_KEY")
 if not api_key:
     print("  ERROR CRÍTICO: ¡Python no encuentra la llave! El valor de api_key es 'None'.")
-    print("  Revisa que el .env esté en la carpeta 'backend' y la variable se llame GEMINI_API_KEY.")
+    print("  Revisa que el .env esté en la carpeta 'backend' y la variable se llame GROQ_API_KEY.")
     import sys
     sys.exit(1)
-llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash", 
-    google_api_key=api_key, 
+llm = ChatGroq(
+    model="llama3-70b-8192", 
+    api_key=api_key, 
     temperature=0
 )
 
@@ -93,11 +93,11 @@ async def download_and_read_pdf(page):
         return None
 
 
-async def parse_with_gemini(text_content: str):
+async def parse_with_groq(text_content: str):
     """
-    Usa Gemini para convertir el texto sucio del PDF en un JSON limpio.
+    Usa Groq para convertir el texto sucio del PDF en un JSON limpio.
     """
-    print("  Procesando perfil con Gemini...")
+    print("  Procesando perfil con Groq...")
     prompt = (
         "Analiza el siguiente texto extraído de un perfil de LinkedIn y devuelve un JSON estricto "
         "con los campos: 'full_name', 'education' (lista de objetos con 'degree', 'institution', 'dates') "
@@ -109,7 +109,7 @@ async def parse_with_gemini(text_content: str):
         response = await llm.ainvoke(prompt)
         return response.content
     except Exception as e:
-        print(f"  Error en Gemini: {e}")
+        print(f"  Error en Groq: {e}")
         return None
 
 
@@ -160,7 +160,7 @@ async def extract_with_agent(profile_url: str, location: str, headless: bool = F
                 return None
 
             # 2. IA procesa el texto
-            structured_data = await parse_with_gemini(raw_text)
+            structured_data = await parse_with_groq(raw_text)
             
             print(f" ✅ Candidato extraído correctamente.")
             return structured_data
