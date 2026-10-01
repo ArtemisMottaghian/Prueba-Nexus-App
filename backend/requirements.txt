@@ -168,5 +168,6 @@ xxhash==3.7.0
 yarl==1.23.0
 zstandard==0.25.0
 pdfplumber==0.11.9
-google-auth-oauthlib==1.4.0groq==0.37.1
+google-auth-oauthlib==1.4.0
+groq==0.37.1
 langchain-groq==1.1.3
