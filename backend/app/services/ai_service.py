@@ -18,13 +18,13 @@ load_dotenv()
 groq_api_key = os.getenv("GROQ_API_KEY")
 
 if not groq_api_key:
-    raise ValueError(
-        "ERROR: No se ha encontrado GROQ_API_KEY en las variables de entorno."
-    )
+    print("[WARN] No se ha encontrado GROQ_API_KEY en las variables de entorno. Las llamadas a IA fallarán gracefulmente.")
 
 GROQ_MODEL = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
 
 def get_groq_llm(temperature=0.1):
+    if not groq_api_key:
+        raise ValueError("GROQ_API_KEY no configurada")
     # Inicializa el motor de Inteligencia Artificial usando la librería ChatGroq.
     # Groq utiliza LPU (Unidades de Procesamiento de Lenguaje) para una inferencia casi instantánea.
     return ChatGroq(

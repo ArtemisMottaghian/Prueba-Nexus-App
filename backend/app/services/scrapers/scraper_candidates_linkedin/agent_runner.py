@@ -19,15 +19,14 @@ COOKIES_PATH = os.path.join(CURRENT_DIR, "cookies.json")
 # Instancia de Groq
 api_key = os.getenv("GROQ_API_KEY")
 if not api_key:
-    print("  ERROR CRÍTICO: ¡Python no encuentra la llave! El valor de api_key es 'None'.")
-    print("  Revisa que el .env esté en la carpeta 'backend' y la variable se llame GROQ_API_KEY.")
-    import sys
-    sys.exit(1)
-llm = ChatGroq(
-    model="llama3-70b-8192", 
-    api_key=api_key, 
-    temperature=0
-)
+    print("  [WARN] No se encuentra GROQ_API_KEY. El agente de LinkedIn fallará de forma segura.")
+    llm = None
+else:
+    llm = ChatGroq(
+        model="llama3-70b-8192", 
+        api_key=api_key, 
+        temperature=0
+    )
 
 async def login_to_linkedin(page):
     """
@@ -97,6 +96,9 @@ async def parse_with_groq(text_content: str):
     """
     Usa Groq para convertir el texto sucio del PDF en un JSON limpio.
     """
+    if not llm:
+        print("  Error: No hay cliente de Groq (API KEY ausente)")
+        return None
     print("  Procesando perfil con Groq...")
     prompt = (
         "Analiza el siguiente texto extraído de un perfil de LinkedIn y devuelve un JSON estricto "
