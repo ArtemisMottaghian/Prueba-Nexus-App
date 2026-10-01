@@ -75,7 +75,7 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
         tabIndex="-1"
         role="dialog"
       >
-        <div className="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable candidate-form-dialog">
+        <div className="modal-dialog modal-dialog-centered modal-lg candidate-form-dialog">
           <div className="modal-content">
             <div className="modal-header">
               <h4 className="modal-title fw-bold">
@@ -90,7 +90,7 @@ export default function EditCandidate({ candidate, onClose, onSave }) {
               ></button>
             </div>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
               <div className="modal-body">
                 {/* Nombre Completo */}
                 <div className="mb-3">
