@@ -45,8 +45,8 @@ export default function CandidateCard({
         onClick={onClick}
         style={{ cursor: 'pointer' }}
       >
-        <div className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between w-100 p-3 gap-3">
-          <div className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-2 gap-lg-3 w-100">
+        <div className="candidate-list-content d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between w-100 p-3 gap-3">
+          <div className="candidate-list-main d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-2 gap-lg-3 w-100">
             <div className="d-flex align-items-center gap-2">
               <input
                 className="form-check-input mt-0"
@@ -69,7 +69,7 @@ export default function CandidateCard({
             </span>
           </div>
 
-          <div className="d-flex align-items-center gap-2 flex-wrap justify-content-start justify-content-lg-end w-100">
+          <div className="candidate-list-actions d-flex align-items-center gap-2 flex-wrap justify-content-start justify-content-lg-end w-100">
             <span className="detail-text opacity-75">
               <i className="bi bi-geo-alt me-1"></i>
               {candidate.location}

@@ -402,3 +402,106 @@ select.badge-contactada,
     flex-wrap: wrap;
   }
 }
+
+/* Evita que nombres, empresas y ubicaciones creen scroll horizontal. */
+.list-main-info,
+.list-text-group,
+.list-meta-info,
+.list-location,
+.list-actions {
+  min-width: 0;
+}
+
+.list-text-group {
+  flex: 1 1 auto;
+}
+
+.list-title,
+.list-company,
+.list-industry,
+.list-location span {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list-company,
+.list-industry {
+  flex: 0 1 auto;
+}
+
+.detail-item > .d-flex {
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.vacante-assignee {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 576px) {
+  .vacante-card-list {
+    padding: 0.85rem;
+  }
+
+  .list-wrapper,
+  .list-main-info,
+  .list-meta-info {
+    align-items: flex-start;
+  }
+
+  .list-main-info {
+    width: 100%;
+  }
+
+  .list-text-group {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3px;
+  }
+
+  .list-separator {
+    display: none;
+  }
+
+  .list-title,
+  .list-company,
+  .list-industry {
+    width: 100%;
+  }
+
+  .list-meta-info {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .list-location {
+    flex: 1 1 auto;
+  }
+
+  .list-actions {
+    flex: 0 0 auto;
+  }
+
+  .card-header-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 6px;
+  }
+
+  .vacante-card .select-status-inline {
+    width: 100%;
+  }
+
+  .vacante-footer {
+    align-items: flex-start;
+  }
+
+  .vacante-footer .origin-badge {
+    max-width: 100%;
+  }
+}

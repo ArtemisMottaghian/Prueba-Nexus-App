@@ -144,3 +144,30 @@
     align-self: flex-start;
   }
 }
+
+@media (max-width: 576px) {
+  .vacante-card {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .vacante-title,
+  .candidate-recruiter {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .detail-item {
+    min-width: 0;
+  }
+
+  .detail-item > span:last-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .vacante-footer {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+}

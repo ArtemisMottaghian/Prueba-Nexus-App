@@ -329,7 +329,7 @@ export default function Clientes() {
       style={{ height: 'auto', overflow: 'visible' }}
     >
       {/* Cabecera */}
-      <div className="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-2">
+      <div className="clientes-page-header mb-4 d-flex justify-content-between align-items-start flex-wrap gap-2">
         <div>
           <p className="text-muted mb-0">
             {clientes.length} empresas registradas
@@ -367,7 +367,7 @@ export default function Clientes() {
         <div>
           {/* Cabecera fija: buscador + filtros */}
           <div className="clientes-list-header">
-            <div className="d-flex flex-wrap gap-2 mb-3">
+            <div className="clientes-status-tabs d-flex flex-wrap gap-2 mb-3">
               {ESTADOS_CUENTA.map((e) => (
                 <button
                   key={e.value}
@@ -381,7 +381,7 @@ export default function Clientes() {
               ))}
             </div>
             <label
-              className="d-flex align-items-center gap-2 mb-2"
+              className="clientes-sort-control d-flex align-items-center gap-2 mb-2"
               style={{ fontSize: '0.875rem', color: '#6b7787' }}
             >
               Ordenar por
@@ -415,7 +415,7 @@ export default function Clientes() {
               )}
             </div>
 
-            <div className="d-flex gap-2">
+            <div className="clientes-filter-controls d-flex gap-2">
               <select
                 className="form-select form-select-sm clientes-select"
                 value={filtroSector}
@@ -442,7 +442,8 @@ export default function Clientes() {
             className="clientes-list-scroll"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
+              gridTemplateColumns:
+                'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
               gap: '20px',
               maxHeight: 'none',
               overflow: 'visible',

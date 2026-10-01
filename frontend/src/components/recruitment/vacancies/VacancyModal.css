@@ -1214,3 +1214,64 @@
     max-width: 100%;
   }
 }
+
+@media (max-width: 576px) {
+  .modal-header {
+    align-items: flex-start;
+    padding: 16px 14px 14px;
+  }
+
+  .modal-header > * {
+    min-width: 0;
+  }
+
+  .modal-title {
+    font-size: 17px;
+  }
+
+  .modal-subtitle,
+  .field-value,
+  .vacancy-description,
+  .cand-notas {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .modal-body-scroll {
+    padding: 14px 10px;
+  }
+
+  .vacancy-modal-tabs {
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+
+  .vacancy-modal-tabs .nav-tabs {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: thin;
+  }
+
+  .vacancy-modal-tabs .nav-link {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 8px 9px;
+  }
+
+  .detail-field {
+    padding: 11px 12px;
+    gap: 9px;
+  }
+
+  .modal-footer,
+  .vacancy-modal-toolbar {
+    align-items: stretch;
+  }
+
+  .modal-footer > *,
+  .vacancy-modal-toolbar > .btn,
+  .vacancy-modal-toolbar > button {
+    max-width: 100%;
+  }
+}

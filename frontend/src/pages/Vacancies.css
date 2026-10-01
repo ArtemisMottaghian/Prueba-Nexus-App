@@ -71,6 +71,31 @@
   }
 }
 
+@media (max-width: 576px) {
+  .vacancies-page {
+    overflow-x: hidden;
+  }
+
+  .vacancies-toolbar__meta,
+  .vacancies-toolbar__actions {
+    align-items: stretch;
+  }
+
+  .vacancies-toolbar__meta > *,
+  .vacancies-toolbar__actions > .btn {
+    width: 100%;
+  }
+
+  .vacancies-toolbar__meta label {
+    justify-content: space-between;
+  }
+
+  .vacancies-toolbar__meta .form-select {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
 .vacancies-page .clientes-pagination__pagesize {
   display: flex;
   align-items: center;

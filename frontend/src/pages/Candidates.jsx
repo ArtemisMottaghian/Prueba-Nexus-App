@@ -497,7 +497,7 @@ export default function Candidates() {
   );
 
   return (
-    <>
+    <div className="candidates-page">
       <div className="controls-container sticky-controls">
         <FilterBar
           filters={filters}
@@ -557,8 +557,8 @@ export default function Candidates() {
       </div>
 
       {!loading && (
-        <div className="d-flex justify-content-between align-items-center mb-3 mt-3">
-          <div className="d-flex align-items-center gap-3">
+        <div className="candidates-toolbar d-flex justify-content-between align-items-center mb-3 mt-3">
+          <div className="candidates-toolbar__meta d-flex align-items-center gap-3">
             <div className="text-muted small">
               Mostrando {candidatesPaginados.length} de{' '}
               {filteredCandidates.length} candidatos
@@ -578,7 +578,7 @@ export default function Candidates() {
             </label>
           </div>
 
-          <div className="d-flex gap-2">
+          <div className="candidates-toolbar__actions d-flex gap-2">
             <button
               className="btn btn-sm btn-primary"
               onClick={() => setIsCreateModalOpen(true)}
@@ -617,7 +617,7 @@ export default function Candidates() {
       )}
 
       {!loading && isNegocio && (
-        <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <div className="candidates-assignment-toolbar d-flex flex-wrap align-items-center gap-2 mb-3">
           <div className="btn-group btn-group-sm" role="group">
             <button
               type="button"
@@ -782,6 +782,6 @@ export default function Candidates() {
           onSave={handleSaveEditCandidate}
         />
       )}
-    </>
+    </div>
   );
 }

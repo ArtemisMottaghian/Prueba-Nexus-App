@@ -148,3 +148,12 @@
     max-width: 100%;
   }
 }
+
+@media (max-width: 480px) {
+  .loc-select__panel {
+    left: 0;
+    right: 0;
+    width: auto;
+    max-width: none;
+  }
+}

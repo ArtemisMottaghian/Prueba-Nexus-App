@@ -211,6 +211,14 @@
   .advanced-grid {
     grid-template-columns: 1fr;
   }
+
+  .linkedin-filter-container {
+    padding: 10px;
+  }
+
+  .filter-pills-group {
+    gap: 6px;
+  }
 }
 
 /* =========================================

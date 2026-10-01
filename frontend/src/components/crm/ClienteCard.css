@@ -436,3 +436,30 @@
     font-size: 10px;
   }
 }
+
+@media (max-width: 576px) {
+  .cliente-card {
+    padding: 12px;
+  }
+
+  .cc-top,
+  .cc-name-row,
+  .cc-bottom {
+    align-items: flex-start;
+  }
+
+  .cc-nombre,
+  .cc-contacto {
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .cc-actions {
+    flex-wrap: wrap;
+  }
+
+  .clientes-pagination__controls {
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+}

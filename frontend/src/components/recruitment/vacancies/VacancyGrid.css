@@ -142,3 +142,20 @@
     flex: 1;
   }
 }
+
+@media (max-width: 576px) {
+  .vacancies-grid,
+  .vacancies-list {
+    gap: 0.75rem;
+    padding-top: 0.75rem;
+  }
+
+  .results-header {
+    margin-bottom: 12px;
+  }
+
+  .results-title {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+}
