@@ -362,6 +362,17 @@ export default function Candidates() {
     return map;
   }, [hrUsers]);
 
+  // Emails de los candidatos cargados: el alta avisa antes de enviar si ya existe
+  const existingEmails = useMemo(
+    () =>
+      new Set(
+        candidates
+          .map((c) => (c.email || '').trim().toLowerCase())
+          .filter(Boolean)
+      ),
+    [candidates]
+  );
+
   const countPendientes = candidates.filter(
     (c) => c.managed_by_id == null
   ).length;
@@ -772,6 +783,7 @@ export default function Candidates() {
         <CreateCandidate
           onClose={() => setIsCreateModalOpen(false)}
           onSave={handleSaveNewCandidate}
+          existingEmails={existingEmails}
         />
       )}
 

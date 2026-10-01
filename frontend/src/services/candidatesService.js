@@ -55,6 +55,68 @@ const mapCandidateData = (c) => ({
   time: formatFecha(c.created_at || c.time),
 });
 
+const FIELD_LABELS = {
+  first_name: 'Nombre',
+  last_name: 'Apellido',
+  email: 'Email',
+  phone: 'Teléfono',
+  location: 'Localización',
+  skills: 'Habilidades',
+  experience: 'Experiencia',
+  education: 'Formación',
+  languages: 'Idiomas',
+  profile: 'Perfil',
+};
+
+const describeValidationError = (err) => {
+  const field = err.loc?.[err.loc.length - 1];
+  const label = FIELD_LABELS[field] || field || 'Un campo';
+  switch (err.type) {
+    case 'missing':
+      return `${label} es obligatorio`;
+    case 'string_too_short':
+      return `${label} debe tener al menos ${err.ctx?.min_length ?? 2} caracteres`;
+    case 'string_too_long':
+      return `${label} no puede superar ${err.ctx?.max_length} caracteres`;
+    case 'string_pattern_mismatch':
+    case 'value_error':
+      return `${label} no tiene un formato válido`;
+    default:
+      return `${label}: ${err.msg}`;
+  }
+};
+
+// FastAPI devuelve `detail` como texto, o como lista de errores de validación
+// (objetos). Lo convertimos siempre a un texto que el usuario pueda leer.
+const formatApiDetail = (detail) => {
+  if (!detail) return null;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    return detail.map(describeValidationError).join('; ');
+  }
+  return JSON.stringify(detail);
+};
+
+const readErrorMessage = async (response, fallback) => {
+  try {
+    const body = await response.json();
+    return formatApiDetail(body?.detail) || fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+// Cuando el servidor falla sin controlar el error (p. ej. email duplicado) el
+// navegador no llega a leer la respuesta y solo lanza "Failed to fetch".
+const isNetworkError = (error) =>
+  error instanceof TypeError &&
+  /fetch|network|load failed/i.test(error.message);
+
+const CREATE_NETWORK_ERROR =
+  'El servidor no ha podido guardar el candidato. Lo más probable es que ya exista un candidato con ese email; si no es así, revisa tu conexión e inténtalo de nuevo.';
+const UPDATE_NETWORK_ERROR =
+  'No se ha podido contactar con el servidor. Revisa tu conexión e inténtalo de nuevo.';
+
 function buildListUrl(query = {}) {
   const sp = new URLSearchParams();
   if (query.verified === true) sp.set('verified', 'true');
@@ -282,14 +344,19 @@ export const candidatesService = {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Error al crear el candidato');
+        throw new Error(
+          await readErrorMessage(
+            response,
+            `Error al crear el candidato (HTTP ${response.status})`
+          )
+        );
       }
 
       const data = await response.json();
       return mapCandidateData(data);
     } catch (error) {
       console.error('Error en createCandidate:', error);
+      if (isNetworkError(error)) throw new Error(CREATE_NETWORK_ERROR);
       throw error;
     }
   },
@@ -309,7 +376,12 @@ export const candidatesService = {
       );
 
       if (!response.ok) {
-        throw new Error('Error al actualizar el candidato en el servidor');
+        throw new Error(
+          await readErrorMessage(
+            response,
+            'Error al actualizar el candidato en el servidor'
+          )
+        );
       }
 
       // Leemos la respuesta como texto primero en lugar de forzar JSON
@@ -322,6 +394,7 @@ export const candidatesService = {
       return data ? mapCandidateData(data) : null;
     } catch (error) {
       console.error(`Error en updateCandidate para el ID ${id}:`, error);
+      if (isNetworkError(error)) throw new Error(UPDATE_NETWORK_ERROR);
       throw error;
     }
   },
