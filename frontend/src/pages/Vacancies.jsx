@@ -427,7 +427,7 @@ export default function Vacancies() {
         <div className="vacancies-toolbar__actions">
           {isNegocio && (
             <button
-              className="btn btn-sm btn-primary"
+              className="btn btn-sm btn-nexus"
               onClick={() => setIsCreateModalOpen(true)}
             >
               <i className="bi bi-plus-lg me-2"></i> Añadir Vacante
