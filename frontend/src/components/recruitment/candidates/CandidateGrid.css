@@ -100,6 +100,209 @@
   opacity: 0.5;
 }
 
+/* La página de candidatos comparte la misma densidad y ritmo móvil que Vacantes. */
+.candidates-page {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.candidates-page .candidate-grid-wrapper,
+.candidates-page .candidates-grid,
+.candidates-page .candidates-list {
+  min-width: 0;
+  width: 100%;
+}
+
+.candidates-page .candidate-grid-wrapper {
+  overflow: hidden;
+}
+
+.candidates-page .candidates-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+}
+
+.candidates-page .clientes-pagination {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .candidates-page .candidates-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .candidates-page .results-header {
+    margin: 12px 0;
+  }
+
+  .candidates-page .view-toggle {
+    width: 100%;
+  }
+
+  .candidates-page .view-btn {
+    flex: 1 1 0;
+  }
+
+  .candidates-page .vacante-card-list {
+    padding: 0;
+  }
+
+  .candidate-list-content {
+    padding: 14px !important;
+  }
+
+  .candidate-list-main,
+  .candidate-list-actions {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .candidate-list-main > .d-flex:first-child {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .candidate-list-main .vacante-title-list-sm,
+  .candidate-list-main .detail-text {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .candidate-list-actions {
+    justify-content: space-between !important;
+    gap: 8px !important;
+  }
+
+  .candidates-page .clientes-pagination__info {
+    width: 100%;
+    white-space: normal;
+    line-height: 1.4;
+  }
+
+  .candidates-page .clientes-pagination__controls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .candidates-page .results-title {
+    font-size: 1.1rem;
+  }
+
+  .candidate-list-main {
+    gap: 6px !important;
+  }
+
+  .candidate-list-main > .d-flex:first-child {
+    align-items: flex-start !important;
+  }
+
+  .candidate-list-main .vacante-title-list-sm {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .candidate-list-actions {
+    align-items: flex-start !important;
+    flex-wrap: wrap;
+  }
+}
+
+/* Toolbar móvil alineada con Vacantes: cada grupo ocupa su propia fila. */
+@media (max-width: 768px) {
+  .candidates-page .candidates-toolbar {
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 10px !important;
+    margin-top: 12px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .candidates-page .candidates-toolbar__meta,
+  .candidates-page .candidates-toolbar__actions {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .candidates-page .candidates-toolbar__meta {
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .candidates-page .candidates-toolbar__meta > .text-muted {
+    white-space: normal;
+    line-height: 1.45;
+  }
+
+  .candidates-page .candidates-toolbar__meta > label {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .candidates-page .candidates-toolbar__meta > label .form-select {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto !important;
+  }
+
+  .candidates-page .candidates-toolbar__actions {
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px !important;
+  }
+
+  .candidates-page .candidates-toolbar__actions .btn {
+    width: 100%;
+    white-space: normal;
+  }
+
+  .candidates-page .candidates-assignment-toolbar {
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch !important;
+    width: 100%;
+    gap: 8px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .candidates-page .candidates-assignment-toolbar .btn-group {
+    display: flex;
+    width: 100%;
+  }
+
+  .candidates-page .candidates-assignment-toolbar .btn-group .btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-left: 6px;
+    padding-right: 6px;
+    white-space: nowrap;
+  }
+
+  .candidates-page .candidates-assignment-toolbar > .form-select {
+    width: 100% !important;
+  }
+
+  .candidates-page .view-toggle {
+    width: fit-content;
+    max-width: 100%;
+    justify-content: flex-start;
+  }
+
+  .candidates-page .view-btn {
+    flex: 0 0 56px;
+  }
+}
+
 /* ── Botones morados de Nexus (Candidatos) ────────────
    Sustituyen al azul por defecto de Bootstrap (#0d6efd) sin cambiar el tamaño del botón.
    Se usan con la clase "btn" (btn btn-nexus, btn btn-outline-nexus). */

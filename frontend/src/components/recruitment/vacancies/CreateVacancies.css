@@ -130,3 +130,19 @@
 [data-bs-theme='dark'] .custom-create-modal .btn-outline-secondary {
   color: var(--text-secondary, #d1d5db);
 }
+
+@media (max-width: 768px) {
+  .custom-create-modal .modal-dialog {
+    margin: 8px;
+    max-width: calc(100% - 16px);
+  }
+
+  .custom-create-modal .modal-footer {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .custom-create-modal .modal-footer .btn {
+    flex: 1 1 auto;
+  }
+}

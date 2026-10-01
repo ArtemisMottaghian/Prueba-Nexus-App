@@ -15,8 +15,8 @@
 }
 
 .search-input-group {
-  flex: 1;
-  min-width: 300px;
+  flex: 1 1 220px;
+  min-width: 0;
   display: flex;
   align-items: center;
   background: var(--bg-secondary);
@@ -54,7 +54,13 @@
 .filter-pills-group {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
+  min-width: 0;
+}
+
+.pill-item {
+  min-width: 0;
 }
 
 .pill-select {
@@ -154,7 +160,7 @@
 /* ===================================================
    RESPONSIVO (MÓVILES Y TABLETS)
    =================================================== */
-@media (max-width: 768px) {
+@media (max-width: 991px) {
   .filter-main-row {
     flex-direction: column;
     align-items: stretch;
@@ -162,8 +168,9 @@
   }
 
   .search-input-group {
-    min-width: 100%;
+    min-width: 0;
     width: 100%;
+    flex: 1 1 auto;
   }
 
   .filter-pills-group {
@@ -172,9 +179,13 @@
     width: 100%;
   }
 
+  .filter-pills-group > * {
+    flex: 1 1 calc(50% - 8px);
+  }
+
   .pill-select,
   .btn-advanced-toggle {
-    flex: 1 1 calc(50% - 8px);
+    width: 100%;
     text-align: center;
     padding: 8px 10px;
   }
@@ -191,6 +202,7 @@
 }
 
 @media (max-width: 480px) {
+  .filter-pills-group > *,
   .pill-select,
   .btn-advanced-toggle {
     flex: 1 1 100%;
@@ -198,6 +210,14 @@
 
   .advanced-grid {
     grid-template-columns: 1fr;
+  }
+
+  .linkedin-filter-container {
+    padding: 10px;
+  }
+
+  .filter-pills-group {
+    gap: 6px;
   }
 }
 
@@ -217,9 +237,12 @@
 /* =========================================
    AJUSTE PARA MÓVILES Y TABLETS
    ========================================= */
-@media (max-width: 768px) {
+@media (max-width: 991px) {
   .sticky-controls {
-    top: 65px;
-    padding: 12px 0;
+    position: relative !important;
+    top: auto !important;
+    background: transparent !important;
+    margin-bottom: 12px !important;
+    padding: 0 !important;
   }
 }

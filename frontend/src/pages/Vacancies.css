@@ -1,0 +1,105 @@
+/* Página Vacantes: toolbar, paginación y contenedor */
+
+.vacancies-page {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.vacancies-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+
+.vacancies-toolbar__meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.vacancies-toolbar__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.vacancies-toolbar .form-select {
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .vacancies-toolbar {
+    align-items: stretch;
+  }
+
+  .vacancies-toolbar__meta,
+  .vacancies-toolbar__actions {
+    width: 100%;
+  }
+
+  .vacancies-toolbar__actions .btn {
+    flex: 1 1 auto;
+    white-space: nowrap;
+  }
+
+  .vacancies-page .clientes-pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .vacancies-page .clientes-pagination__info {
+    white-space: normal;
+  }
+
+  .vacancies-page .clientes-pagination__controls {
+    flex-wrap: wrap;
+    overflow: visible;
+    justify-content: flex-start;
+    row-gap: 8px;
+  }
+
+  .vacancies-page .clientes-pagination__pagesize {
+    width: 100%;
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .vacancies-page {
+    overflow-x: hidden;
+  }
+
+  .vacancies-toolbar__meta,
+  .vacancies-toolbar__actions {
+    align-items: stretch;
+  }
+
+  .vacancies-toolbar__meta > *,
+  .vacancies-toolbar__actions > .btn {
+    width: 100%;
+  }
+
+  .vacancies-toolbar__meta label {
+    justify-content: space-between;
+  }
+
+  .vacancies-toolbar__meta .form-select {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
+.vacancies-page .clientes-pagination__pagesize {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 12px;
+  font-size: 0.875rem;
+}

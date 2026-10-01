@@ -689,6 +689,83 @@
   color: #111827;
 }
 
+@media (max-width: 991px) {
+  .clientes-page {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden !important;
+  }
+
+  .clientes-page-header {
+    margin-bottom: 16px !important;
+    align-items: stretch !important;
+  }
+
+  .clientes-page-header > * {
+    max-width: 100%;
+  }
+
+  .clientes-page-header .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .clientes-list-header {
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .clientes-status-tabs {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .clientes-status-tabs .btn {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .clientes-sort-control {
+    width: 100%;
+    justify-content: space-between;
+    margin-bottom: 0 !important;
+  }
+
+  .clientes-sort-control .form-select {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto !important;
+  }
+
+  .clientes-filter-controls {
+    width: 100%;
+  }
+
+  .clientes-filter-controls .clientes-select {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .clientes-list-scroll {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .clientes-pagination__info {
+    width: 100%;
+    white-space: normal;
+    line-height: 1.4;
+  }
+}
+
 /* Botones danger en btn-icon */
 .btn-icon .bi-trash,
 .btn-icon .text-danger,

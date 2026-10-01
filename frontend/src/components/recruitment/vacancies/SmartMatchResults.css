@@ -15,6 +15,18 @@
   padding: 20px;
 }
 
+@media (max-width: 576px) {
+  .smart-match-overlay {
+    padding: 8px;
+    align-items: stretch;
+  }
+
+  .smart-match-modal {
+    max-height: 100%;
+    border-radius: 16px;
+  }
+}
+
 .smart-match-modal {
   width: 100%;
   max-width: 600px;
