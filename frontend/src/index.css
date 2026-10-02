@@ -89,18 +89,28 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
 }
 
 .ara-content {
   flex: 1;
   display: flex;
   overflow: hidden;
+  min-width: 0;
 }
 
 .content-scroll {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 24px;
+  min-width: 0;
+}
+
+@media (max-width: 991px) {
+  .content-scroll {
+    padding: 16px;
+  }
 }
 
 /* ==========================================
@@ -303,4 +313,37 @@ body {
   font-size: 0.75rem;
   color: #94a3b8;
   margin: 0;
+}
+
+/* ── Botones morados de Nexus (compartidos: Candidatos y Vacantes) ────────────
+   Sustituyen al azul por defecto de Bootstrap (#0d6efd) sin cambiar el tamaño del botón.
+   Se usan con la clase "btn" (btn btn-nexus, btn btn-outline-nexus). */
+.btn-nexus {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--color-purple-primary);
+  --bs-btn-border-color: var(--color-purple-primary);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--color-purple-secondary);
+  --bs-btn-hover-border-color: var(--color-purple-secondary);
+  --bs-btn-focus-shadow-rgb: 124, 63, 255;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--color-purple-dark);
+  --bs-btn-active-border-color: var(--color-purple-dark);
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: var(--color-purple-primary);
+  --bs-btn-disabled-border-color: var(--color-purple-primary);
+}
+
+.btn-outline-nexus {
+  --bs-btn-color: var(--color-purple-secondary);
+  --bs-btn-border-color: var(--color-purple-secondary);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--color-purple-secondary);
+  --bs-btn-hover-border-color: var(--color-purple-secondary);
+  --bs-btn-focus-shadow-rgb: 124, 63, 255;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--color-purple-secondary);
+  --bs-btn-active-border-color: var(--color-purple-secondary);
+  --bs-btn-disabled-color: var(--color-purple-secondary);
+  --bs-btn-disabled-border-color: var(--color-purple-secondary);
 }

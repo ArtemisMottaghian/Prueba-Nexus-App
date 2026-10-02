@@ -401,6 +401,14 @@
   white-space: nowrap;
 }
 
+/* Modo oscuro: el morado de la marca (#4425a7) sobre fondo oscuro no se lee
+   (contraste 1,4 a 1). Se usa un lila claro, con el mismo estilo. */
+[data-bs-theme='dark'] .skill-chip {
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.18);
+  border-color: rgba(167, 139, 250, 0.35);
+}
+
 /* Apartados del CV como lista (experiencia, formacion, idiomas) */
 .cv-list {
   margin: 0;
@@ -424,4 +432,94 @@
   border-radius: 50%;
   background: var(--text-secondary, #6c757d);
   opacity: 0.55;
+}
+
+/* ── Ficha en el móvil ───────────────────────────────── */
+@media (max-width: 576px) {
+  /* Acciones: el estado ocupa el ancho que sobra junto a "Verificar" y los iconos
+     van debajo, sin el separador vertical que se quedaba suelto. */
+  .modal-candidate .cm-estado {
+    flex: 1 1 140px;
+    min-width: 0;
+    max-width: none;
+  }
+  .modal-candidate .cm-iconos {
+    border: 0 !important;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+  }
+
+  /* Pestañas en una sola línea: sin iconos, y con scroll lateral si aun así no caben */
+  .modal-candidate .cm-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .modal-candidate .cm-tabs .nav-link {
+    white-space: nowrap;
+    padding-inline: 0.6rem;
+  }
+  .modal-candidate .cm-tabs .nav-link i {
+    display: none;
+  }
+
+  /* Seguimiento: los campos uno debajo de otro, no en columnas estrechas */
+  .modal-candidate .cand-form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Ficha: pestaña Detalles ──────────────────────────
+   Primero lo importante (experiencia, habilidades, formación e idiomas) y al final
+   el contacto y los enlaces en etiquetas compactas. */
+.cm-missing {
+  background: var(--bg-secondary);
+  border: 1px dashed var(--border-color);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.cm-two-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.cm-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.cm-contact-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 100%;
+  padding: 0.45rem 0.85rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+a.cm-contact-item:hover {
+  border-color: var(--color-purple-secondary);
+  color: var(--color-purple-secondary);
+}
+
+.cm-contact-label {
+  font-weight: 700;
+}
+
+@media (max-width: 576px) {
+  .cm-two-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

@@ -60,10 +60,26 @@ export default function CandidateModal({
 
   const metaEnlace = (url) =>
     /linkedin/i.test(url)
-      ? { label: 'Perfil de LinkedIn', icon: 'bi-linkedin' }
+      ? { label: 'LinkedIn', icon: 'bi-linkedin' }
       : /github/i.test(url)
         ? { label: 'GitHub', icon: 'bi-github' }
-        : { label: 'Portfolio / Web', icon: 'bi-globe' };
+        : /infojobs/i.test(url)
+          ? { label: 'InfoJobs', icon: 'bi-briefcase' }
+          : { label: 'Web', icon: 'bi-globe' };
+
+  // "linkedin.com/in/ana-lopez" en vez de la URL entera con ?utm_...
+  const enlaceCorto = (url) => {
+    try {
+      const u = new URL(url);
+      const texto = (u.hostname.replace(/^www\./, '') + u.pathname).replace(
+        /\/$/,
+        ''
+      );
+      return texto.length > 42 ? texto.slice(0, 40) + '…' : texto;
+    } catch {
+      return url;
+    }
+  };
 
   const enlaces = [
     candidate.linkedinUrl,
@@ -76,6 +92,20 @@ export default function CandidateModal({
     .split(',')
     .map((s) => s.trim())
     .filter((s) => s && s !== 'N/A' && s !== 'Sin especificar');
+
+  const tieneExperiencia =
+    !!candidate.experience &&
+    !['N/A', 'Consultar CV'].includes(candidate.experience.trim());
+
+  // Lo que falta se agrupa en una línea en vez de una caja vacía por cada dato
+  const faltan = [
+    !tieneExperiencia && 'experiencia',
+    habilidades.length === 0 && 'habilidades',
+    !candidate.education && 'formación',
+    !candidate.languages && 'idiomas',
+    !candidate.phone && 'teléfono',
+    enlaces.length === 0 && 'enlaces',
+  ].filter(Boolean);
 
   const handleSave = () => {
     onUpdateStatus(candidate.id, localStatus);
@@ -162,9 +192,9 @@ export default function CandidateModal({
             </div>
 
             <div className="modal-body">
-              <div className="d-flex align-items-center gap-3 mb-4 flex-wrap">
+              <div className="cm-acciones d-flex align-items-center gap-3 mb-4 flex-wrap">
                 <select
-                  className="form-select select-status-inline"
+                  className="cm-estado form-select select-status-inline"
                   value={localStatus}
                   onChange={(e) => {
                     // Se guarda al momento, sin esperar a "Guardar cambios"
@@ -184,7 +214,7 @@ export default function CandidateModal({
                     className={`btn btn-sm ${
                       candidate.verified
                         ? 'btn-outline-danger'
-                        : 'btn-outline-primary'
+                        : 'btn-outline-nexus'
                     }`}
                     onClick={handleVerify}
                   >
@@ -194,7 +224,7 @@ export default function CandidateModal({
                 )}
 
                 {/* --- ZONA DE ICONOS (ESTRELLA, EDITAR, ELIMINAR) --- */}
-                <div className="d-flex align-items-center gap-1 border-start ps-3 ms-1">
+                <div className="cm-iconos d-flex align-items-center gap-1 border-start ps-3 ms-1">
                   {/* Favorito */}
                   <button
                     className={`btn-icon ${candidate.isFavorite ? 'text-warning' : ''}`}
@@ -249,7 +279,7 @@ export default function CandidateModal({
                 {/* -------------------------------------------------- */}
               </div>
 
-              <ul className="nav nav-tabs mb-4">
+              <ul className="cm-tabs nav nav-tabs mb-4">
                 <li className="nav-item">
                   <button
                     className={`nav-link ${activeTab === 'detalles' ? 'active' : ''}`}
@@ -280,172 +310,131 @@ export default function CandidateModal({
               <div className="tab-content">
                 {activeTab === 'detalles' && (
                   <div className="tab-pane fade show active">
-                    <div className="detail-section mb-4">
-                      {enlaces.length > 0 ? (
-                        <div className="detail-grid">
-                          {enlaces.map((url) => {
-                            const meta = metaEnlace(url);
-                            return (
-                              <a
-                                key={url}
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="detail-field d-flex align-items-center gap-3"
-                                style={{ textDecoration: 'none' }}
-                              >
-                                <div className="detail-icon icon-purple flex-shrink-0">
-                                  <i className={`bi ${meta.icon}`}></i>
-                                </div>
-                                <div
-                                  className="flex-grow-1"
-                                  style={{ minWidth: 0 }}
-                                >
-                                  <div className="field-label">
-                                    {meta.label}
-                                  </div>
-                                  <div className="field-value text-break">
-                                    {url}
-                                  </div>
-                                </div>
-                                <i className="bi bi-box-arrow-up-right text-muted"></i>
-                              </a>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div
-                          className="detail-field d-flex align-items-center gap-3 text-muted"
-                          style={{ borderStyle: 'dashed' }}
-                        >
-                          <div className="detail-icon icon-purple flex-shrink-0">
-                            <i className="bi bi-link-45deg"></i>
-                          </div>
-                          <div className="field-value">
-                            Sin enlaces (portfolio, LinkedIn…)
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    {faltan.length > 0 && (
+                      <div className="cm-missing mb-4">
+                        <i className="bi bi-info-circle me-2"></i>
+                        Faltan datos: {faltan.join(', ')}
+                        {onEditCandidate && (
+                          <button
+                            type="button"
+                            className="btn btn-link btn-sm p-0 ms-2 align-baseline"
+                            onClick={() => {
+                              onEditCandidate(candidate);
+                              onClose();
+                            }}
+                          >
+                            Completar ficha
+                          </button>
+                        )}
+                      </div>
+                    )}
 
-                    <div className="detail-section mb-4">
-                      <h4 className="section-title">Información personal</h4>
-                      <div className="detail-grid">
-                        <div className="detail-field d-flex align-items-start gap-3">
-                          <div className="detail-icon icon-blue flex-shrink-0 mt-1">
-                            <i className="bi bi-geo-alt"></i>
-                          </div>
-                          <div style={{ minWidth: 0 }}>
-                            <div className="field-label">Ubicación</div>
-                            <div className="field-value">
-                              {candidate.location || 'No especificada'}
-                            </div>
-                          </div>
-                        </div>
-
+                    {tieneExperiencia && (
+                      <div className="detail-section mb-4">
+                        <h4 className="section-title">
+                          Experiencia profesional
+                        </h4>
                         <div className="detail-field d-flex align-items-start gap-3">
                           <div className="detail-icon icon-purple flex-shrink-0 mt-1">
-                            <i className="bi bi-telephone"></i>
+                            <i className="bi bi-briefcase"></i>
                           </div>
-                          <div style={{ minWidth: 0 }}>
-                            <div className="field-label">Teléfono</div>
-                            <div className="field-value">
-                              {candidate.phone || 'No indicado'}
-                            </div>
+                          <div
+                            className="field-value text-break flex-grow-1"
+                            style={{ whiteSpace: 'pre-line', minWidth: 0 }}
+                          >
+                            <CvList text={candidate.experience} empty="" />
                           </div>
                         </div>
+                      </div>
+                    )}
 
-                        <div className="detail-field d-flex align-items-start gap-3">
-                          <div className="detail-icon icon-blue flex-shrink-0 mt-1">
-                            <i className="bi bi-envelope"></i>
-                          </div>
-                          <div style={{ minWidth: 0 }}>
-                            <div className="field-label">Email</div>
+                    {habilidades.length > 0 && (
+                      <div className="detail-section mb-4">
+                        <h4 className="section-title">Habilidades</h4>
+                        <div className="skill-chips">
+                          {habilidades.map((h, i) => (
+                            <span key={i} className="skill-chip">
+                              {h}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {(candidate.education || candidate.languages) && (
+                      <div className="cm-two-cols mb-4">
+                        {candidate.education && (
+                          <div className="detail-section">
+                            <h4 className="section-title">Formación</h4>
                             <div className="field-value text-break">
-                              {candidate.email || 'No indicado'}
+                              <CvList text={candidate.education} empty="" />
                             </div>
                           </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="detail-section mb-4">
-                      <h4 className="section-title">Experiencia profesional</h4>
-                      <div className="detail-field d-flex align-items-start gap-3">
-                        <div className="detail-icon icon-purple flex-shrink-0 mt-1">
-                          <i className="bi bi-briefcase"></i>
-                        </div>
-                        <div
-                          className="field-value text-break flex-grow-1"
-                          style={{ whiteSpace: 'pre-line', minWidth: 0 }}
-                        >
-                          <CvList
-                            text={candidate.experience}
-                            empty="No especificada"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="detail-section mb-4">
-                      <h4 className="section-title">Formación académica</h4>
-                      <div className="detail-field d-flex align-items-start gap-3">
-                        <div className="detail-icon icon-blue flex-shrink-0 mt-1">
-                          <i className="bi bi-mortarboard"></i>
-                        </div>
-                        <div
-                          className="field-value text-break flex-grow-1"
-                          style={{ whiteSpace: 'pre-line', minWidth: 0 }}
-                        >
-                          <CvList
-                            text={candidate.education}
-                            empty="No especificada"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="detail-section">
-                      <h4 className="section-title">Idiomas</h4>
-                      <div className="detail-field d-flex align-items-start gap-3">
-                        <div className="detail-icon icon-blue flex-shrink-0 mt-1">
-                          <i className="bi bi-translate"></i>
-                        </div>
-                        <div
-                          className="field-value text-break flex-grow-1"
-                          style={{ whiteSpace: 'pre-line', minWidth: 0 }}
-                        >
-                          <CvList
-                            text={candidate.languages}
-                            empty="No especificados"
-                            commas
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="detail-section">
-                      <h4 className="section-title">Habilidades</h4>
-                      <div className="detail-field d-flex align-items-start gap-3">
-                        <div className="detail-icon icon-purple flex-shrink-0 mt-1">
-                          <i className="bi bi-tools"></i>
-                        </div>
-                        <div
-                          className="field-value flex-grow-1"
-                          style={{ minWidth: 0 }}
-                        >
-                          {habilidades.length > 0 ? (
-                            <div className="skill-chips">
-                              {habilidades.map((h, i) => (
-                                <span key={i} className="skill-chip">
-                                  {h}
-                                </span>
-                              ))}
+                        )}
+                        {candidate.languages && (
+                          <div className="detail-section">
+                            <h4 className="section-title">Idiomas</h4>
+                            <div className="field-value text-break">
+                              <CvList
+                                text={candidate.languages}
+                                empty=""
+                                commas
+                              />
                             </div>
-                          ) : (
-                            'No especificadas'
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="detail-section">
+                      <h4 className="section-title">Contacto y enlaces</h4>
+                      <div className="cm-contact">
+                        {candidate.email && (
+                          <a
+                            href={`mailto:${candidate.email}`}
+                            className="cm-contact-item"
+                          >
+                            <i className="bi bi-envelope"></i>
+                            <span>{candidate.email}</span>
+                          </a>
+                        )}
+                        {candidate.phone && (
+                          <a
+                            href={`tel:${candidate.phone.replace(/[^\d+]/g, '')}`}
+                            className="cm-contact-item"
+                          >
+                            <i className="bi bi-telephone"></i>
+                            <span>{candidate.phone}</span>
+                          </a>
+                        )}
+                        {candidate.location &&
+                          candidate.location !== 'No indicada' && (
+                            <span className="cm-contact-item">
+                              <i className="bi bi-geo-alt"></i>
+                              <span>{candidate.location}</span>
+                            </span>
                           )}
-                        </div>
+                        {enlaces.map((url) => {
+                          const meta = metaEnlace(url);
+                          return (
+                            <a
+                              key={url}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="cm-contact-item"
+                              title={url}
+                            >
+                              <i className={`bi ${meta.icon}`}></i>
+                              <span>
+                                <span className="cm-contact-label">
+                                  {meta.label}
+                                </span>{' '}
+                                {enlaceCorto(url)}
+                              </span>
+                            </a>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -730,7 +719,7 @@ export default function CandidateModal({
               </button>
               <button
                 type="button"
-                className="btn btn-primary"
+                className="btn btn-nexus"
                 onClick={handleSave}
               >
                 Guardar cambios

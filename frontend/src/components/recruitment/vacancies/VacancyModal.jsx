@@ -724,7 +724,7 @@ export default function VacancyModal({
 
             {/* BODY */}
             <div className="modal-body-scroll">
-              <div className="d-flex align-items-center gap-3 mb-4">
+              <div className="vacancy-modal-toolbar">
                 <select
                   className="form-select select-status-inline"
                   value={localStatus}
@@ -784,7 +784,7 @@ export default function VacancyModal({
               </div>
 
               {/* Tabs */}
-              <div className="d-flex justify-content-between align-items-center border-bottom mb-4">
+              <div className="vacancy-modal-tabs">
                 <ul className="nav nav-tabs border-bottom-0 mb-0">
                   <li className="nav-item">
                     <button

@@ -14,6 +14,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CreateVacancy from '../components/recruitment/vacancies/CreateVacancies';
 import { provinciaDe } from '../utils/provincias';
+import './Vacancies.css';
 
 const OPCIONES_POR_PAGINA = [10, 20, 50];
 
@@ -324,7 +325,7 @@ export default function Vacancies() {
 
   // --- 7. RENDER ---
   return (
-    <>
+    <div className="vacancies-page">
       <div className="controls-container sticky-controls">
         {/* Barra de Filtros */}
         <FilterBar
@@ -402,8 +403,8 @@ export default function Vacancies() {
       </div>
 
       {/* Cabecera de contadores y botones visuales */}
-      <div className="d-flex justify-content-between align-items-center mb-3 mt-3">
-        <div className="d-flex align-items-center gap-3">
+      <div className="vacancies-toolbar">
+        <div className="vacancies-toolbar__meta">
           <div className="text-muted small">
             Mostrando {jobsPaginados.length} de {filteredJobs.length} vacantes
           </div>
@@ -423,10 +424,10 @@ export default function Vacancies() {
           </label>
         </div>
 
-        <div className="d-flex gap-2">
+        <div className="vacancies-toolbar__actions">
           {isNegocio && (
             <button
-              className="btn btn-sm btn-primary"
+              className="btn btn-sm btn-nexus"
               onClick={() => setIsCreateModalOpen(true)}
             >
               <i className="bi bi-plus-lg me-2"></i> Añadir Vacante
@@ -496,16 +497,7 @@ export default function Vacancies() {
             {totalPaginas}
           </span>
           <div className="clientes-pagination__controls">
-            <label
-              className="clientes-pagination__pagesize"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                marginRight: '12px',
-                fontSize: '0.875rem',
-              }}
-            >
+            <label className="clientes-pagination__pagesize">
               Ver
               <select
                 value={itemsPorPagina}
@@ -627,6 +619,6 @@ export default function Vacancies() {
           }}
         />
       )}
-    </>
+    </div>
   );
 }

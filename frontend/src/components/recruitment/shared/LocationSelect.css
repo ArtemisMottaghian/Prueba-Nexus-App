@@ -1,5 +1,6 @@
 .loc-select {
   position: relative;
+  min-width: 0;
 }
 
 .loc-select__trigger {
@@ -7,7 +8,7 @@
   align-items: center;
   gap: 6px;
   white-space: nowrap;
-  max-width: 220px;
+  max-width: min(220px, 100%);
 }
 
 .loc-select__value {
@@ -138,4 +139,21 @@
   text-align: center;
   color: var(--text-muted);
   font-size: 0.85rem;
+}
+
+@media (max-width: 991px) {
+  .loc-select,
+  .loc-select__trigger {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .loc-select__panel {
+    left: 0;
+    right: 0;
+    width: auto;
+    max-width: none;
+  }
 }

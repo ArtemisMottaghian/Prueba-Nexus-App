@@ -45,8 +45,8 @@ export default function CandidateCard({
         onClick={onClick}
         style={{ cursor: 'pointer' }}
       >
-        <div className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between w-100 p-3 gap-3">
-          <div className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-2 gap-lg-3 w-100">
+        <div className="candidate-list-content d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between w-100 p-3 gap-3">
+          <div className="candidate-list-main d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-2 gap-lg-3 w-100">
             <div className="d-flex align-items-center gap-2">
               <input
                 className="form-check-input mt-0"
@@ -55,21 +55,29 @@ export default function CandidateCard({
                 onChange={handleCheckboxClick}
                 onClick={handleChildClick}
               />
-              <h5 className="mb-0 text-body vacante-title-list-sm">
+              <h5
+                className="cl-name mb-0 text-body vacante-title-list-sm"
+                title={candidate.name}
+              >
                 {candidate.name}
               </h5>
             </div>
             <span className="text-muted small d-none d-lg-block">|</span>
-            <span className="detail-text">{candidate.specialty}</span>
+            <span className="detail-text" title={candidate.specialty}>
+              {candidate.specialty}
+            </span>
             <span className="text-muted small d-none d-lg-block">|</span>
-            <span className="detail-text text-muted small">
+            <span
+              className="detail-text text-muted small"
+              title={candidate.experience || ''}
+            >
               {/* Solo la primera linea (puesto mas reciente); el detalle va en la ficha */}
               {(candidate.experience || '').split('\n')[0] ||
                 'Experiencia no indicada'}
             </span>
           </div>
 
-          <div className="d-flex align-items-center gap-2 flex-wrap justify-content-start justify-content-lg-end w-100">
+          <div className="candidate-list-actions d-flex align-items-center gap-2 flex-wrap justify-content-start justify-content-lg-end w-100">
             <span className="detail-text opacity-75">
               <i className="bi bi-geo-alt me-1"></i>
               {candidate.location}
@@ -84,7 +92,7 @@ export default function CandidateCard({
               <button
                 type="button"
                 className={`btn btn-sm py-0 px-2 ${
-                  candidate.verified ? 'btn-outline-danger' : 'btn-primary'
+                  candidate.verified ? 'btn-outline-danger' : 'btn-nexus'
                 }`}
                 onClick={handleVerify}
               >
@@ -119,10 +127,7 @@ export default function CandidateCard({
       onClick={onClick}
       style={{ cursor: 'pointer' }}
     >
-      <div
-        className="card-header-row d-flex align-items-center mb-2"
-        style={{ justifyContent: 'space-evenly', gap: '8px' }}
-      >
+      <div className="card-header-row d-flex align-items-center gap-2 mb-2">
         <input
           className="form-check-input mt-0 checkbox-lg"
           type="checkbox"
@@ -131,49 +136,55 @@ export default function CandidateCard({
           onClick={handleChildClick}
           style={{ flexShrink: 0, width: '18px', height: '18px' }}
         />
-        <select
-          className={`form-select form-select-sm select-status-inline ${badgeClass}`}
-          value={candidate.status}
-          onChange={handleStatusChange}
-          onClick={handleChildClick}
-          style={{ minWidth: '90px', textAlignLast: 'center' }}
-        >
-          {CANDIDATE_STATUS_SELECT_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-        {onVerify && (
+        <div className="ms-auto d-flex align-items-center gap-2">
+          {onVerify && (
+            <button
+              type="button"
+              className={`btn btn-sm ${
+                candidate.verified ? 'btn-outline-danger' : 'btn-nexus'
+              }`}
+              onClick={handleVerify}
+              style={{
+                padding: '0.25rem 0.6rem',
+                fontSize: '0.8rem',
+                borderRadius: '6px',
+              }}
+            >
+              {candidate.verified ? 'Quitar' : 'Verificar'}
+            </button>
+          )}
           <button
-            type="button"
-            className={`btn btn-sm ${
-              candidate.verified ? 'btn-outline-danger' : 'btn-primary'
+            className={`btn-icon btn-icon-sm ${
+              candidate.isFavorite ? 'text-warning' : ''
             }`}
-            onClick={handleVerify}
-            style={{
-              padding: '0.25rem 0.6rem',
-              fontSize: '0.8rem',
-              borderRadius: '6px',
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavorite(candidate.id, candidate.isFavorite);
             }}
           >
-            {candidate.verified ? 'Quitar' : 'Verificar'}
+            <i
+              className={
+                candidate.isFavorite ? 'bi bi-star-fill' : 'bi bi-star'
+              }
+            ></i>
           </button>
-        )}
-        <button
-          className={`btn-icon btn-icon-sm ${
-            candidate.isFavorite ? 'text-warning' : ''
-          }`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleFavorite(candidate.id, candidate.isFavorite);
-          }}
-        >
-          <i
-            className={candidate.isFavorite ? 'bi bi-star-fill' : 'bi bi-star'}
-          ></i>
-        </button>
+        </div>
       </div>
+
+      {/* El estado va en su propia fila, con el ancho de la tarjeta, para que se lea entero */}
+      <select
+        className={`form-select form-select-sm select-status-inline card-status mb-2 ${badgeClass}`}
+        value={candidate.status}
+        onChange={handleStatusChange}
+        onClick={handleChildClick}
+        style={{ textAlignLast: 'center' }}
+      >
+        {CANDIDATE_STATUS_SELECT_OPTIONS.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
 
       <h3 className="vacante-title">{candidate.name}</h3>
 
@@ -190,7 +201,10 @@ export default function CandidateCard({
             <i className="bi bi-person-badge"></i>
           </div>
           <div className="d-flex flex-column gap-1">
-            <span className="detail-text">
+            <span
+              className="detail-text cc-2l"
+              title={candidate.specialty || ''}
+            >
               {candidate.specialty || 'No indicada'}
             </span>
             <div className="d-flex flex-wrap gap-1 mt-1">
@@ -211,7 +225,7 @@ export default function CandidateCard({
           <div className="detail-icon icon-cyan">
             <i className="bi bi-geo-alt"></i>
           </div>
-          <span className="detail-text">
+          <span className="detail-text" title={candidate.location || ''}>
             {candidate.location || 'No indicada'}
           </span>
         </div>
@@ -220,8 +234,12 @@ export default function CandidateCard({
           <div className="detail-icon icon-orange mt-1 align-self-start">
             <i className="bi bi-briefcase"></i>
           </div>
-          <span className="detail-text text-break">
-            {candidate.experience || 'No indicada'}
+          {/* Solo el puesto actual (primera línea); la trayectoria completa va en la ficha */}
+          <span
+            className="detail-text text-break cc-2l"
+            title={candidate.experience || ''}
+          >
+            {(candidate.experience || '').split('\n')[0] || 'No indicada'}
           </span>
         </div>
 
@@ -229,7 +247,10 @@ export default function CandidateCard({
           <div className="detail-icon icon-green mt-1 align-self-start">
             <i className="bi bi-mortarboard"></i>
           </div>
-          <span className="detail-text text-break">
+          <span
+            className="detail-text text-break"
+            title={candidate.education || ''}
+          >
             {candidate.education || 'No indicada'}
           </span>
         </div>
@@ -238,7 +259,10 @@ export default function CandidateCard({
           <div className="detail-icon icon-teal mt-1 align-self-start">
             <i className="bi bi-translate"></i>
           </div>
-          <span className="detail-text text-break">
+          <span
+            className="detail-text text-break"
+            title={candidate.languages || ''}
+          >
             {candidate.languages || 'No indicados'}
           </span>
         </div>
@@ -247,7 +271,10 @@ export default function CandidateCard({
           <div className="detail-icon icon-gray mt-1 align-self-start">
             <i className="bi bi-envelope"></i>
           </div>
-          <span className="detail-text text-break">
+          <span
+            className="detail-text text-break"
+            title={candidate.email || ''}
+          >
             {candidate.email || 'No indicado'}
           </span>
         </div>

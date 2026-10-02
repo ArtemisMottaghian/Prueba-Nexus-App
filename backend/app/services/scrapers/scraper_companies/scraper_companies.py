@@ -12,7 +12,7 @@ from app.db.session import AsyncSessionLocal
 from bs4 import BeautifulSoup
 from sqlalchemy import text
 warnings.filterwarnings("ignore", category=FutureWarning)
-import google.generativeai as genai
+from langchain_groq import ChatGroq
 
 # 2. Silenciamos DEFINITIVAMENTE el aviso de InsecureRequestWarning de requests
 requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
@@ -21,15 +21,15 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 from datetime import datetime
 from app.core.scraper_companies_config import DB_CONFIG
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 os.environ["PGCLIENTENCODING"] = "utf-8"
 
-if not GEMINI_API_KEY:
-    print("[ERROR CRÍTICO] No se ha encontrado GEMINI_API_KEY en el .env.")
+if not GROQ_API_KEY:
+    print("[ERROR CRÍTICO] No se ha encontrado GROQ_API_KEY en el .env.")
 else:
-    print("[OK] API KEY de Gemini cargada correctamente.")
-    genai.configure(api_key=GEMINI_API_KEY)
+    print("[OK] API KEY de Groq cargada correctamente.")
 
 
 # ==========================================
@@ -194,13 +194,11 @@ def extract_company_data(raw_text: str, basic_company_name: str) -> dict:
     if website_clearbit and website_clearbit != 'Desconocida':
         info_extra_internet = search_description_in_browser(website_clearbit)
     
-    # --- PASO 3: GEMINI ---
-    print(f"   -> [3/3] Pasando datos a Gemini para consolidar...")
-    if not GEMINI_API_KEY:
+    # --- PASO 3: GROQ ---
+    print(f"   -> [3/3] Pasando datos a Groq para consolidar...")
+    if not GROQ_API_KEY:
          return {"name": nombre_limpio, "cif": cif_encontrado, "sector": None, "website": website_clearbit, "linkedin_url": None, "address": "Provincia/Pais no especificado", "contact_email": None, "contact_phone": None}
 
-    model = genai.GenerativeModel(os.getenv("GEMINI_MODEL", "gemini-flash-latest"))
-    
     prompt = f"""
     Actúa como investigador B2B. Oferta de la empresa "{nombre_limpio}".
     Datos previos encontrados:
@@ -222,10 +220,16 @@ def extract_company_data(raw_text: str, basic_company_name: str) -> dict:
     - "contact_email": (SOLO si aparece en el texto, si no null)
     - "contact_phone": (SOLO si aparece en el texto, si no null)
     """
-    
+
     try:  
-        response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
-        data = json.loads(response.text)
+        llm = ChatGroq(
+            model=os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b"), 
+            api_key=GROQ_API_KEY, 
+            temperature=0.1
+        )
+        response = llm.invoke(prompt)
+        clean_json = response.content.replace('```json', '').replace('```', '').strip()
+        data = json.loads(clean_json)
         
         print(f"La IA devolvio esta descripción: {data.get('company_description')}")
 
@@ -245,7 +249,7 @@ def extract_company_data(raw_text: str, basic_company_name: str) -> dict:
         return data
         
     except Exception as e:
-        print(f"   -> Fallo en Gemini: {str(e)[:50]}")
+        print(f"   -> Fallo en Groq: {str(e)[:50]}")
         return {
             "name": nombre_limpio, "cif": cif_encontrado, "sector": None, 
             "website": website_clearbit, "linkedin_url": None, 

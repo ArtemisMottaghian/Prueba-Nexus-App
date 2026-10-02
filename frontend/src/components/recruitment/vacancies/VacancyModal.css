@@ -45,6 +45,7 @@
   );
   border-bottom: 1px solid var(--border-color);
   padding: 20px 18px 16px;
+  gap: 12px;
 }
 
 .modal-title {
@@ -52,6 +53,8 @@
   font-size: 20px;
   font-weight: 700;
   margin: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .modal-header-icon {
@@ -166,6 +169,12 @@
 @media (max-width: 900px) {
   .detail-grid {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1119,4 +1128,150 @@
 }
 .cand-historial-nota {
   font-style: italic;
+}
+
+.vacancy-modal-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.vacancy-modal-tabs {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 1.5rem;
+}
+
+.vacancy-modal-tabs .nav-tabs {
+  flex-wrap: wrap;
+  min-width: 0;
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .modal-vacancy {
+    width: calc(100% - 16px) !important;
+    max-width: calc(100% - 16px) !important;
+    margin: 8px auto;
+  }
+
+  .modal-body-scroll {
+    max-height: none;
+    padding: 16px 12px;
+  }
+
+  .tab-content,
+  .tab-pane {
+    min-height: 0;
+  }
+
+  .nav-tabs .nav-link {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .cand-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .cand-form-notes-row {
+    flex-direction: column;
+  }
+
+  .cand-add-btn {
+    align-self: stretch;
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .contact-card,
+  .asign-current,
+  .asign-recruiter-row,
+  .cand-tracking-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .msg-generated-header,
+  .msg-generated-actions,
+  .contact-section-header,
+  .seguimiento-card-header,
+  .cand-body-top {
+    flex-wrap: wrap;
+  }
+
+  .doc-tipo-select {
+    width: 100%;
+  }
+
+  .select-status-inline {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .modal-header {
+    align-items: flex-start;
+    padding: 16px 14px 14px;
+  }
+
+  .modal-header > * {
+    min-width: 0;
+  }
+
+  .modal-title {
+    font-size: 17px;
+  }
+
+  .modal-subtitle,
+  .field-value,
+  .vacancy-description,
+  .cand-notas {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .modal-body-scroll {
+    padding: 14px 10px;
+  }
+
+  .vacancy-modal-tabs {
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+
+  .vacancy-modal-tabs .nav-tabs {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: thin;
+  }
+
+  .vacancy-modal-tabs .nav-link {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 8px 9px;
+  }
+
+  .detail-field {
+    padding: 11px 12px;
+    gap: 9px;
+  }
+
+  .modal-footer,
+  .vacancy-modal-toolbar {
+    align-items: stretch;
+  }
+
+  .modal-footer > *,
+  .vacancy-modal-toolbar > .btn,
+  .vacancy-modal-toolbar > button {
+    max-width: 100%;
+  }
 }

@@ -12,9 +12,10 @@
   flex-direction: column;
   gap: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-  /* Llena la celda del grid para que todas las tarjetas midan igual */
   flex: 1;
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .vacante-card:hover {
@@ -47,10 +48,24 @@
 
 /* Fila superior: Checkbox, Status y Acciones */
 .card-header-row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
+  gap: 8px;
   margin-bottom: 8px;
+}
+
+.card-header-row .form-check-input {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.vacante-card .select-status-inline {
+  text-align-last: center;
+  justify-self: center;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .header-left {
@@ -185,6 +200,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .vacante-date {
@@ -215,6 +232,7 @@
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .list-main-info {
@@ -222,6 +240,7 @@
   align-items: center;
   gap: 16px;
   flex: 1;
+  min-width: 0;
 }
 
 .list-text-group {
@@ -229,6 +248,7 @@
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .list-title {
@@ -236,6 +256,8 @@
   font-weight: 700;
   color: var(--text-primary, #111827);
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .list-company {
@@ -357,4 +379,129 @@ select.badge-contactada,
   background: rgba(var(--cyan-rgb), 0.08);
   color: #67e8f9;
   border-color: rgba(var(--cyan-rgb), 0.2);
+}
+
+@media (max-width: 768px) {
+  .vacante-card {
+    padding: 1rem;
+  }
+
+  .list-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .list-main-info,
+  .list-meta-info {
+    width: 100%;
+  }
+
+  .list-meta-info {
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+}
+
+/* Evita que nombres, empresas y ubicaciones creen scroll horizontal. */
+.list-main-info,
+.list-text-group,
+.list-meta-info,
+.list-location,
+.list-actions {
+  min-width: 0;
+}
+
+.list-text-group {
+  flex: 1 1 auto;
+}
+
+.list-title,
+.list-company,
+.list-industry,
+.list-location span {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list-company,
+.list-industry {
+  flex: 0 1 auto;
+}
+
+.detail-item > .d-flex {
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.vacante-assignee {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 576px) {
+  .vacante-card-list {
+    padding: 0.85rem;
+  }
+
+  .list-wrapper,
+  .list-main-info,
+  .list-meta-info {
+    align-items: flex-start;
+  }
+
+  .list-main-info {
+    width: 100%;
+  }
+
+  .list-text-group {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3px;
+  }
+
+  .list-separator {
+    display: none;
+  }
+
+  .list-title,
+  .list-company,
+  .list-industry {
+    width: 100%;
+  }
+
+  .list-meta-info {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .list-location {
+    flex: 1 1 auto;
+  }
+
+  .list-actions {
+    flex: 0 0 auto;
+  }
+
+  .card-header-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 6px;
+  }
+
+  .vacante-card .select-status-inline {
+    width: 100%;
+  }
+
+  .vacante-footer {
+    align-items: flex-start;
+  }
+
+  .vacante-footer .origin-badge {
+    max-width: 100%;
+  }
 }

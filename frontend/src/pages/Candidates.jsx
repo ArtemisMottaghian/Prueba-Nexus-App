@@ -362,6 +362,17 @@ export default function Candidates() {
     return map;
   }, [hrUsers]);
 
+  // Emails de los candidatos cargados: el alta avisa antes de enviar si ya existe
+  const existingEmails = useMemo(
+    () =>
+      new Set(
+        candidates
+          .map((c) => (c.email || '').trim().toLowerCase())
+          .filter(Boolean)
+      ),
+    [candidates]
+  );
+
   const countPendientes = candidates.filter(
     (c) => c.managed_by_id == null
   ).length;
@@ -497,7 +508,7 @@ export default function Candidates() {
   );
 
   return (
-    <>
+    <div className="candidates-page">
       <div className="controls-container sticky-controls">
         <FilterBar
           filters={filters}
@@ -557,8 +568,8 @@ export default function Candidates() {
       </div>
 
       {!loading && (
-        <div className="d-flex justify-content-between align-items-center mb-3 mt-3">
-          <div className="d-flex align-items-center gap-3">
+        <div className="candidates-toolbar d-flex justify-content-between align-items-center mb-3 mt-3">
+          <div className="candidates-toolbar__meta d-flex align-items-center gap-3">
             <div className="text-muted small">
               Mostrando {candidatesPaginados.length} de{' '}
               {filteredCandidates.length} candidatos
@@ -578,9 +589,9 @@ export default function Candidates() {
             </label>
           </div>
 
-          <div className="d-flex gap-2">
+          <div className="candidates-toolbar__actions d-flex gap-2">
             <button
-              className="btn btn-sm btn-primary"
+              className="btn btn-sm btn-nexus"
               onClick={() => setIsCreateModalOpen(true)}
             >
               <i className="bi bi-person-plus-fill me-2"></i>
@@ -617,25 +628,25 @@ export default function Candidates() {
       )}
 
       {!loading && isNegocio && (
-        <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <div className="candidates-assignment-toolbar d-flex flex-wrap align-items-center gap-2 mb-3">
           <div className="btn-group btn-group-sm" role="group">
             <button
               type="button"
-              className={`btn ${assignmentView === 'pendientes' ? 'btn-primary' : 'btn-outline-secondary'}`}
+              className={`btn ${assignmentView === 'pendientes' ? 'btn-nexus' : 'btn-outline-secondary'}`}
               onClick={() => setAssignmentView('pendientes')}
             >
               Pendientes ({countPendientes})
             </button>
             <button
               type="button"
-              className={`btn ${assignmentView === 'asignados' ? 'btn-primary' : 'btn-outline-secondary'}`}
+              className={`btn ${assignmentView === 'asignados' ? 'btn-nexus' : 'btn-outline-secondary'}`}
               onClick={() => setAssignmentView('asignados')}
             >
               Asignados ({countAsignados})
             </button>
             <button
               type="button"
-              className={`btn ${assignmentView === 'todos' ? 'btn-primary' : 'btn-outline-secondary'}`}
+              className={`btn ${assignmentView === 'todos' ? 'btn-nexus' : 'btn-outline-secondary'}`}
               onClick={() => setAssignmentView('todos')}
             >
               Todos ({candidates.length})
@@ -772,6 +783,7 @@ export default function Candidates() {
         <CreateCandidate
           onClose={() => setIsCreateModalOpen(false)}
           onSave={handleSaveNewCandidate}
+          existingEmails={existingEmails}
         />
       )}
 
@@ -782,6 +794,6 @@ export default function Candidates() {
           onSave={handleSaveEditCandidate}
         />
       )}
-    </>
+    </div>
   );
 }

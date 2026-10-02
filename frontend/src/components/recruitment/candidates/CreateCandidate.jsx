@@ -1,8 +1,59 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { candidatesService } from '../../../services/candidatesService';
 import './CreateCandidate.css';
 
-export default function CreateCandidate({ onClose, onSave }) {
+// El CV leído puede traer listas u objetos en vez de texto: lo pasamos a texto
+const asText = (value, separator = '\n') => {
+  if (value == null) return '';
+  if (typeof value === 'string') return value.trim();
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => asText(item, ' - '))
+      .filter(Boolean)
+      .join(separator);
+  }
+  if (typeof value === 'object') {
+    return Object.values(value)
+      .map((item) => asText(item, ' - '))
+      .filter(Boolean)
+      .join(' - ');
+  }
+  return String(value);
+};
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Mismo formato que exige el backend para el teléfono
+const PHONE_RE = /^\+?[\d\s-]{7,20}$/;
+
+// El backend exige nombre y apellido (mín. 2 letras cada uno) y email válido.
+// Lo comprobamos antes de enviar para avisar campo a campo.
+function validateForm({ name, email, phone }, existingEmails) {
+  const errors = {};
+
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const firstName = parts[0] || '';
+  const lastName = parts.slice(1).join(' ');
+  if (firstName.length < 2 || lastName.length < 2) {
+    errors.name = 'Escribe nombre y apellido (mínimo 2 letras cada uno).';
+  }
+
+  if (!email.trim()) {
+    errors.email = 'El email es obligatorio.';
+  } else if (!EMAIL_RE.test(email.trim())) {
+    errors.email = 'El email no tiene un formato válido.';
+  } else if (existingEmails?.has(email.trim().toLowerCase())) {
+    errors.email = 'Ya existe un candidato con este email.';
+  }
+
+  if (phone.trim() && !PHONE_RE.test(phone.trim())) {
+    errors.phone =
+      'Teléfono no válido: entre 7 y 20 caracteres, solo números, espacios, guiones y un + inicial.';
+  }
+
+  return errors;
+}
+
+export default function CreateCandidate({ onClose, onSave, existingEmails }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -20,23 +71,49 @@ export default function CreateCandidate({ onClose, onSave }) {
   const [cvExtracted, setCvExtracted] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [parsedCandidateId, setParsedCandidateId] = useState(null);
   const [errorStatus, setErrorStatus] = useState(null);
-  const [consentMensaje, setConsentMensaje] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const fileInputRef = useRef(null);
+  const errorBannerRef = useRef(null);
+  // El estado `isSubmitting` se actualiza de forma asíncrona: un doble clic
+  // rápido (o Intro) podría lanzar dos envíos. Este cerrojo es síncrono.
+  const submittingRef = useRef(false);
+
+  // Si el error aparece arriba y el usuario está abajo del formulario, lo traemos a la vista
+  useEffect(() => {
+    if (errorStatus) {
+      errorBannerRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }
+  }, [errorStatus]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submittingRef.current || isParsing) return;
+
+    const errors = validateForm(formData, existingEmails);
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      setErrorStatus('Revisa los campos marcados en rojo antes de guardar.');
+      return;
+    }
+
+    submittingRef.current = true;
     setIsSubmitting(true);
     setErrorStatus(null);
 
-    const nameParts = formData.name.trim().split(' ');
+    const nameParts = formData.name.trim().split(/\s+/);
     const fName = nameParts[0] || '';
     const lName = nameParts.slice(1).join(' ') || '';
 
@@ -62,15 +139,7 @@ export default function CreateCandidate({ onClose, onSave }) {
     );
 
     try {
-      let finalCandidate;
-      if (parsedCandidateId) {
-        finalCandidate = await candidatesService.updateCandidate(
-          parsedCandidateId,
-          finalData
-        );
-      } else {
-        finalCandidate = await candidatesService.createCandidate(finalData);
-      }
+      const finalCandidate = await candidatesService.createCandidate(finalData);
 
       onSave({
         ...finalCandidate,
@@ -81,91 +150,69 @@ export default function CreateCandidate({ onClose, onSave }) {
     } catch (error) {
       console.error('Error al guardar el candidato:', error);
 
+      // El servicio ya devuelve el motivo en un texto legible
+      const reason = error?.message || '';
       let msg = 'No se ha podido guardar el candidato. Inténtalo de nuevo.';
 
-      if (
-        error.message.includes('already exists') ||
-        error.message.includes('duplicate')
-      ) {
+      if (reason.includes('already exists') || reason.includes('duplicate')) {
         msg =
           '¡Error! Ya existe un candidato registrado con este mismo correo electrónico.';
-      } else {
-        try {
-          const rawMessage = error.message;
-          if (
-            rawMessage &&
-            (rawMessage.startsWith('[') || rawMessage.startsWith('{'))
-          ) {
-            const parsedErrors = JSON.parse(rawMessage);
-            if (Array.isArray(parsedErrors)) {
-              msg =
-                'Campos incorrectos: ' +
-                parsedErrors
-                  .map((err) => `${err.loc?.[1] || 'campo'}: ${err.msg}`)
-                  .join(' | ');
-            }
-          } else {
-            msg = `Error del servidor: ${error.message}`;
-          }
-        } catch (e) {
-          console.warn(
-            'La respuesta de error no contenía un JSON de validación:',
-            e
-          );
-          msg = `Error del servidor: ${error.message || 'Error desconocido'}`;
-        }
+      } else if (reason) {
+        msg = `No se ha podido guardar el candidato: ${reason}`;
       }
 
       setErrorStatus(msg);
     } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   };
 
+  // Lee el PDF solo para rellenar el formulario: el candidato NO se crea hasta
+  // pulsar Guardar, así que cancelar o cerrar no deja nada guardado.
   const processCVFile = async (file) => {
-    if (!file || file.type !== 'application/pdf') return;
+    if (!file || isParsing) return;
+
+    const isPdf =
+      file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '');
+    if (!isPdf) {
+      setErrorStatus('Solo se admiten archivos PDF.');
+      return;
+    }
 
     setIsParsing(true);
     setErrorStatus(null);
+    setFieldErrors({});
     setCvFileName(file.name);
     setCvExtracted(false);
 
     try {
-      const res = await candidatesService.processCV(file);
-      setConsentMensaje(res?.mensaje || 'CV procesado correctamente.');
+      const c = await candidatesService.extractCV(file);
 
-      // Rellenar el formulario con lo extraido del CV para poder revisarlo.
-      // Al guardar, como ya existe el candidato (parsedCandidateId), se actualiza.
-      const c = res?.candidato;
-      if (c) {
-        setFormData({
-          name: [c.first_name, c.last_name].filter(Boolean).join(' '),
-          email: c.email || '',
-          phone: c.phone || '',
-          education: c.education || '',
-          location: c.location || '',
-          experience: c.experience || '',
-          specialty: c.skills || '',
-          languages: c.languages || '',
-          profile: c.profile || '',
-        });
-      }
-      if (res?.id) setParsedCandidateId(res.id);
+      setFormData({
+        name: [asText(c?.first_name), asText(c?.last_name)]
+          .filter(Boolean)
+          .join(' '),
+        email: asText(c?.email),
+        phone: asText(c?.phone),
+        education: asText(c?.education),
+        location: asText(c?.location),
+        experience: asText(c?.experience),
+        specialty: asText(c?.skills, ', '),
+        languages: asText(c?.languages, ', '),
+        profile: asText(c?.profile),
+      });
       setCvExtracted(true);
     } catch (err) {
-      console.error('Error al procesar el CV:', err);
+      console.error('Error al leer el CV:', err);
 
-      let msg = 'No hemos podido leer este PDF correctamente.';
-      if (
-        err.message.includes('already exists') ||
-        err.message.includes('duplicate')
-      ) {
+      // 400: el servidor explica el problema en español (no es PDF, sin texto...)
+      let msg = err.message;
+      if (err.status === 413) {
+        msg = 'El archivo PDF es demasiado grande.';
+      } else if (err.status >= 500) {
         msg =
-          '¡Este candidato ya existe! El email de este PDF ya está en la base de datos.';
-      } else if (err.message.includes('413')) {
-        msg = 'El archivo PDF es demasiado grande para procesarlo.';
-      } else {
-        msg = `Error al procesar PDF: ${err.message}`;
+          'No hemos podido leer este PDF. Prueba con otro archivo o rellena los datos a mano.';
       }
 
       setErrorStatus(msg);
@@ -191,8 +238,7 @@ export default function CreateCandidate({ onClose, onSave }) {
     setCvFileName('');
     setCvExtracted(false);
     setErrorStatus(null);
-    setConsentMensaje('');
-    setParsedCandidateId(null);
+    setFieldErrors({});
     setFormData({
       name: '',
       email: '',
@@ -220,7 +266,7 @@ export default function CreateCandidate({ onClose, onSave }) {
           CAMBIO CLAVE: eliminado "modal-dialog-scrollable" — interfería con nuestro
           flex propio. El scroll lo gestiona ahora el CSS en .modal-body.
         */}
-        <div className="modal-dialog modal-dialog-centered modal-lg">
+        <div className="modal-dialog modal-dialog-centered modal-lg candidate-form-dialog">
           <div className="modal-content">
             <div className="modal-header">
               <h4 className="modal-title fw-bold">Añadir Nuevo Candidato</h4>
@@ -232,11 +278,16 @@ export default function CreateCandidate({ onClose, onSave }) {
               ></button>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
+            <form
+              onSubmit={handleSubmit}
+              noValidate
+              style={{ display: 'contents' }}
+            >
               <div className="modal-body">
                 {/* Banner de error */}
                 {errorStatus && (
                   <div
+                    ref={errorBannerRef}
                     className="alert alert-danger d-flex align-items-center animate__animated animate__shakeX"
                     role="alert"
                   >
@@ -286,7 +337,10 @@ export default function CreateCandidate({ onClose, onSave }) {
                   <div className="cv-success-banner d-flex justify-content-between align-items-center p-3 mb-4 bg-success-subtle text-success rounded border border-success">
                     <div className="cv-success-left">
                       <i className="bi bi-check-circle-fill me-2"></i>
-                      <span>{consentMensaje}</span>
+                      <span>
+                        Datos leídos de {cvFileName}. Revísalos y pulsa Guardar
+                        Candidato.
+                      </span>
                     </div>
                     <button
                       type="button"
@@ -309,28 +363,37 @@ export default function CreateCandidate({ onClose, onSave }) {
                     </label>
                     <input
                       type="text"
-                      className="form-control"
+                      className={`form-control ${fieldErrors.name ? 'is-invalid' : ''}`}
                       id="name"
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
                       required
                     />
+                    {fieldErrors.name && (
+                      <div className="invalid-feedback">{fieldErrors.name}</div>
+                    )}
                   </div>
 
                   <div className="row">
                     <div className="col-md-6 mb-3">
                       <label htmlFor="email" className="form-label fw-semibold">
-                        Email
+                        Email <span className="text-danger">*</span>
                       </label>
                       <input
                         type="email"
-                        className="form-control"
+                        className={`form-control ${fieldErrors.email ? 'is-invalid' : ''}`}
                         id="email"
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
+                        required
                       />
+                      {fieldErrors.email && (
+                        <div className="invalid-feedback">
+                          {fieldErrors.email}
+                        </div>
+                      )}
                     </div>
                     <div className="col-md-6 mb-3">
                       <label htmlFor="phone" className="form-label fw-semibold">
@@ -338,12 +401,17 @@ export default function CreateCandidate({ onClose, onSave }) {
                       </label>
                       <input
                         type="tel"
-                        className="form-control"
+                        className={`form-control ${fieldErrors.phone ? 'is-invalid' : ''}`}
                         id="phone"
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
                       />
+                      {fieldErrors.phone && (
+                        <div className="invalid-feedback">
+                          {fieldErrors.phone}
+                        </div>
+                      )}
                     </div>
                   </div>
 

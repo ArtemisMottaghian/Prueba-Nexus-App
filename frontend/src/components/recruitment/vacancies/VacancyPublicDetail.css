@@ -513,6 +513,39 @@
   .vpd-body {
     padding: 24px 0 120px;
   }
+
+  .vpd-title,
+  .vpd-company,
+  .vpd-info-value,
+  .vpd-cta-desc {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .vpd-meta-chip {
+    max-width: 100%;
+  }
+
+  .vpd-modal-overlay {
+    padding: 8px;
+  }
+
+  .vpd-modal-header,
+  .vpd-modal-body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .vpd-form-row,
+  .vpd-form-actions {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .vpd-btn-cancel,
+  .vpd-btn-submit {
+    width: 100%;
+  }
 }
 /* ── MODAL CANDIDATURA ───────────────────────────── */
 .vpd-modal-overlay {

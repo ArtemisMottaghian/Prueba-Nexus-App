@@ -94,33 +94,19 @@ export default function VacancyCard({
 
   return (
     <div className="vacante-card" onClick={onClick}>
-      <div
-        className="card-header-row"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'auto 1fr auto',
-          alignItems: 'center',
-          gap: '8px',
-        }}
-      >
+      <div className="card-header-row">
         <input
           className="form-check-input checkbox-lg"
           type="checkbox"
           checked={isSelected || false}
           onChange={handleCheckboxClick}
           onClick={handleChildClick}
-          style={{ flexShrink: 0, width: '18px', height: '18px' }}
         />
         <select
           className={`form-select form-select-sm select-status-inline ${badgeClass}`}
           value={job.status}
           onChange={handleStatusChange}
           onClick={handleChildClick}
-          style={{
-            textAlignLast: 'center',
-            justifySelf: 'center',
-            minWidth: '90px',
-          }}
         >
           <option value="Nueva">Nueva</option>
           <option value="Contactada">Contactada</option>
