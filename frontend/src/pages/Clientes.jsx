@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import EmailInput, { validarEmailFormato } from '../components/shared/EmailInput';
+import EmailInput, {
+  validarEmailFormato,
+} from '../components/shared/EmailInput';
 import PhoneInput, {
   LONGITUDES_TELEFONO,
 } from '../components/shared/PhoneInput';
@@ -257,19 +259,19 @@ export default function Clientes() {
   };
 
   const handleFormChange = (e) => {
-  const { name, value, type, checked } = e.target;
-  
-  // Si están escribiendo en el nombre, eliminamos los saltos de línea al instante
-  const valorLimpio = name === 'nombre' ? value.replace(/[\r\n]/g, '') : value;
+    const { name, value, type, checked } = e.target;
 
-  setForm((prev) => ({
-    ...prev,
-    [name]: type === 'checkbox' ? checked : valorLimpio,
-  }));
-  
-  if (errores[name]) setErrores((prev) => ({ ...prev, [name]: undefined }));
-};
+    // Si están escribiendo en el nombre, eliminamos los saltos de línea al instante
+    const valorLimpio =
+      name === 'nombre' ? value.replace(/[\r\n]/g, '') : value;
 
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : valorLimpio,
+    }));
+
+    if (errores[name]) setErrores((prev) => ({ ...prev, [name]: undefined }));
+  };
 
   const guardarCliente = async () => {
     const nuevosErrores = validarForm(form);
@@ -668,12 +670,12 @@ export default function Clientes() {
                     <div className="col-md-6">
                       <label className="form-label">Nombre empresa *</label>
                       <input
-                         name="nombre"
-                         value={form.nombre}
-                         onChange={handleFormChange}
-                         maxLength={100} // Esto bloquea el teclado a los 100 caracteres
-                         className={`form-control ${errores.nombre ? 'is-invalid' : ''}`}
-                         placeholder="Ej: TechCorp Solutions"
+                        name="nombre"
+                        value={form.nombre}
+                        onChange={handleFormChange}
+                        maxLength={100} // Esto bloquea el teclado a los 100 caracteres
+                        className={`form-control ${errores.nombre ? 'is-invalid' : ''}`}
+                        placeholder="Ej: TechCorp Solutions"
                       />
                       {errores.nombre && (
                         <div className="invalid-feedback">{errores.nombre}</div>
