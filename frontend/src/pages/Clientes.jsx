@@ -1,5 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import PhoneInput, { LONGITUDES_TELEFONO } from '../components/shared/PhoneInput';
+import EmailInput, { validarEmailFormato } from '../components/shared/EmailInput';
+import PhoneInput, {
+  LONGITUDES_TELEFONO,
+} from '../components/shared/PhoneInput';
 import ClienteCard from '../components/crm/ClienteCard';
 import ClienteDetail from '../components/crm/ClienteDetail';
 import BulkActions from '../components/recruitment/shared/BulkActions';
@@ -28,17 +31,26 @@ const formVacio = {
 };
 const validarForm = (datos) => {
   const err = {};
-  if (!datos.nombre) err.nombre = 'El nombre es obligatorio';
+  // --- VALIDACIÓN DEL NOMBRE DE LA EMPRESA MEJORADA ---
+  if (!datos.nombre) {
+    err.nombre = 'El nombre es obligatorio';
+  } else if (datos.nombre.length > 100) {
+    err.nombre = `El nombre es demasiado largo. Máximo 100 caracteres (llevas ${datos.nombre.length})`;
+  } else if (/[\r\n]/.test(datos.nombre)) {
+    err.nombre = 'El nombre no puede contener saltos de línea';
+  }
   if (!datos.sector) err.sector = 'El sector es obligatorio';
   if (!datos.contactoPrincipal)
     err.contactoPrincipal = 'El contacto es obligatorio';
-  if (!datos.email) err.email = 'El email es obligatorio';
+  // Usamos la validación del componente compartido
+  const errorEmail = validarEmailFormato(datos.email, true);
+  if (errorEmail) err.email = errorEmail;
 
   // --- VALIDACIÓN DINÁMICA DE TELÉFONO POR PAÍS ---
   if (!datos.telefono) {
     err.telefono = 'El teléfono es obligatorio';
   } else {
-    const numerosSolo = datos.telefono.replace(/\s/g, ''); 
+    const numerosSolo = datos.telefono.replace(/\s/g, '');
     const prefijoActual = datos.prefijo || '+34';
     const reglaPais = LONGITUDES_TELEFONO[prefijoActual] || { min: 9, max: 13 };
 
@@ -47,7 +59,7 @@ const validarForm = (datos) => {
     } else if (numerosSolo.length > reglaPais.max) {
       err.telefono = `Número no válido. No debe superar los ${reglaPais.max} dígitos.`;
     }
-  } 
+  }
   return err;
 };
 
@@ -245,13 +257,19 @@ export default function Clientes() {
   };
 
   const handleFormChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-    if (errores[name]) setErrores((prev) => ({ ...prev, [name]: undefined }));
-  };
+  const { name, value, type, checked } = e.target;
+  
+  // Si están escribiendo en el nombre, eliminamos los saltos de línea al instante
+  const valorLimpio = name === 'nombre' ? value.replace(/[\r\n]/g, '') : value;
+
+  setForm((prev) => ({
+    ...prev,
+    [name]: type === 'checkbox' ? checked : valorLimpio,
+  }));
+  
+  if (errores[name]) setErrores((prev) => ({ ...prev, [name]: undefined }));
+};
+
 
   const guardarCliente = async () => {
     const nuevosErrores = validarForm(form);
@@ -650,11 +668,12 @@ export default function Clientes() {
                     <div className="col-md-6">
                       <label className="form-label">Nombre empresa *</label>
                       <input
-                        name="nombre"
-                        value={form.nombre}
-                        onChange={handleFormChange}
-                        className={`form-control ${errores.nombre ? 'is-invalid' : ''}`}
-                        placeholder="Ej: TechCorp Solutions"
+                         name="nombre"
+                         value={form.nombre}
+                         onChange={handleFormChange}
+                         maxLength={100} // Esto bloquea el teclado a los 100 caracteres
+                         className={`form-control ${errores.nombre ? 'is-invalid' : ''}`}
+                         placeholder="Ej: TechCorp Solutions"
                       />
                       {errores.nombre && (
                         <div className="invalid-feedback">{errores.nombre}</div>
@@ -689,25 +708,19 @@ export default function Clientes() {
                       )}
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label">Email *</label>
-                      <input
-                        name="email"
-                        type="email"
+                      <EmailInput
                         value={form.email}
                         onChange={handleFormChange}
-                        className={`form-control ${errores.email ? 'is-invalid' : ''}`}
-                        placeholder="contacto@empresa.com"
+                        error={errores.email}
+                        required={true}
                       />
-                      {errores.email && (
-                        <div className="invalid-feedback">{errores.email}</div>
-                      )}
                     </div>
                     <div className="col-md-6">
                       <label className="form-label">Teléfono *</label>
-                      <PhoneInput 
-                        form={form} 
-                        errores={errores} 
-                        handleFormChange={handleFormChange} 
+                      <PhoneInput
+                        form={form}
+                        errores={errores}
+                        handleFormChange={handleFormChange}
                       />
                     </div>
                     <div className="col-md-6">
@@ -761,7 +774,7 @@ export default function Clientes() {
                   >
                     Cancelar
                   </button>
-                  <button className="btn btn-primary" onClick={guardarCliente}>
+                  <button className="btn-nexus" onClick={guardarCliente}>
                     <i className="bi bi-check-circle me-2"></i>
                     {modalAbierto === 'nuevo'
                       ? 'Crear cliente'
